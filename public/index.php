@@ -1,18 +1,105 @@
 <?php
 
+// phpinfo();
+// die();
+
+// AWS load balancing forwards the IP using X-headers
+$_SERVER['REMOTE_ADDR'] = ( isset($_SERVER['HTTP_X_FORWARDED_FOR']) )
+    ? $_SERVER['HTTP_X_FORWARDED_FOR']
+    : $_SERVER['REMOTE_ADDR'];
+
+$https = ( isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https' )
+        ? true
+        : ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' )
+            ? true
+            : false;
+
+defined('HTTPS')
+    || define('HTTPS', $https);
+
+// Define path to public directory
+defined('PUBLIC_PATH')
+    || define('PUBLIC_PATH',      realpath(dirname(__FILE__)));
+
+// Define path to modules directory
+defined('MODULES_PATH')
+    || define('MODULES_PATH', realpath(dirname(__FILE__) . '/../application/modules'));
+
 // Define path to application directory
-defined('APPLICATION_PATH')
-    || define('APPLICATION_PATH', realpath(dirname(__FILE__) . '/../application'));
+defined('DEFAULT_MODULE_PATH')
+    || define('DEFAULT_MODULE_PATH', realpath(dirname(__FILE__) . '/../application/modules/default'));
+
+// Define path to vendor directory
+defined('VENDOR_PATH')
+    || define('VENDOR_PATH',     realpath(dirname(__FILE__) . '/../../tiger-vendor/vendor'));
+
+// Define path to library directory
+defined('LIBRARY_PATH')
+    || define('LIBRARY_PATH',     realpath(dirname(__FILE__) . '/../library'));
+
+// Define path to library directory
+//defined('TEMPLATE_PATH')
+//    || define('TEMPLATE_PATH',     realpath(dirname(__FILE__) . '/../application/themes/zen3/templates'));
+
+// Define path to library directory
+defined('TIGER_CONFIG_PATH')
+    || define('TIGER_CONFIG_PATH',   realpath(dirname(__FILE__) . '/../../tiger-config'));
+
+// Define path to logs directory
+defined('LOG_PATH')
+    || define('LOG_PATH',         realpath(dirname(__FILE__) . '/../tiger-logs'));
+
+// Define path to the file upload directory
+defined('UPLOAD_PATH')
+    || define('UPLOAD_PATH',      realpath(dirname(__FILE__) . '/../upload'));
+
+// Define path to the temporary file directory
+defined('TMP_PATH')
+    || define('TMP_PATH',         realpath(dirname(__FILE__) . '/../tmp'));
+
+// Define path to the temporary file directory
+defined('TEST_PATH')
+    || define('TEST_PATH',        realpath(dirname(__FILE__) . '/../tests'));
+
+// Define default locale
+defined('DEFAULT_LOCALE')
+    || define('DEFAULT_LOCALE', 'en_US');
+
+defined('TIGER_ID')
+    || define('TIGER_ID', '00000000-0000-0000-0000-000000000000');
 
 // Define application environment
+$env = 'production';
+if (getenv('APPLICATION_ENV')){
+    // Standard Apache Environment Var
+    $env = getenv('APPLICATION_ENV');
+}
+
 defined('APPLICATION_ENV')
-    || define('APPLICATION_ENV', (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production'));
+    || define('APPLICATION_ENV', $env);
+
+// Define maintenance mode
+$maint = false;
+if (getenv('APPLICATION_MAINT')){
+    // Standard Apache Environment Var
+    $maint = ( getenv('APPLICATION_MAINT') === 'true' ) ? true  : false;
+}
+
+defined('APPLICATION_MAINT')
+    || define('APPLICATION_MAINT', $maint);
+
+/** Tiger Utility functions */
+require_once 'functions.php';
 
 // Ensure library/ is on include_path
 set_include_path(implode(PATH_SEPARATOR, array(
-    realpath(APPLICATION_PATH . '/../library'),
+    VENDOR_PATH,
+    LIBRARY_PATH,
     get_include_path(),
 )));
+
+/** Composer Autoload */
+require_once VENDOR_PATH . '/autoload.php';
 
 /** Zend_Application */
 require_once 'Zend/Application.php';
@@ -20,7 +107,10 @@ require_once 'Zend/Application.php';
 // Create application, bootstrap, and run
 $application = new Zend_Application(
     APPLICATION_ENV,
-    APPLICATION_PATH . '/configs/application.ini'
+    array('config' => array(
+        DEFAULT_MODULE_PATH . '/configs/application.ini',
+        // APPLICATION_PATH . '/configs/navigation.ini',
+    ))
 );
-$application->bootstrap()
-            ->run();
+
+$application->bootstrap()->run();
