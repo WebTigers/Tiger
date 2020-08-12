@@ -17,6 +17,10 @@ defined('PUBLIC_PATH')
     || define('PUBLIC_PATH', realpath(dirname(__FILE__)));
 
 // Define path to modules directory
+defined('APPLICATION_PATH')
+    || define('APPLICATION_PATH', realpath(dirname(__FILE__) . '/../application'));
+
+// Define path to modules directory
 defined('MODULES_PATH')
     || define('MODULES_PATH', realpath(dirname(__FILE__) . '/../application/modules'));
 
@@ -103,5 +107,7 @@ $application = new Zend_Application(
         DEFAULT_MODULE_PATH . '/configs/application.ini',
     ))
 );
+
+// pr( $application->getBootstrap() );
 
 $application->bootstrap()->run();
