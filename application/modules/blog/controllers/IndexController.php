@@ -12,7 +12,7 @@ class Blog_IndexController extends Zend_Controller_Action
     {
         // action body
 
-        $core = new Default_Service_Test();
+        $core = new Core_Service_Test();
 
     }
 

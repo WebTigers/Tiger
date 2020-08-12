@@ -1,6 +1,6 @@
 <?php
 
-class Default_Model_Config extends Zend_Db_Table_Abstract {
+class Core_Model_Config extends Zend_Db_Table_Abstract {
     
     protected $_name    = 'config';
     protected $_primary = 'config_id';

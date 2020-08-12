@@ -24,7 +24,7 @@ $application = new Zend_Application(
     APPLICATION_ENV,
     ['config' => [
         TIGER_CONFIG_PATH . '/tiger-restricted.ini',
-        DEFAULT_MODULE_PATH . '/configs/application.ini',
+        CORE_MODULE_PATH . '/configs/application.ini',
     ]]
 );
 

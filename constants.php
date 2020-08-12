@@ -21,8 +21,8 @@ defined('MODULES_PATH')
     || define('MODULES_PATH', realpath(dirname(__FILE__) . '/application/modules'));
 
 // Define path to application directory
-defined('DEFAULT_MODULE_PATH')
-    || define('DEFAULT_MODULE_PATH', realpath(dirname(__FILE__) . '/application/modules/default'));
+defined('CORE_MODULE_PATH')
+    || define('CORE_MODULE_PATH', realpath(dirname(__FILE__) . '/application/modules/core'));
 
 // Define path to vendor directory
 defined('VENDOR_PATH')
