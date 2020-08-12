@@ -11,6 +11,9 @@ class Blog_IndexController extends Zend_Controller_Action
     public function indexAction()
     {
         // action body
+
+        $core = new Default_Service_Test();
+
     }
 
 
