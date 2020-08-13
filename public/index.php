@@ -1,4 +1,10 @@
 <?php
+/** ***************************************************************************
+ * TIGER Development Platform | WebTIGERS                                     *
+ * TIGER is Licensed Software and subject to international copyright laws.    *
+ * Portions of TIGER utilize open-source software.                            *
+ * Copyright WebTigers                                                        *
+ ******************************************************************************/
 
 /** Include our App Constants */
 require_once realpath(dirname(__FILE__) . '/../constants.php');
