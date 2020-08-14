@@ -16,6 +16,10 @@ defined('HTTPS')
 defined('PUBLIC_PATH')
     || define('PUBLIC_PATH', realpath(dirname(__FILE__) . '/public'));
 
+// Define path to public directory
+defined('ASSETS_PATH')
+    || define('ASSETS_PATH', realpath(dirname(__FILE__) . '/public/assets'));
+
 // Define path to modules directory
 defined('MODULES_PATH')
     || define('MODULES_PATH', realpath(dirname(__FILE__) . '/application/modules'));
