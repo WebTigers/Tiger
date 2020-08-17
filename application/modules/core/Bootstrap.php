@@ -2,9 +2,11 @@
 
 class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 {
+    protected $_locale;
+    protected $_translate;
+
     protected function _initCore()
     {
-
         /** First we bootstrap our db and session ... */
         $this->bootstrap( ['db', 'session'] );
 

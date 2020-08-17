@@ -21,6 +21,12 @@
     <?php if ( isset($this->one->theme) ) { ?>
     <link rel="stylesheet" id="css-theme" href="<?php echo $this->one->assets_folder; ?>/css/themes/<?php echo $this->one->theme; ?>.min.css">
     <?php } ?>
+
+    <!-- TIGER Layout -->
+    <?php echo $this->headLink(); ?>
+    <?php echo $this->headStyle(); ?>
+    <?php echo $this->headScript(); ?>
+
     <!-- END Stylesheets -->
 </head>
 <body>

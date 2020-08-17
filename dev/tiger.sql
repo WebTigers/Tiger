@@ -39,5 +39,22 @@ CREATE TABLE `session` (
     PRIMARY KEY (`session_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ----------------------------
+-- Table structure for translation
+-- ----------------------------
+DROP TABLE IF EXISTS `translation`;
+CREATE TABLE `translation` (
+    `translation_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `msg_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `msg_str` text COLLATE utf8mb4_unicode_ci NOT NULL,
+    `locale` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `create_date` datetime NOT NULL,
+    `update_date` datetime NOT NULL,
+    `create_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `update_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `active` tinyint(1) NOT NULL,
+    `deleted` tinyint(1) NOT NULL,
+    PRIMARY KEY (`translation_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

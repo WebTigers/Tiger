@@ -15,7 +15,7 @@ class IndexController extends Zend_Controller_Action
         // **************************************************************************************************
 
         // : Name, version and assets folder's name
-        $one = new Core_Service_Template('OneUI', '4.6', '/assets/core');
+        $one = new Core_Service_Template('TIGER', '2.0', '/assets/core');
 
 
         // **************************************************************************************************
@@ -23,10 +23,10 @@ class IndexController extends Zend_Controller_Action
         // **************************************************************************************************
 
         // : The data is added in the <head> section of the page
-        $one->author = 'pixelcave';
+        $one->author = 'WebTIGERS';
         $one->robots = 'noindex, nofollow';
-        $one->title = 'OneUI - Bootstrap 4 Admin Template &amp; UI Framework';
-        $one->description = 'OneUI - Bootstrap 4 Admin Template &amp; UI Framework created by pixelcave and published on Themeforest';
+        $one->title = 'Tiger - Development Platform';
+        $one->description = 'Tiger - Push button. Get Application. The easiest way to jumpstart your application development.';
 
         // : The url of your site, used in Open Graph Meta Data (eg 'https://example.com')
         $one->og_url_site               = '';
@@ -133,7 +133,7 @@ class IndexController extends Zend_Controller_Action
         // ''                           : Full width Main Content
         // 'boxed'                      : Full width Main Content with a specific maximum width (screen width > 1200px)
         // 'narrow'                     : Full width Main Content with a percentage width (screen width > 1200px)
-        $one->l_m_content               = '';
+        $one->l_m_content               = 'boxed';
 
 
         // **************************************************************************************************

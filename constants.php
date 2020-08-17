@@ -56,10 +56,6 @@ defined('TMP_PATH')
 defined('TEST_PATH')
     || define('TEST_PATH', realpath(dirname(__FILE__) . '/tests'));
 
-// Define default locale
-defined('DEFAULT_LOCALE')
-    || define('DEFAULT_LOCALE', 'en_US');
-
 defined('TIGER_ID')
     || define('TIGER_ID', '00000000-0000-0000-0000-000000000000');
 

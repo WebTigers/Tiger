@@ -25,12 +25,17 @@ require_once VENDOR_PATH . '/autoload.php';
 /** Zend_Application */
 require_once 'Zend/Application.php';
 
+/** Include early locale constant setting. Mostly this is for routing. */
+require_once realpath(dirname(__FILE__) . '/../locale.php');
+
 // Create application, bootstrap, and run
 $application = new Zend_Application(
     APPLICATION_ENV,
     ['config' => [
-        TIGER_CONFIG_PATH . '/tiger-restricted.ini',
-        CORE_MODULE_PATH . '/configs/application.ini',
+        TIGER_CONFIG_PATH   . '/tiger-restricted.ini',
+        CORE_MODULE_PATH    . '/configs/application.ini',
+        CORE_MODULE_PATH    . '/configs/constants.ini',
+        CORE_MODULE_PATH    . '/configs/routes.ini',
     ]]
 );
 
