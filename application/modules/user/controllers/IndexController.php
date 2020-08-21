@@ -11,7 +11,6 @@ class User_IndexController extends Zend_Controller_Action
 
     public function indexAction ( )
     {
-        // action body
 
     }
 
@@ -21,10 +20,12 @@ class User_IndexController extends Zend_Controller_Action
         Zend_Layout::getMvcInstance()->setLayoutPath(CORE_MODULE_PATH . '/layouts/scripts');
 
         /** Add the signup page JS plugin. */
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/user.signup.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/user/js/tiger/user.signup.js' ) );
 
-        /** Set the theme vars. */
+        /** Set the OneUI theme vars. */
         $this->view->one = $this->_setThemeVars();
+
+        $this->view->signupForm = new User_Form_Signup();
 
     }
 
@@ -36,7 +37,7 @@ class User_IndexController extends Zend_Controller_Action
         // **************************************************************************************************
 
         // : Name, version and assets folder's name
-        $one = new Core_Service_Template('OneUI', '4.6', '/assets/core');
+        $one = new Core_Service_Template('Tiger', '2.0', '/assets/core');
 
 
         // **************************************************************************************************

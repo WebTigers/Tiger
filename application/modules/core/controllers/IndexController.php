@@ -8,7 +8,7 @@ class IndexController extends Zend_Controller_Action
         /* Initialize action controller here */
     }
 
-    public function indexAction()
+    public function indexAction ( )
     {
         // **************************************************************************************************
         // TEMPLATE OBJECT
@@ -152,6 +152,12 @@ class IndexController extends Zend_Controller_Action
         // **************************************************************************************************
 
         $this->view->one                = $one;
+
+    }
+
+    public function testAction ( ) {
+
+        pr( Zend_Registry::get('Config')->CSRF_EXPIRE_SECONDS );
 
     }
 

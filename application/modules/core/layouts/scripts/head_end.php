@@ -18,7 +18,7 @@
 
     <!-- You can include a specific file from css/themes/ folder to alter the default color theme of the template. eg: -->
     <!-- <link rel="stylesheet" id="css-theme" href="assets/css/themes/amethyst.min.css"> -->
-    <?php if ( isset($this->one->theme) ) { ?>
+    <?php if ( ! empty($this->one->theme) ) { ?>
     <link rel="stylesheet" id="css-theme" href="<?php echo $this->one->assets_folder; ?>/css/themes/<?php echo $this->one->theme; ?>.min.css">
     <?php } ?>
 
