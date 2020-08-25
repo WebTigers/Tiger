@@ -444,7 +444,7 @@ class User_Form_Signup extends Tiger_Form_Base
 
             'name'          =>  $name,
             'id'            =>  $name,
-            'class'         =>  'form-control form-control-lg form-control-alt',
+            'class'         =>  'form-control form-control-lg form-control-alt select2',
             'attribs'       =>  [
                                     'data-valid' => '0',
                                 ],
@@ -508,9 +508,9 @@ class User_Form_Signup extends Tiger_Form_Base
                                         'data-valid' => '0',
                                    ],
 
-           'label'             =>  'LABEL.TERMS',
+           'label'             =>  'LABEL.ACCEPT_TERMS',
 
-           'description'       =>  'DESCRIPTION.TERMS',
+           // 'description'       =>  'DESCRIPTION.ACCEPT_TERMS',
 
            'checkedValue'      =>  '1',
            'uncheckedValue'    =>  '0',

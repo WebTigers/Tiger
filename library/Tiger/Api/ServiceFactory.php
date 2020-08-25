@@ -17,7 +17,7 @@ class Tiger_Api_ServiceFactory {
 
         $this->_request     = $request;
         $this->_translate   = Zend_Registry::get( 'Zend_Translate' );
-        $this->_response    = new Core_Model_Response();
+        $this->_response    = new Core_Model_ResponseObject();
         $this->_acl         = Zend_Registry::get( 'Zend_Acl' );
         $this->_role        = Zend_Auth::getInstance()->getIdentity()->role;
         $this->_params      = $request->getParams();
@@ -27,7 +27,7 @@ class Tiger_Api_ServiceFactory {
     }
 
     /**
-     * @return Core_Model_Response
+     * @return Core_Model_ResponseObject
      */
     public function getResponse ( ) {
         

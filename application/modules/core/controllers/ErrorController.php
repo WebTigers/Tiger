@@ -3,47 +3,65 @@
 class ErrorController extends Zend_Controller_Action
 {
 
-    public function errorAction()
+    public function errorAction ( )
     {
+        /**
+         * Dev Notes: If we get here, there's a good chance someone typed in some random
+         * URL that doesn't route within the application. Because of Tiger's core routing
+         * and routes, /abcdefg can be a valid route but will not map to valid modules,
+         * controllers or actions. Tiger "sees" the above non-routable URL as
+         *
+         *     module = abcdefg
+         *     controller = index
+         *     action = index
+         *
+         * which is undesirable since there is no abcdefg module.
+         */
+
+        // Zend_Layout::getMvcInstance()->setLayoutPath( CORE_MODULE_PATH . '/layouts/scripts/');
+        // $this->view->setScriptPath( CORE_MODULE_PATH . '/views/scripts/');
+        // $this->view->setBasePath(CORE_MODULE_PATH . '/views/');
+
         $errors = $this->_getParam('error_handler');
-        
-        if (!$errors || !$errors instanceof ArrayObject) {
-            $this->view->message = 'You have reached the error page';
-            return;
-        }
-        
-        switch ($errors->type) {
-            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
-            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
-            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
+
+        // pr( $errors );
+
+        switch ( $errors->type ) {
+
+            case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
+            case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
+            case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
                 // 404 error -- controller or action not found
-                $this->getResponse()->setHttpResponseCode(404);
                 $priority = Zend_Log::NOTICE;
-                $this->view->message = 'Page not found';
+                $this->forward('error404');
+                break;
+            case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_OTHER:
+                $priority = Zend_Log::NOTICE;
+                $this->forward('error403');
                 break;
             default:
                 // application error
-                $this->getResponse()->setHttpResponseCode(500);
                 $priority = Zend_Log::CRIT;
-                $this->view->message = 'Application error';
+                $this->forward('error500');
                 break;
         }
-        
+
         // Log exception, if logger available
-        if ($log = $this->getLog()) {
-            $log->log($this->view->message, $priority, $errors->exception);
-            $log->log('Request Parameters', $priority, $errors->request->getParams());
-        }
+//        if ($log = $this->getLog()) {
+//            $log->log($this->view->message, $priority, $errors->exception);
+//            $log->log('Request Parameters', $priority, $errors->request->getParams());
+//        }
         
         // conditionally display exceptions
         if ($this->getInvokeArg('displayExceptions') == true) {
             $this->view->exception = $errors->exception;
         }
-        
-        $this->view->request   = $errors->request;
+
+        // $this->view->message = $errors->message;
+        $this->view->request = $errors->request;
     }
 
-    public function getLog()
+    public function getLog ( )
     {
         $bootstrap = $this->getInvokeArg('bootstrap');
         if (!$bootstrap->hasResource('Log')) {
@@ -53,6 +71,48 @@ class ErrorController extends Zend_Controller_Action
         return $log;
     }
 
+    public function error403Action ( )
+    {
+        // $this->getResponse()->setHttpResponseCode(403);
+
+        // pr( $this->getRequest() );
+
+        /**
+         * If we're here in the error403 action, then the original request is garbage
+         * and cannot be use. Switch to the core layout and render this error page.
+         */
+        $this->view->message = 'Page not authorized.';
+
+    }
+
+    public function error404Action ( )
+    {
+        // $this->getResponse()->setHttpResponseCode(404);
+
+        // pr( Zend_Layout::getMvcInstance()->getViewBasePath() );
+        // pr( $this->getRequest()->getActionName() );
+        // pr( $this->getRequest() );
+        // pr( $this->view->getScriptPaths() );
+
+        /**
+         * If we're here in the error404 action, then the original request is garbage
+         * and cannot be use. Switch to the core layout and render this error page.
+         */
+        $this->view->message = 'Page not found';
+
+    }
+
+    public function error500Action ( )
+    {
+        // $this->getResponse()->setHttpResponseCode(500);
+
+        /**
+         * If we're here in the error404 action, then the original request is garbage
+         * and cannot be use. Switch to the core layout and render this error page.
+         */
+        $this->view->message = 'Application error';
+
+    }
 
 }
 

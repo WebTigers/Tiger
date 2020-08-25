@@ -1,6 +1,6 @@
 <?php
 
-class Core_Model_Response
+class Core_Model_ResponseObject
 {
     /**
      * Result
@@ -19,11 +19,24 @@ class Core_Model_Response
     public $data;
 
     /**
-     * Used for form validation messages.
+     * Used for form validation.
      *
      * @var array
      */
     public $form;
+
+    /**
+     * Used for form validation element identity
+     *
+     * @var string
+     */
+    public $element;
+
+    /**
+     * Used for form validation form or element messages
+     * @var array
+     */
+    public $messages;
 
     /**
      * Response text
@@ -52,6 +65,11 @@ class Core_Model_Response
      * @var translate
      */
     protected $_translate;
+
+    const MESSAGE_CLASS_ALERT = 3;
+    const MESSAGE_CLASS_ERROR = 2;
+    const MESSAGE_CLASS_SUCCESS = 1;
+    const MESSAGE_CLASS_INFO = 0;
 
     public function __construct() {
         
@@ -142,6 +160,8 @@ class Core_Model_Response
             'result'    => $this->result,
             'data'      => $this->data,
             'form'      => $this->form,
+            'element'   => $this->element,
+            'messages'  => $this->messages,
             'text'      => $this->text,
             'html'      => $this->html,
             'login'     => $this->login,

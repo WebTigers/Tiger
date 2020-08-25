@@ -1,12 +1,19 @@
 <?php
 
-class User_IndexController extends Zend_Controller_Action
+class User_IndexController extends Tiger_Controller_Action
 {
 
     public function init ( )
     {
         /** Set any custom CSS files you might have. These can also be set statically in the layout. */
         $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/core/css/custom/tiger.css' ) );
+        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/core/js/plugins/select2/css/select2.min.css' ) );
+
+        /** Set any custom JS files you might have. These can also be set statically in the layout. */
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/plugins/select2/js/select2.full.min.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerForm.js' ) );
+
     }
 
     public function indexAction ( )
@@ -16,7 +23,7 @@ class User_IndexController extends Zend_Controller_Action
 
     public function signupAction ( )
     {
-        /** Set the layout path to use the core layout. */
+        /** Set the layout path to use the core layout instead of the default user module layout. */
         Zend_Layout::getMvcInstance()->setLayoutPath(CORE_MODULE_PATH . '/layouts/scripts');
 
         /** Add the signup page JS plugin. */
@@ -29,6 +36,12 @@ class User_IndexController extends Zend_Controller_Action
 
     }
 
+    public function login ( )
+    {
+
+        pr( $this->getRequest() );
+
+    }
 
     protected function _setThemeVars ( ) {
 

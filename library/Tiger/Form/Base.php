@@ -86,8 +86,8 @@ class Tiger_Form_Base extends Zend_Form
                                         ] ],
                                         [ 'Uuid', false, [
                                             'messages' => [
-                                            Tiger_Validate_Uuid::MSG_EMPTY_UUID => "ERROR.EMPTY_VALUE",
-                                            Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID",
+                                                Tiger_Validate_Uuid::MSG_EMPTY_UUID => "ERROR.EMPTY_VALUE",
+                                                Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID",
                                             ]
                                         ] ],
                                         [ 'Csrf', false, [

@@ -16,7 +16,7 @@ defined('DEFAULT_LOCALE')
  * language, your bare translation keys will show. How embarrassing!
  */
 defined('LOCALE_REGEX')
-    || define('LOCALE_REGEX', '^[a-z]{2}([_])?([A-Za-z]{2})?$');
+    || define('LOCALE_REGEX', '^[a-z]{2}(?:_[A-Z]{2})?$');
 
 /** Attempt to discern if a locale exists within the first position of the uri string ... */
 
