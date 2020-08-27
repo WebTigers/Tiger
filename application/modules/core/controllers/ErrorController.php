@@ -18,23 +18,23 @@ class ErrorController extends Zend_Controller_Action
          * which is undesirable since there is no abcdefg module.
          */
 
-        // Zend_Layout::getMvcInstance()->setLayoutPath( CORE_MODULE_PATH . '/layouts/scripts/');
-        // $this->view->setScriptPath( CORE_MODULE_PATH . '/views/scripts/');
-        // $this->view->setBasePath(CORE_MODULE_PATH . '/views/');
+        Zend_Layout::getMvcInstance()->setLayoutPath( CORE_MODULE_PATH . '/layouts/scripts/');
 
         $errors = $this->_getParam('error_handler');
 
-        // pr( $errors );
+        // pr( $errors->type );
 
         switch ( $errors->type ) {
 
             case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
+            case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_ACL_NO_RESOURCE:
             case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
             case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
                 // 404 error -- controller or action not found
                 $priority = Zend_Log::NOTICE;
                 $this->forward('error404');
                 break;
+            case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_ACL_NOT_AUTHORIZED:
             case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_OTHER:
                 $priority = Zend_Log::NOTICE;
                 $this->forward('error403');
@@ -75,7 +75,7 @@ class ErrorController extends Zend_Controller_Action
     {
         // $this->getResponse()->setHttpResponseCode(403);
 
-        // pr( $this->getRequest() );
+        // pr( ['403', $this->getRequest()] );
 
         /**
          * If we're here in the error403 action, then the original request is garbage
@@ -89,10 +89,7 @@ class ErrorController extends Zend_Controller_Action
     {
         // $this->getResponse()->setHttpResponseCode(404);
 
-        // pr( Zend_Layout::getMvcInstance()->getViewBasePath() );
-        // pr( $this->getRequest()->getActionName() );
-        // pr( $this->getRequest() );
-        // pr( $this->view->getScriptPaths() );
+        // pr( ['404', $this->getRequest()] );
 
         /**
          * If we're here in the error404 action, then the original request is garbage

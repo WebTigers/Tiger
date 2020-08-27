@@ -66,10 +66,10 @@ class Tiger_Controller_Plugin_ErrorHandler extends Zend_Controller_Plugin_ErrorH
                         $error->type = self::EXCEPTION_OTHER;
                     }
                     break;
-                case 'Tiger_Controller_Plugin_AclNoResourceException':
+                case 'Tiger_Exception_AclNoResource':
                     $error->type = self::EXCEPTION_ACL_NO_RESOURCE;
                     break;
-                case 'Tiger_Controller_Plugin_AclNotAuthorizedException':
+                case 'Tiger_Exception_AclNotAuthorized':
                     $error->type = self::EXCEPTION_ACL_NOT_AUTHORIZED;
                     break;
                 default:

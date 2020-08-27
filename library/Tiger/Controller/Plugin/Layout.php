@@ -21,7 +21,7 @@ class Tiger_Controller_Plugin_Layout extends Zend_Controller_Plugin_Abstract
 
         $MVC->setLayoutPath( $layoutPath );
         $view->setBasePath( $viewPath );
-        
+
     }
 
 }

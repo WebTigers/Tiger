@@ -6,6 +6,8 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
     protected $_auth;
     protected $_hasRun = false;
 
+    const ROLE_GUEST = "guest";
+
     /**
      * The Routes Plugin is responsible for collecting and setting the
      * various router routes.
@@ -19,11 +21,22 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
             return;
         }
 
-        // $this->_acl = Zend_Registry::get( 'Zend_Acl' );
-        // $this->_auth = Zend_Auth::getInstance();
+        // zd( Zend_Controller_Front::getInstance()->throwExceptions() );
 
-        // $this->validateResource( $request );
-        // $this->validateAccess( $request );
+        try {
+
+            $this->_acl = Zend_Registry::get('Zend_Acl');
+            $this->_auth = Zend_Auth::getInstance();
+
+            // $this->validateResource($request);
+            // $this->validateAccess($request);
+        }
+        catch ( Exception $e ) {
+
+            pr( $e );
+
+        }
+
 
         $this->_hasRun = true;
     }
@@ -34,8 +47,8 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
         $controller = strtolower($request->getControllerName());
         $resource = $module . ':' . $controller;
 
-        if ($this->_acl->has($resource) !== true) {
-            throw new Tiger_Controller_Plugin_AclNoResourceException('ERROR.NO_RESOURCE' );
+        if ( $this->_acl->has($resource) !== true ) {
+            throw new Tiger_Exception_AclNoResource('ERROR.NO_RESOURCE' );
         }
 
     }
@@ -43,6 +56,7 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
     public function validateAccess ( $request )
     {
         $role = self::ROLE_GUEST;
+
         if ($this->_auth->hasIdentity()) {
             $role = $this->_auth->getIdentity()->role;
         }

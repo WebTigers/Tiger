@@ -22,6 +22,8 @@ class Tiger_Api_ServiceFactory {
         $this->_role        = Zend_Auth::getInstance()->getIdentity()->role;
         $this->_params      = $request->getParams();
 
+        pr('COOL!');
+
         $this->_processRequest();
         
     }
@@ -48,6 +50,8 @@ class Tiger_Api_ServiceFactory {
             $this->_getValidModule();
             $this->_getValidService();
             $this->_getValidMethod();
+
+            pr( 'YO!' );
 
             if ( ! $this->_acl->isAllowed( $this->_role, $this->_serviceClass, $this->_method ) ) {
 

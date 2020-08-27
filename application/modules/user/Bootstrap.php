@@ -5,18 +5,25 @@ class User_Bootstrap extends Zend_Application_Module_Bootstrap
 
     public function _initModule()
     {
-        // $moduleConfig = null;
-        // pr( $this->getOptions() );
 
-        // $files = scandir( realpath(dirname(__FILE__) . '/configs' ) );
+        /**
+         * The following code block reads all of the config folder's .ini files and adds those configs
+         * to the global config object based on the application environment.
+         */
 
-        // pr( $files );
+        $Config = Zend_Registry::get( 'Config' );
 
-//        $config = new Zend_Config( $this->getOptions(), true );
-//        $configModel = new Core_Model_Config;
-//        $configArray = $configModel->getConfigArray();
-//        $config->merge( new Zend_Config( $configArray ) );
-//        Zend_Registry::set( 'Config', $config );
+        /** Return an array of only .ini config files from the /configs folder */
+        $configFiles = preg_grep('/.*\.(ini)/', scandir( realpath(dirname(__FILE__) . '/configs' ) ) );
+
+        foreach( $configFiles as $configFile ) {
+            $filename = realpath(dirname(__FILE__) . '/configs' ) . '/' . $configFile;
+            $configOptions = new Zend_Config_Ini( $filename, APPLICATION_ENV, [ 'allowModifications' => true ] );
+            $Config->merge( $configOptions );
+        }
+
+        Zend_Registry::set( 'Config', $Config );
+
     }
 
 }
