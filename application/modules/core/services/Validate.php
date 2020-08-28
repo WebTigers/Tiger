@@ -7,21 +7,18 @@ final class Core_Service_Validate {
     private $_response;
 
     public function __construct( Array $params ) {
-        
-        if ( isset( $params['module'] ) && 
-            isset( $params['form']   ) &&
-            Zend_Validate::is( $params['module'], 'Alpha' )  &&
-            Zend_Validate::is( $params['form'],   'Alpha' ) )
+
+        if (isset($params['module']) &&
+            isset($params['form']) &&
+            Zend_Validate::is($params['module'], 'Alpha') &&
+            Zend_Validate::is($params['form'], 'Regex', ['pattern' => '/^[A-Za-z0-9_]+$/']))
         {
 
-            $this->_module      = Zend_Filter::filterStatic( $params['module'], 'Alpha');
-            
-            $formName           = ucfirst( $this->_module ) . '_Form_' . ucfirst( Zend_Filter::filterStatic( $params['form'], 'Alpha') );
-            $this->_form        = new $formName;
-            
-            $this->_response    = new Core_Model_ResponseObject;
-            
-            $this->validateField( $params );
+            $this->_module = Zend_Filter::filterStatic($params['module'], 'Alpha');
+            $formName = Zend_Filter::filterStatic($params['form'], 'PregReplace', ['match' => '/[^A-Za-z0-9_]/', 'replace' => '']);
+            $this->_form = new $formName();
+            $this->_response = new Core_Model_ResponseObject;
+            $this->element($params);
 
         }
 
@@ -43,11 +40,7 @@ final class Core_Service_Validate {
      * @param array $params
      * @return object ResponseObject 
      */
-    public function validateField ( Array $params ) {
-        
-        // pr( $params );
-        
-        if ( $params['element'] === 'g-recaptcha-response' ) { $params['element'] = 'recaptcha';  }
+    public function element ( Array $params ) {
         
         $element = $this->_form->getElement( $params['element'] );
         

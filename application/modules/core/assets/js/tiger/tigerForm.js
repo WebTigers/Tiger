@@ -76,7 +76,8 @@
             // Set the base post data object //
             let data = {
                 module  : 'core',
-                service : 'Validate',
+                service : 'validate',
+                method  : 'element',
                 form    : $this.closest('form').attr('name'),
                 value   : '',
                 context : '',

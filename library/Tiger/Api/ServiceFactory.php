@@ -22,8 +22,6 @@ class Tiger_Api_ServiceFactory {
         $this->_role        = Zend_Auth::getInstance()->getIdentity()->role;
         $this->_params      = $request->getParams();
 
-        pr('COOL!');
-
         $this->_processRequest();
         
     }
@@ -44,14 +42,12 @@ class Tiger_Api_ServiceFactory {
      * @return null
      */
     protected function _processRequest ( ) {
-        
+
         try {
 
             $this->_getValidModule();
             $this->_getValidService();
             $this->_getValidMethod();
-
-            pr( 'YO!' );
 
             if ( ! $this->_acl->isAllowed( $this->_role, $this->_serviceClass, $this->_method ) ) {
 
@@ -60,15 +56,13 @@ class Tiger_Api_ServiceFactory {
                  * this login flag helps us see that we just need to login again.
                  */
                 $this->_response->login = ( $this->_role === self::ROLE_GUEST );
-
                 throw new Exception( $this->_translator->translate( 'ERROR.ACTION_NOT_ALLOWED' ));
 
             }
 
+
             if ( ! class_exists( $this->_serviceClass, true ) ) {
-
                 throw new Exception( $this->_translator->translate( 'ERROR.INVALID_SERVICE' ) );
-
             }
 
             $service = new $this->_serviceClass( $this->_params );
@@ -136,6 +130,8 @@ class Tiger_Api_ServiceFactory {
         if ( ! isset( $this->_params['method'] ) || ! Zend_Validate::is( $this->_params['method'], 'Alpha' ) ){
             throw new Exception( $this->_translator->translate( 'ERROR.INVALID_METHOD' ) );
         }
+
+        $this->_method = $this->_params['method'];
     }
 
 }

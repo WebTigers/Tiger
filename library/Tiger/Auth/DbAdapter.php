@@ -15,14 +15,14 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
         if ( ! empty( $credential ) ) { $this->_credential = $credential; }
         if ( ! empty( $timestamp  ) ) { $this->_timestamp  = $timestamp; }
 
-        $this->_config      = Zend_Registry::get('Zend_Config');
-        $this->_userModel   = new Core_Model_User;
+        $this->_config      = Zend_Registry::get('Config');
+        $this->_userModel   = new User_Model_User;
 
     }
 
     # Some convenience setters #
     
-    # An identity could be either a username or user_id
+    # An identity could be either a username, email, or user_id
     public function setIdentity ( $identity ) { 
         $this->_identity = $identity;
         return $this;
@@ -68,13 +68,13 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
                 
                 if ( ! empty( $this->_identity ) && ! empty( $this->_credential ) ) {
 
-                    $user = $this->_userModel->getUserByUsernameOrEmail( $this->_identity );
+                    $user = $this->_userModel->getUserByIdentity( $this->_identity );
 
                     if ( ! is_null( $user ) ) {
 
                         // Password hashes must match to authenticate.
 
-                        if ( $this->_cryption->check_hash( $user->password, $this->_credential ) ) {
+                        if ( $this->_cryption->hash( $this->_credential ) === $user->password ) {
 
                             // Since this is a normal login, we log the user's last 
                             // access within their account.

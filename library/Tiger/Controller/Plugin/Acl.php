@@ -21,6 +21,8 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
             return;
         }
 
+        // pr( $request );
+
         $this->_acl = Zend_Registry::get('Zend_Acl');
         $this->_auth = Zend_Auth::getInstance();
 
@@ -46,18 +48,13 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
 
     public function validateAccess ( $request )
     {
-        $role = self::ROLE_GUEST;
-
-        if ($this->_auth->hasIdentity()) {
-            $role = $this->_auth->getIdentity()->role;
-        }
-
+        $role = $this->_auth->getIdentity()->role;
         $module = strtolower($request->getModuleName());
         $controller = strtolower($request->getControllerName());
         $action = strtolower($request->getActionName());
         $resource = $module . ':' . $controller;
 
-        if (!$this->_acl->isAllowed($role, $resource, $action)) {
+        if ( ! $this->_acl->isAllowed( $role, $resource, $action ) ) {
 
             // Elegantly handle not allowed with a redirect to the login page.
 

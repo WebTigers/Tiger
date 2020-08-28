@@ -19,7 +19,7 @@ class User_Form_Signup extends Tiger_Form_Base
      */
     protected function _addFormElements ( ) {
 
-        $this->setName('Signup');
+        $this->setName('User_Form_Signup');
 
         $this->addElement( $this->_getReferralCode() );
         $this->addElement( $this->_getFirstName() );
