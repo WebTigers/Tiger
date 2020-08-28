@@ -21,34 +21,25 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
             return;
         }
 
-        // zd( Zend_Controller_Front::getInstance()->throwExceptions() );
+        $this->_acl = Zend_Registry::get('Zend_Acl');
+        $this->_auth = Zend_Auth::getInstance();
 
-        try {
-
-            $this->_acl = Zend_Registry::get('Zend_Acl');
-            $this->_auth = Zend_Auth::getInstance();
-
-            // $this->validateResource($request);
-            // $this->validateAccess($request);
-        }
-        catch ( Exception $e ) {
-
-            pr( $e );
-
-        }
-
+        $this->validateResource($request);
+        $this->validateAccess($request);
 
         $this->_hasRun = true;
+
     }
 
     public function validateResource ( $request )
     {
+
         $module = strtolower($request->getModuleName());
         $controller = strtolower($request->getControllerName());
         $resource = $module . ':' . $controller;
 
         if ( $this->_acl->has($resource) !== true ) {
-            throw new Tiger_Exception_AclNoResource('ERROR.NO_RESOURCE' );
+            throw new Tiger_Exception_AclNoResource('ERROR.NO_RESOURCE');
         }
 
     }
