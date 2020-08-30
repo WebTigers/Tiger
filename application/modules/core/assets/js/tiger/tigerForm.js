@@ -1,7 +1,10 @@
 /**
  * TigerForm jQuery Plugin
  *
- * @version 1.0.04
+ * TigerForm is a convenience from plugin to marshal form vars
+ * and do auto-validation.
+ *
+ * @version 2.0.0
  */
 
 (function( $ ){
@@ -16,6 +19,8 @@
 
                 //Check for TigerDOM Library //
                 if ( ! $().tigerDOM ) { alert( 'The TigerDOM plugin is required.' ); }
+
+                Class.initAutoValidate();
 
             });
 
@@ -42,9 +47,31 @@
 
         },
 
+        /**
+         * A convenience method used to return a JSON
+         * compatible array of the form's values.
+         * @param object | null params that will be added to the form values.
+         * @returns object
+         */
+        getFormValues : function ( formValues ) {
+
+            if ( formValues === undefined ) {
+                formValues = {};
+            }
+
+            if ( $(this).is('form') ) {
+                $( $(this).serializeArray() ).each(function ( i, el ) {
+                    formValues[el.name] = el.value;
+                });
+            }
+
+            return formValues;
+
+        },
+
         initAutoValidate : function ( ) {
 
-            return $( 'input[data-valid]' )
+            return $( 'input[data-valid], select[data-valid]' )
                 .not( 'input[type=hidden]' )
                 .not( '.no-validate' ).each( function( ) {
 
@@ -65,9 +92,6 @@
 
             let $this = $( this );
 
-            // If we've already validated, don't validate again, this is a bad idea
-            // if (  Class.validateAjax.indexOf( $this.attr('id') ) > -1 ) { return; }
-
             Class.validateAjax.push( $this.attr('id') );
 
             // If we've added the no-validate class after the init, just return.
@@ -75,29 +99,30 @@
 
             // Set the base post data object //
             let data = {
-                module  : 'core',
-                service : 'validate',
+                service : 'core:validate',
                 method  : 'element',
                 form    : $this.closest('form').attr('name'),
+                element : $this.attr('name'),
                 value   : '',
-                context : '',
-                element : ''
+                context : ''
             };
 
-            // Set the element value //
-            data.value = ( $this.is('input:radio') )
-                ? ($( 'input:radio[name=' + $this.attr('name') + ']' ).is(':checked'))
-                    ? $this.val()
-                    : ''
-                : $this.val();
+            let $form = $('form[name="' + data.form + '"]');
 
-            // If the element value and data.value are the same,
-            // then no change has occured, just return.
+            // Set the element value //
+            data.value = $this.val();
+
+            // Override the element value for special input elements like checkboxes and radio buttons //
+            if ( $this.is(':radio') && $( 'input:radio[name=' + $this.attr('name') + ']' ).is(':checked') ) {
+                data.value = $this.val();
+            }
+            if ( $this.is(':checkbox') ) {
+                data.value = ( $this.is(':checked' ) ) ? $this.val() : '';
+            }
+
+            // If the element value and data.value are the same, then no change has occurred, just return.
             if ( parseInt( $this.attr( 'data-valid' ), 10 ) === 1 &&
                 $this.attr( 'data-value' ) === data.value ) { return; }
-
-            // Element Adjustments //
-            data.element = $this.attr('name');
 
             function success ( data ){
                 Class._setElementMessage( data );
@@ -125,121 +150,21 @@
 
         _setElementMessage : function ( data ) {
 
-            // console.log( data );
+            let $element = $('form[name="' + data.form + '"] #' + data.element );
 
-            let element;
-            let $element;
-            let $container;
-            let sId         = '';
-            let sMessage    = '';
-            let siClass     = '';
-            let sClass      = '';
-            let sError      = '';
-            let sIcon       = '';
-            let $form       = null;
+            if ( data.result === 0 ) {
 
-            // parse the data object
+                let content = '<div id="' + data.element + '-error" class="invalid-feedback">' + data.messages[0].message + '</div>';
+                $element.closest('div.form-group').find('.message-container').tigerDOM('change', { content : content } );
+                $element.addClass('is-invalid');
 
-            $.each( data, function( property, value ) {
-
-                // console.log(property,value);
-
-                if ( property === 'element' ) {
-
-                    element = value;
-
-                    $element = $( ' #' + element );
-
-                    // console.log( $element );
-
-                    // $element = ( $('[name=' + element + ']').is(':radio') ) ? $('[name=' + element + ']') : $('#' + element);
-
-                }
-
-                else if ( property === 'messages' ) {
-
-                    $.each( value, function( i, msgObj ) {
-
-                        sMessage = ( typeof msgObj === "string" ) ? msgObj  : msgObj.message;
-                        siClass  = ( typeof msgObj === "string" ) ? ''      : msgObj.class;
-                        sError   = ( typeof msgObj === "string" ) ? ''      : msgObj.error;
-
-                    });
-
-                }
-
-                else if ( property === 'id' ) {
-
-                    sId = value;
-
-                }
-
-            });
-
-            if ( element === 'type_contact' || element === 'contact_value' ) {
-                $element = $( '[name=' + element + '][data-contact_id=' + sId + ']' );
-            }
-
-            $container = $element.closest('div.form-group').find('.field-message');
-
-            switch ( siClass ) {
-
-                case 'info':
-                    sClass  = 'alert alert-info';
-                    sIcon   = 'fa fa-info-circle';
-                    break;
-
-                case 'success':
-                    sClass  = 'alert alert-success';
-                    sIcon   = 'fa fa-check';
-                    break;
-
-                case 'error':
-                    sClass  = 'alert alert-danger';
-                    sIcon   = 'fa fa-ban';
-                    break;
-
-                case 'alert':
-                default :
-                    sClass  = 'alert alert-warning';
-                    sIcon   = 'fa fa-warning';
-                    break;
-            }
-
-            let content = ( sMessage !== undefined && sMessage.length > 0 )
-                ? '<div class="alert ' + sClass + '"><i class="' + sIcon + '"> </i>' + sMessage + '</div>'
-                : '';
-
-            if ( content === '' || siClass === 'success' ) {
-                $element.closest('.form-group').removeClass('has-warning');
-                $element.closest('.form-group').addClass('has-success');
             }
             else {
-                $element.closest('.form-group').removeClass('has-success');
-                $element.closest('.form-group').addClass('has-warning');
-            }
 
-            $element.attr( 'data-valid', ( content === '' || siClass === 'success' ) ? 1 : 0 );
-
-            if ( parseInt( $element.attr( 'data-valid' ) ) === 1 ) {
-
-                if ( $element.is('select') ) {
-                    $element.attr('data-value', $element.find(':selected').val() );
-                } else {
-                    $element.attr('data-value', $element.val() );
-                }
+                $element.closest('div.form-group').find('.message-container').tigerDOM('change', { content : '' } );
+                $element.removeClass( 'is-invalid' ).addClass('is-valid');
 
             }
-
-            let message = {
-                content       : content,
-                removeClick   : false,
-                removeTimeout : ( siClass === 'success' ) ? 3000 : 0
-            };
-
-            // console.log( $container, oMessage );
-
-            $container.tigerDOM('change', message);
 
         }
 

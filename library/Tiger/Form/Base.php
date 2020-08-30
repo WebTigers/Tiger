@@ -13,7 +13,7 @@ class Tiger_Form_Base extends Zend_Form
         $this->_session   = new Zend_Session_Namespace( 'forms' );
         $this->_locale    = Zend_Registry::get('Zend_Locale');
         $this->_translate = Zend_Registry::get('Zend_Translate');
-        $this->_config    = Zend_Registry::get('Config');
+        $this->_config    = Zend_Registry::get('Zend_Config');
 
         // Allows us to load and use custom ZendTiger validator classes with elements
         $this->addElementPrefixPath('Tiger_Validate', 'Tiger/Validate/', 'validate');

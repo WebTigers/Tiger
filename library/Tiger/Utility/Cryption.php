@@ -17,10 +17,10 @@ class Tiger_Utility_Cryption {
 
     private function encrypt_decrypt( $string, $action )
     {
-        $encrypt_method = Zend_Registry::get('Config')->encryption->method;
-        $hash_algo      = Zend_Registry::get('Config')->encryption->hash_algo;
-        $secret_key     = Zend_Registry::get('Config')->encryption->key;
-        $secret_iv      = Zend_Registry::get('Config')->encryption->iv;
+        $encrypt_method = Zend_Registry::get('Zend_Config')->encryption->method;
+        $hash_algo      = Zend_Registry::get('Zend_Config')->encryption->hash_algo;
+        $secret_key     = Zend_Registry::get('Zend_Config')->encryption->key;
+        $secret_iv      = Zend_Registry::get('Zend_Config')->encryption->iv;
 
         // get a hash of our secret key
         $key = hash( $hash_algo, $secret_key );
@@ -42,7 +42,7 @@ class Tiger_Utility_Cryption {
 
     public static function hash ( $string )
     {
-        return hash( Zend_Registry::get('Config')->encryption->hash_algo, $string );
+        return hash( Zend_Registry::get('Zend_Config')->encryption->hash_algo, $string );
     }
 
 }

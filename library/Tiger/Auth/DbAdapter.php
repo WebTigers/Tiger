@@ -15,7 +15,7 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
         if ( ! empty( $credential ) ) { $this->_credential = $credential; }
         if ( ! empty( $timestamp  ) ) { $this->_timestamp  = $timestamp; }
 
-        $this->_config      = Zend_Registry::get('Config');
+        $this->_config      = Zend_Registry::get('Zend_Config');
         $this->_userModel   = new User_Model_User;
 
     }

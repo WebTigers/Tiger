@@ -1,28 +1,26 @@
 /**
- * jQuery Plugin Template
+ * Tiger Localize
  * 
- * Use this template for making your own jQuery Plugins
+ * A convenience plugin that allows us to pull localized values
+ * from the database. Utilizes the Tiger Localize Service.
+ *
+ * @version 2.0.0
  */
 
 (function( $ ){
 
-    var oParams = { service : 'Localize' };
+    let oParams = { service : 'Localize' };
 
-    var oMethods = {
+    let oMethods = {
         
         init : function( ) {
 
             $( document ).ready( function() {
                
-               
             });            
 
         },
         
-        destroy : function( ) {
-         
-        },
-
         translate : function( value ) {
             
             oParams['method']   = 'translate';

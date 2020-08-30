@@ -15,7 +15,7 @@ class ApiController extends Zend_Controller_Action
      */
     public function apiAction ( ) {
 
-        $service = new Tiger_Api_ServiceFactory( $this->getRequest(), true );
+        $service = new Tiger_Api_ServiceFactory( $this->getRequest() );
         $responseModel = $service->getResponse();
 
         // header("Access-Control-Allow-Origin: *");

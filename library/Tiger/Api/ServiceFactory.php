@@ -8,9 +8,11 @@ class Tiger_Api_ServiceFactory {
     protected $_acl;
     protected $_role;
     protected $_params;
+    protected $_module;
+    protected $_service;
     protected $_serviceClass;
+    protected $_method;
 
-    const MODULE_CORE = "core";
     const ROLE_GUEST = "guest";
 
     public function __construct( Zend_Controller_Request_Http $request ) {
@@ -60,46 +62,75 @@ class Tiger_Api_ServiceFactory {
 
             }
 
+            if ( class_exists( $this->_serviceClass, true )
+                && method_exists( $this->_serviceClass, $this->_method ) )
+            {
 
-            if ( ! class_exists( $this->_serviceClass, true ) ) {
+                /**
+                 * This is where all the magic happens. The service class is called dynamically with
+                 * all of the params it will need to forward the parameter payload to the proper method.
+                 * The class method (function) will run automagically based on the method name passed into
+                 * the class' constructor. The method will perform all of its tasks and then set the standard
+                 * responseObject within the class. All of this happens before the class is returned as the
+                 * $service var! All that is necessary now is for us to gather the response from the service.
+                 * The API controller will then gather the responseObject from this service factory and return
+                 * it to the view as a JSON response.
+                 *
+                 * In PHP 7.x, fatal errors are not caught by the exception handler. Wrapping this call in
+                 * a try/catch for errors prevents the API from displaying the error page.
+                 */
+                try {
+
+                    $service = new $this->_serviceClass( $this->_params );
+                    // $service = new $this->_service($this->_params);
+                    $this->_response = $service->getResponse();
+
+                }
+                catch ( Error $e ) {
+
+                    $this->_response->setTextMessage( $e->getMessage(), 'error' );
+                    $this->_response->result = false;
+
+                }
+            }
+            else {
                 throw new Exception( $this->_translator->translate( 'ERROR.INVALID_SERVICE' ) );
             }
-
-            $service = new $this->_serviceClass( $this->_params );
-            $this->_response = $service->getResponse();
 
         }
         catch ( Exception $e ) {
 
-            $message = $e->getMessage();
-
-            $this->_response->setTextMessage( $message, 'error' );
+            $this->_response->setTextMessage( $e->getMessage(), 'error' );
             $this->_response->result = false;
 
         }
 
     }
 
+    // Sanity Validation //
+
     /**
      * Sets a valid module.
      * @throws Zend_Validate_Exception
      * @throws Exception
      */
-    protected function _getValidModule ()
+    protected function _getValidModule ( )
     {
         /** $modules is an array of all of the active modules. */
         $modules = array_keys( Zend_Controller_Front::getInstance()->getDispatcher()->getControllerDirectory() );
 
-        if ( ! isset( $this->_params['module'] ) ) {
+        if ( isset( $this->_params['service'] ) && strstr( $this->_params['service'],':' ) ) {
 
-            $this->_params['module'] = self::MODULE_CORE;
+            $this->_module = explode( ':', $this->_params['service'] )[0];
+
+            if ( ! Zend_Validate::is( $this->_module, 'Alpha' ) || ! in_array( $this->_module, $modules) ){
+                throw new Exception( $this->_translator->translate( 'ERROR.INVALID_MODULE' ) );
+            }
 
         }
         else {
 
-            if ( ! Zend_Validate::is( $this->_params['module'], 'Alpha' ) || ! in_array( $this->_params['module'], $modules) ){
-                throw new Exception( $this->_translator->translate( 'ERROR.INVALID_MODULE' ) );
-            }
+            throw new Exception( $this->_translator->translate( 'ERROR.INVALID_SERVICE' ) );
 
         }
 
@@ -111,12 +142,22 @@ class Tiger_Api_ServiceFactory {
      */
     protected function _getValidService ( )
     {
+        if ( isset( $this->_params['service'] ) && strstr( $this->_params['service'],':' ) ) {
 
-        $this->_params['service'] = ( isset( $this->_params['service'] ) && Zend_Validate::is( $this->_params['service'], 'Alpha' ) )
-            ? $this->_params['service']
-            : '';
+            $this->_service = $this->_params['service'];
+            $service = explode( ':', $this->_service )[1];
 
-        $this->_serviceClass = ucfirst( $this->_params['module'] ) . '_Service_' . ucfirst( $this->_params['service'] );
+            if ( Zend_Validate::is( $service, 'Alpha' ) ) {
+                $this->_serviceClass = ucfirst( $this->_module ) . '_Service_' . ucfirst( $service );
+            }
+            else {
+                throw new Exception( $this->_translator->translate( 'ERROR.INVALID_SERVICE' ) );
+            }
+
+        }
+        else {
+            throw new Exception( $this->_translator->translate( 'ERROR.INVALID_SERVICE' ) );
+        }
 
     }
 
@@ -127,11 +168,13 @@ class Tiger_Api_ServiceFactory {
      */
     protected function _getValidMethod ( )
     {
-        if ( ! isset( $this->_params['method'] ) || ! Zend_Validate::is( $this->_params['method'], 'Alpha' ) ){
+        if ( isset( $this->_params['method'] ) && Zend_Validate::is( $this->_params['method'], 'Alpha' ) ) {
+            $this->_method = $this->_params['method'];
+        }
+        else {
             throw new Exception( $this->_translator->translate( 'ERROR.INVALID_METHOD' ) );
         }
 
-        $this->_method = $this->_params['method'];
     }
 
 }

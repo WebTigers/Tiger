@@ -12,7 +12,7 @@ class Tiger_Controller_Plugin_Routes extends Zend_Controller_Plugin_Abstract
     public function routeStartup(Zend_Controller_Request_Abstract $request)
     {
 
-        $config = Zend_Registry::get('Config');
+        $config = Zend_Registry::get('Zend_Config');
         $router = Zend_Controller_Front::getInstance()->getRouter();
         $router->removeDefaultRoutes();
         $router->addConfig($config, 'routes');

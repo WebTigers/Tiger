@@ -80,8 +80,8 @@ class Core_Model_ResponseObject
     public function setTextMessage( $message, $type = 3 )
     {
 
-        $this->_text[] = $message;
-        $this->createHTMLMessage( $message, $type );
+        $this->text[] = $message;
+        $this->html[] = $this->createHTMLMessage( $message, $type );
 
     }
 

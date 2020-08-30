@@ -156,7 +156,7 @@ class IndexController extends Tiger_Controller_Action
 
     public function testAction ( ) {
 
-        pr( Zend_Registry::get('Config')->CSRF_EXPIRE_SECONDS );
+        pr( Zend_Registry::get('Zend_Config')->CSRF_EXPIRE_SECONDS );
 
     }
 

@@ -2,32 +2,21 @@
  * jQuery Tiger DOM Plugin
  * 
  * Tiger DOM is a multi-function jQuery plugin that allows you to do
- * a multitude of things elegantly.
+ * a multitude of things elegantly in the DOM.
  * 
- * Version 1.0.6
- * 
- * ChangeLog
- * 
- * Version 1.0.6 Fixed container heights with elements using top and bottom margins.
- * Version 1.0.5 Added Count function
- * Version 1.0.4 Fixed initToggleControls page jumping with preventDefault()
- *               Fixed issue with heights in nested toggled containers
- * Version 1.0.3 Added animateCount Method
- * Version 1.0.2 Added InitToggleControls Method
- * Version 1.0.1 Added Open & Close Methods
- * Version 1.0.0 Initial Insert, Change, Remove Methods
+ * Version 2.0.0
  */
 
 (function( $ ){
     
     //
-    var _locale;
+    let _locale;
     
     // The baseTime is the speed of all animations within the plugin
-    var baseTime        = 400;
-    var baseTimeFast    = 200;
+    let baseTime        = 400;
+    let baseTimeFast    = 200;
     
-    var oMethods = {
+    let oMethods = {
         
         init : function() {
 
@@ -49,7 +38,7 @@
         
         /**
          * Sets the locale from the browsers meta http-equiv Content-Language 
-         * variable as set by the server.
+         * letiable as set by the server.
          * 
          */
         setLocale : function( ) {
@@ -69,8 +58,8 @@
          */
         animateCount : function ( oParams ) {  
         
-            var from = { count : oParams.begin };
-            var to   = { count : oParams.end };
+            let from = { count : oParams.begin };
+            let to   = { count : oParams.end };
             
             $(from).animate(to, {
                 duration: baseTime,
@@ -107,7 +96,7 @@
             
             $('[data-tiger-control]').each(function(){
             
-                var $target = $($(this).attr('data-tiger-control'));
+                let $target = $($(this).attr('data-tiger-control'));
                 $target.css('overflow', 'hidden')
                        .height(0)
                        .css('opacity', 0)
@@ -129,7 +118,7 @@
          * Counts the number of properties (keys) in an array
          */
         count : function( obj ) {
-            var count = 0, key;
+            let count = 0, key;
             for (key in obj) {
                 if (obj.hasOwnProperty(key)) { count++; }
             }
@@ -142,11 +131,11 @@
          */
         equalHeights : function( ) {
             
-            var tallest = 0;
+            let tallest = 0;
 
             $(this).each( function() {
                 
-                    var thisHeight = $(this).height();
+                    let thisHeight = $(this).height();
                     if(thisHeight > tallest) {
                             tallest = thisHeight;
                     }
@@ -173,10 +162,10 @@
                 //        example 1: parse_url('http://username:password@hostname/path?arg=value#anchor');
                 //        returns 1: {scheme: 'http', host: 'hostname', user: 'username', pass: 'password', path: '/path', query: 'arg=value', fragment: 'anchor'}
 
-                var str         = oParams.uri, 
+                let str         = oParams.uri, 
                     component   = oParams.component;
 
-                var query, key = ['source', 'scheme', 'authority', 'userInfo', 'user', 'pass', 'host', 'port', 'relative', 'path', 'directory', 'file', 'query', 'fragment' ],
+                let query, key = ['source', 'scheme', 'authority', 'userInfo', 'user', 'pass', 'host', 'port', 'relative', 'path', 'directory', 'file', 'query', 'fragment' ],
                     ini = (this.php_js && this.php_js.ini) || {},
                     mode = (ini['phpjs.parse_url.mode'] &&
                         ini['phpjs.parse_url.mode'].local_value) || 'php',
@@ -185,7 +174,7 @@
                                 strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
                                 loose: /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/\/?)?((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/ // Added one optional slash to post-scheme to catch file:/// (should restrict this)
                         };
-                        var m = parser[mode].exec(str),
+                        let m = parser[mode].exec(str),
                         uri = {},
                         i = 14;
                         while (i--) {
@@ -199,7 +188,7 @@
                         .toLowerCase()];
                 }
                 if (mode !== 'php') {
-                var name = (ini['phpjs.parse_url.queryKey'] &&
+                let name = (ini['phpjs.parse_url.queryKey'] &&
                         ini['phpjs.parse_url.queryKey'].local_value) || 'queryKey';
                         parser = /(?:^|&)([^&=]*)=?([^&]*)/g;
                         uri[name] = {};
@@ -228,7 +217,7 @@
             
             return this.each(function(){
 
-                var $this = $(this);
+                let $this = $(this);
                 
                     $this.css('opacity', 0)
                     .removeClass('hide')
@@ -251,7 +240,7 @@
             
             return this.each(function(){
 
-                var $this = $(this);
+                let $this = $(this);
                 
                     $this.animate({opacity: 0}, baseTime, callback);               
                
@@ -270,14 +259,14 @@
          */
         open : function ( callback ) {
             
-            var fnCallback = (typeof callback === 'function') ? callback : null;
+            let fnCallback = (typeof callback === 'function') ? callback : null;
             
             return this.each(function(){
                 
-                var $this = $(this);
+                let $this = $(this);
                 
                 $this.removeClass( 'hide' );
-                var height = parseInt( $this.prop('scrollHeight'), 10 );
+                let height = parseInt( $this.prop('scrollHeight'), 10 );
 
                 $this
                     .css( 'opacity' , 0 )
@@ -314,7 +303,7 @@
                 
             return this.each(function(){
                 
-                var $this = $(this);
+                let $this = $(this);
                 
                 return $this.css('overflow', 'hidden').animate({
                         'opacity': 0
@@ -333,7 +322,7 @@
          * Insert elegantly inserts content into a container (target) 
          * based on the oParams set.
          * 
-         * var oMessage = { 
+         * let oMessage = { 
          *      content       : '',
          *      removeClick   : false,
          *      removeTimeout : 0
@@ -344,16 +333,16 @@
          */
         insert : function( oParams ) { 
 
-            var callback = (typeof oParams.callback == 'function') 
+            let callback = (typeof oParams.callback == 'function') 
                 ? oParams.callback 
                 : null;
 
             return this.each(function(){
-                var $this = $(this);
+                let $this = $(this);
 
                 // Get the current height of the parent container element 
-                // var parentHeight = parseInt($this.innerHeight(), 10) + 1;
-                var parentHeight = $this.innerHeight();
+                // let parentHeight = parseInt($this.innerHeight(), 10) + 1;
+                let parentHeight = $this.innerHeight();
                 
                 // console.log( parentHeight );
                 
@@ -361,16 +350,16 @@
                 $this.css('height', parentHeight).css('overflow', 'auto');
 
                 // Create and insert the content
-                var $content = $( oParams.content )
+                let $content = $( oParams.content )
                         .css('opacity', 0)
                         .appendTo( $this );
 
                 // Calculate what the total height of the container needs to be
-                // var containerHeight = parentHeight + parseInt($content.outerHeight(), 10);
-                var minHeight = parseInt( $this.css('min-height'), 10 );
+                // let containerHeight = parentHeight + parseInt($content.outerHeight(), 10);
+                let minHeight = parseInt( $this.css('min-height'), 10 );
                 
                 $this.css('height', 'auto');
-                var containerHeight = $this.innerHeight();
+                let containerHeight = $this.innerHeight();
                 
                 // console.log( containerHeight );
                 
@@ -429,15 +418,15 @@
 
             return this.each(function(){
                 
-                var $content = $(this);
-                var contentHeight = $content.outerHeight();
+                let $content = $(this);
+                let contentHeight = $content.outerHeight();
                     
-                var $parent  = $content.parent();
-                var parentHeight = $parent.innerHeight();
+                let $parent  = $content.parent();
+                let parentHeight = $parent.innerHeight();
 
-                var height = parseInt(parentHeight - contentHeight, 10);
-                var adjustedHeight = ($parent.children().length > 0 ) ? height : 1;
-                var minHeight = parseInt( $parent.css('min-height'), 10 );
+                let height = parseInt(parentHeight - contentHeight, 10);
+                let adjustedHeight = ($parent.children().length > 0 ) ? height : 1;
+                let minHeight = parseInt( $parent.css('min-height'), 10 );
                 
                 adjustedHeight = ( minHeight > 0 ) ? minHeight : adjustedHeight;
                 
@@ -472,7 +461,7 @@
           
             return this.each(function(){
                 
-                var $target = $(this);
+                let $target = $(this);
                 
                 // fade out all the kids
                 if ($target.children().length > 0) {
@@ -531,7 +520,7 @@
          * there is no margin on the content_parent for a more smooth 
          * animation.
          * 
-         * var oMessage = { 
+         * let oMessage = { 
          *      out      : content_parent,
          *      in       : content_parent,
          *      callback : function
@@ -540,15 +529,15 @@
          */
         switch : function ( oParams ) {
           
-            var callback = (typeof oParams.callback === 'function') 
+            let callback = (typeof oParams.callback === 'function') 
                 ? oParams.callback 
                 : null;
           
             return this.each(function(){
                 
-                var $target = $(this);
-                var $out    = $(oParams.out);
-                var $in     = $(oParams.in);
+                let $target = $(this);
+                let $out    = $(oParams.out);
+                let $in     = $(oParams.in);
                 
                 // Set the parent height so it doesn't change 
                 // height when the out content is hidden
@@ -569,8 +558,8 @@
                     $in.removeClass('hide');
 
                     // Calculate what the total height of the incoming container
-                    var minHeight = parseInt($in.css('min-height'), 10);
-                    var containerHeight = 0;
+                    let minHeight = parseInt($in.css('min-height'), 10);
+                    let containerHeight = 0;
 
                     containerHeight = $in.outerHeight()
                             + parseInt($in.css('margin-top'), 10)

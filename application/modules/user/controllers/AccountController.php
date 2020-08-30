@@ -1,6 +1,6 @@
 <?php
 
-class User_IndexController extends Tiger_Controller_Action
+class User_AccountController extends Tiger_Controller_Action
 {
 
     public function init ( )
@@ -13,6 +13,7 @@ class User_IndexController extends Tiger_Controller_Action
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/plugins/select2/js/select2.full.min.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerForm.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerPassword.js' ) );
 
     }
 
@@ -58,10 +59,10 @@ class User_IndexController extends Tiger_Controller_Action
         // **************************************************************************************************
 
         //                               : The data is added in the <head> section of the page
-        $one->author                     = 'pixelcave';
+        $one->author                     = 'WebTIGERS';
         $one->robots                     = 'noindex, nofollow';
-        $one->title                      = 'OneUI - Bootstrap 4 Admin Template &amp; UI Framework';
-        $one->description                = 'OneUI - Bootstrap 4 Admin Template &amp; UI Framework created by pixelcave and published on Themeforest';
+        $one->title                      = 'Tiger - Development Platform';
+        $one->description                = 'Tiger - Push button. Get Application. The easiest way to jumpstart your application development.';
 
         //                               : The url of your site, used in Open Graph Meta Data (eg 'https://example.com')
         $one->og_url_site                = '';

@@ -39,7 +39,7 @@ class Tiger_Validate_Csrf extends Zend_Validate_Abstract
         // zd( array( $value, $context, $this->allowEmpty ) );
         
         $this->_setValue( $value );
-        $sessionToken = Zend_Registry::get('session')->get('csrfToken');
+        $sessionToken = Zend_Registry::get('Zend_Session')->get('csrfToken');
 
         if ( $this->allowEmpty === false && empty( $value ) ) {
             $this->_error( self::MSG_EMPTY_TOKEN );

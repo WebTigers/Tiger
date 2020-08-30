@@ -17,11 +17,10 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
      */
     public function preDispatch( Zend_Controller_Request_Abstract $request )
     {
+        /** We only want this running once in the startup loop. */
         if ( $this->_hasRun === true ) {
             return;
         }
-
-        // pr( $request );
 
         $this->_acl = Zend_Registry::get('Zend_Acl');
         $this->_auth = Zend_Auth::getInstance();
@@ -59,7 +58,7 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
             // Elegantly handle not allowed with a redirect to the login page.
 
             // Remember where we were going to we can send the user back there once they login.
-            Zend_Registry::get('Session')->aclRequest = $this->_request;
+            Zend_Registry::get('Zend_Session')->aclRequest = $this->_request;
 
             $this->redirect('/login');
 

@@ -306,12 +306,13 @@ class User_Form_Signup extends Tiger_Form_Base
 
     protected function _getPassword ( ) {
 
-//        $configs = $this->_config->password->toArray();
-//
-//        $configs['labels'][0] = $this->_translate->_('form.signup.password.0');
-//        $configs['labels'][1] = $this->_translate->_('form.signup.password.1');
-//        $configs['labels'][2] = $this->_translate->_('form.signup.password.2');
-//        $configs['labels'][3] = $this->_translate->_('form.signup.password.3');
+        // Get the password strength configs and update them with translated labels
+        $configs = $this->_config->password->toArray();
+
+        $configs['labels'][0] = $this->_translate->translate('PASSWORD.WEAK');
+        $configs['labels'][1] = $this->_translate->translate('PASSWORD.FAIR');
+        $configs['labels'][2] = $this->_translate->translate('PASSWORD.GOOD');
+        $configs['labels'][3] = $this->_translate->translate('PASSWORD.STRONG');
 
         $name = 'password';
 
@@ -319,17 +320,17 @@ class User_Form_Signup extends Tiger_Form_Base
 
             'name'          =>  $name,
             'id'            =>  $name,
-            'class'         =>  'form-control form-control-lg form-control-alt password-strength',
+            'class'         =>  'form-control form-control-lg form-control-alt tiger-password-strength',
 
             'attribs'       =>  [
                                     'placeholder'       =>  $this->_translate->translate( 'PASSWORD' ),
                                     'data-valid'        => '0',
                                     'autocomplete'      => 'off',
-                                    // 'data-requirements' => json_encode( $configs ),
+                                    'data-requirements' => json_encode( $configs ), // <-- configs get added to the control
                                 ],
 
             'label'         =>  'LABEL.PASSWORD',
-            'description'   =>  'DESCRIPTION.PASSWORD',
+            'description'   =>  'PASSWORD.DESCRIPTION', // <-- this is a special template that needs to be set in translations
 
             'required'      =>  true,
 
@@ -377,8 +378,8 @@ class User_Form_Signup extends Tiger_Form_Base
             'id'            =>  $name,
             'class'         =>  'form-control form-control-lg form-control-alt password-strength',
             'attribs'       =>  [
-                                    'data-valid'    => '0',
                                     'placeholder'   =>  $this->_translate->translate( 'EMAIL' ),
+                                    'data-valid'    => '0',
                                 ],
 
             'label'         =>  'LABEL.EMAIL',
@@ -395,8 +396,8 @@ class User_Form_Signup extends Tiger_Form_Base
                                         'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
                                     ] ],
                                     [ 'StringLength', false, [
-                                        'min' => 1,
-                                        'max' => 50,
+                                        'min' => 5,
+                                        'max' => 100,
                                         'messages' => [
                                             Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                             Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
@@ -411,15 +412,15 @@ class User_Form_Signup extends Tiger_Form_Base
                                     ] ],
                                     [ 'EmailAddress', false, [
                                         'messages' => [
-                                            Zend_Validate_EmailAddress::INVALID            => "Invalid type.",
-                                            Zend_Validate_EmailAddress::INVALID_FORMAT     => "Invalid email address format.",
-                                            Zend_Validate_EmailAddress::INVALID_HOSTNAME   => "Invalid email hostname.",
-                                            Zend_Validate_EmailAddress::INVALID_MX_RECORD  => "Invalid host MX record.",
-                                            Zend_Validate_EmailAddress::INVALID_SEGMENT    => "Invalid address segments.",
-                                            Zend_Validate_EmailAddress::DOT_ATOM           => "Invalid email address.t",
-                                            Zend_Validate_EmailAddress::QUOTED_STRING      => "Invalid email address.",
-                                            Zend_Validate_EmailAddress::INVALID_LOCAL_PART => "Invalid email address.",
-                                            Zend_Validate_EmailAddress::LENGTH_EXCEEDED    => "Email length is too long.",
+                                            // Zend_Validate_EmailAddress::INVALID            => "Invalid type.",
+                                            Zend_Validate_EmailAddress::INVALID_FORMAT     => "ERROR.EMAIL_INVALID_FORMAT",
+                                            Zend_Validate_EmailAddress::INVALID_HOSTNAME   => "ERROR.EMAIL_INVALID_HOSTNAME",
+                                            // Zend_Validate_EmailAddress::INVALID_MX_RECORD  => "Invalid host MX record.",
+                                            // Zend_Validate_EmailAddress::INVALID_SEGMENT    => "Invalid address segments.",
+                                            Zend_Validate_EmailAddress::DOT_ATOM           => "ERROR.EMAIL_INVALID_USER",
+                                            // Zend_Validate_EmailAddress::QUOTED_STRING      => "Invalid email address.",
+                                            // Zend_Validate_EmailAddress::INVALID_LOCAL_PART => "Invalid email address.",
+                                            // Zend_Validate_EmailAddress::LENGTH_EXCEEDED    => "Email length is too long.",
                                         ],
                                     ] ],
                                 ]
@@ -510,10 +511,7 @@ class User_Form_Signup extends Tiger_Form_Base
 
            'label'             =>  'LABEL.ACCEPT_TERMS',
 
-           // 'description'       =>  'DESCRIPTION.ACCEPT_TERMS',
-
            'checkedValue'      =>  '1',
-           'uncheckedValue'    =>  '0',
 
            'required'          =>  true,
 
@@ -523,6 +521,7 @@ class User_Form_Signup extends Tiger_Form_Base
 
            'validators'        =>  [
                                         [ 'NotEmpty', false, [
+                                            Zend_Validate_NotEmpty::ALL,
                                             'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
                                         ] ],
                                         [ 'Digits', false, [

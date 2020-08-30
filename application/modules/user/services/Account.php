@@ -1,7 +1,12 @@
 <?php
 
-final class Core_Service_Validate {
-
+/**
+ * 
+ */
+class User_Service_Account
+{
+    protected $_auth;
+    protected $_acl;
     protected $_locale;
     protected $_translate;
     protected $_config;
@@ -12,19 +17,23 @@ final class Core_Service_Validate {
 
     public function __construct( $input ) {
 
-        $this->_locale      = Zend_Registry::get('Zend_Locale');
-        $this->_translate   = Zend_Registry::get('Zend_Translate');
-        $this->_config      = Zend_Registry::get('Zend_Config');
-        $this->_response    = new Core_Model_ResponseObject();
+        pr( $input );
+
+        $this->_auth                    = Zend_Auth::getInstance();
+        $this->_acl                     = Zend_Registry::get('Zend_Acl');
+        $this->_locale                  = Zend_Registry::get('Zend_Locale');
+        $this->_translate               = Zend_Registry::get('Zend_Translate');
+        $this->_config                  = Zend_Registry::get('Zend_Config');
+        $this->_response                = new Core_Model_ResponseObject();
 
         if ( $input instanceof Zend_Controller_Request_Http ) {
             $this->_request = $input;
             $params = $this->_request->getParams();
-        }
+        } 
         elseif ( is_array($input) ) {
             $params = $input;
         }
-
+        
         if ( ! isset( $this->_reflection ) ) {
             $this->_reflection = new ReflectionClass( $this );
         }
@@ -32,13 +41,13 @@ final class Core_Service_Validate {
         if ( isset( $params['form'] ) && class_exists( $params['form'], true ) ) {
             $this->_form = new $params['form'];
         }
-
+        
         $this->_dispatch( $params );
-
+        
     }
 
     // Common Class Functions //
-
+    
     /**
      * If this service is called via the API, the dispatch
      * method will route the $params to the proper function.
@@ -47,27 +56,27 @@ final class Core_Service_Validate {
     private function _dispatch ( $params ) {
 
         try {
-
+            
             if ( isset( $params['method'] ) ) {
 
                 // filter the method to just camelCase alphaNumeric for security
-                $method = Zend_Filter::filterStatic( $params['method'],
-                    'PregReplace', array('match' => '/[^A-Za-z0-9]/', 'replace' => '') );
+                $method = Zend_Filter::filterStatic( $params['method'], 
+                        'PregReplace', array('match' => '/[^A-Za-z0-9]/', 'replace' => '') );
 
                 // make sure the method exists and that it's public
                 if ( method_exists( $this, $method ) &&
-                    $this->_reflection->getMethod( $method )->isPublic() ) {
-                    $this->{$method}( $params );
+                        $this->_reflection->getMethod( $method )->isPublic() ) {
+                            $this->{$method}( $params );
                 }
             }
         }
-
+        
         catch ( Exception $e ) {
 
             // @TODO Need to log this
 
         }
-
+        
     }
 
     /**
@@ -93,58 +102,14 @@ final class Core_Service_Validate {
         $this->_response->error         = $form->getErrors();
 
     }
-    
-    /**
-     * Validate Field
-     * 
-     * @param array $params
-     * @return object ResponseObject 
-     */
-    public function element ( Array $params ) {
-        
-        $element = $this->_form->getElement( $params['element'] );
-
-        if ( $element instanceof Zend_Form_Element ) {
-
-            if ($element->isValid($params['value'], $params)) {
-
-                // Sends an empty response
-                $this->_response->result = 1;
-                $this->_response->form = $this->_form->getName();
-                $this->_response->element = $params['element'];
-                $this->_response->messages = [];
 
 
-            } else {
+    // Public Functions //
 
-                // Invalid Entry //
+    public function signup ( $params ) {
 
-                $this->_setElementMessages($element);
+        pr( $params );
 
-                $this->_response->result = 0;
-                $this->_response->form = $this->_form->getName();
-                $this->_response->element = $params['element'];
-
-            }
-
-        }
-        
-    }
-
-    /**
-     *
-     * @param Zend_Form_Element $element
-     * @return \Core_Model_MessageObject
-     */
-    protected function _setElementMessages ( Zend_Form_Element $element ) {
-
-        $messages = $element->getMessages();
-
-        foreach ( $messages as $error => $message ) {
-
-            $this->_response->messages[] = new Core_Model_MessageObject( $message, 'error', $error );
-
-        }
 
     }
 

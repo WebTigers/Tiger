@@ -11,7 +11,7 @@ class User_Bootstrap extends Zend_Application_Module_Bootstrap
          * to the global config object based on the application environment.
          */
 
-        $Config = Zend_Registry::get( 'Config' );
+        $Config = Zend_Registry::get( 'Zend_Config' );
 
         /** Return an array of only .ini config files from the /configs folder */
         $configFiles = preg_grep('/.*\.(ini)/', scandir( realpath(dirname(__FILE__) . '/configs' ) ) );
@@ -22,7 +22,7 @@ class User_Bootstrap extends Zend_Application_Module_Bootstrap
             $Config->merge( $configOptions );
         }
 
-        Zend_Registry::set( 'Config', $Config );
+        Zend_Registry::set( 'Zend_Config', $Config );
 
     }
 

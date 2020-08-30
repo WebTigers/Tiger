@@ -9,7 +9,7 @@ abstract class Tiger_Controller_Action extends Zend_Controller_Action {
         
         parent::init();
         
-        // $this->_config          = Zend_Registry::get( 'Config' );
+        // $this->_config          = Zend_Registry::get( 'Zend_Config' );
         // $this->_translate       = Zend_Registry::get( 'Zend_Translate' );
 
     }

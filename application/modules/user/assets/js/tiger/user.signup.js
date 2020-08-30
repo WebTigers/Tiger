@@ -6,9 +6,8 @@
     
     let Class = {
         
-        // Class Plugin Vars //
+        // Class Plugin lets //
         captcha : null,
-        validateAjax : [],
 
         init : function( ) {
 
@@ -16,7 +15,6 @@
 
                 // Page init stuff goes here. //
                 Class._initSignupForm();
-                $().tigerForm('initAutoValidate');
 
             });
 
@@ -25,25 +23,13 @@
         // Signup Functions //
 
         _initSignupForm : function () {
-            
-            // Init Select2 Rich Select Controls
+
+            // Init Select2 Controls
             $( '#type_hearabout' ).select2({
                 minimumResultsForSearch: -1
             });
 
-            // $( '#signup #password' )
-            //     .tigerForm( 'initPasswordStrength' )
-            //     .tooltip({
-            //         placement   : 'left',
-            //         title       : $('#password-tooltip-html').html(),
-            //         html        : true,
-            //         trigger     : 'manual',
-            //         container   : '#password-tooltip'
-            //     });
-            // $( '#signup #password' ).on( 'focus', function(){ $(this).tooltip('show'); $( '#signup #password' ).tigerForm( 'validatePasswordStrength' ); });
-            // $( '#signup #password' ).on( 'blur', function(){ $(this).tooltip('hide'); });
-            //
-            // $('#signup #first_name').focus();
+            $('#first_name').focus();
 
             // if ( ! reCaptchaSignup ) {
             //     reCaptchaSignup = grecaptcha.render('reCaptchaSignup', {
@@ -54,6 +40,8 @@
             //         theme: 'dark'
             //     });
             // }
+
+            $('#signup-button').on( 'click', Class._submitForm );
 
         },
         
@@ -73,24 +61,6 @@
 
             }
             
-        },
-
-        _getSignupData : function () {
-
-            return {
-                first_name      : $('#signup #first_name').val(),
-                last_name       : $('#signup #last_name').val(),
-                company_name    : $('#signup #company_name').val(),
-                username        : $('#signup #username').val(),
-                password        : $('#signup #password').val(),
-                email           : $('#signup #email').val(),
-                type_hearabout  : $('#signup #type_hearabout').select2('val'),
-                recaptcha       : $('#signup #reCaptchaSignup .g-recaptcha-response').val(),
-                service         : 'Account',
-                method          : 'clientsignup',
-                form            : 'Signup'
-            };
-
         },
 
         _submitForm : function ( event ) {
@@ -128,9 +98,9 @@
                     // Signup Error //
                     
                     enableElements();
-                    grecaptcha.reset( reCaptchaSignup );
+                    // grecaptcha.reset( reCaptchaSignup );
                     
-                    var oMessage = { 
+                    let oMessage = { 
                         content       : data.html[0],
                         removeClick   : true,
                         removeTimeout : 0
@@ -168,10 +138,10 @@
             function error ( jqXHR, textStatus, errorThrown ) { 
 
                 enableElements();
-                grecaptcha.reset( reCaptchaSignup );
+                // grecaptcha.reset( reCaptchaSignup );
                 
                 // show general error message
-                var oMessage = { 
+                let oMessage = { 
                     content       : '<div class="alert alert-danger"><i class="fa fa-ban"></i> &nbsp;' + errorThrown + '</div>',
                     removeClick   : true,
                     removeTimeout : 0
@@ -181,19 +151,26 @@
                 
             };
 
-            // console.log( oMethods._getSignupData()  );
+            /** API params tell Tiger what service will be processing the data. */
+            let apiParams = {
+                service : 'user:account',
+                method  : 'signup'
+            };
+
+            /** Note that our API params will be added to the form data */
+            let data = $('#page-signup-form').tigerForm('getFormValues', apiParams );
 
             $.ajax({
                 type        : "POST",
-                url         : "/ajax",
+                url         : "/api",
                 dataType    : "json",
-                data        : oMethods._getSignupData(),
+                data        : data,
                 beforeSend  : disableElements,
                 success     : success,
                 error       : error
             });
             
-        },
+        }
 
     };
   
