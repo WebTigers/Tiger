@@ -31,6 +31,27 @@ class Tiger_Form_Base extends Zend_Form
 
     }
 
+    public function isValid ( $data ) {
+
+        $remove = [
+            'module' => null,
+            'controller' => null,
+            'action' => null,
+            'service' => null,
+            'method' => null,
+            'form' => null,
+        ];
+
+        $newData = array_diff_key( $data, $remove );
+
+        return parent::isValid( $newData );
+
+    }
+
+    public function isValidPreserve ( $data ) {
+        return parent::isValid( $data );
+    }
+
     protected function _addFormElements ( )
     {
         /** This will usually be overridden with an extension class. */

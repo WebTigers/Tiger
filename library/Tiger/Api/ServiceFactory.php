@@ -67,22 +67,28 @@ class Tiger_Api_ServiceFactory {
             {
 
                 /**
+                 * HOW TIGER SERVICES WORK:
+                 *
                  * This is where all the magic happens. The service class is called dynamically with
-                 * all of the params it will need to forward the parameter payload to the proper method.
+                 * all of the params it will need to forward the params payload to the proper method.
                  * The class method (function) will run automagically based on the method name passed into
-                 * the class' constructor. The method will perform all of its tasks and then set the standard
-                 * responseObject within the class. All of this happens before the class is returned as the
-                 * $service var! All that is necessary now is for us to gather the response from the service.
+                 * the class' constructor. The method will then perform all of its tasks and then set the
+                 * standard responseObject within the class. All of this happens before the class is returned
+                 * as the $service var!
+                 *
+                 * All that is necessary now is for us to gather the response from the $service instance.
+                 *
                  * The API controller will then gather the responseObject from this service factory and return
                  * it to the view as a JSON response.
-                 *
+                 */
+
+                /**
                  * In PHP 7.x, fatal errors are not caught by the exception handler. Wrapping this call in
                  * a try/catch for errors prevents the API from displaying the error page.
                  */
                 try {
 
                     $service = new $this->_serviceClass( $this->_params );
-                    // $service = new $this->_service($this->_params);
                     $this->_response = $service->getResponse();
 
                 }

@@ -29,7 +29,7 @@ class User_Form_Signup extends Tiger_Form_Base
         $this->addElement( $this->_getPassword() );
         $this->addElement( $this->_getEmail() );
         $this->addElement( $this->_getTypeHearAbout() );
-        $this->addElement( $this->_getReCaptcha() );
+        // $this->addElement( $this->_getReCaptcha() );
         $this->addElement( $this->_getTerms() );
 
     }
@@ -464,7 +464,7 @@ class User_Form_Signup extends Tiger_Form_Base
                                         'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "Required." ]
                                     ] ],
                                     [ 'Regex', false, [
-                                        'pattern'   => '/^[A-Za-z0-9_/-/.]+$/',
+                                        'pattern'   => '/^[A-Za-z0-9_\-\.]+$/',
                                         'messages'  => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                     ] ],
 

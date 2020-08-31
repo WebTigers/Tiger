@@ -25,6 +25,16 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         Zend_Registry::set( 'Zend_Config', $config );
 
 
+        /** Set a Guest User Id that tries to persist the same across all visits. */
+        $guest_user_id = ( isset( $_COOKIE['TID'] ) )
+            ? $_COOKIE['TID']
+            : Tiger_Utility_Uuid::v1();
+        setcookie('TID', $guest_user_id, time() + (3600 * 24 * 365));
+        Zend_Registry::set('TID', $guest_user_id);
+        defined('GUEST_USER_ID')
+            || define('GUEST_USER_ID', $guest_user_id);
+
+
         /**
          * AWS General Access Keys
          * These constants will be automagically recognized by the

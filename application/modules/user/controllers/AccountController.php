@@ -17,33 +17,6 @@ class User_AccountController extends Tiger_Controller_Action
 
     }
 
-    public function indexAction ( )
-    {
-
-    }
-
-    public function signupAction ( )
-    {
-        /** Set the layout path to use the core layout instead of the default user module layout. */
-        Zend_Layout::getMvcInstance()->setLayoutPath(CORE_MODULE_PATH . '/layouts/scripts');
-
-        /** Add the signup page JS plugin. */
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/user/js/tiger/user.signup.js' ) );
-
-        /** Set the OneUI theme vars. */
-        $this->view->one = $this->_setThemeVars();
-
-        $this->view->signupForm = new User_Form_Signup();
-
-    }
-
-    public function login ( )
-    {
-
-        pr( $this->getRequest() );
-
-    }
-
     protected function _setThemeVars ( ) {
 
         // **************************************************************************************************
@@ -191,6 +164,50 @@ class User_AccountController extends Tiger_Controller_Action
         $one->main_nav                   = array();
 
         return $one;
+
+    }
+
+
+    ### Public Actions ###
+
+    public function indexAction ( )
+    {
+        $this->forward('dashboard');
+    }
+
+    public function signupAction ( )
+    {
+        /** Set the layout path to use the core layout instead of the default user module layout. */
+        Zend_Layout::getMvcInstance()->setLayoutPath(CORE_MODULE_PATH . '/layouts/scripts');
+
+        /** Add the signup page JS plugin. */
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/user/js/tiger/user.signup.js' ) );
+
+        /** Set the OneUI theme vars. */
+        $this->view->one = $this->_setThemeVars();
+
+        $this->view->signupForm = new User_Form_Signup();
+
+    }
+
+    public function loginAction ( )
+    {
+
+        pr( $this->getRequest() );
+
+    }
+
+    public function verifyAction ( )
+    {
+
+        pr( $this->getRequest() );
+
+    }
+
+    public function dashboardAction ( )
+    {
+
+        pr( $this->getRequest() );
 
     }
 

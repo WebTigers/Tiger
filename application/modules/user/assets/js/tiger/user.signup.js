@@ -93,39 +93,39 @@
 
                     window.location = '/account/dashboard';
 
-                } else {
+                }
+                else {
 
                     // Signup Error //
                     
                     enableElements();
                     // grecaptcha.reset( reCaptchaSignup );
                     
-                    let oMessage = { 
-                        content       : data.html[0],
-                        removeClick   : true,
-                        removeTimeout : 0
-                    };
-
-                    $( '#form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
-                    
-                    // show element error messages & flag tabs with errors
-                    if ( data.form ) {
+                    // show element error messages
+                    if ( data.messages ) {
 
                         let msgData = {
-                            form : 'Signup',
+                            result : 0,
+                            form : 'User_Form_Signup',
                             element : null,
                             messages : []
                         };
 
-                        $.each(data.form, function (el, msg) {
+                        $.each( data.messages, function ( el, msgObj ) {
+
+                            // console.log( el, msgObj );
 
                             msgData.element = el;
+                            msgData.messages = [];
 
-                            $.each( msg, function (errName, errMsg) {
+                            $.each( msgObj, function (errName, errMsg) {
+                                console.log( errName, errMsg );
                                 msgData.messages.push( {message: errMsg, error: errName, class: "alert"} );
                             });
 
-                            oMethods._setElementMessage( msgData );
+                            // console.log( msgData );
+
+                            $().tigerForm('_setElementMessage', msgData );
 
                         });
 
