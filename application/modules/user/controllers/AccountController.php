@@ -6,7 +6,7 @@ class User_AccountController extends Tiger_Controller_Action
     public function init ( )
     {
         /** Set any custom CSS files you might have. These can also be set statically in the layout. */
-        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/css/custom/tiger.css' ) );
+        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/core/css/oneui/custom/tiger.css' ) );
         $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/js/plugins/select2/css/select2.min.css' ) );
 
         /** Set any custom JS files you might have. These can also be set statically in the layout. */
