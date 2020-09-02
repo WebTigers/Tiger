@@ -25,10 +25,6 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         Zend_Registry::set( 'Zend_Config', $config );
 
 
-        /** Theme Namespace Autoloading */
-        $loader = Zend_Loader_Autoloader::getInstance();
-        $loader->registerNamespace('Oneui');
-
         /** Set a Guest User Id that tries to persist the same across all visits. */
         $guest_user_id = ( isset( $_COOKIE['TID'] ) )
             ? $_COOKIE['TID']
