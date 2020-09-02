@@ -24,6 +24,10 @@ defined('ASSETS_PATH')
 defined('MODULES_PATH')
     || define('MODULES_PATH', realpath(dirname(__FILE__) . '/application/modules'));
 
+// Define path to modules directory
+defined('THEMES_PATH')
+    || define('THEMES_PATH', realpath(dirname(__FILE__) . '/application/themes'));
+
 // Define path to application directory
 defined('CORE_MODULE_PATH')
     || define('CORE_MODULE_PATH', realpath(dirname(__FILE__) . '/application/modules/core'));

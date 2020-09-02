@@ -121,7 +121,7 @@ class ErrorController extends Zend_Controller_Action
         // **************************************************************************************************
 
         // : Name, version and assets folder's name
-        $one = new Core_Service_Template('Tiger', '2.0', '/assets/core');
+        $one = new Oneui_Service_Template('Tiger', '2.0', '/assets/oneui');
 
 
         // **************************************************************************************************

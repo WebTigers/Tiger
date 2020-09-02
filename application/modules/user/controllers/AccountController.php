@@ -6,14 +6,25 @@ class User_AccountController extends Tiger_Controller_Action
     public function init ( )
     {
         /** Set any custom CSS files you might have. These can also be set statically in the layout. */
-        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/core/css/custom/tiger.css' ) );
-        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/core/js/plugins/select2/css/select2.min.css' ) );
+        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/css/custom/tiger.css' ) );
+        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/js/plugins/select2/css/select2.min.css' ) );
 
         /** Set any custom JS files you might have. These can also be set statically in the layout. */
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/plugins/select2/js/select2.full.min.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/plugins/select2/js/select2.full.min.js' ) );
+
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerForm.js' ) );
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerPassword.js' ) );
+
+        /** Set the layout path to use the core layout instead of the default user module layout. */
+        # Zend_Layout::getMvcInstance()->setLayoutPath(CORE_MODULE_PATH . '/layouts/scripts');
+
+        $this->view->theme = 'oneui';
+
+        /** Set the layout path to use the core layout instead of the default user module layout. */
+        Zend_Layout::getMvcInstance()->setLayoutPath(MODULES_PATH .'/'. $this->view->theme . '/layouts/scripts');
+
+        /** Set the OneUI theme vars. */
+        $this->view->one = $this->_setThemeVars();
 
     }
 
@@ -24,7 +35,7 @@ class User_AccountController extends Tiger_Controller_Action
         // **************************************************************************************************
 
         // : Name, version and assets folder's name
-        $one = new Core_Service_Template('Tiger', '2.0', '/assets/core');
+        $one = new Oneui_Service_Template('Tiger', '2.0', '/assets/oneui');
 
 
         // **************************************************************************************************
@@ -177,40 +188,43 @@ class User_AccountController extends Tiger_Controller_Action
 
     public function signupAction ( )
     {
-        /** Set the layout path to use the core layout instead of the default user module layout. */
-        Zend_Layout::getMvcInstance()->setLayoutPath(CORE_MODULE_PATH . '/layouts/scripts');
+        // pr( THEMES_PATH . '/' . $this->view->theme . '/layouts/scripts' );
+
+
+        /** Add the tigerPassword widget. */
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/tiger/tigerPassword.js' ) );
 
         /** Add the signup page JS plugin. */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/user/js/tiger/user.signup.js' ) );
 
-        /** Set the OneUI theme vars. */
-        $this->view->one = $this->_setThemeVars();
-
         $this->view->signupForm = new User_Form_Signup();
+
+    }
+
+    public function welcomeAction ( ) {
+
+
 
     }
 
     public function loginAction ( )
     {
 
-        pr( $this->getRequest() );
-
     }
 
     public function verifyAction ( )
     {
 
-        pr( $this->getRequest() );
-
     }
 
     public function dashboardAction ( )
     {
+        /** Reset the layout path to use the admin layout instead of the default user module layout. */
+        Zend_Layout::getMvcInstance()->setLayoutPath(MODULES_PATH . '/admin/layouts/scripts');
 
         pr( $this->getRequest() );
 
     }
-
 
 }
 

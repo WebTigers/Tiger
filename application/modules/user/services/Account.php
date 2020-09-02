@@ -142,6 +142,8 @@ class User_Service_Account
          * data already added, like create_date, create_user, etc.
          */
         $userRow = $userModel->createNewRow( $data );
+
+        /** Update the relevant pieces with system data. */
         $userRow->user_id = GUEST_USER_ID;
         $userRow->role = self::ROLE_NEWUSER;
         $userRow->password = Tiger_Utility_Cryption::hash( $userRow->password );
