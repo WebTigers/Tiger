@@ -4,7 +4,8 @@ class Core_Model_Config extends Zend_Db_Table_Abstract {
     
     protected $_name    = 'config';
     protected $_primary = 'config_id';
-    
+    protected $_rowClass = 'Tiger_Db_Table_Row';
+
     public function init ( ) {
 
     }

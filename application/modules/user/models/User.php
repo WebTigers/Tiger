@@ -1,10 +1,11 @@
 <?php
 
-class User_Model_User extends Core_Model_Base
+class User_Model_User extends Zend_Db_Table_Abstract
 {
-    protected $_name    = 'user';
-    protected $_primary = 'user_id';
-    
+    protected $_name        = 'user';
+    protected $_primary     = 'user_id';
+    protected $_rowClass    = 'Tiger_Db_Table_Row';
+
     /**
      * @param $user_id
      * @return Zend_Db_Table_Row_Abstract|null
@@ -25,17 +26,28 @@ class User_Model_User extends Core_Model_Base
      */
     public function getUserByIdentity( $identity )
     {
-        /** returns a Zend Rowset that we convert into an array of data */
+        /** This needs to join with the org table so that we make sure the org is active too. */
 
         $sql = $this->
             select()->
-            where('( user_id = ?', $identity)->
-            orWhere('username = ?', $identity)->
-            orWhere('email = ? )', $identity)->
-            where('active = 1')->
-            where('deleted = 0');
+            from( [ 'ou' => 'org_user'], [] )->
+            joinLeft( [ 'o' => 'org'], 'o.org_id = ou.org_id', ['o.*'] )->
+            joinLeft( [ 'u' => 'user'], 'u.user_id = ou.user_id', ['u.*'] )->
 
-        return $this->fetchAll($sql);
+            where('( u.user_id = ?', $identity)->
+            orWhere('u.username = ?', $identity)->
+            orWhere('u.email = ? )', $identity)->
+
+            where('ou.active = 1')->
+            where('ou.deleted = 0')->
+
+            where('u.active = 1')->
+            where('u.deleted = 0')->
+
+            where('o.active = 1')->
+            where('o.deleted = 0');
+
+        return $this->fetchRow($sql);
 
     }
 

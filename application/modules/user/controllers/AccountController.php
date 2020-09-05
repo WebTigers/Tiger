@@ -188,8 +188,6 @@ class User_AccountController extends Tiger_Controller_Action
 
     public function signupAction ( )
     {
-        // pr( THEMES_PATH . '/' . $this->view->theme . '/layouts/scripts' );
-
 
         /** Add the tigerPassword widget. */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/tiger/tigerPassword.js' ) );

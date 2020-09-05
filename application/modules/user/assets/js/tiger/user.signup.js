@@ -100,7 +100,19 @@
                     
                     enableElements();
                     // grecaptcha.reset( reCaptchaSignup );
-                    
+
+                    if ( data.html ) {
+
+                        $('#page-signup-form .form-message')
+                            .css('overflow', 'hidden')
+                            .tigerDOM('insert', {
+                                content: data.html[0],
+                                removeClick: true,
+                                removeTimeout: 0
+                            });
+
+                    }
+
                     // show element error messages
                     if ( data.messages ) {
 

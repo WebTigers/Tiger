@@ -2,8 +2,9 @@
 
 class Core_Model_Translation extends Zend_Db_Table_Abstract {
     
-    protected $_name    = 'translation';
-    protected $_primary = 'translation_id';
+    protected $_name        = 'translation';
+    protected $_primary     = 'translation_id';
+    protected $_rowClass    = 'Tiger_Db_Table_Row';
 
     public function getLocales () {
 

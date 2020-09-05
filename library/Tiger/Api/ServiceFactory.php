@@ -58,7 +58,7 @@ class Tiger_Api_ServiceFactory {
                  * this login flag helps us see that we just need to login again.
                  */
                 $this->_response->login = ( $this->_role === self::ROLE_GUEST );
-                throw new Exception( $this->_translator->translate( 'ERROR.ACTION_NOT_ALLOWED' ));
+                throw new Exception( $this->_translate->translate( 'ERROR.ACTION_NOT_ALLOWED' ));
 
             }
 
@@ -100,7 +100,7 @@ class Tiger_Api_ServiceFactory {
                 }
             }
             else {
-                throw new Exception( $this->_translator->translate( 'ERROR.INVALID_SERVICE' ) );
+                throw new Exception( $this->_translate->translate( 'ERROR.INVALID_SERVICE' ) );
             }
 
         }
@@ -130,13 +130,13 @@ class Tiger_Api_ServiceFactory {
             $this->_module = explode( ':', $this->_params['service'] )[0];
 
             if ( ! Zend_Validate::is( $this->_module, 'Alpha' ) || ! in_array( $this->_module, $modules) ){
-                throw new Exception( $this->_translator->translate( 'ERROR.INVALID_MODULE' ) );
+                throw new Exception( $this->_translate->translate( 'ERROR.INVALID_MODULE' ) );
             }
 
         }
         else {
 
-            throw new Exception( $this->_translator->translate( 'ERROR.INVALID_SERVICE' ) );
+            throw new Exception( $this->_translate->translate( 'ERROR.INVALID_SERVICE' ) );
 
         }
 
@@ -157,12 +157,12 @@ class Tiger_Api_ServiceFactory {
                 $this->_serviceClass = ucfirst( $this->_module ) . '_Service_' . ucfirst( $service );
             }
             else {
-                throw new Exception( $this->_translator->translate( 'ERROR.INVALID_SERVICE' ) );
+                throw new Exception( $this->_translate->translate( 'ERROR.INVALID_SERVICE' ) );
             }
 
         }
         else {
-            throw new Exception( $this->_translator->translate( 'ERROR.INVALID_SERVICE' ) );
+            throw new Exception( $this->_translate->translate( 'ERROR.INVALID_SERVICE' ) );
         }
 
     }
@@ -178,7 +178,7 @@ class Tiger_Api_ServiceFactory {
             $this->_method = $this->_params['method'];
         }
         else {
-            throw new Exception( $this->_translator->translate( 'ERROR.INVALID_METHOD' ) );
+            throw new Exception( $this->_translate->translate( 'ERROR.INVALID_METHOD' ) );
         }
 
     }

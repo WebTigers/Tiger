@@ -4,7 +4,8 @@ class Core_Model_BadWord extends Zend_Db_Table_Abstract
 {
     protected $_name    = 'badword';
     protected $_primary = 'badword_id';
-    
+    protected $_rowClass = 'Tiger_Db_Table_Row';
+
     public function init()
     {
     }

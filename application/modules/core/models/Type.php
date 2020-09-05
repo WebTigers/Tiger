@@ -2,8 +2,9 @@
 
 class Core_Model_Type extends Zend_Db_Table_Abstract
 {
-    protected $_name    = 'type';
-    protected $_primary = 'type_id';
+    protected $_name        = 'type';
+    protected $_primary     = 'type_id';
+    protected $_rowClass    = 'Tiger_Db_Table_Row';
 
     protected $_translate;
 
