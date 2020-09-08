@@ -21,6 +21,20 @@ class User_Model_User extends Zend_Db_Table_Abstract
     }
 
     /**
+     * @param $key
+     * @return Zend_Db_Table_Row_Abstract|null
+     */
+    public function getUserByEmailVerifyKey ( $key )
+    {
+        $sql = $this->
+            select()->
+            where('email_verify_key = ?', $key);
+
+        return $this->fetchRow( $sql );
+
+    }
+
+    /**
      * @param null $identity
      * @return Zend_Db_Table_Rowset_Abstract
      */
@@ -30,6 +44,7 @@ class User_Model_User extends Zend_Db_Table_Abstract
 
         $sql = $this->
             select()->
+            setIntegrityCheck(false)->  // We need this for any kind of join where updates cannot be performed.
             from( [ 'ou' => 'org_user'], [] )->
             joinLeft( [ 'o' => 'org'], 'o.org_id = ou.org_id', ['o.*'] )->
             joinLeft( [ 'u' => 'user'], 'u.user_id = ou.user_id', ['u.*'] )->

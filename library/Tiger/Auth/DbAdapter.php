@@ -70,11 +70,11 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
 
                     $user = $this->_userModel->getUserByIdentity( $this->_identity );
 
-                    if ( ! is_null( $user ) ) {
+                    if ( ! empty( $user ) ) {
 
                         // Password hashes must match to authenticate.
 
-                        if ( $this->_cryption->hash( $this->_credential ) === $user->password ) {
+                        if ( Tiger_Utility_Cryption::hash( $this->_credential ) === $user->password ) {
 
                             // Since this is a normal login, we log the user's last 
                             // access within their account.
@@ -83,7 +83,11 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
                             $timestamp = $now->format('Y-m-d H:i:s');
                             $user->last_login_date = $timestamp;
                             $user->last_login_ip = $_SERVER['REMOTE_ADDR'];
+                            $user->update_user_id = $user->user_id;
+                            $user->update_date = $timestamp;
                             $user->save();
+
+                            $this->_dbRow = $user;
 
                         } else {
 
@@ -116,11 +120,16 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
             
         }
         catch ( Exception $e ) {
-            
-            throw new Zend_Auth_Adapter_Exception();
-            
+
+            pr( $e->getMessage() );
+
         }
-        
+        catch ( Error $e ) {
+
+            pr( $e->getMessage() );
+
+        }
+
     }
     
     /**
@@ -131,7 +140,7 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
      * @param type $params
      * @return null
      */
-    public function getResultRowObject($params = array()) {
+    public function getResultRow( $params = array() ) {
 
         if (is_null($this->_dbRow)) {
             return null;

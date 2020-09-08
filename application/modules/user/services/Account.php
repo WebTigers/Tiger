@@ -15,6 +15,16 @@ class User_Service_Account
     protected $_form;
     protected $_reflection;
 
+    protected $_userModel;
+    protected $_orgModel;
+    protected $_contactModel;
+    protected $_addressModel;
+    protected $_orgUserModel;
+    protected $_orgContactModel;
+    protected $_orgAddressModel;
+    protected $_userContactModel;
+    protected $_userAddressModel;
+
     const ROLE_NEWUSER = "newuser";
     const ROLE_USER = "user";
     const ROLE_NEWCLIENT = "newclient";
@@ -28,6 +38,16 @@ class User_Service_Account
         $this->_translate   = Zend_Registry::get('Zend_Translate');
         $this->_config      = Zend_Registry::get('Zend_Config');
         $this->_response    = new Core_Model_ResponseObject();
+
+        $this->_userModel           = new User_Model_User();
+        $this->_orgModel            = new User_Model_Org();
+        $this->_addressModel        = new User_Model_Address();
+        $this->_contactModel        = new User_Model_Contact();
+        $this->_orgUserModel        = new User_Model_OrgUser();
+        $this->_orgAddressModel     = new User_Model_OrgAddress();
+        $this->_orgContactModel     = new User_Model_OrgContact();
+        $this->_userAddressModel    = new User_Model_UserAddress();
+        $this->_userContactModel    = new User_Model_UserContact();
 
         if ( $input instanceof Zend_Controller_Request_Http ) {
             $this->_request = $input;
@@ -155,8 +175,11 @@ class User_Service_Account
              * tables and persist each one separately.
              */
 
-            $data['user_id']    = $this->persistUser( $data );
-            $data['org_id']     = $this->persistOrg( $data );
+            $userRow = $this->persistUser( $data );
+            $data['user_id'] = $userRow->user_id;
+
+            $orgRow  = $this->persistOrg( $data );
+            $data['org_id'] = $orgRow->org_id;
 
             $this->persistOrgUser( $data );
 
@@ -167,7 +190,8 @@ class User_Service_Account
                 'contact_value' => $data['email'],
                 'primary'       => 1,
             ];
-            $data['contact_id'] = $this->persistContact( $contactData );
+            $contactRow = $this->persistContact( $contactData );
+            $data['contact_id'] = $contactRow->contact_id;
 
             $this->persistUserContact( $data );
             $this->persistOrgContact( $data );
@@ -175,22 +199,22 @@ class User_Service_Account
             /** Commit the DB transaction. All done! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
 
+            /**
+             * Now that we have a new user, we'll update their identity in the Auth module.
+             */
+            $identity = $this->_setIdentity( $userRow, $orgRow );
+
             // All of these messages should probably triggered by an event.
             /** Send the new user and admins various messages that a new user signed up. */
-            // Core_Service_Mail::sendUserWelcome( $userRow );
-            // Core_Service_Mail::sendUserVerifyEmail( $userRow );
-            // Core_Service_Mail::sendAdminWelcome( $userRow );
-            // Core_Service_Text::sendAdminText( $userRow );
-            // Core_Service_Note::alertAdminNewUser( $userRow );
+            Core_Service_Message::sendUserWelcomeEmail( $userRow );
+            Core_Service_Message::sendUserVerifyEmail( $userRow );
 
             /**
              * Populate the responseObject with our success. There probably shouldn't
              * be a whole lot of messaging here, as you should just send the new user
-             * to a signup success page with further instructions.
+             * to a signup success page with further instructions to verify their email.
              */
-
             $this->_response->result = 1;
-            $this->_response->setTextMessage( 'MESSAGE.NEWUSER_SUCCESS' );
 
         }
         catch ( Exception $e ) {
@@ -204,8 +228,6 @@ class User_Service_Account
 
             $this->_response->result = 0;
             $this->_response->setTextMessage( 'MESSAGE.NEWUSER_FAILED' );
-
-            pr( $e->getMessage() );
 
             /** We also log what happened ... */
             // Tiger_Log::logger( $e->getMessage() );
@@ -228,12 +250,11 @@ class User_Service_Account
     public function persistUser( $data )
     {
         /** Persisting our clean data is easy with Zend DB Models. */
-        $userModel = new User_Model_User();
 
         /** If we have a user_id, then we know this is an update. */
         if ( isset($data['user_id']) ) {
 
-            $userRow = $userModel->getUserById( $data['user_id'] );
+            $userRow = $this->_userModel->getUserById( $data['user_id'] );
 
             if ( empty($userRow) ) {
                 throw new Exception('ERROR.USER_NOT_FOUND');
@@ -250,7 +271,7 @@ class User_Service_Account
         else {
 
             /** Create the row with our relevant data. */
-            $userRow = $userModel->createRow( $data );
+            $userRow = $this->_userModel->createRow( $data );
 
             /** Update the relevant pieces with user data. */
             $userRow->user_id = GUEST_USER_ID;
@@ -266,7 +287,7 @@ class User_Service_Account
              * But in the event this user_id is already in the DB, we need to make one final
              * check and then re-assign a new user_id if they are.
              */
-            if ( $userModel->getUserById( GUEST_USER_ID ) !== null ) {
+            if ( $this->_userModel->getUserById( GUEST_USER_ID ) !== null ) {
                 $userRow->user_id = Tiger_Utility_Uuid::v1();
             }
 
@@ -277,7 +298,8 @@ class User_Service_Account
          * our boilerplate fields, but returns the primary key of the record so it can
          * be used in populating other tables with data linked to this user.
          */
-        return $userRow->saveRow();
+        $userRow->saveRow();
+        return $userRow;
 
     }
 
@@ -294,13 +316,10 @@ class User_Service_Account
      */
     public function persistOrg( $data )
     {
-        /** Persisting our clean data is easy with Zend DB Models. */
-        $orgModel = new User_Model_Org();
-
         /** If we have a user_id, then we know this is an update. */
         if ( isset($data['org_id']) ) {
 
-            $orgRow = $orgModel->getOrgById( $data['org_id'] );
+            $orgRow = $this->_orgModel->getOrgById( $data['org_id'] );
 
             if ( empty($orgRow) ) {
                 throw new Exception('ERROR.USER_NOT_FOUND');
@@ -312,7 +331,7 @@ class User_Service_Account
         else {
 
             /** Create the row with our relevant data. */
-            $orgRow = $orgModel->createRow( $data );
+            $orgRow = $this->_orgModel->createRow( $data );
 
             /** Update the relevant pieces with user data. */
             $orgRow->org_id = Tiger_Utility_Uuid::v1();;
@@ -324,7 +343,8 @@ class User_Service_Account
          * our boilerplate fields, but returns the primary key of the record so it can
          * be used in populating other tables with data linked to this user.
          */
-        return $orgRow->saveRow();
+        $orgRow->saveRow();
+        return $orgRow;
 
     }
 
@@ -340,13 +360,10 @@ class User_Service_Account
      */
     public function persistOrgUser( $data )
     {
-        /** Persisting our clean data is easy with Zend DB Models. */
-        $orgUserModel = new User_Model_OrgUser();
-
         /** If we have a org_user_id, then we know this is an update. */
         if ( isset($data['org_user_id']) ) {
 
-            $orgUserRow = $orgUserModel->getOrgUserById( $data['org_user_id'] );
+            $orgUserRow = $this->_orgUserModel->getOrgUserById( $data['org_user_id'] );
 
             if ( empty($orgUserRow) ) {
                 throw new Exception('ERROR.ORGUSER_NOT_FOUND');
@@ -358,7 +375,7 @@ class User_Service_Account
         else {
 
             /** Create the row with our relevant data. */
-            $orgUserRow = $orgUserModel->createRow( $data );
+            $orgUserRow = $this->_orgUserModel->createRow( $data );
 
             /** Update the relevant pieces with user data. In this case, we just need a new id. */
             $orgUserRow->org_user_id = Tiger_Utility_Uuid::v1();;
@@ -370,7 +387,8 @@ class User_Service_Account
          * our boilerplate fields as well as returns an org_user_id for new records if we
          * need it.
          */
-        return $orgUserRow->saveRow();
+        $orgUserRow->saveRow();
+        return $orgUserRow;
 
     }
 
@@ -386,13 +404,10 @@ class User_Service_Account
      */
     public function persistContact( $data )
     {
-        /** Persisting our clean data is easy with Zend DB Models. */
-        $contactModel = new User_Model_Contact();
-
         /** If we have a org_user_id, then we know this is an update. */
         if ( isset($data['contact_id']) ) {
 
-            $contactRow = $contactModel->getContactById( $data['contact_id'] );
+            $contactRow = $this->_contactModel->getContactById( $data['contact_id'] );
 
             if ( empty($contactRow) ) {
                 throw new Exception('ERROR.CONTACT_NOT_FOUND');
@@ -404,7 +419,7 @@ class User_Service_Account
         else {
 
             /** Create the row with our relevant data. */
-            $contactRow = $contactModel->createRow( $data );
+            $contactRow = $this->_contactModel->createRow( $data );
 
             /** Update the relevant pieces with user data. In this case, we just need a new id. */
             $contactRow->contact_id = Tiger_Utility_Uuid::v1();;
@@ -416,7 +431,8 @@ class User_Service_Account
          * our boilerplate fields as well as returns an org_user_id for new records if we
          * need it.
          */
-        return $contactRow->saveRow();
+        $contactRow->saveRow();
+        return $contactRow;
 
     }
 
@@ -432,13 +448,10 @@ class User_Service_Account
      */
     public function persistOrgContact( $data )
     {
-        /** Persisting our clean data is easy with Zend DB Models. */
-        $orgContactModel = new User_Model_OrgContact();
-
         /** If we have a org_contact_id, then we know this is an update. */
         if ( isset($data['org_contact_id']) ) {
 
-            $orgContactRow = $orgContactModel->getOrgContactById( $data['org_contact_id'] );
+            $orgContactRow = $this->_orgContactModel->getOrgContactById( $data['org_contact_id'] );
 
             if ( empty($orgContactRow) ) {
                 throw new Exception('ERROR.ORGCONTACT_NOT_FOUND');
@@ -451,7 +464,7 @@ class User_Service_Account
         else {
 
             /** Create the row with our relevant data. */
-            $orgContactRow = $orgContactModel->createRow( $data );
+            $orgContactRow = $this->_orgContactModel->createRow( $data );
 
             /** Update the relevant pieces with user data. In this case, we just need a new id. */
             $orgContactRow->org_contact_id = Tiger_Utility_Uuid::v1();;
@@ -463,7 +476,8 @@ class User_Service_Account
          * our boilerplate fields as well as returns an org_user_id for new records if we
          * need it.
          */
-        return $orgContactRow->saveRow();
+        $orgContactRow->saveRow();
+        return $orgContactRow;
 
     }
 
@@ -479,13 +493,10 @@ class User_Service_Account
      */
     public function persistUserContact( $data )
     {
-        /** Persisting our clean data is easy with Zend DB Models. */
-        $userContactModel = new User_Model_UserContact();
-
         /** If we have a user_contact_id, then we know this is an update. */
         if ( isset($data['user_contact_id']) ) {
 
-            $userContactRow = $userContactModel->getUserContactById( $data['user_contact_id'] );
+            $userContactRow = $this->_userContactModel->getUserContactById( $data['user_contact_id'] );
 
             if ( empty($userContactRow) ) {
                 throw new Exception('ERROR.USERCONTACT_NOT_FOUND');
@@ -498,7 +509,7 @@ class User_Service_Account
         else {
 
             /** Create the row with our relevant data. */
-            $userContactRow = $userContactModel->createRow( $data );
+            $userContactRow = $this->_userContactModel->createRow( $data );
 
             /** Update the relevant pieces with user data. In this case, we just need a new id. */
             $userContactRow->user_contact_id = Tiger_Utility_Uuid::v1();
@@ -510,7 +521,161 @@ class User_Service_Account
          * our boilerplate fields as well as returns an user_user_id for new records if we
          * need it.
          */
-        return $userContactRow->saveRow();
+        $userContactRow->saveRow();
+        return $userContactRow;
+
+    }
+
+    /**
+     * Sets the identity of a user using the user_id and org_id within an array. This function cannot
+     * be called by the Tiger API since it is both protected and requires both $userRow and $orgRow data.
+     *
+     * @param $data
+     * @throws Zend_Auth_Storage_Exception
+     */
+    protected function _setIdentity( $userRow, $orgRow )
+    {
+        $identityObject = new User_Model_IdentityObject( $userRow, $orgRow );
+        Zend_Auth::getInstance()->getStorage()->write( (object) $identityObject->toArray() );
+    }
+
+    /**
+     * Resends the user a verify emil address email.
+     *
+     * @param $user_id UUID
+     * @throws Zend_Validate_Exception
+     */
+    public function resend( $params )
+    {
+
+        if ( isset( $params['user_id'] ) && Zend_Validate::is( $params['user_id'], 'Uuid', [], ['Tiger_Validate'] ) ) {
+
+            $userRow = $this->_userModel->getUserById( $params['user_id'] );
+
+            if ( ! empty( $userRow ) ) {
+
+                try {
+
+                    Core_Service_Message::verifyEmail( $userRow );
+
+                }
+                catch ( Exception $e ) {
+
+                    $this->_response->result = 0;
+                    $this->_response->setTextMessage( $e->getMessage(), 'error' );
+
+                }
+
+                $this->_response->result = 1;
+                $this->_response->setTextMessage( 'SUCCESS.EMAIL_RESENT', 'success' );
+
+            }
+            else {
+
+                $this->_response->result = 0;
+                $this->_response->setTextMessage( 'ERROR.USER_NOT_FOUND', 'error' );
+
+            }
+
+        }
+        else {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage( 'ERROR.INVALID_ID', 'error' );
+
+        }
+
+    }
+
+    /**
+     * @param $params
+     * @throws Zend_Validate_Exception
+     */
+    public function verify( $params )
+    {
+
+        if ( isset( $params['key'] ) && Zend_Validate::is( $params['key'], 'Uuid', [], ['Tiger_Validate'] ) ) {
+
+            $userRow = $this->_userModel->getUserByEmailVerifyKey( $params['key'] );
+
+            if ( ! empty( $userRow ) ) {
+
+                /** If you allow multiple active orgs per user, this might not return the exact org you are looking for. */
+                $orgRow = $this->_orgUserModel->getOrgByUserId( $userRow->user_id  );
+
+                try {
+
+                    $userRow->role = self::ROLE_USER;
+                    $userRow->email_verify_key = null;
+                    $userRow->saveRow();    // <-- saveRow() adds boilerplate values.
+                    $this->_setIdentity( $userRow, $orgRow );
+
+                }
+                catch ( Exception $e ) {
+
+                    $this->_response->result = 0;
+                    $this->_response->setTextMessage( $e->getMessage(), 'error' );
+
+                }
+
+                $this->_response->result = 1;
+                $this->_response->setTextMessage( 'SUCCESS.EMAIL_VERIFIED', 'success' );
+
+            }
+            else {
+
+                $this->_response->result = 0;
+                $this->_response->setTextMessage( 'ERROR.USER_NOT_FOUND', 'error' );
+
+            }
+
+        }
+        else {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage( 'ERROR.INVALID_KEY', 'error' );
+
+        }
+
+    }
+
+    public function login ( $params )
+    {
+        $this->_form = new User_Form_Login();
+
+        /**
+         * First sanity check the login credentials. Note the generic failed message. We don't
+         * want to give hackers clues about which part of the credentials might be bad.
+         */
+        if ( ! $this->_form->isValid( $params ) ) {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage('LOGIN.FAILED');
+            return;
+
+        }
+
+        $data = $this->_form->getValues();
+        $tigerAuth = new Tiger_Auth_DbAdapter( $data['username'], $data['password'], time() );
+
+        $authResult = $tigerAuth->authenticate();   // <-- This is where the magic happens ...
+
+        if ( $authResult->isValid() ) {
+
+            $userRow = $tigerAuth->getUser();
+            $orgRow  = $this->_orgUserModel->getOrgByUserId( $userRow->user_id );
+            $this->_setIdentity( $userRow, $orgRow );
+
+            $this->_response->result = 1;
+            $this->_response->setTextMessage('LOGIN.SUCCESS');
+
+        }
+        else {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage('LOGIN.FAILED');
+
+        }
 
     }
 

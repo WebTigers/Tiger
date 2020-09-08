@@ -91,7 +91,7 @@
                     
                     // User should be logged-in and sent to the Account landing page
 
-                    window.location = '/account/dashboard';
+                    window.location = '/account/welcome';
 
                 }
                 else {

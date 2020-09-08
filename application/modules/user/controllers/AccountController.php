@@ -190,7 +190,7 @@ class User_AccountController extends Tiger_Controller_Action
     {
 
         /** Add the tigerPassword widget. */
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/tiger/tigerPassword.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerPassword.js' ) );
 
         /** Add the signup page JS plugin. */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/user/js/tiger/user.signup.js' ) );
@@ -199,19 +199,49 @@ class User_AccountController extends Tiger_Controller_Action
 
     }
 
-    public function welcomeAction ( ) {
+    public function welcomeAction ( )
+    {
+        /** Add the welcome page JS plugin. */
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/user/js/tiger/user.welcome.js' ) );
 
+        $this->view->user = Zend_Auth::getInstance()->getIdentity();
 
+        $resendForm = new User_Form_Resend();
+        $resendForm->getElement('user_id')->setValue( $this->view->user->user_id );
+        $this->view->resendForm = $resendForm;
 
     }
 
     public function loginAction ( )
     {
+        /** Add the login page JS plugin. */
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/user/js/tiger/user.login.js' ) );
+        $this->view->loginForm = new User_Form_Login();
+        if ( isset( $_COOKIE['username'] ) ) {
+            $this->view->loginForm->getElement('username')->setValue( $_COOKIE['username'] );
+            $this->view->loginForm->getElement('remember_me')->setChecked( true );
+        }
+    }
 
+    public function logoutAction ( )
+    {
+        Zend_Auth::getInstance()->clearIdentity();
+        Zend_Session::destroy();
     }
 
     public function verifyAction ( )
     {
+
+         $request = $this->getRequest();
+         $request->setParam('method', 'verify');
+
+         /**
+          * Notice how we can just pass in the request object to have to Account Service
+          * auto-route to the verify method, do the work, and then we can just poll the
+          * service for the response once the service in instantiated.
+          */
+         $accountService = new User_Service_Account( $request );
+         $this->view->response = $accountService->getResponse();
 
     }
 
@@ -220,7 +250,7 @@ class User_AccountController extends Tiger_Controller_Action
         /** Reset the layout path to use the admin layout instead of the default user module layout. */
         Zend_Layout::getMvcInstance()->setLayoutPath(MODULES_PATH . '/admin/layouts/scripts');
 
-        pr( $this->getRequest() );
+        // pr( Zend_Auth::getInstance()->getIdentity() );
 
     }
 

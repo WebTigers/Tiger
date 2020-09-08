@@ -51,12 +51,11 @@ class ErrorController extends Zend_Controller_Action
 //        }
         
         // conditionally display exceptions
-        if ($this->getInvokeArg('displayExceptions') == true) {
-            $this->view->exception = $errors->exception;
-        }
+//        if ($this->getInvokeArg('displayExceptions') == true) {
+//            $this->view->exception = $errors->exception;
+//        }
 
-        // $this->view->message = $errors->message;
-        $this->view->request = $errors->request;
+        $this->view->errors = $errors;
     }
 
     public function getLog ( )

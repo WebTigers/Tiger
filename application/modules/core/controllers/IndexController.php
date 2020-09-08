@@ -167,9 +167,30 @@ class IndexController extends Tiger_Controller_Action
 
     }
 
-    public function testAction ( ) {
+    public function testAction ( )
+    {
 
-        pr( Zend_Registry::get('Zend_Config')->CSRF_EXPIRE_SECONDS );
+        $this->_helper->layout->disableLayout();
+
+        try {
+
+            $userModel = new User_Model_User();
+            $userRow = $userModel->getUserById('3436efde-ef95-11ea-9f43-12d1c32c0ac5');
+            $activation_link = "http://" . $_SERVER['HTTP_HOST'] . "/account/activation/key/" . $userRow->email_verify_key;
+
+            $view = new Zend_View();
+            $view->setScriptPath(Zend_Registry::get('Zend_Config')->mail->templateScriptPath);
+            $view->assign('site', Zend_Registry::get('Zend_Config')->site);
+            $view->assign('activation_link', $activation_link);
+            echo $view->render('verify.phtml');
+            exit;
+
+        }
+        catch( Error $e ) {
+
+            pr( $e->getMessage() );
+
+        }
 
     }
 

@@ -60,21 +60,13 @@ class Core_Model_ResponseObject
      */
     public $login = false;
 
-    /**
-     *
-     * @var translate
-     */
-    protected $_translate;
-
     const MESSAGE_CLASS_ALERT = 3;
     const MESSAGE_CLASS_ERROR = 2;
     const MESSAGE_CLASS_SUCCESS = 1;
     const MESSAGE_CLASS_INFO = 0;
 
-    public function __construct() {
-        
-        $this->_translate = Zend_Registry::get( 'Zend_Translate' );
-        
+    public function __construct()
+    {
     }
 
     public function setTextMessage( $message, $type = 3 )
@@ -139,14 +131,14 @@ class Core_Model_ResponseObject
         </div>
         */
 
-        return  '<div class="' . $class . ' d-flex align-items-center">'.
+        return  '<div class="' . $class . ' d-flex align-items-left">'.
                     '<div class="flex-00-auto">' .
                         '<i class="' . $icon . '"></i>' .
                     '</div>' .
                     '<div class="flex-fill mr-3">' .
-                        $this->_translate->_( $out_message ) .
+                        Zend_Registry::get( 'Zend_Translate' )->translate( $out_message ) .
                     '</div>' .
-                '</div>';
+                            '</div>';
         
     }
 
