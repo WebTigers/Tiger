@@ -61,4 +61,15 @@ class Acl_Model_AclResources extends Zend_Db_Table_Abstract {
         
     }
 
+    public function getResourceDBConfigs ( ) {
+
+        $resourceRowset = $this->getResourceList();
+        $resources = [];
+        foreach ( $resourceRowset as $resourceRow ) {
+            $resources[ $resourceRow->resource_id ] = $resourceRow->toArray();
+        }
+        return new Zend_Config( $resources, true );
+
+    }
+
 }

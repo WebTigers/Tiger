@@ -57,17 +57,17 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 
         /** AWS S3 (Simple Storage Service) Access Keys */
         defined('AWS_S3_ACCESS_KEY_ID')
-        || define('AWS_S3_ACCESS_KEY_ID', $config->aws->s3->key);
+            || define('AWS_S3_ACCESS_KEY_ID', $config->aws->s3->key);
 
         defined('AWS_S3_SECRET_ACCESS_KEY')
-        || define('AWS_s3_SECRET_ACCESS_KEY', $config->aws->s3->secret);
+            || define('AWS_s3_SECRET_ACCESS_KEY', $config->aws->s3->secret);
 
         /** AWS SES (Simple Email Service) Access Keys */
         defined('AWS_SES_ACCESS_KEY_ID')
-        || define('AWS_SES_ACCESS_KEY_ID', $config->aws->ses->key);
+            || define('AWS_SES_ACCESS_KEY_ID', $config->aws->ses->key);
 
         defined('AWS_SES_SECRET_ACCESS_KEY')
-        || define('AWS_SES_SECRET_ACCESS_KEY', $config->aws->ses->secret);
+            || define('AWS_SES_SECRET_ACCESS_KEY', $config->aws->ses->secret);
 
     }
 

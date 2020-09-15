@@ -93,7 +93,7 @@
                     removeTimeout : 0
                 };
 
-                $( '#page-login-form .form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
+                $( '#page-login-form .form-message' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
                 
             };
 

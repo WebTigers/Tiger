@@ -62,4 +62,15 @@ class Acl_Model_AclRoles extends Zend_Db_Table_Abstract {
         
     }
 
+    public function getRoleDBConfigs ( ) {
+
+        $roleRowset = $this->getRoleList();
+        $roles = [];
+        foreach ( $roleRowset as $roleRow ) {
+            $roles[ $roleRow->role_id ] = $roleRow->toArray();
+        }
+        return new Zend_Config( $roles, true );
+
+    }
+
 }

@@ -42,7 +42,7 @@ class Oneui_Service_Template {
         $inc_header,
         $inc_footer;
 
-    private $nav_html           = '',
+    private $nav_html       = '',
         $page_classes       = '',
         $placeholder_names  = array(
         'female' => array(

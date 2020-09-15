@@ -4,7 +4,9 @@ class IndexController extends Tiger_Controller_Action
 {
     public function init()
     {
-        /* Initialize action controller here */
+        /** OneUI Dashboard Bundles */
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/oneui.core.min.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/oneui.app.min.js' ) );
 
         /** Set the OneUI theme vars. */
         $this->view->one = $this->_setThemeVars();
@@ -18,7 +20,7 @@ class IndexController extends Tiger_Controller_Action
         // **************************************************************************************************
 
         // : Name, version and assets folder's name
-        $one = new Oneui_Service_Template('Tiger', '2.0', '/assets/oneui');
+        $one = new Core_Service_Template('Tiger', '2.0', '/assets/oneui');
 
 
         // **************************************************************************************************

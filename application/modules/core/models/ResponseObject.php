@@ -53,6 +53,13 @@ class Core_Model_ResponseObject
     public $html = [];
 
     /**
+     * Response redirect
+     *
+     * @var null
+     */
+    public $redirect = null;
+
+    /**
      * Response login tells us if we need to login again. This value is set
      * with (user_role === "guest"). If it is true, then a new login is needed.
      *
@@ -157,6 +164,7 @@ class Core_Model_ResponseObject
             'text'      => $this->text,
             'html'      => $this->html,
             'login'     => $this->login,
+            'redirect'  => $this->redirect,
         ];
     }
     

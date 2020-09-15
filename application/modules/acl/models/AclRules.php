@@ -62,4 +62,16 @@ class Acl_Model_AclRules extends Zend_Db_Table_Abstract {
         
     }
 
+    public function getRuleDBConfigs ( ) {
+
+        $ruleRowset = $this->getRuleList();
+        $rules = [];
+        foreach ( $ruleRowset as $ruleRow ) {
+            $rules[ $ruleRow->rule_id ] = $ruleRow->toArray();
+        }
+        return new Zend_Config( $rules, true );
+
+    }
+
+
 }

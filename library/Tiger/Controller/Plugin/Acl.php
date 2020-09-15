@@ -9,8 +9,8 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
     const ROLE_GUEST = "guest";
 
     /**
-     * The Routes Plugin is responsible for collecting and setting the
-     * various router routes.
+     * The ACL Plugin's preDispatch is responsible for validating that we
+     * have a resource for the route and that we are allowed to access it.
      *
      * @param Zend_Controller_Request_Abstract $request
      * @throws Zend_Exception
@@ -22,22 +22,41 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
             return;
         }
 
-        $this->_acl = Zend_Registry::get('Zend_Acl');
         $this->_auth = Zend_Auth::getInstance();
 
-        $this->validateResource($request);
-        $this->validateAccess($request);
+        $this->initializeAcl();
+        $this->validateResource( $request );
+        $this->validateAccess( $request );
 
         $this->_hasRun = true;
+
+    }
+
+    public function initializeAcl()
+    {
+        try {
+
+            /** Init ACL */
+            $zend_acl = new Acl_Service_Acl();
+            $this->_acl = $zend_acl;
+            Zend_Registry::set('Zend_Acl', $zend_acl);
+
+        }
+        catch ( \Error $e ) {
+            throw new Tiger_Exception_Acl( $e->getMessage(), $e->getCode(), null );
+        }
+        catch ( \Exception $e ){
+            throw new Tiger_Exception_Acl( $e->getMessage(), $e->getCode(), $e );
+        }
 
     }
 
     public function validateResource ( $request )
     {
 
-        $module = strtolower($request->getModuleName());
-        $controller = strtolower($request->getControllerName());
-        $resource = $module . ':' . $controller;
+        $module = ucfirst( strtolower($request->getModuleName()) );
+        $controller = ucfirst( strtolower($request->getControllerName()) );
+        $resource = $module . '_Controller_' . $controller;
 
         if ( $this->_acl->has($resource) !== true ) {
             throw new Tiger_Exception_AclNoResource('ERROR.NO_RESOURCE');
@@ -48,10 +67,12 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
     public function validateAccess ( $request )
     {
         $role = $this->_auth->getIdentity()->role;
-        $module = strtolower($request->getModuleName());
-        $controller = strtolower($request->getControllerName());
+
+        $module = ucfirst( strtolower($request->getModuleName()) );
+        $controller = ucfirst( strtolower($request->getControllerName()) );
+        $resource = $module . '_Controller_' . $controller;
+
         $action = strtolower($request->getActionName());
-        $resource = $module . ':' . $controller;
 
         if ( ! $this->_acl->isAllowed( $role, $resource, $action ) ) {
 
@@ -60,11 +81,10 @@ class Tiger_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
             // Remember where we were going to we can send the user back there once they login.
             Zend_Registry::get('Zend_Session')->aclRequest = $this->_request;
 
-            $this->redirect('/login');
+            Zend_Controller_Front::getInstance()->getResponse()->setRedirect('/login');
 
         }
 
     }
-
 
 }

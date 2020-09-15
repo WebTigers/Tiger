@@ -2,22 +2,26 @@
 
 class Acl_Service_Acl extends Zend_Acl {
 
+    protected $_resourceModel;
+    protected $_roleModel;
+    protected $_ruleModel;
+
     const ROLE_GUEST = "guest";
 
     public function __construct() {
 
-        $resourceModel  = new Acl_Model_AclResources;
-        $roleModel      = new Acl_Model_AclRoles;
-        $ruleModel      = new Acl_Model_AclRules;
+        $this->_resourceModel   = new Acl_Model_AclResources;
+        $this->_roleModel       = new Acl_Model_AclRoles;
+        $this->_ruleModel       = new Acl_Model_AclRules;
 
-        $resources      = $resourceModel->getResourceList();
-        $roles          = $roleModel->getRoleList();
-        $rules          = $ruleModel->getRuleList();
+        $resources  = $this->_getAppResourceList();
+        $roles      = $this->_getAppRoleList();
+        $rules      = $this->_getAppRuleList();
 
         $this->_addResources( $resources );
         $this->_addRoles( $roles );
         $this->_addRules( $rules );
-        
+
         Zend_Registry::set( 'Zend_Acl', $this );
         
     }
@@ -104,8 +108,7 @@ class Acl_Service_Acl extends Zend_Acl {
         }
         
     }    
-    
-    
+
     /**
      * Add all rules to the ACL
      * 
@@ -168,6 +171,45 @@ class Acl_Service_Acl extends Zend_Acl {
             
         }
             
+    }
+
+    /**
+     * @return Zend_Config
+     */
+    protected function _getAppResourceList ( )
+    {
+        $resourceConfigs = Zend_Registry::get('Zend_Config')->acl->resources;
+        $resourceDBConfigs = $this->_resourceModel->getResourceDBConfigs();
+        if ( ! empty( $resourceConfigs ) ) {
+            $resourceDBConfigs->merge( $resourceConfigs );
+        }
+        return $resourceDBConfigs;
+    }
+
+    /**
+     * @return Zend_Config
+     */
+    protected function _getAppRoleList ( )
+    {
+        $roleConfigs = Zend_Registry::get('Zend_Config')->acl->roles;
+        $roleDBConfigs = $this->_roleModel->getRoleDBConfigs();
+        if ( ! empty( $roleConfigs ) ) {
+            $roleDBConfigs->merge( $roleConfigs );
+        }
+        return $roleDBConfigs;
+    }
+
+    /**
+     * @return Zend_Config
+     */
+    protected function _getAppRuleList ( )
+    {
+        $ruleConfigs = Zend_Registry::get('Zend_Config')->acl->rules;
+        $ruleDBConfigs = $this->_ruleModel->getRuleDBConfigs();
+        if ( ! empty( $ruleConfigs ) ) {
+            $ruleDBConfigs->merge( $ruleConfigs );
+        }
+        return $ruleDBConfigs;
     }
 
 }

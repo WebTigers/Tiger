@@ -36,6 +36,7 @@ $application = new Zend_Application(
         CORE_MODULE_PATH    . '/configs/application.ini',
         CORE_MODULE_PATH    . '/configs/constants.ini',
         CORE_MODULE_PATH    . '/configs/routes.ini',
+        CORE_MODULE_PATH    . '/configs/navigation.ini',
     ]]
 );
 

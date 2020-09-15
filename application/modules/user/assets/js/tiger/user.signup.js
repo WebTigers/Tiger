@@ -145,7 +145,7 @@
 
                 }
 
-            };
+            }
 
             function error ( jqXHR, textStatus, errorThrown ) { 
 
@@ -153,15 +153,13 @@
                 // grecaptcha.reset( reCaptchaSignup );
                 
                 // show general error message
-                let oMessage = { 
+                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'change', {
                     content       : '<div class="alert alert-danger"><i class="fa fa-ban"></i> &nbsp;' + errorThrown + '</div>',
                     removeClick   : true,
                     removeTimeout : 0
-                };
-
-                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
+                });
                 
-            };
+            }
 
             /** API params tell Tiger what service will be processing the data. */
             let apiParams = {

@@ -666,6 +666,17 @@ class User_Service_Account
             $orgRow  = $this->_orgUserModel->getOrgByUserId( $userRow->user_id );
             $this->_setIdentity( $userRow, $orgRow );
 
+            if ( intval( $data['remember_me'] ) === 1 ) {
+                setcookie( 'username', $userRow->username, time()+60*60*24*30,'/' ); // Expire in 30 days
+            }
+            else {
+                setcookie( 'username', '', time()-60*60*24*30, '/' ); // Expired 30 days ago
+            }
+
+            if ( in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
+                $this->_response->redirect = '/admin';
+            }
+
             $this->_response->result = 1;
             $this->_response->setTextMessage('LOGIN.SUCCESS');
 
