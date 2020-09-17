@@ -62,8 +62,10 @@ class Tiger_Api_ServiceFactory {
 
             }
 
-            if ( class_exists( $this->_serviceClass, true )
-                && method_exists( $this->_serviceClass, $this->_method ) )
+            if (
+                class_exists( $this->_serviceClass, true ) &&
+                method_exists( $this->_serviceClass, $this->_method )
+            )
             {
 
                 /**
@@ -86,22 +88,23 @@ class Tiger_Api_ServiceFactory {
                  * In PHP 7.x, fatal errors are not caught by the exception handler. Wrapping this call in
                  * a try/catch for errors prevents the API from displaying the error page.
                  */
-                try {
 
-                    $service = new $this->_serviceClass( $this->_params );
-                    $this->_response = $service->getResponse();
+                $service = new $this->_serviceClass( $this->_params );
+                $this->_response = $service->getResponse();
 
-                }
-                catch ( Error $e ) {
 
-                    $this->_response->setTextMessage( $e->getMessage(), 'error' );
-                    $this->_response->result = false;
-
-                }
             }
             else {
+
                 throw new Exception( $this->_translate->translate( 'ERROR.INVALID_SERVICE' ) );
+
             }
+
+        }
+        catch ( Error $e ) {
+
+            $this->_response->setTextMessage( $e->getMessage(), 'error' );
+            $this->_response->result = false;
 
         }
         catch ( Exception $e ) {
