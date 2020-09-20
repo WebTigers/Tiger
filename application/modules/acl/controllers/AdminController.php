@@ -2,7 +2,7 @@
 
 class Acl_AdminController extends Tiger_Controller_Action
 {
-    public function init()
+    public function init ( )
     {
         /** The Admin Controller and Admin Service are only available on ports 8080 and 8081 for security purposes. */
         if ( ! in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
@@ -29,9 +29,6 @@ class Acl_AdminController extends Tiger_Controller_Action
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerForm.js' ) );
 
-        /** Set the layout path to use the core layout instead of the default user module layout. */
-        # Zend_Layout::getMvcInstance()->setLayoutPath(CORE_MODULE_PATH . '/layouts/scripts');
-
         $this->view->theme = 'oneui';
 
         /** Set the layout path to use the core layout instead of the default user module layout. */
@@ -46,9 +43,16 @@ class Acl_AdminController extends Tiger_Controller_Action
         /** Adds the backend dashboard settings we need. */
         $this->_setBackendVars( $this->view->one );
 
+        /** Set User to the theme container */
+        $this->view->one->user = Zend_Auth::getInstance()->getIdentity();
+
+        /** Global hero header vars */
+        $this->view->one->page_title = $this->view->translate('PERMISSIONS');
+
     }
 
-    protected function _setThemeVars ( ) {
+    protected function _setThemeVars ( )
+    {
 
         // **************************************************************************************************
         // TEMPLATE OBJECT
@@ -214,6 +218,7 @@ class Acl_AdminController extends Tiger_Controller_Action
 
     }
 
+
     ##### Admin Actions #####
 
     public function indexAction ( )
@@ -224,17 +229,19 @@ class Acl_AdminController extends Tiger_Controller_Action
     public function resourceAction ( )
     {
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/acl/js/acl.admin.resource.js' ) );
-
+        $this->view->resourceForm = new Acl_Form_Resource();
     }
 
     public function roleAction ( )
     {
-
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/acl/js/acl.admin.role.js' ) );
+        $this->view->roleForm = new Acl_Form_Role();
     }
 
     public function ruleAction ( )
     {
-
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/acl/js/acl.admin.rule.js' ) );
+        $this->view->ruleForm = new Acl_Form_Rule();
     }
 
 }

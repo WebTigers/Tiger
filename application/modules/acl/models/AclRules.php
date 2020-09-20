@@ -2,9 +2,10 @@
 
 class Acl_Model_AclRules extends Zend_Db_Table_Abstract {
     
-    protected $_name    = 'acl_rule';
-    protected $_primary = 'rule_id';
-    
+    protected $_name        = 'acl_rule';
+    protected $_primary     = 'rule_id';
+    protected $_rowClass    = 'Tiger_Db_Table_Row';
+
     public function init ( ) {
         
     }
@@ -73,5 +74,33 @@ class Acl_Model_AclRules extends Zend_Db_Table_Abstract {
 
     }
 
+    /**
+     * Searches and returns a list of rules based on various searchable fields. Note
+     * that admin searches are unconcerned with whether or not a record is active or deleted.
+     *
+     * These "SearchList" type functions are typically used exclusively by DataTables.
+     *
+     * @param string $search
+     * @param integer $offset
+     * @param integer $limit
+     * @return array of object of category
+     */
+    public function getAdminRuleSearchList ( $search, $offset = 0, $limit = 0, $orderby = '' ) {
+
+        $sql = $this->select()->
+            where( '( priority LIKE ?', "%$search%" )->
+            orWhere( 'rule_name LIKE ?', "%$search%" )->
+            orWhere( 'rule_description LIKE ?', "%$search%" )->
+            orWhere( 'permission LIKE ?', "%$search%" )->
+            orWhere( 'resource LIKE ?', "%$search%" )->
+            orWhere( 'privilege LIKE ?', "%$search%" )->
+            orWhere( 'assertion LIKE ?', "%$search%" )->
+            orWhere( 'role LIKE ? )', "%$search%" )->
+            order( $orderby)->
+            limit( $limit, $offset );
+
+        return $this->fetchAll( $sql );
+
+    }
 
 }

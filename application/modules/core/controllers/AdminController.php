@@ -27,9 +27,6 @@ class AdminController extends Tiger_Controller_Action
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerForm.js' ) );
 
-        /** Set the layout path to use the core layout instead of the default user module layout. */
-        # Zend_Layout::getMvcInstance()->setLayoutPath(CORE_MODULE_PATH . '/layouts/scripts');
-
         $this->view->theme = 'oneui';
 
         /** Set the layout path to use the core layout instead of the default user module layout. */
@@ -43,6 +40,12 @@ class AdminController extends Tiger_Controller_Action
 
         /** Adds the backend dashboard settings we need. */
         $this->_setBackendVars( $this->view->one );
+
+        /** Set User to the theme container */
+        $this->view->one->user = Zend_Auth::getInstance()->getIdentity();
+
+        /** Global hero header vars */
+        $this->view->one->page_title = $this->view->translate('DASHBOARD');
 
     }
 

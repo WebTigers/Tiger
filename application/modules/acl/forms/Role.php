@@ -1,6 +1,6 @@
 <?php
 
-class Acl_Form_Resource extends Tiger_Form_Base
+class Acl_Form_Role extends Tiger_Form_Base
 {
 
     public function init ( ) {
@@ -15,14 +15,13 @@ class Acl_Form_Resource extends Tiger_Form_Base
      */
     protected function _addFormElements ( ) {
 
-        $this->setName('Acl_Form_Resource');
+        $this->setName('Acl_Form_Role');
 
-        $this->addElement( $this->_getResourceId() );
-        $this->addElement( $this->_getModuleName() );
-        $this->addElement( $this->_getResourceName() );
-        $this->addElement( $this->_getResourceDescription() );
-        $this->addElement( $this->_getResource() );
-        $this->addElement( $this->_getPrivilege() );
+        $this->addElement( $this->_getRoleId() );
+        $this->addElement( $this->_getPriority() );
+        $this->addElement( $this->_getRoleName() );
+        $this->addElement( $this->_getParentRoleName() );
+        $this->addElement( $this->_getRoleDescription() );
         $this->addElement( $this->_getActive() );
         $this->addElement( $this->_getDeleted() );
 
@@ -30,9 +29,9 @@ class Acl_Form_Resource extends Tiger_Form_Base
 
     ##### Form Fields #####
 
-    protected function _getResourceId ( ) {
+    protected function _getRoleId ( ) {
 
-        $name = 'resource_id';
+        $name = 'role_id';
 
         $options = [
 
@@ -56,9 +55,111 @@ class Acl_Form_Resource extends Tiger_Form_Base
 
     }
 
-    protected function _getModuleName ( ) {
+    protected function _getPriority ( ) {
 
-        $name = 'module_name';
+        $name = 'priority';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'           =>  [
+                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.PRIVILEGE' ),
+                                        'data-valid'    => '0',
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'required'          =>  true,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^0-9]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                    [ 'NotEmpty', false, [
+                                        'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                    ] ],
+                                    [ 'StringLength', false, [
+                                        'min'   => 1,
+                                        'max'   => 100,
+                                        'messages' => [
+                                            Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                            Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                        ]
+                                    ] ],
+                                    [ 'Regex', false, [
+                                        'pattern' => '/^[0-9]+$/',
+                                        'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                    ] ]
+                                ]
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getRoleName ( ) {
+
+        $name = 'role_name';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'           =>  [
+                // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE_NAME' ),
+                'data-valid'    => '0',
+            ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'required'          =>  true,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Za-z0-9]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'NotEmpty', false, [
+                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                        ] ],
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 50,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Za-z0-9]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getParentRoleName ( ) {
+
+        $name = 'parent_role_name';
 
         $options = [
 
@@ -90,7 +191,7 @@ class Acl_Form_Resource extends Tiger_Form_Base
                                         ] ],
                                         [ 'StringLength', false, [
                                             'min'   => 1,
-                                            'max'   => 25,
+                                            'max'   => 50,
                                             'messages' => [
                                                 Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                                 Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
@@ -107,9 +208,9 @@ class Acl_Form_Resource extends Tiger_Form_Base
 
     }
 
-    protected function _getResourceName ( ) {
+    protected function _getRoleDescription ( ) {
 
-        $name = 'resource_name';
+        $name = 'role_description';
 
         $options = [
 
@@ -118,9 +219,9 @@ class Acl_Form_Resource extends Tiger_Form_Base
             'class'             =>  'form-control form-control-lg form-control-alt',
 
             'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE_NAME' ),
-                                        'data-valid'    => '0',
-                                    ],
+                // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE_DESCRIPTION' ),
+                'data-valid'    => '0',
+            ],
 
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
@@ -149,159 +250,6 @@ class Acl_Form_Resource extends Tiger_Form_Base
                                         ] ],
                                         [ 'Regex', false, [
                                             'pattern' => '/^[A-Za-z0-9 \'\-,.]+$/',
-                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
-                                        ] ]
-                                    ]
-        ];
-
-        return new Zend_Form_Element_Text( $name, $options );
-
-    }
-
-    protected function _getResourceDescription ( ) {
-
-        $name = 'resource_description';
-
-        $options = [
-
-            'name'              =>  $name,
-            'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
-
-            'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE_DESCRIPTION' ),
-                                        'data-valid'    => '0',
-                                    ],
-
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
-
-            'required'          =>  true,
-
-            'filters'           =>  [
-                                        [ 'StringTrim' ],
-                                        [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9 \'\-,.]/',
-                                            'replace' => ''
-                                        ] ]
-                                    ],
-
-            'validators'        =>  [
-                                        [ 'NotEmpty', false, [
-                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
-                                        ] ],
-                                        [ 'StringLength', false, [
-                                            'min'   => 1,
-                                            'max'   => 100,
-                                            'messages' => [
-                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
-                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
-                                            ]
-                                        ] ],
-                                        [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9 \'\-,.]+$/',
-                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
-                                        ] ]
-                                    ]
-        ];
-
-        return new Zend_Form_Element_Text( $name, $options );
-
-    }
-
-    protected function _getResource ( ) {
-
-        $name = 'resource';
-
-        $options = [
-
-            'name'              =>  $name,
-            'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
-
-            'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
-                                        'data-valid'    => '0',
-                                    ],
-
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
-
-            'required'          =>  true,
-
-            'filters'           =>  [
-                                        [ 'StringTrim' ],
-                                        [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9\_.]/',
-                                            'replace' => ''
-                                        ] ]
-                                    ],
-
-            'validators'        =>  [
-                                        [ 'NotEmpty', false, [
-                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
-                                        ] ],
-                                        [ 'StringLength', false, [
-                                            'min'   => 1,
-                                            'max'   => 100,
-                                            'messages' => [
-                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
-                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
-                                            ]
-                                        ] ],
-                                        [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9\_.]+$/',
-                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
-                                        ] ]
-                                    ]
-        ];
-
-        return new Zend_Form_Element_Text( $name, $options );
-
-    }
-
-    protected function _getPrivilege ( ) {
-
-        $name = 'privilege';
-
-        $options = [
-
-            'name'              =>  $name,
-            'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
-
-            'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.PRIVILEGE' ),
-                                        'data-valid'    => '0',
-                                    ],
-
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
-
-            'required'          =>  true,
-
-            'filters'           =>  [
-                                        [ 'StringTrim' ],
-                                        [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9\_.]/',
-                                            'replace' => ''
-                                        ] ]
-                                    ],
-
-            'validators'        =>  [
-                                        [ 'NotEmpty', false, [
-                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
-                                        ] ],
-                                        [ 'StringLength', false, [
-                                            'min'   => 1,
-                                            'max'   => 100,
-                                            'messages' => [
-                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
-                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
-                                            ]
-                                        ] ],
-                                        [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9\_.]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]
@@ -351,7 +299,7 @@ class Acl_Form_Resource extends Tiger_Form_Base
                                             'min' => 0,
                                             'max' => 1
                                         ] ],
-                                    ],
+                                    ]
         ];
 
         return new Zend_Form_Element_Checkbox( $name, $options );
@@ -398,7 +346,7 @@ class Acl_Form_Resource extends Tiger_Form_Base
                                             'min' => 0,
                                             'max' => 1
                                         ] ],
-                                    ],
+                                    ]
         ];
 
         return new Zend_Form_Element_Checkbox( $name, $options );

@@ -86,7 +86,8 @@ class Acl_Model_AclResources extends Zend_Db_Table_Abstract {
     public function getAdminResourceSearchList ( $search, $offset = 0, $limit = 0, $orderby = '' ) {
 
         $sql = $this->select()->
-            where( '( resource_name LIKE ?', "%$search%" )->
+            where( '( module_name LIKE ?', "%$search%" )->
+            orWhere( 'resource_name LIKE ?', "%$search%" )->
             orWhere( 'resource_description LIKE ?', "%$search%" )->
             orWhere( 'resource LIKE ?', "%$search%" )->
             orWhere( 'privilege LIKE ? )', "%$search%" )->
@@ -96,6 +97,5 @@ class Acl_Model_AclResources extends Zend_Db_Table_Abstract {
         return $this->fetchAll( $sql );
 
     }
-
 
 }

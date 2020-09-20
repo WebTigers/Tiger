@@ -6,17 +6,17 @@
     
     let Class = {
 
-        resourceDT : null,
-        staticResourceDT : null,
+        ruleDT : null,
+        staticRuleDT : null,
         
         init : function( ) {
 
             $(document).ready(function() {
 
                 // Page init stuff goes here. //
-                Class._initResourceDataTable();
+                Class._initRuleDataTable();
                 Class._initControls();
-                Class._initStaticResourceDataTable();
+                Class._initStaticRuleDataTable();
 
             });
 
@@ -24,9 +24,9 @@
 
         // Admin Functions //
 
-        _initResourceDataTable : function () {
+        _initRuleDataTable : function () {
 
-            Class.resourceDT = $('#resourcesDT').DataTable({
+            Class.ruleDT = $('#rulesDT').DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
@@ -45,26 +45,30 @@
                     'dataSrc': 'data',
                     'data': {
                         service: 'acl:admin',
-                        method: 'getAdminResourcesDataTable'
+                        method: 'getAdminRulesDataTable'
                     }
                 },
                 'columns': [{
-                    'title': 'Resource Id',
-                    'name': 'resource_id',
-                    'data': 'resource_id',
+                    'title': 'Rule Id',
+                    'name': 'rule_id',
+                    'data': 'rule_id',
                     'visible': false
                 }, {
-                    'title': 'Module',
-                    'name': 'module_name',
-                    'data': 'module_name'
+                    'title': 'Priority',
+                    'name': 'priority',
+                    'data': 'priority'
                 }, {
-                    'title': 'Resource Name',
-                    'name': 'resource_name',
-                    'data': 'resource_name'
+                    'title': 'Rule Name',
+                    'name': 'rule_name',
+                    'data': 'rule_name'
                 }, {
-                    'title': 'Resource Description',
-                    'name': 'resource_description',
-                    'data': 'resource_description'
+                    'title': 'Rule Description',
+                    'name': 'rule_description',
+                    'data': 'rule_description'
+                }, {
+                    'title': 'Permission',
+                    'name': 'permission',
+                    'data': 'permission'
                 }, {
                     'title': 'Resource',
                     'name': 'resource',
@@ -74,7 +78,15 @@
                     'name': 'privilege',
                     'data': 'privilege'
                 }, {
-                    'title': 'Privilege',
+                    'title': 'Assertion',
+                    'name': 'assertion',
+                    'data': 'assertion'
+                }, {
+                    'title': 'Role',
+                    'name': 'role',
+                    'data': 'role'
+                }, {
+                    'title': 'Active',
                     'name': 'active',
                     'data': 'active',
                     'class': 'active',
@@ -95,13 +107,13 @@
                 }]
             });
 
-            Class.resourceDT.on('preXhr.dt', function (event, settings, data) {
-                // data.page = Class.resourceDT.page() + 1;
-                // data.search = Class.resourceDT.search();
+            Class.ruleDT.on('preXhr.dt', function (event, settings, data) {
+                // data.page = Class.ruleDT.page() + 1;
+                // data.search = Class.ruleDT.search();
                 // data.locale = 'en';
             });
 
-            Class.resourceDT.on('xhr.dt', function (event, settings, json, xhr) {
+            Class.ruleDT.on('xhr.dt', function (event, settings, json, xhr) {
                 // json.recordsTotal = parseInt( json.recordsTotal, 10);
                 // json.recordsFiltered = parseInt( json.recordsFiltered, 10);
             });
@@ -135,32 +147,30 @@
 
         _initControls : function () {
 
-            $('#add-resource').on( 'click', Class._add );
+            $('#add-rule').on( 'click', Class._add );
             $('#save-button').on( 'click', Class._save );
 
             $('body').on('click', 'table i.edit', Class._edit );
             $('body').on('click', 'table i.active, table i.deleted', Class._update );
 
-            // $().tigerDOM('initToggleControls');
-
         },
 
         _add : function ( event ) {
 
-            $('#add-resource-header').removeClass('hide')
-            $('#edit-resource-header').addClass('hide')
-            $('#resource-form .boiler-plate').addClass('hide')
-            $('#resource-form').tigerForm('reset');
-            $('#modal-resources-form').modal('show');
+            $('#add-rule-header').removeClass('hide')
+            $('#edit-rule-header').addClass('hide')
+            $('#rule-form .boiler-plate').addClass('hide')
+            $('#rule-form').tigerForm('reset');
+            $('#modal-rules-form').modal('show');
 
         },
 
         _edit : function ( event ) {
 
-            $('#add-resource-header').addClass('hide')
-            $('#edit-resource-header').removeClass('hide')
-            $('#resource-form .boiler-plate').removeClass('hide')
-            $('#resource-form').tigerForm('reset');
+            $('#add-rule-header').addClass('hide')
+            $('#edit-rule-header').removeClass('hide')
+            $('#rule-form .boiler-plate').removeClass('hide')
+            $('#rule-form').tigerForm('reset');
 
             function beforeSend ( jqXHR, settings ) {
             }
@@ -174,8 +184,8 @@
 
                 if ( data.result === 1 ) {
 
-                    $('#resource-form').tigerForm('setFormValues', data.data );
-                    $('#modal-resources-form').modal('show');
+                    $('#rule-form').tigerForm('setFormValues', data.data );
+                    $('#modal-rules-form').modal('show');
 
                 }
                 else {
@@ -207,8 +217,8 @@
 
             let data = {
                 service : 'acl:admin',
-                method  : 'getResource',
-                resource_id : $(this).attr('data-id')
+                method  : 'getRule',
+                rule_id : $(this).attr('data-id')
             };
 
             $.ajax({
@@ -250,13 +260,13 @@
                     /** Update the icon and the row's value. */
 
                     if ( $elm.hasClass('active') ) {
-                        Class.resourceDT.row( $row ).cell('.active').data(data.data.active);
+                        Class.ruleDT.row( $row ).cell('.active').data(data.data.active);
                         data.data.active = ( parseInt(data.data.active,10) === 1 )
                             ? $elm.removeClass('fa-play').addClass('fa-pause')
                             : $elm.addClass('fa-play').removeClass('fa-pause');
                     }
                     else if ( $elm.hasClass('deleted') ) {
-                        Class.resourceDT.row( $row ).cell('.deleted').data(data.data.deleted);
+                        Class.ruleDT.row( $row ).cell('.deleted').data(data.data.deleted);
                         data.data.deleted = ( parseInt(data.data.deleted,10) === 0 )
                             ? $elm.addClass('fa-trash').removeClass('fa-trash-restore')
                             : $elm.removeClass('fa-trash').addClass('fa-trash-restore');
@@ -290,7 +300,7 @@
             }
 
             /** Based on the control that made the request, let's grab our data! */
-            let data = Class.resourceDT.row( $row ).data();
+            let data = Class.ruleDT.row( $row ).data();
             delete data.DT_RowId;
             delete data.controls;
 
@@ -307,7 +317,7 @@
 
             /** API params tell Tiger what service will be processing the data. */
             data.service = 'acl:admin';
-            data.method = 'updateResource';
+            data.method = 'updateRule';
 
             $.ajax({
                 type        : "POST",
@@ -352,7 +362,7 @@
 
                 if (parseInt(data.result, 10) === 1) {
 
-                    $('#resource-form .form-message').css('overflow', 'hidden').tigerDOM('insert', {
+                    $('#rule-form .form-message').css('overflow', 'hidden').tigerDOM('insert', {
                         content: data.html[0],
                         removeClick: true,
                         removeTimeout: 0
@@ -377,7 +387,7 @@
 
                         let msgData = {
                             result: 0,
-                            form: 'Acl_Form_Resource',
+                            form: 'Acl_Form_Rule',
                             element: null,
                             messages: []
                         };
@@ -422,11 +432,11 @@
             /** API params tell Tiger what service will be processing the data. */
             let apiParams = {
                 service : 'acl:admin',
-                method  : 'saveResource'
+                method  : 'saveRule'
             };
 
             /** Note that our API params will be added to the form data */
-            let data = $('#resource-form').tigerForm('getFormValues', apiParams );
+            let data = $('#rule-form').tigerForm('getFormValues', apiParams );
 
             $.ajax({
                 type        : "POST",
@@ -441,9 +451,9 @@
             
         },
 
-        _initStaticResourceDataTable : function () {
+        _initStaticRuleDataTable : function () {
 
-            Class.staticResourceDT = $('#staticResourcesDT').DataTable({
+            Class.staticRuleDT = $('#staticRulesDT').DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': false,
@@ -462,26 +472,30 @@
                     'dataSrc': 'data',
                     'data': {
                         service: 'acl:admin',
-                        method: 'getAdminStaticResourcesDataTable'
+                        method: 'getAdminStaticRulesDataTable'
                     }
                 },
                 'columns': [{
-                    'title': 'Resource Id',
-                    'name': 'resource_id',
-                    'data': 'resource_id',
+                    'title': 'Rule Id',
+                    'name': 'rule_id',
+                    'data': 'rule_id',
                     'visible': false
                 }, {
-                    'title': 'Module',
-                    'name': 'module_name',
-                    'data': 'module_name'
+                    'title': 'Priority',
+                    'name': 'priority',
+                    'data': 'priority'
                 }, {
-                    'title': 'Resource Name',
-                    'name': 'resource_name',
-                    'data': 'resource_name'
+                    'title': 'Rule Name',
+                    'name': 'rule_name',
+                    'data': 'rule_name'
                 }, {
-                    'title': 'Resource Description',
-                    'name': 'resource_description',
-                    'data': 'resource_description'
+                    'title': 'Rule Description',
+                    'name': 'rule_description',
+                    'data': 'rule_description'
+                }, {
+                    'title': 'Permission',
+                    'name': 'permission',
+                    'data': 'permission'
                 }, {
                     'title': 'Resource',
                     'name': 'resource',
@@ -490,6 +504,14 @@
                     'title': 'Privilege',
                     'name': 'privilege',
                     'data': 'privilege'
+                }, {
+                    'title': 'Assertion',
+                    'name': 'assertion',
+                    'data': 'assertion'
+                }, {
+                    'title': 'Role',
+                    'name': 'role',
+                    'data': 'role'
                 }]
             });
 
@@ -497,7 +519,7 @@
 
     };
   
-    $.fn.aclAdminResource = function( method ) {
+    $.fn.aclAdminRule = function( method ) {
         if ( Class[method] ) {
             return Class[ method ].apply( this, Array.prototype.slice.call( arguments, 1 ));
         } else if ( typeof method === 'object' || ! method ) {
@@ -507,6 +529,6 @@
         }
     };
     
-    $().aclAdminResource();
+    $().aclAdminRule();
     
 })( jQuery );

@@ -21,6 +21,7 @@
                 if ( ! $().tigerDOM ) { alert( 'The TigerDOM plugin is required.' ); }
 
                 Class.initAutoValidate();
+                Class.initBlockOptions();
 
             });
 
@@ -32,18 +33,72 @@
          */
         reset : function( ) {
 
-            return this.each(function() {
+            this.each(function() {
 
                 let type = this.type, tag = this.tagName.toLowerCase();
-                if (tag === 'form') { return $(':input',this).tigerForm('reset'); }
-                if (type === 'text' || type === 'password' || tag === 'textarea') { this.value = ''; }
-                else if (type === 'checkbox' || type === 'radio') { this.checked = false; }
-                else if (tag === 'select') { this.selectedIndex = -1; }
 
-                Class._setElementMessage('{"element":"' + $(this).attr('name') + '"}');
-                $('ul.messages').children().tigerDOM('remove');
+                if (tag === 'form') {
+                    return $(':input',this).tigerForm('reset');
+                }
+
+                if (type === 'text' || type === 'password' || tag === 'textarea') {
+                    this.value = '';
+                }
+                else if (type === 'checkbox' || type === 'radio') {
+                    this.checked = false;
+                }
+                else if (tag === 'select') {
+                    this.selectedIndex = -1;
+                }
+
+                $(this).removeClass('is-valid').removeClass('is-invalid');
 
             });
+
+            this.find('.message-container, .form-message').children().remove();
+            this.find('.message-container, .form-message').tigerDOM('reset');
+
+        },
+
+        setFormValues : function ( formValues ) {
+
+            /** "this" is already a jQuery from object. */
+
+            let boilerPlateVars = ['create_user_id', 'update_user_id', 'create_date', 'update_date'];
+
+            for ( let key in formValues ) {
+
+                let $el = $(this).find('#' + key );
+
+                if ( $el.length > 0 ) {
+
+                    if ( $el.not('input:checkbox').is('input:text, input:hidden, textarea') ) {
+                        $el.val( formValues[key] );
+                    }
+
+                    if ( $el.is('input:checkbox') ) {
+                        if ( formValues[key] === $el.val() ) {
+                            $el.attr('checked', 'checked').prop('checked', true);
+                        }
+                        else {
+                            $el.removeAttr('checked').prop('checked', false);
+                        }
+                    }
+
+                    if ( $el.is('select') ) {
+                        $el.val( formValues[key] );
+                        if ( $el.hasClass('select2') ) {
+                            $el.trigger('change');
+                        }
+                    }
+
+                }
+
+                else if ( $.inArray(key, boilerPlateVars) > -1 ) {
+                    $(this).find('.' + key ).html( formValues[key] );
+                }
+
+            }
 
         },
 
@@ -165,6 +220,29 @@
                 $element.removeClass( 'is-invalid' ).addClass('is-valid');
 
             }
+
+        },
+
+        initBlockOptions : function ( ) {
+
+            $('div.block-options [data-tiger-reload-table]').on('click', function ( event ) {
+
+                let datatable = $(this).attr('data-tiger-reload-table');
+                let block = $(this).closest('div.block');
+
+                $( datatable ).DataTable().on('preDraw.block', function ( event ) {
+                    One.block('state_loading', block );
+                });
+
+                $( datatable ).DataTable().on('draw.block', function( event ) {
+                    One.block('state_normal', block );
+                    $( datatable ).DataTable().off('preDraw.block');
+                    $( datatable ).DataTable().off('draw.block');
+                });
+
+                $( datatable ).DataTable().draw();
+
+            });
 
         }
 

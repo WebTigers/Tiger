@@ -22,6 +22,12 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         $configModel = new Core_Model_Config;
         $configArray = $configModel->getConfigArray();
         $config->merge( new Zend_Config( $configArray ) );
+
+        /** Merge the ACL file separately. */
+        $filename = realpath(dirname(__FILE__) . '/configs' ) . '/acl.ini';
+        $configOptions = new Zend_Config_Ini( $filename, APPLICATION_ENV, [ 'allowModifications' => true ] );
+        $config->merge( $configOptions );
+
         Zend_Registry::set( 'Zend_Config', $config );
 
 

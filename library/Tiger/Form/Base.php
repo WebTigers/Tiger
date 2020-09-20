@@ -48,8 +48,29 @@ class Tiger_Form_Base extends Zend_Form
 
     }
 
+    public function isValidPartial ( $data ) {
+
+        $remove = [
+            'module' => null,
+            'controller' => null,
+            'action' => null,
+            'service' => null,
+            'method' => null,
+            'form' => null,
+        ];
+
+        $newData = array_diff_key( $data, $remove );
+
+        return parent::isValidPartial( $newData );
+
+    }
+
     public function isValidPreserve ( $data ) {
         return parent::isValid( $data );
+    }
+
+    public function isValidPartialPreserve ( $data ) {
+        return parent::isValidPartial( $data );
     }
 
     protected function _addFormElements ( )

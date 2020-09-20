@@ -2,9 +2,10 @@
 
 class Acl_Model_AclRoles extends Zend_Db_Table_Abstract {
     
-    protected $_name    = 'acl_role';
-    protected $_primary = 'role_id';
-    
+    protected $_name        = 'acl_role';
+    protected $_primary     = 'role_id';
+    protected $_rowClass    = 'Tiger_Db_Table_Row';
+
     public function init ( ) {
         
     }
@@ -70,6 +71,31 @@ class Acl_Model_AclRoles extends Zend_Db_Table_Abstract {
             $roles[ $roleRow->role_id ] = $roleRow->toArray();
         }
         return new Zend_Config( $roles, true );
+
+    }
+    
+    /**
+     * Searches and returns a list of roles based on various searchable fields. Note
+     * that admin searches are unconcerned with whether or not a record is active or deleted.
+     *
+     * These "SearchList" type functions are typically used exclusively by DataTables.
+     *
+     * @param string $search
+     * @param integer $offset
+     * @param integer $limit
+     * @return array of object of category
+     */
+    public function getAdminRoleSearchList ( $search, $offset = 0, $limit = 0, $orderby = '' ) {
+
+        $sql = $this->select()->
+            where( '( priority LIKE ?', "%$search%" )->
+            orWhere( 'role_name LIKE ?', "%$search%" )->
+            orWhere( 'parent_role_name LIKE ?', "%$search%" )->
+            orWhere( 'role_description LIKE ? )', "%$search%" )->
+            order( $orderby)->
+            limit( $limit, $offset );
+
+        return $this->fetchAll( $sql );
 
     }
 

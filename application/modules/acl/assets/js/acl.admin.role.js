@@ -6,17 +6,17 @@
     
     let Class = {
 
-        resourceDT : null,
-        staticResourceDT : null,
+        roleDT : null,
+        staticRoleDT : null,
         
         init : function( ) {
 
             $(document).ready(function() {
 
                 // Page init stuff goes here. //
-                Class._initResourceDataTable();
+                Class._initRoleDataTable();
                 Class._initControls();
-                Class._initStaticResourceDataTable();
+                Class._initStaticRoleDataTable();
 
             });
 
@@ -24,9 +24,9 @@
 
         // Admin Functions //
 
-        _initResourceDataTable : function () {
+        _initRoleDataTable : function () {
 
-            Class.resourceDT = $('#resourcesDT').DataTable({
+            Class.roleDT = $('#rolesDT').DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
@@ -45,36 +45,32 @@
                     'dataSrc': 'data',
                     'data': {
                         service: 'acl:admin',
-                        method: 'getAdminResourcesDataTable'
+                        method: 'getAdminRolesDataTable'
                     }
                 },
                 'columns': [{
-                    'title': 'Resource Id',
-                    'name': 'resource_id',
-                    'data': 'resource_id',
+                    'title': 'Role Id',
+                    'name': 'role_id',
+                    'data': 'role_id',
                     'visible': false
                 }, {
-                    'title': 'Module',
-                    'name': 'module_name',
-                    'data': 'module_name'
+                    'title': 'Priority',
+                    'name': 'priority',
+                    'data': 'priority'
                 }, {
-                    'title': 'Resource Name',
-                    'name': 'resource_name',
-                    'data': 'resource_name'
+                    'title': 'Role Name',
+                    'name': 'role_name',
+                    'data': 'role_name'
                 }, {
-                    'title': 'Resource Description',
-                    'name': 'resource_description',
-                    'data': 'resource_description'
+                    'title': 'Parent Role Name',
+                    'name': 'parent_role_name',
+                    'data': 'parent_role_name'
                 }, {
-                    'title': 'Resource',
-                    'name': 'resource',
-                    'data': 'resource'
+                    'title': 'Role Description',
+                    'name': 'role_description',
+                    'data': 'role_description'
                 }, {
-                    'title': 'Privilege',
-                    'name': 'privilege',
-                    'data': 'privilege'
-                }, {
-                    'title': 'Privilege',
+                    'title': 'Active',
                     'name': 'active',
                     'data': 'active',
                     'class': 'active',
@@ -95,13 +91,13 @@
                 }]
             });
 
-            Class.resourceDT.on('preXhr.dt', function (event, settings, data) {
-                // data.page = Class.resourceDT.page() + 1;
-                // data.search = Class.resourceDT.search();
+            Class.roleDT.on('preXhr.dt', function (event, settings, data) {
+                // data.page = Class.roleDT.page() + 1;
+                // data.search = Class.roleDT.search();
                 // data.locale = 'en';
             });
 
-            Class.resourceDT.on('xhr.dt', function (event, settings, json, xhr) {
+            Class.roleDT.on('xhr.dt', function (event, settings, json, xhr) {
                 // json.recordsTotal = parseInt( json.recordsTotal, 10);
                 // json.recordsFiltered = parseInt( json.recordsFiltered, 10);
             });
@@ -135,32 +131,30 @@
 
         _initControls : function () {
 
-            $('#add-resource').on( 'click', Class._add );
+            $('#add-role').on( 'click', Class._add );
             $('#save-button').on( 'click', Class._save );
 
             $('body').on('click', 'table i.edit', Class._edit );
             $('body').on('click', 'table i.active, table i.deleted', Class._update );
 
-            // $().tigerDOM('initToggleControls');
-
         },
 
         _add : function ( event ) {
 
-            $('#add-resource-header').removeClass('hide')
-            $('#edit-resource-header').addClass('hide')
-            $('#resource-form .boiler-plate').addClass('hide')
-            $('#resource-form').tigerForm('reset');
-            $('#modal-resources-form').modal('show');
+            $('#add-role-header').removeClass('hide')
+            $('#edit-role-header').addClass('hide')
+            $('#role-form .boiler-plate').addClass('hide')
+            $('#role-form').tigerForm('reset');
+            $('#modal-roles-form').modal('show');
 
         },
 
         _edit : function ( event ) {
 
-            $('#add-resource-header').addClass('hide')
-            $('#edit-resource-header').removeClass('hide')
-            $('#resource-form .boiler-plate').removeClass('hide')
-            $('#resource-form').tigerForm('reset');
+            $('#add-role-header').addClass('hide')
+            $('#edit-role-header').removeClass('hide')
+            $('#role-form .boiler-plate').removeClass('hide')
+            $('#role-form').tigerForm('reset');
 
             function beforeSend ( jqXHR, settings ) {
             }
@@ -174,8 +168,8 @@
 
                 if ( data.result === 1 ) {
 
-                    $('#resource-form').tigerForm('setFormValues', data.data );
-                    $('#modal-resources-form').modal('show');
+                    $('#role-form').tigerForm('setFormValues', data.data );
+                    $('#modal-roles-form').modal('show');
 
                 }
                 else {
@@ -207,8 +201,8 @@
 
             let data = {
                 service : 'acl:admin',
-                method  : 'getResource',
-                resource_id : $(this).attr('data-id')
+                method  : 'getRole',
+                role_id : $(this).attr('data-id')
             };
 
             $.ajax({
@@ -250,13 +244,13 @@
                     /** Update the icon and the row's value. */
 
                     if ( $elm.hasClass('active') ) {
-                        Class.resourceDT.row( $row ).cell('.active').data(data.data.active);
+                        Class.roleDT.row( $row ).cell('.active').data(data.data.active);
                         data.data.active = ( parseInt(data.data.active,10) === 1 )
                             ? $elm.removeClass('fa-play').addClass('fa-pause')
                             : $elm.addClass('fa-play').removeClass('fa-pause');
                     }
                     else if ( $elm.hasClass('deleted') ) {
-                        Class.resourceDT.row( $row ).cell('.deleted').data(data.data.deleted);
+                        Class.roleDT.row( $row ).cell('.deleted').data(data.data.deleted);
                         data.data.deleted = ( parseInt(data.data.deleted,10) === 0 )
                             ? $elm.addClass('fa-trash').removeClass('fa-trash-restore')
                             : $elm.removeClass('fa-trash').addClass('fa-trash-restore');
@@ -290,7 +284,7 @@
             }
 
             /** Based on the control that made the request, let's grab our data! */
-            let data = Class.resourceDT.row( $row ).data();
+            let data = Class.roleDT.row( $row ).data();
             delete data.DT_RowId;
             delete data.controls;
 
@@ -307,7 +301,7 @@
 
             /** API params tell Tiger what service will be processing the data. */
             data.service = 'acl:admin';
-            data.method = 'updateResource';
+            data.method = 'updateRole';
 
             $.ajax({
                 type        : "POST",
@@ -352,7 +346,7 @@
 
                 if (parseInt(data.result, 10) === 1) {
 
-                    $('#resource-form .form-message').css('overflow', 'hidden').tigerDOM('insert', {
+                    $('#role-form .form-message').css('overflow', 'hidden').tigerDOM('insert', {
                         content: data.html[0],
                         removeClick: true,
                         removeTimeout: 0
@@ -377,7 +371,7 @@
 
                         let msgData = {
                             result: 0,
-                            form: 'Acl_Form_Resource',
+                            form: 'Acl_Form_Role',
                             element: null,
                             messages: []
                         };
@@ -422,11 +416,11 @@
             /** API params tell Tiger what service will be processing the data. */
             let apiParams = {
                 service : 'acl:admin',
-                method  : 'saveResource'
+                method  : 'saveRole'
             };
 
             /** Note that our API params will be added to the form data */
-            let data = $('#resource-form').tigerForm('getFormValues', apiParams );
+            let data = $('#role-form').tigerForm('getFormValues', apiParams );
 
             $.ajax({
                 type        : "POST",
@@ -441,9 +435,9 @@
             
         },
 
-        _initStaticResourceDataTable : function () {
+        _initStaticRoleDataTable : function () {
 
-            Class.staticResourceDT = $('#staticResourcesDT').DataTable({
+            Class.staticRoleDT = $('#staticRolesDT').DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': false,
@@ -462,34 +456,30 @@
                     'dataSrc': 'data',
                     'data': {
                         service: 'acl:admin',
-                        method: 'getAdminStaticResourcesDataTable'
+                        method: 'getAdminStaticRolesDataTable'
                     }
                 },
                 'columns': [{
-                    'title': 'Resource Id',
-                    'name': 'resource_id',
-                    'data': 'resource_id',
+                    'title': 'Role Id',
+                    'name': 'role_id',
+                    'data': 'role_id',
                     'visible': false
                 }, {
-                    'title': 'Module',
-                    'name': 'module_name',
-                    'data': 'module_name'
+                    'title': 'Priority',
+                    'name': 'priority',
+                    'data': 'priority'
                 }, {
-                    'title': 'Resource Name',
-                    'name': 'resource_name',
-                    'data': 'resource_name'
+                    'title': 'Role Name',
+                    'name': 'role_name',
+                    'data': 'role_name'
                 }, {
-                    'title': 'Resource Description',
-                    'name': 'resource_description',
-                    'data': 'resource_description'
+                    'title': 'Parent Role Name',
+                    'name': 'parent_role_name',
+                    'data': 'parent_role_name'
                 }, {
-                    'title': 'Resource',
-                    'name': 'resource',
-                    'data': 'resource'
-                }, {
-                    'title': 'Privilege',
-                    'name': 'privilege',
-                    'data': 'privilege'
+                    'title': 'Role Description',
+                    'name': 'role_description',
+                    'data': 'role_description'
                 }]
             });
 
@@ -497,7 +487,7 @@
 
     };
   
-    $.fn.aclAdminResource = function( method ) {
+    $.fn.aclAdminRole = function( method ) {
         if ( Class[method] ) {
             return Class[ method ].apply( this, Array.prototype.slice.call( arguments, 1 ));
         } else if ( typeof method === 'object' || ! method ) {
@@ -507,6 +497,6 @@
         }
     };
     
-    $().aclAdminResource();
+    $().aclAdminRole();
     
 })( jQuery );

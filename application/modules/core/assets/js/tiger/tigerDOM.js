@@ -7,7 +7,7 @@
  * Version 2.0.0
  */
 
-(function( $ ){
+( function ( $ ) {
     
     //
     let _locale;
@@ -16,14 +16,14 @@
     let baseTime        = 400;
     let baseTimeFast    = 200;
     
-    let oMethods = {
+    let Class = {
         
-        init : function() {
+        init : function ( ) {
 
             $(document).ready(function() {
 
                 // set Locale
-                oMethods.setLocale();
+                Class.setLocale();
 
             });
 
@@ -32,7 +32,7 @@
         /**
          * Returns the current locale of the client as set by the server.
          */
-        getLocale : function() {
+        getLocale : function ( ) {
             return _locale;
         },
         
@@ -41,7 +41,7 @@
          * letiable as set by the server.
          * 
          */
-        setLocale : function( ) {
+        setLocale : function ( ) {
             _locale = $('meta[http-equiv=Content-Language]').attr("content");
         },
 
@@ -117,7 +117,7 @@
         /**
          * Counts the number of properties (keys) in an array
          */
-        count : function( obj ) {
+        count : function ( obj ) {
             let count = 0, key;
             for (key in obj) {
                 if (obj.hasOwnProperty(key)) { count++; }
@@ -129,7 +129,7 @@
          * A utility function that sets all of the passed in 
          * elements to the same height as the tallest element
          */
-        equalHeights : function( ) {
+        equalHeights : function ( ) {
             
             let tallest = 0;
 
@@ -144,7 +144,7 @@
             $(this).height(tallest);
         },
 
-        parse_url : function( oParams ) {
+        parse_url : function ( oParams ) {
             
                 //       discuss at: http://phpjs.org/functions/parse_url/
                 //      original by: Steven Levithan (http://blog.stevenlevithan.com)
@@ -331,7 +331,7 @@
          * NOTE: the Target container element's CSS needs to be 
          * set to "overflow:hidden;"
          */
-        insert : function( oParams ) { 
+        insert : function ( oParams ) {
 
             let callback = (typeof oParams.callback == 'function') 
                 ? oParams.callback 
@@ -410,7 +410,7 @@
          * 
          * Remove function elegantly deletes content (targeted elements).
          */
-        remove : function( callback ) {
+        remove : function ( callback ) {
             
             callback = (typeof callback === 'function') 
                 ? callback 
@@ -425,11 +425,13 @@
                 let parentHeight = $parent.innerHeight();
 
                 let height = parseInt(parentHeight - contentHeight, 10);
-                let adjustedHeight = ($parent.children().length > 0 ) ? height : 1;
+                let adjustedHeight = ( $parent.children().length > 0 ) ? height : 1;
                 let minHeight = parseInt( $parent.css('min-height'), 10 );
                 
                 adjustedHeight = ( minHeight > 0 ) ? minHeight : adjustedHeight;
-                
+
+                console.log( adjustedHeight );
+
                 // set an element static height on the container
                 $parent.css('height', parentHeight);
                 
@@ -443,7 +445,6 @@
                         });
                 });
 
-                
             });
         
         },
@@ -603,10 +604,10 @@
     };
   
     $.fn.tigerDOM = function( method ) {
-        if ( oMethods[method] ) {
-            return oMethods[ method ].apply( this, Array.prototype.slice.call( arguments, 1 ));
+        if ( Class[method] ) {
+            return Class[ method ].apply( this, Array.prototype.slice.call( arguments, 1 ));
         } else if ( typeof method === 'object' || ! method ) {
-            return oMethods.init.apply( this, arguments );
+            return Class.init.apply( this, arguments );
         } else {
             $.error( 'Method ' +  method + ' does not exist on jQuery.tigerDOM' );
         }    
@@ -614,7 +615,7 @@
     
     $().tigerDOM();
 
-})( jQuery );
+} ) ( jQuery );
 
 function storageAvailable(type) {
     let storage;
