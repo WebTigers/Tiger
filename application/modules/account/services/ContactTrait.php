@@ -122,7 +122,7 @@ trait Account_Service_ContactTrait
 
     }
 
-    public function getContactSelect2List ( $params )
+    public function getAdminContactSelect2List ( $params )
     {
 
         try {

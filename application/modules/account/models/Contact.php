@@ -28,7 +28,7 @@ class Account_Model_Contact extends Zend_Db_Table_Abstract
      * @param integer $offset
      * @param integer $limit
      * @param string $orderby
-     * @return array of object of category
+     * @return Zend_Db_Table_Rowset_Abstract
      */
     public function getAdminContactSearchList ( string $entity, string $entity_id, string $search, $offset = 0, $limit = 0, string $orderby )
     {

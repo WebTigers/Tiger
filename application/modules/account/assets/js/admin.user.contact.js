@@ -6,8 +6,6 @@
     
     let Class = {
 
-        userDT : null,
-        
         init : function( ) {
 
             $(document).ready(function() {
@@ -40,11 +38,11 @@
 
                 let query = {
                     search      : params.term,
-                    page        : params.page || 1,
+                    page        : params.page || 0,
                     limit       : 10,
                     order       : 'create_date ASC',
                     service     : 'account:admin',
-                    method      : 'getContactSelect2List',
+                    method      : 'getAdminContactSelect2List',
                     entity      : $('#contact-form #entity').val(),
                     entity_id   : $('#contact-form #entity_id').val()
                 }
@@ -81,7 +79,9 @@
                 }
             });
 
-            $('#contact-form #contact_id').on('select2:select', Class._edit );
+            $('#contact-form #contact_id')
+                .off('select2:select')
+                .on('select2:select', Class._edit );
 
         },
 
@@ -141,7 +141,7 @@
 
         // CRUD Functions //
 
-        _resetContact(){
+        _resetContact ( ) {
 
             $('#contact-form').tigerForm('reset');
             $('#contact-form #contact_id').select2('destroy');

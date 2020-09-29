@@ -6,8 +6,6 @@
     
     let Class = {
 
-        userDT : null,
-        
         init : function( ) {
 
             $(document).ready(function() {
