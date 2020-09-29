@@ -51,7 +51,8 @@ class Acl_Model_AclRoles extends Zend_Db_Table_Abstract {
      * 
      * @return Zend Rowset of acl_roles
      */
-    public function getRoleList ( ) {
+    public function getRoleList ( )
+    {
         
         $sql = $this->
                     select()->
@@ -63,7 +64,56 @@ class Acl_Model_AclRoles extends Zend_Db_Table_Abstract {
         
     }
 
-    public function getRoleDBConfigs ( ) {
+    /**
+     * Searches and returns a list of roles based on various searchable fields. Note
+     * that admin searches are unconcerned with whether or not a record is active or deleted.
+     *
+     * These "SearchList" type functions are typically used exclusively by DataTables.
+     *
+     * @param $search
+     * @param int $offset
+     * @param int $limit
+     * @param string $orderby
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    public function getRoleSearchList ( $search, $offset = 0, $limit = 0, $orderby = '' ) {
+
+        $sql = $this->select()->
+
+            where( '( priority LIKE ?', "%$search%" )->
+            orWhere( 'role_name LIKE ?', "%$search%" )->
+            orWhere( 'parent_role_name LIKE ?', "%$search%" )->
+            orWhere( 'role_description LIKE ? )', "%$search%" )->
+
+            where( 'active = 1' )->
+            where( 'deleted = 0' )->
+
+            order( $orderby )->
+            limit( $limit, $offset );
+
+        return $this->fetchAll( $sql );
+
+    }
+
+    public function getRoleSelectList ( )
+    {
+
+        $roleRowset = $this->getRoleList();
+
+        $rolesOut = [];
+        foreach ( $roleRowset as $roleRow ) {
+
+            $rolesOut[ $roleRow->role_name ] = Zend_Registry::get('Zend_Translate')->
+                translate( strtoupper( 'ROLE.' . $roleRow->role_name ) );
+
+        }
+
+        return $rolesOut;
+
+    }
+
+    public function getRoleDBConfigs ( )
+    {
 
         $roleRowset = $this->getRoleList();
         $roles = [];

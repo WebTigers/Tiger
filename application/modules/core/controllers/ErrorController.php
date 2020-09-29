@@ -180,6 +180,8 @@ class ErrorController extends Zend_Controller_Action
 
         $errors = $this->_getParam('error_handler');
 
+        // pr( $errors );
+
         switch ( $errors->type ) {
 
             case Tiger_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
@@ -210,9 +212,9 @@ class ErrorController extends Zend_Controller_Action
 //        }
         
         // conditionally display exceptions
-//        if ($this->getInvokeArg('displayExceptions') == true) {
-//            $this->view->exception = $errors->exception;
-//        }
+        if ($this->getInvokeArg('displayExceptions') == true) {
+            $this->view->exception = $errors->exception;
+        }
 
         $this->view->errors = $errors;
     }

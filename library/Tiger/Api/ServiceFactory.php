@@ -177,7 +177,7 @@ class Tiger_Api_ServiceFactory {
      */
     protected function _getValidMethod ( )
     {
-        if ( isset( $this->_params['method'] ) && Zend_Validate::is( $this->_params['method'], 'Alpha' ) ) {
+        if ( isset( $this->_params['method'] ) && Zend_Validate::is( $this->_params['method'], 'Alnum' ) ) {
             $this->_method = $this->_params['method'];
         }
         else {

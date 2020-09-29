@@ -95,15 +95,8 @@
                 }]
             });
 
-            Class.resourceDT.on('preXhr.dt', function (event, settings, data) {
-                // data.page = Class.resourceDT.page() + 1;
-                // data.search = Class.resourceDT.search();
-                // data.locale = 'en';
-            });
-
-            Class.resourceDT.on('xhr.dt', function (event, settings, json, xhr) {
-                // json.recordsTotal = parseInt( json.recordsTotal, 10);
-                // json.recordsFiltered = parseInt( json.recordsFiltered, 10);
+            Class.resourceDT.on('draw', function ( event, settings ) {
+                One.helpers('core-bootstrap-tooltip');
             });
 
         },
@@ -117,14 +110,23 @@
                 if ( el.type === 'icon' ) {
                     html += $('<i>')
                         .attr('data-id', el.id)
+                        .attr('data-value', el.value)
                         .attr('class', el.class)
                         .attr('title', el.title)
                         .attr('data-toggle', 'tooltip')
+                        .attr('data-animation', 'true')
+                        .attr('data-placement', 'bottom')
+                        .attr('data-delay', '{ "show": 2000, "hide": 100 }')
                         .prop('outerHTML');
                 }
 
                 if ( el.type === 'button' ) {
-                    html += $('<button>').attr('data-id', el.id).attr('class', el.class).attr('title', el.title).prop('outerHTML');
+                    html += $('<button>')
+                        .attr('data-id', el.id)
+                        .attr('data-value', el.value)
+                        .attr('class', el.class)
+                        .attr('title', el.title)
+                        .prop('outerHTML');
                 }
 
             });
@@ -141,7 +143,7 @@
             $('body').on('click', 'table i.edit', Class._edit );
             $('body').on('click', 'table i.active, table i.deleted', Class._update );
 
-            // $().tigerDOM('initToggleControls');
+            $().tigerDOM('initToggleControls');
 
         },
 
@@ -232,8 +234,7 @@
              * DT row of data ... but don't really have to.
              */
 
-            let $elm = $(this);
-            let $row = $elm.closest('tr');
+            let $elm = $(this), data = {};
 
             function beforeSend () {
             }
@@ -247,16 +248,16 @@
 
                 if ( parseInt( data.result, 10 ) === 1 ) {
 
-                    /** Update the icon and the row's value. */
+                    /** Update the icon's data-value and class. */
 
                     if ( $elm.hasClass('active') ) {
-                        Class.resourceDT.row( $row ).cell('.active').data(data.data.active);
+                        $elm.attr('data-value', data.data.active);
                         data.data.active = ( parseInt(data.data.active,10) === 1 )
                             ? $elm.removeClass('fa-play').addClass('fa-pause')
                             : $elm.addClass('fa-play').removeClass('fa-pause');
                     }
                     else if ( $elm.hasClass('deleted') ) {
-                        Class.resourceDT.row( $row ).cell('.deleted').data(data.data.deleted);
+                        $elm.attr('data-value', data.data.deleted);
                         data.data.deleted = ( parseInt(data.data.deleted,10) === 0 )
                             ? $elm.addClass('fa-trash').removeClass('fa-trash-restore')
                             : $elm.removeClass('fa-trash').addClass('fa-trash-restore');
@@ -289,17 +290,12 @@
 
             }
 
-            /** Based on the control that made the request, let's grab our data! */
-            let data = Class.resourceDT.row( $row ).data();
-            delete data.DT_RowId;
-            delete data.controls;
-
             /** Flip the bool before sending to the server. */
             if ( $elm.hasClass('active') ) {
-                data.active = ( parseInt(data.active,10) === 1 ) ? 0 : 1;
+                data.active = ( parseInt($elm.attr('data-value'),10) === 1 ) ? 0 : 1;
             }
             else if ( $elm.hasClass('deleted') ) {
-                data.deleted = ( parseInt(data.deleted,10) === 1 ) ? 0 : 1;
+                data.deleted = ( parseInt($elm.attr('data-value'),10) === 1 ) ? 0 : 1;
             }
             else {
                 return;
@@ -308,6 +304,7 @@
             /** API params tell Tiger what service will be processing the data. */
             data.service = 'acl:admin';
             data.method = 'updateResource';
+            data.resource_id = $elm.attr('data-id');
 
             $.ajax({
                 type        : "POST",

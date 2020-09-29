@@ -95,19 +95,25 @@
         initToggleControls : function ( ) {
             
             $('[data-tiger-control]').each(function(){
-            
-                let $target = $($(this).attr('data-tiger-control'));
-                $target.css('overflow', 'hidden')
-                       .height(0)
-                       .css('opacity', 0)
-                       .removeClass('hide');
 
-                $(this).on('click', {target:$target}, function( e ){
-                    e.preventDefault();
-                    if ($target.height() == 0) { 
-                        $target.tigerDOM('open'); 
+                let $control = $(this);
+                let $icon = $control.find('i');
+                let $target = $( $control.attr('data-tiger-control') );
+
+                if ( ! $target.is(':visible') ) {
+                    $target.css('overflow', 'hidden').height(0).css('opacity', 0).removeClass('hide');
+                }
+
+                $(this).on('click', {target:$target}, function( event ){
+                    event.preventDefault();
+                    if ($target.height() === 0) {
+                        $icon.addClass( $control.attr('data-tiger-class-open') );
+                        $icon.removeClass( $control.attr('data-tiger-class-close') );
+                        $target.tigerDOM('open');
                     } else {
-                        $target.tigerDOM('close'); 
+                        $icon.addClass( $control.attr('data-tiger-class-close') );
+                        $icon.removeClass( $control.attr('data-tiger-class-open') );
+                        $target.tigerDOM('close');
                     }
                 });    
             });
@@ -277,7 +283,7 @@
                 $this.animate( { height : height }, baseTime, function(){
                     // Now make the content visible
                     $this.animate( { opacity : 1 }, baseTime, function(){
-                        $this.css( 'height', '' ).css( 'overflow', '');
+                        $this.css( 'height', '' ).css( 'overflow', '').css( 'opacity', '');
                         fnCallback;
                     });
                 });

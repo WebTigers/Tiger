@@ -33,8 +33,10 @@
          */
         reset : function( ) {
 
-            this.each(function() {
+            let boilerPlateVars = ['create_user_id', 'update_user_id', 'create_date', 'update_date', 'create_ip', 'update_ip'];
+            let $form = $(this);
 
+            this.each(function() {
                 let type = this.type, tag = this.tagName.toLowerCase();
 
                 if (tag === 'form') {
@@ -55,28 +57,37 @@
 
             });
 
+            $( boilerPlateVars ).each(function (i, el ) {
+                $form.find('.' + el ).html( '' );
+            });
+
             this.find('.message-container, .form-message').children().remove();
             this.find('.message-container, .form-message').tigerDOM('reset');
 
         },
 
+        /**
+         * A convenience method used to populate non-select form controls.
+         *
+         * @param formValues
+         */
         setFormValues : function ( formValues ) {
 
             /** "this" is already a jQuery from object. */
 
-            let boilerPlateVars = ['create_user_id', 'update_user_id', 'create_date', 'update_date'];
+            let boilerPlateVars = ['create_user_id', 'update_user_id', 'create_date', 'update_date', 'create_ip', 'update_ip'];
 
             for ( let key in formValues ) {
 
-                let $el = $(this).find('#' + key );
+                let $el = $(this).find('[name="' + key + '"]' );
 
-                if ( $el.length > 0 ) {
+                if ( $el.length > 0 && formValues[key] ) {
 
-                    if ( $el.not('input:checkbox').is('input:text, input:hidden, textarea') ) {
+                    if ( $el.not('input:checkbox, input:radio').is('input:text, input:hidden, textarea') ) {
                         $el.val( formValues[key] );
                     }
 
-                    if ( $el.is('input:checkbox') ) {
+                    if ( $el.is('input:checkbox, input:radio') ) {
                         if ( formValues[key] === $el.val() ) {
                             $el.attr('checked', 'checked').prop('checked', true);
                         }
@@ -85,12 +96,14 @@
                         }
                     }
 
+                    /*
                     if ( $el.is('select') ) {
                         $el.val( formValues[key] );
                         if ( $el.hasClass('select2') ) {
                             $el.trigger('change');
                         }
                     }
+                    */
 
                 }
 
@@ -103,8 +116,8 @@
         },
 
         /**
-         * A convenience method used to return a JSON
-         * compatible array of the form's values.
+         * A convenience method used to return a JSON compatible array of the form's values.
+         *
          * @param object | null params that will be added to the form values.
          * @returns object
          */
@@ -133,11 +146,13 @@
                 let $this = $(this);
 
                 if ( $this.is('input:radio') ) { $(this).on( 'click.autovalidate', Class._ajaxValidate ); }
+                else if ( $this.is('input:checkbox') ) { $(this).on( 'click.autovalidate', Class._ajaxValidate ); }
                 else if ( $this.is('select') ) { $(this).on( 'change.autovalidate', Class._ajaxValidate ); }
-                else if ( $this.is('input') ) { $this.on( 'blur.autovalidate, change.autovalidate', Class._ajaxValidate ); }
+                else if ( $this.is('textarea') ) { $this.on( 'blur.autovalidate', Class._ajaxValidate ); }
+                else if ( $this.is('input') ) { $this.on( 'blur.autovalidate', Class._ajaxValidate ); }
 
                 // Set change detection so that we only validate on a changed field //
-                $this.attr('data-value', $this.val() );
+                $this.attr( 'data-value', $this.val() );
 
             });
 

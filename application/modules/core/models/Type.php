@@ -23,6 +23,67 @@ class Core_Model_Type extends Zend_Db_Table_Abstract
 
     }
 
+    /**
+     * @param string $reference
+     * @param string $key
+     * @param false $formatForSelect
+     * @param string $locale
+     * @return array | Zend_Db_Table_Rowset_Abstract
+     */
+    public function getTypeListByReference ( string $reference, string $key = '', $formatForSelect = false ) {
+
+        $sql = $this->select()->
+        where( 'reference = ?', $reference)->
+        where( 'active = ?', 1 )->
+        where( 'deleted = ?', 0 )->
+        order( 'sort_order' );
+
+        if ( ! empty( $key ) ) {
+            $sql->where( '`key` = ?', $key );
+        }
+
+        $rowSet = $this->fetchAll($sql);
+
+        $this->translateTypeName( $rowSet );
+
+        if ( $formatForSelect === true ) {
+
+            $out = [];
+            foreach( $rowSet as $item ){
+                $out[ $item['key'] ] = $item['type_name'];
+            }
+
+            return $out;
+
+        }
+
+        return $rowSet;
+
+    }
+
+
+    /**
+     * @param $referenece
+     * @return string
+     */
+    public function getTypeListStringByReferenece ( $referenece ) {
+
+        $types = $this->getTypeListKeysAsArray( $referenece );
+        return "'" . implode("','", $types ) . "'";
+
+    }
+
+    ### Utility Functions ###
+
+    private function translateTypeName( Zend_Db_Table_Rowset_Abstract & $rowset ) {
+        foreach( $rowset as $row ) {
+            $row->type_name = $this->_translate->translate( $row->type_name );
+        }
+    }
+
+
+    ### DEPRECATED ###
+
     public function getLocaleListByStringList ( $aList ) {
         
         $select = $this->select()->
@@ -50,39 +111,6 @@ class Core_Model_Type extends Zend_Db_Table_Abstract
 
     }
 
-    /**
-     * @param $reference
-     * @param false $formatForSelect
-     * @param string $locale
-     * @return array | Zend_Db_Table_Rowset_Abstract
-     */
-    public function getTypeListByReference ( $reference, $formatForSelect = false ) {
-        
-        $sql = $this->select()->
-            where( 'reference = ?', $reference)->
-            where( 'active = ?', 1 )->
-            where( 'deleted = ?', 0 )->
-            order( 'sort_order' );
-        
-        $rowSet = $this->fetchAll($sql);
-
-        $this->translateTypeName( $rowSet );
-
-        if ( $formatForSelect === true ) {
-            
-            $out = [];
-            foreach( $rowSet as $item ){
-                $out[ $item['key'] ] = $item['type_name'];
-            }
-
-            return $out;
-            
-        }
-
-        return $rowSet;
-        
-    }
-
     public function getTypeListKeysAsArray( $reference ) {
 
         $sql = $this->select()->
@@ -98,17 +126,6 @@ class Core_Model_Type extends Zend_Db_Table_Abstract
         }
 
         return $out;
-
-    }
-
-    /**
-     * @param $referenece
-     * @return string
-     */
-    public function getTypeListStringByReferenece ( $referenece ) {
-
-        $types = $this->getTypeListKeysAsArray( $referenece );
-        return "'" . implode("','", $types ) . "'";
 
     }
 
@@ -136,12 +153,5 @@ class Core_Model_Type extends Zend_Db_Table_Abstract
             
     }
 
-    ### Utility Functions ###
-
-    private function translateTypeName( Zend_Db_Table_Rowset_Abstract & $rowset ) {
-        foreach( $rowset as $row ) {
-            $row->type_name = $this->_translate->translate( $row->type_name );
-        }
-    }
 
 }

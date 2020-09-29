@@ -167,29 +167,23 @@ trait Acl_Service_RoleTrait
         $actions[] = (object) [
             'type'      => 'icon',
             'id'        => $role->role_id,
+            'value'     => $role->active,
             'class'     => ( intval($role->active) !== 1 )
                                 ? 'fa fas fa-play active'
                                 : 'fa fas fa-pause active',
-            'title'     => ( intval($role->active) !== 1 )
-                                ? $this->_translate->_('DT.ACTIVE_ROLE')
-                                : $this->_translate->_('DT.INACTIVE_ROLE'),
-            'label'     => ( intval($role->active) !== 1 )
-                                ? $this->_translate->_('DT.ACTIVE')
-                                : $this->_translate->_('DT.INACTIVE'),
+            'title'     => $this->_translate->_('DT.ACTIVE_INACTIVE_ROLE'),
+            'label'     => $this->_translate->_('DT.ACTIVE_INACTIVE'),
         ];
 
         $actions[] = (object) [
             'type'      => 'icon',
             'id'        => $role->role_id,
+            'value'     => $role->deleted,
             'class'     => ( intval($role->deleted) !== 0 )
                                 ? 'fa fas fa-trash-restore deleted'
                                 : 'fa fas fa-trash deleted',
-            'title'     => ( intval($role->deleted) !== 0 )
-                                ? $this->_translate->_('DT.UNDELETE_ROLE')
-                                :  $this->_translate->_('DT.DELETE_ROLE'),
-            'label'     => ( intval($role->deleted) !== 0 )
-                                ? $this->_translate->_('DT.UNDELETE')
-                                : $this->_translate->_('DT.DELETE'),
+            'title'     => $this->_translate->_('DT.DELETE_UNDELETE_ROLE'),
+            'label'     => $this->_translate->_('DT.DELETE_UNDELETE'),
         ];
 
         return $actions;
@@ -228,7 +222,7 @@ trait Acl_Service_RoleTrait
         }
 
         /** Gets the filtered and validated values from the form. We've got clean data. */
-        $data = $this->_form->getValues();
+        $data = $this->_form->getValidValues( $params );
 
         try {
 
@@ -270,7 +264,7 @@ trait Acl_Service_RoleTrait
              */
 
             $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.NEWUSER_FAILED', 'alert' );
+            $this->_response->setTextMessage( 'MESSAGE.NEW_ROLE_FAILED', 'alert' );
 
             /** We also log what happened ... */
             // Tiger_Log::logger( $e->getMessage() );
@@ -310,8 +304,7 @@ trait Acl_Service_RoleTrait
             }
 
             /** Gets the filtered and validated values from the form. We've got clean data. */
-            $data = $this->_form->getValues();
-
+            $data = $this->_form->getValidValues( $params );
 
             /**
              * Before saving any data, we wrap all of our saves in DB Transaction.
@@ -325,7 +318,7 @@ trait Acl_Service_RoleTrait
              * it's available. We can send the data back to the UI with new or updated
              * data.
              */
-            $roleRow = $this->_persistRole( $data );
+            $roleRow = $this->_persistRole( $data, true );
 
             /** Commit the DB transaction. All done! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
@@ -370,11 +363,12 @@ trait Acl_Service_RoleTrait
      * field data that needs to be inserted or updated within the user table. If you
      * pass in a populated role_id, the persist will be treated as an update.
      *
-     * @param $data
+     * @param array $data
+     * @param bool $partial
      * @throws Exception
      * @return mixed
      */
-    protected function _persistRole( $data )
+    protected function _persistRole( array $data, $partial = false )
     {
         /** Persisting our clean data is easy with Zend DB Models. */
 
@@ -387,7 +381,23 @@ trait Acl_Service_RoleTrait
                 throw new Exception('ERROR.ROLE_NOT_FOUND');
             }
 
-            $roleRow->setFromArray( $data );
+            if ( $partial === false ) {
+
+                /**
+                 * The setFromArray method assumes a fully populated array of params.
+                 * If you leave something out, it will be saved as null.
+                 */
+                $roleRow->setFromArray( $data );
+
+            }
+            else {
+
+                unset( $data['role_id'] );  // Security precaution
+                foreach( $data as $prop => $value ) {
+                    $roleRow->$prop = $value;
+                }
+
+            }
 
         }
         else {

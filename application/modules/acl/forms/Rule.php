@@ -471,7 +471,7 @@ class Acl_Form_Rule extends Tiger_Form_Base
         $options = [
 
             'name'              =>  $name,
-            'id'                =>  $name,
+            'id'                =>  $name . '_rule',
             'class'             =>  'custom-control-input',
 
             'attribs'           =>  [
@@ -481,7 +481,7 @@ class Acl_Form_Rule extends Tiger_Form_Base
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'checkedValue'      =>  '1',
+            'disableHidden'     =>  true,
 
             'required'          =>  true,
 
@@ -518,7 +518,7 @@ class Acl_Form_Rule extends Tiger_Form_Base
         $options = [
 
             'name'              =>  $name,
-            'id'                =>  $name,
+            'id'                =>  $name . '_rule',
             'class'             =>  'custom-control-input',
 
             'attribs'           =>  [
@@ -528,7 +528,7 @@ class Acl_Form_Rule extends Tiger_Form_Base
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'checkedValue'      =>  '1',
+            'disableHidden'     =>  true,
 
             'required'          =>  true,
 

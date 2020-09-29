@@ -167,29 +167,23 @@ trait Acl_Service_RuleTrait
         $actions[] = (object) [
             'type'      => 'icon',
             'id'        => $rule->rule_id,
+            'value'     => $rule->active,
             'class'     => ( intval($rule->active) !== 1 )
                                 ? 'fa fas fa-play active'
                                 : 'fa fas fa-pause active',
-            'title'     => ( intval($rule->active) !== 1 )
-                                ? $this->_translate->_('DT.ACTIVE_RULE')
-                                : $this->_translate->_('DT.INACTIVE_RULE'),
-            'label'     => ( intval($rule->active) !== 1 )
-                                ? $this->_translate->_('DT.ACTIVE')
-                                : $this->_translate->_('DT.INACTIVE'),
+            'title'     => $this->_translate->_('DT.ACTIVE_INACTIVE_RULE'),
+            'label'     => $this->_translate->_('DT.ACTIVE_INACTIVE'),
         ];
 
         $actions[] = (object) [
             'type'      => 'icon',
             'id'        => $rule->rule_id,
+            'value'     => $rule->deleted,
             'class'     => ( intval($rule->deleted) !== 0 )
                                 ? 'fa fas fa-trash-restore deleted'
                                 : 'fa fas fa-trash deleted',
-            'title'     => ( intval($rule->deleted) !== 0 )
-                                ? $this->_translate->_('DT.UNDELETE_RULE')
-                                :  $this->_translate->_('DT.DELETE_RULE'),
-            'label'     => ( intval($rule->deleted) !== 0 )
-                                ? $this->_translate->_('DT.UNDELETE')
-                                : $this->_translate->_('DT.DELETE'),
+            'title'     => $this->_translate->_('DT.DELETE_UNDELETE_RULE'),
+            'label'     => $this->_translate->_('DT.DELETE_UNDELETE'),
         ];
 
         return $actions;
@@ -228,7 +222,7 @@ trait Acl_Service_RuleTrait
         }
 
         /** Gets the filtered and validated values from the form. We've got clean data. */
-        $data = $this->_form->getValues();
+        $data = $this->_form->getValidValues( $params );
 
         try {
 
@@ -244,7 +238,7 @@ trait Acl_Service_RuleTrait
              * it's available. We can send the data back to the UI with new or updated
              * data.
              */
-            $ruleRow = $this->_persistRule( $data );
+            $ruleRow = $this->_persistRule( $data, true );
 
             /** Commit the DB transaction. All done! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
@@ -370,11 +364,12 @@ trait Acl_Service_RuleTrait
      * field data that needs to be inserted or updated within the user table. If you
      * pass in a populated rule_id, the persist will be treated as an update.
      *
-     * @param $data
+     * @param array $data
+     * @param bool $partial
      * @throws Exception
      * @return mixed
      */
-    protected function _persistRule( $data )
+    protected function _persistRule( array $data, $partial = false )
     {
         /** Persisting our clean data is easy with Zend DB Models. */
 
@@ -387,7 +382,23 @@ trait Acl_Service_RuleTrait
                 throw new Exception('ERROR.RULE_NOT_FOUND');
             }
 
-            $ruleRow->setFromArray( $data );
+            if ( $partial === false ) {
+
+                /**
+                 * The setFromArray method assumes a fully populated array of params.
+                 * If you leave something out, it will be saved as null.
+                 */
+                $ruleRow->setFromArray( $data );
+
+            }
+            else {
+
+                unset( $data['rule_id'] );  // Security precaution
+                foreach( $data as $prop => $value ) {
+                    $ruleRow->$prop = $value;
+                }
+
+            }
 
         }
         else {
