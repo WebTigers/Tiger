@@ -36,7 +36,10 @@ class Account_Form_Address extends Tiger_Form_Base
 
         $this->setName('Account_Form_Address');
 
-        $this->addElement( $this->_getAddressId() );
+        $this->addElement( $this->_getEntity() );           // org or user
+        $this->addElement( $this->_getEntityId() );         // org_id or user_id
+
+        $this->addElement( $this->_getAddressId() );        // select the address_id or set it to null
         $this->addElement( $this->_getTypeAddress() );
         $this->addElement( $this->_getAddress() );
         $this->addElement( $this->_getAddress2() );
@@ -55,16 +58,57 @@ class Account_Form_Address extends Tiger_Form_Base
 
     ##### Form Fields #####
 
-    protected function _getAddressId ( ) {
+    protected function _getEntity ( ) {
 
-        $name = 'address_id';
+        $name = 'entity';
 
         $options = [
 
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'hide',
-            'required'      =>  true,
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'required'          =>  true,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^org|user]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'StringLength', false, [
+                                            'min'   => 4,
+                                            'max'   => 5,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[org|user]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Hidden( $name, $options );
+
+    }
+
+    protected function _getEntityId ( ) {
+
+        $name = 'entity_id';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'required'          =>  true,
 
             'filters'       =>  [
                                     [ 'StringTrim' ],
@@ -77,7 +121,44 @@ class Account_Form_Address extends Tiger_Form_Base
                                 ]
         ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+        return new Zend_Form_Element_Hidden( $name, $options );
+
+    }
+
+    protected function _getAddressId ( ) {
+
+        $name = 'address_id';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt select2',
+
+            'attribs'           =>  [
+                // 'placeholder'     =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
+                'data-valid'        => '0',
+            ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'multiOptions'              =>  [],     // Set vis Select2 Control
+            'registerInArrayValidator'  => false,
+
+            'required'          =>  false,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                    ],
+            'validators'        =>  [
+                                        [ 'Uuid', false, [
+                                            'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID." ]
+                                        ] ],
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 
@@ -89,7 +170,7 @@ class Account_Form_Address extends Tiger_Form_Base
 
             'name'              =>  $name,
             'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
+            'class'             =>  'form-control form-control-lg form-control-alt select2',
 
             'attribs'           =>  [
                                         // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
@@ -448,8 +529,8 @@ class Account_Form_Address extends Tiger_Form_Base
                                 ],
             'validators'    =>  [
                                     [ 'StringLength', false, [
-                                        'min'   => 1,
-                                        'max'   => 50,
+                                        'min'   => 2,
+                                        'max'   => 3,
                                         'messages' => [
                                             Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                             Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
@@ -487,9 +568,9 @@ class Account_Form_Address extends Tiger_Form_Base
             'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  false,
+
             'filters'       =>  [
                                     [ 'StringTrim' ],
-                                    [ 'MaxLength', [ 'maxlength' => 12 ] ],
                                     [ 'PregReplace', [ 'match' => '/[^0-9\+\-.]/', 'replace' => '' ] ]
                                 ],
             'validators'    =>  [
@@ -533,9 +614,9 @@ class Account_Form_Address extends Tiger_Form_Base
             'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  false,
+
             'filters'       =>  [
                                     [ 'StringTrim' ],
-                                    [ 'MaxLength', [ 'maxlength' => 12 ] ],
                                     [ 'PregReplace', [ 'match' => '/[^0-9\+\-.]/', 'replace' => '' ] ]
                                 ],
             'validators'    =>  [

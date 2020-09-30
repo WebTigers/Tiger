@@ -141,6 +141,52 @@ trait Account_Service_AddressTrait
 
     }
 
+    public function getAdminAddressSelect2List ( $params )
+    {
+
+        try {
+
+            if (!isset($params['entity']) || !in_array($params['entity'], ['org', 'user'])) {
+                throw new Exception($this->_translate->_('ERROR.INVALID'));
+            };
+
+            if (!isset($params['entity_id']) || !Tiger_Utility_Uuid::is_valid($params['entity_id'])) {
+                throw new Exception($this->_translate->_('ERROR.ADDRESS_NOT_FOUND'));
+            };
+
+            $entitiy = $params['entity'];
+            $entitiy_id = $params['entity_id'];
+            $search = (isset($params['search'])) ? $params['search'] : '';
+            $offset = (isset($params['page'])) ? $params['page'] : 1;
+            $limit = (isset($params['limit'])) ? $params['limit'] : 1;
+            $orderby = (isset($params['order'])) ? $params['order'] : '';
+
+            $results = [];
+            $results[] = (object)['id' => '', 'text' => $this->_translate->_('FORM.ADD_NEW_CONTACT')];
+            $addressRowset = $this->_addressModel->getAdminAddressSearchList($entitiy, $entitiy_id, $search, $offset, $limit, $orderby);
+
+            foreach ($addressRowset as $addressRow) {
+                $results[] = (object)[
+                    'id' => $addressRow->address_id,
+                    'text' => $addressRow->address_value,
+                    'type' => $addressRow->type_address,
+                    'primary' => $addressRow->primary
+                ];
+            }
+        }
+        catch (Exception $e ) {
+            pr( $e->getMessage() );
+        }
+
+        $this->_response = new Core_Model_ResponseObjectSelect2([
+            'results' => $results,
+            'pagination' => (object) ['more' => false ],
+            'error' => null,
+            'login' => false,
+        ]);
+
+    }
+
     protected function _getAddressActions ( $address ) {
 
         $actions[] = (object) [
@@ -149,7 +195,7 @@ trait Account_Service_AddressTrait
             'param'     => '',                                          // Used for some Datatables toggles
             'value'     => '',                                          // Used for some Datatables toggles
             'class'     => 'fa fas fa-pencil-alt edit',                 // The class for the icon or button.
-            'title'     => $this->_translate->_('DT.EDIT_ADDRESS'),    // The title attribute, often used for tooltips.
+            'title'     => $this->_translate->_('DT.EDIT_RESOURCE'),    // The title attribute, often used for tooltips.
             'label'     => $this->_translate->_('DT.EDIT'),             // The title attribute.
         ];
 
@@ -157,28 +203,28 @@ trait Account_Service_AddressTrait
             'type'      => 'icon',
             'id'        => $address->address_id,
             'class'     => ( intval($address->active) !== 1 )
-                                ? 'fa fas fa-play active'
-                                : 'fa fas fa-pause active',
+                ? 'fa fas fa-play active'
+                : 'fa fas fa-pause active',
             'title'     => ( intval($address->active) !== 1 )
-                                ? $this->_translate->_('DT.ACTIVE_ADDRESS')
-                                : $this->_translate->_('DT.INACTIVE_ADDRESS'),
+                ? $this->_translate->_('DT.ACTIVE_RESOURCE')
+                : $this->_translate->_('DT.INACTIVE_RESOURCE'),
             'label'     => ( intval($address->active) !== 1 )
-                                ? $this->_translate->_('DT.ACTIVE')
-                                : $this->_translate->_('DT.INACTIVE'),
+                ? $this->_translate->_('DT.ACTIVE')
+                : $this->_translate->_('DT.INACTIVE'),
         ];
 
         $actions[] = (object) [
             'type'      => 'icon',
             'id'        => $address->address_id,
             'class'     => ( intval($address->deleted) !== 0 )
-                                ? 'fa fas fa-trash-restore deleted'
-                                : 'fa fas fa-trash deleted',
+                ? 'fa fas fa-trash-restore deleted'
+                : 'fa fas fa-trash deleted',
             'title'     => ( intval($address->deleted) !== 0 )
-                                ? $this->_translate->_('DT.UNDELETE_ADDRESS')
-                                :  $this->_translate->_('DT.DELETE_ADDRESS'),
+                ? $this->_translate->_('DT.UNDELETE_RESOURCE')
+                :  $this->_translate->_('DT.DELETE_RESOURCE'),
             'label'     => ( intval($address->deleted) !== 0 )
-                                ? $this->_translate->_('DT.UNDELETE')
-                                : $this->_translate->_('DT.DELETE'),
+                ? $this->_translate->_('DT.UNDELETE')
+                : $this->_translate->_('DT.DELETE'),
         ];
 
         return $actions;
@@ -246,7 +292,7 @@ trait Account_Service_AddressTrait
              */
             $this->_response->result = 1;
             $this->_response->data = $address;
-            $this->_response->setTextMessage( 'MESSAGE.ADDRESS_SAVED', 'success' );
+            $this->_response->setTextMessage( 'MESSAGE.RESOURCE_SAVED', 'success' );
 
         }
         catch ( Exception $e ) {
@@ -301,7 +347,6 @@ trait Account_Service_AddressTrait
             /** Gets the filtered and validated values from the form. We've got clean data. */
             $data = $this->_form->getValues();
 
-
             /**
              * Before saving any data, we wrap all of our saves in DB Transaction.
              * That way if anything fails, we can roll it all back. Very important!
@@ -315,6 +360,7 @@ trait Account_Service_AddressTrait
              * data.
              */
             $addressRow = $this->_persistAddress( $data );
+            $addressRow = $this->_persistEntityAddress( $data, $addressRow );
 
             /** Commit the DB transaction. All done! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
@@ -324,7 +370,7 @@ trait Account_Service_AddressTrait
              */
             $this->_response->result = 1;
             $this->_response->data = $addressRow;
-            $this->_response->setTextMessage( 'MESSAGE.ADDRESS_SAVED', 'success' );
+            $this->_response->setTextMessage( 'MESSAGE.CONTACT_SAVED', 'success' );
 
         }
         catch ( Exception $e ) {
@@ -350,6 +396,8 @@ trait Account_Service_AddressTrait
             /** We also log what happened ... */
             // Tiger_Log::logger( $e->getMessage() );
 
+            pr( $e->getMessage() );
+
         }
 
     }
@@ -363,7 +411,7 @@ trait Account_Service_AddressTrait
      * @throws Exception
      * @return mixed
      */
-    protected function _persistAddress( $data )
+    protected function _persistAddress( array $data, $partial = false )
     {
         /** Persisting our clean data is easy with Zend DB Models. */
 
@@ -373,10 +421,26 @@ trait Account_Service_AddressTrait
             $addressRow = $this->_addressModel->getAddressById( $data['address_id'] );
 
             if ( empty($addressRow) ) {
-                throw new Exception('ERROR.ADDRESS_NOT_FOUND');
+                throw new Exception('ERROR.CONTACT_NOT_FOUND');
             }
 
-            $addressRow->setFromArray( $data );
+            if ( $partial === false ) {
+
+                /**
+                 * The setFromArray method assumes a fully populated array of params.
+                 * If you leave something out, it will be saved as null.
+                 */
+                $addressRow->setFromArray( $data );
+
+            }
+            else {
+
+                unset( $data['user_id'] );  // Security precaution
+                foreach( $data as $prop => $value ) {
+                    $addressRow->$prop = $value;
+                }
+
+            }
 
         }
         else {
@@ -397,6 +461,48 @@ trait Account_Service_AddressTrait
          */
         $addressRow->saveRow();
         return $addressRow;
+
+    }
+
+    /**
+     * Persist the linking table data. Note that we only need to do this for new records.
+     *
+     * @param array $data
+     * @param Zend_Db_Table_Row $addressRow
+     */
+    protected function _persistEntityAddress ( array $data, Zend_Db_Table_Row $addressRow ) {
+
+        if ( empty( $data['address_id'] ) ) {
+
+            /** Select the appropriate entity model ... */
+
+            switch ( $data['entity'] ) {
+                case 'org':
+                    $entityModel = $this->_orgAddressModel;
+                    $entityData = [
+                        'org_address_id' => Tiger_Utility_Uuid::v1(),
+                        'org_id' => $data['entity_id'],
+                    ];
+                    break;
+                case 'user':
+                default:
+                    $entityModel = $this->_userAddressModel;
+                    $entityData = [
+                        'user_address_id' => Tiger_Utility_Uuid::v1(),
+                        'user_id' => $data['entity_id'],
+                    ];
+                    break;
+            }
+
+            /** Create the row with our relevant data. */
+            $entityAddressRow = $entityModel->createRow( $entityData );
+
+            /** Update the relevant pieces with new address data. */
+            $entityAddressRow->address_id = $addressRow->address_id;
+
+            $entityAddressRow->saveRow();
+
+        }
 
     }
 

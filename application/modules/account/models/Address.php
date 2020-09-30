@@ -25,10 +25,10 @@ class Account_Model_Address extends Zend_Db_Table_Abstract {
     protected $_primary     = 'address_id';
     protected $_rowClass    = 'Tiger_Db_Table_Row';
 
-    public function init ( ) {
-        
-    }
-
+    /**
+     * @param $address_id
+     * @return Zend_Db_Table_Row_Abstract|null
+     */
     public function getAddressById ( $address_id )
     {
         $sql = $this->
@@ -36,6 +36,48 @@ class Account_Model_Address extends Zend_Db_Table_Abstract {
             where('address_id = ?', $address_id);
 
         return $this->fetchRow( $sql );
+
+    }
+
+    /**
+     * Searches and returns a list of users based on various searchable fields. Note
+     * that admin searches are unconcerned with whether or not a record is active or deleted.
+     *
+     * These "SearchList" type functions are typically used exclusively by DataTables.
+     *
+     * @param string $entity
+     * @param string $entity_id
+     * @param string $search
+     * @param integer $offset
+     * @param integer $limit
+     * @param string $orderby
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    public function getAdminAddressSearchList ( string $entity, string $entity_id, string $search, $offset = 0, $limit = 0, string $orderby )
+    {
+        $joinTable = $entity . '_address';  // Either org_address or user_address
+
+        $sql = $this->
+        select()->
+        setIntegrityCheck( false )->
+
+        from( [ 'jt' => $joinTable ], [] )->
+        joinLeft( array( 'a' => 'address' ), 'a.address_id  = jt.address_id', ['a.*'] )->
+
+        where( 'jt.' . $entity .'_id = ?', $entity_id )->
+        where( '( a.address_id LIKE ?', "%$search%" )->
+        orWhere( 'a.address LIKE ?', "%$search%" )->
+        orWhere( 'a.address2 LIKE ?', "%$search%" )->
+        orWhere( 'a.city LIKE ?', "%$search%" )->
+        orWhere( 'a.county LIKE ?', "%$search%" )->
+        orWhere( 'a.state LIKE ?', "%$search%" )->
+        orWhere( 'a.postal_code LIKE ?', "%$search%" )->
+        orWhere( 'a.country LIKE ?', "%$search%" )->
+        orWhere( 'a.type_address LIKE ? )', "%$search%" )->
+        order( $orderby )->
+        limit( $limit, $offset );
+
+        return $this->fetchAll( $sql );
 
     }
 
