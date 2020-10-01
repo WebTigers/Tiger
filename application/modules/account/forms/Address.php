@@ -471,7 +471,7 @@ class Account_Form_Address extends Tiger_Form_Base
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'required'          =>  true,
+            'required'          =>  false,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],

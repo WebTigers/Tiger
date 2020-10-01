@@ -208,14 +208,14 @@ class Account_AdminController extends Tiger_Controller_Action
         $one->main_nav_active            = basename($_SERVER['PHP_SELF']);
 
         // You can use the following array to create your main menu
-        $one->main_nav                   = array();
+        $one->main_nav                   = [];
 
 
         // **************************************************************************************************
         // MAIN MENU
         // **************************************************************************************************
 
-        $one->main_nav                   = array();
+        $one->main_nav                   = [];
 
         return $one;
 
@@ -228,10 +228,10 @@ class Account_AdminController extends Tiger_Controller_Action
         // INCLUDED VIEWS
         // **************************************************************************************************
 
-        $one->inc_side_overlay           = true;
-        $one->inc_sidebar                = true;
-        $one->inc_header                 = true;
-        $one->inc_footer                 = true;
+        $one->inc_side_overlay          = true;
+        $one->inc_sidebar               = true;
+        $one->inc_header                = true;
+        $one->inc_footer                = true;
 
         return $one;
 

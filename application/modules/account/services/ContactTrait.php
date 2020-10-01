@@ -157,7 +157,7 @@ trait Account_Service_ContactTrait
             $entitiy = $params['entity'];
             $entitiy_id = $params['entity_id'];
             $search = (isset($params['search'])) ? $params['search'] : '';
-            $offset = (isset($params['page'])) ? $params['page'] : 1;
+            $offset = (isset($params['page'])) ? $params['page'] : 0;
             $limit = (isset($params['limit'])) ? $params['limit'] : 1;
             $orderby = (isset($params['order'])) ? $params['order'] : '';
 
@@ -354,10 +354,11 @@ trait Account_Service_ContactTrait
             Zend_Db_Table_Abstract::getDefaultAdapter()->beginTransaction();
 
             /**
-             * Since we're not really doing anything with the contact being persisted
-             * we don't need the $contactRow, but we left it in just to let devs know
-             * it's available. We can send the data back to the UI with new or updated
-             * data.
+             * Normally, we don't need the $dataRow, but we need it now to pass
+             * our new id to the linking table. Since the contactRow record
+             * does not know who it belongs to, we also need to pass our data into
+             * the persist method so the linking table knows who the entity (whether
+             * a user or and org) is.
              */
             $contactRow = $this->_persistContact( $data );
             $contactRow = $this->_persistEntityContact( $data, $contactRow );
@@ -448,7 +449,11 @@ trait Account_Service_ContactTrait
             /** Create the row with our relevant data. */
             $contactRow = $this->_contactModel->createRow( $data );
 
-            /** Update the relevant pieces with new contact data. */
+            /**
+             * Update the relevant pieces with new contact system data. As a rule of thumb,
+             * system data is added here while user added data is massaged in the update
+             * or save methods.
+             */
             $contactRow->contact_id = Tiger_Utility_Uuid::v1();
 
         }

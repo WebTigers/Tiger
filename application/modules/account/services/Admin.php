@@ -43,6 +43,7 @@ class Account_Service_Admin
     protected $_orgModel;
     protected $_contactModel;
     protected $_addressModel;
+    protected $_countryModel;
     protected $_orgUserModel;
     protected $_orgContactModel;
     protected $_orgAddressModel;
@@ -64,6 +65,7 @@ class Account_Service_Admin
         $this->_userModel           = new Account_Model_User();
         $this->_orgModel            = new Account_Model_Org();
         $this->_addressModel        = new Account_Model_Address();
+        $this->_countryModel        = new Account_Model_Country();
         $this->_contactModel        = new Account_Model_Contact();
         $this->_orgUserModel        = new Account_Model_OrgUser();
         $this->_orgAddressModel     = new Account_Model_OrgAddress();
@@ -217,7 +219,6 @@ class Account_Service_Admin
             'error' => null,
             'login' => false,
         ]);
-
 
     }
 

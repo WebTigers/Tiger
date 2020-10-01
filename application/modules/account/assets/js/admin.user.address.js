@@ -46,6 +46,7 @@
 
             Class._initSAddressIdSelect2();
             Class._initTypeAddressSelect2();
+            Class._initCountrySelect2();
 
         },
 
@@ -158,21 +159,78 @@
 
         },
 
+        _initCountrySelect2 ( ) {
+
+            function data( params ) {
+
+                let query = {
+                    search      : params.term,
+                    page        : params.page || 0,
+                    limit       : 15,
+                    service     : 'account:admin',
+                    method      : 'getCountrySelect2List',
+                }
+
+                return query;
+
+            }
+
+            $('#address-form #country').select2({
+                width : '100%',
+                ajax: {
+                    type        : "POST",
+                    url         : "/api",
+                    dataType    : "json",
+                    data        : data
+                }
+            });
+
+        },
+
+        _setCountrySelect2 ( country ) {
+
+            if ( ! country ) { return; }
+
+            let $typeAddress = $('#address-form #country');
+
+            $.ajax({
+                type        : 'GET',
+                dataType    : "json",
+                url         : '/api/service/account:admin/method/getCountrySelect2List/search/' + country
+            }).then( function ( data ) {
+
+                let option = new Option( data.results[0].text, data.results[0].id, true, true);
+                $typeAddress.append(option).trigger('change');
+
+                $typeAddress.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: data
+                    }
+                });
+
+            });
+
+        },
+
+
         // CRUD Functions //
 
-        _resetAddress ( ) {
+        _resetAddress ( exclude ) {
 
-            $('#address-form').tigerForm('reset');
-            $('#address-form #address_id').select2('destroy');
+            $('#address-form').tigerForm('reset', exclude );
             $('#address-form #type_address').select2('destroy');
-            Class._initSAddressIdSelect2();
+            $('#address-form #country').select2('destroy');
             Class._initTypeAddressSelect2();
+            Class._initCountrySelect2();
 
         },
 
         _view : function ( event ) {
 
             Class._resetAddress();
+            $('#address-form #address_id').select2('destroy');
+            Class._initSAddressIdSelect2();
 
             /**
              * The address form is used by both orgs and users, so we need to
@@ -188,12 +246,10 @@
 
         _edit : function ( event ) {
 
-            console.log(this, event, $('#address-form #address_id').val() );
-
             /** if the value is empty, then it's a new address. Just clear the form and return. */
             if ( ! $('#address-form #address_id').val() ) {
 
-                Class._resetAddress();
+                Class._resetAddress(['address_id']);
                 return;
 
             }

@@ -163,9 +163,7 @@
         _resetContact ( ) {
 
             $('#contact-form').tigerForm('reset');
-            $('#contact-form #contact_id').select2('destroy');
             $('#contact-form #type_contact').select2('destroy');
-            Class._initSContactIdSelect2();
             Class._initTypeContactSelect2();
 
         },
@@ -173,6 +171,8 @@
         _view : function ( event ) {
 
             Class._resetContact();
+            $('#contact-form #contact_id').select2('destroy');
+            Class._initSContactIdSelect2();
 
             /**
              * The contact form is used by both orgs and users, so we need to

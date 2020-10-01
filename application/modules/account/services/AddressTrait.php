@@ -157,25 +157,30 @@ trait Account_Service_AddressTrait
             $entitiy = $params['entity'];
             $entitiy_id = $params['entity_id'];
             $search = (isset($params['search'])) ? $params['search'] : '';
-            $offset = (isset($params['page'])) ? $params['page'] : 1;
+            $offset = (isset($params['page'])) ? $params['page'] : 0;
             $limit = (isset($params['limit'])) ? $params['limit'] : 1;
             $orderby = (isset($params['order'])) ? $params['order'] : '';
 
             $results = [];
-            $results[] = (object)['id' => '', 'text' => $this->_translate->_('FORM.ADD_NEW_CONTACT')];
-            $addressRowset = $this->_addressModel->getAdminAddressSearchList($entitiy, $entitiy_id, $search, $offset, $limit, $orderby);
+            $results[] = (object)['id' => '', 'text' => $this->_translate->_('FORM.ADD_NEW_ADDRESS')];
+            $addressRowset = $this->_addressModel->getAdminAddressSearchList( $entitiy, $entitiy_id, $search, $offset, $limit, $orderby );
 
             foreach ($addressRowset as $addressRow) {
                 $results[] = (object)[
                     'id' => $addressRow->address_id,
-                    'text' => $addressRow->address_value,
+                    'text' => $addressRow->address . ', ' . $addressRow->city . ', ' . $addressRow->state . ', ' . $addressRow->postal_code,
+                    'city' => $addressRow->city,
+                    'state' => $addressRow->state,
+                    'postal_code' => $addressRow->postal_code,
                     'type' => $addressRow->type_address,
                     'primary' => $addressRow->primary
                 ];
             }
         }
         catch (Exception $e ) {
+
             pr( $e->getMessage() );
+
         }
 
         $this->_response = new Core_Model_ResponseObjectSelect2([
@@ -230,6 +235,49 @@ trait Account_Service_AddressTrait
         return $actions;
 
     }
+
+    public function getCountrySearchList ( $search = '', $offset = 0, $limit = 0, $orderby = '' )
+    {
+
+        return $this->_countryModel->getCountrySearchList( $search, $offset, $limit, $orderby );
+
+    }
+
+    public function getCountrySelect2List ( $params )
+    {
+
+        try {
+
+            $search = (isset($params['search'])) ? $params['search'] : '';
+            $offset = (isset($params['page'])) ? $params['page'] : 0;
+            $limit = (isset($params['limit'])) ? $params['limit'] : 1;
+            $orderby = (isset($params['order'])) ? $params['order'] : '';
+
+            $results = [];
+            $countryRowset = $this->getCountrySearchList( $search, $offset, $limit, $orderby );
+
+            foreach ($countryRowset as $countryRow) {
+                $results[] = (object) [
+                    'id' => $countryRow->code,
+                    'text' => $countryRow->name,
+                ];
+            }
+        }
+        catch (Exception $e ) {
+
+            pr( $e->getMessage() );
+
+        }
+
+        $this->_response = new Core_Model_ResponseObjectSelect2([
+            'results' => $results,
+            'pagination' => (object) ['more' => false ],
+            'error' => null,
+            'login' => false,
+        ]);
+
+    }
+
 
     ### Persistence Methods ###
 
@@ -353,11 +401,16 @@ trait Account_Service_AddressTrait
              */
             Zend_Db_Table_Abstract::getDefaultAdapter()->beginTransaction();
 
+            /** Massage some data if it's empty ... */
+            $data['lat'] = ( ! empty( $data['lat'] ) ) ? $data['lat'] : 0.0;
+            $data['lng'] = ( ! empty( $data['lng'] ) ) ? $data['lng'] : 0.0;
+
             /**
-             * Since we're not really doing anything with the address being persisted
-             * we don't need the $addressRow, but we left it in just to let devs know
-             * it's available. We can send the data back to the UI with new or updated
-             * data.
+             * Normally, we don't need the $dataRow, but we need it now to pass
+             * our new id to the linking table. Since the addressRow record
+             * does not know who it belongs to, we also need to pass our data into
+             * the persist method so the linking table knows who the entity (whether
+             * a user or and org) is.
              */
             $addressRow = $this->_persistAddress( $data );
             $addressRow = $this->_persistEntityAddress( $data, $addressRow );
@@ -383,6 +436,8 @@ trait Account_Service_AddressTrait
 
             /** We also log what happened ... */
             // Tiger_Log::logger( $e->getMessage() );
+
+            pr( $e->getMessage() );
 
         }
         catch ( Error $e ) {
@@ -448,7 +503,11 @@ trait Account_Service_AddressTrait
             /** Create the row with our relevant data. */
             $addressRow = $this->_addressModel->createRow( $data );
 
-            /** Update the relevant pieces with new address data. */
+            /**
+             * Update the relevant pieces with new address system data. As a rule of thumb,
+             * system data is added here while user added data is massaged in the update
+             * or save methods.
+             */
             $addressRow->address_id = Tiger_Utility_Uuid::v1();
 
         }

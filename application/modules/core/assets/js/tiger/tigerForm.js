@@ -49,12 +49,27 @@
          * Intelligent Form Reset
          * @returns {*}
          */
-        reset : function( ) {
+        reset : function( exclude ) {
 
-            let boilerPlateVars = ['create_user_id', 'update_user_id', 'create_date', 'update_date', 'create_ip', 'update_ip'];
+            console.log('exclude', exclude );
+
+            let boilerPlateVars = [
+                'email_validate_key',
+                'password_reset_key',
+                'create_user_id',
+                'update_user_id',
+                'create_date',
+                'update_date',
+                'create_ip',
+                'update_ip'
+            ];
+
             let $form = $(this);
 
             this.each(function() {
+
+                if ( exclude && exclude.indexOf( this.id ) > -1 ){ return false; }
+
                 let type = this.type, tag = this.tagName.toLowerCase();
 
                 if (tag === 'form') {

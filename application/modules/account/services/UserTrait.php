@@ -161,7 +161,7 @@ trait Account_Service_UserTrait
     public function getUserSelect2List ( $params )
     {
         $search     = ( isset( $params['search'] ) ) ? $params['search'] : '';
-        $offset     = ( isset( $params['page']   ) ) ? $params['page']   : 1;
+        $offset     = ( isset( $params['page']   ) ) ? $params['page']   : 0;
         $limit      = ( isset( $params['limit']  ) ) ? $params['limit']  : 1;
         $orderby    = ( isset( $params['order']  ) ) ? $params['order']  : '';
 
@@ -500,7 +500,11 @@ trait Account_Service_UserTrait
             /** Create the row with our relevant data. */
             $userRow = $this->_userModel->createRow( $data );
 
-            /** Update the relevant pieces with new user data. */
+            /**
+             * Update the relevant pieces with new user system data. As a rule of thumb,
+             * system data is added here while user added data is massaged in the update
+             * or save methods.
+             */
             $userRow->user_id   = Tiger_Utility_Uuid::v1();
             $userRow->create_ip = $_SERVER['REMOTE_ADDR'];
 
