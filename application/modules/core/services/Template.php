@@ -21,10 +21,10 @@
 
 class Core_Service_Template extends Oneui_Service_Template
 {
-    public $admin_logo =    '<a class="font-w600 text-dual" href="index.php">' .
-                                '<i class="fa fa-circle-notch text-primary"></i>' .
+    public $admin_logo =    '<a class="font-w600 text-dual" href="/admin">' .
+                                '<i class="tiger tiger-logo-tiny"></i>' .
                                 '<span class="smini-hide">' .
-                                    '<span class="font-w700 font-size-h5">ne</span>' .
+                                    '<span class="font-w700 font-size-h5"> TIGER</span>' .
                                 '</span>' .
                             '</a>';
 

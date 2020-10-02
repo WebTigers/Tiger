@@ -274,6 +274,7 @@
                      * the option properly.
                      */
                     Class._setTypeAddressSelect2( data.data.type_address );
+                    Class._setCountrySelect2( data.data.country );
 
                 }
                 else {

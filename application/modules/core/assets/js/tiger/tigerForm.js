@@ -51,8 +51,6 @@
          */
         reset : function( exclude ) {
 
-            console.log('exclude', exclude );
-
             let boilerPlateVars = [
                 'email_validate_key',
                 'password_reset_key',
