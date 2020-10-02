@@ -198,7 +198,7 @@ class IndexController extends Tiger_Controller_Action
 
         try {
 
-            $userModel = new User_Model_User();
+            $userModel = new Account_Model_User();
             $userRow = $userModel->getUserById('3436efde-ef95-11ea-9f43-12d1c32c0ac5');
             $activation_link = "http://" . $_SERVER['HTTP_HOST'] . "/account/activation/key/" . $userRow->email_verify_key;
 
