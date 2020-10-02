@@ -267,14 +267,14 @@ class Account_AdminController extends Tiger_Controller_Action
 
     public function addressAction ( )
     {
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.address.js' ) );
-        $this->view->addressForm = new Account_Form_Address();
+        //$this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.address.js' ) );
+        //$this->view->addressForm = new Account_Form_Address();
     }
 
     public function contactAction ( )
     {
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.contact.js' ) );
-        $this->view->contactForm = new Account_Form_Contact();
+        //$this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.contact.js' ) );
+        //$this->view->contactForm = new Account_Form_Contact();
     }
 
 }

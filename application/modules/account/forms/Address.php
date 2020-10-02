@@ -80,8 +80,8 @@ class Account_Form_Address extends Tiger_Form_Base
 
             'validators'        =>  [
                                         [ 'StringLength', false, [
-                                            'min'   => 4,
-                                            'max'   => 5,
+                                            'min'   => 1,
+                                            'max'   => 25,
                                             'messages' => [
                                                 Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                                 Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
@@ -188,7 +188,7 @@ class Account_Form_Address extends Tiger_Form_Base
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Z0-9]/',
+                                            'match' => '/[^A-Z0-9_]/',
                                             'replace' => ''
                                         ] ]
                                     ],
@@ -203,7 +203,7 @@ class Account_Form_Address extends Tiger_Form_Base
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Z0-9]+$/',
+                                            'pattern' => '/^[A-Z0-9_]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]
