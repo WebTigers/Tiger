@@ -118,11 +118,11 @@
                     'class': 'deleted',
                     'visible': false
                 }, {
-                    'title': 'Controls',
+                    'title': 'Actions',
                     'targets': -1,
                     'data': null,
                     'orderable': false,
-                    'width': '150px',
+                    'width': '230px',
                     'render': Class._buildControls,
                 }]
             });

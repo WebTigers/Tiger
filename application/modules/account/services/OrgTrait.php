@@ -176,6 +176,25 @@ trait Account_Service_OrgTrait
         ];
 
         $actions[] = (object) [
+            'type'      => 'icon',                                      // Controls are either 'icon' or 'button'.
+            'id'        => $org->org_id,                                // Gets built as a data-id attribute.
+            'value'     => '',                                          // Gets built as a data-value attribute.
+            'class'     => 'fa fa fa-address-card address',             // The class for the icon or button.
+            'title'     => $this->_translate->_('DT.ADDRESS'),          // The title attribute, often used for tooltips.
+            'label'     => $this->_translate->_('DT.ADDRESS'),          // The title attribute.
+        ];
+
+        $actions[] = (object) [
+            'type'      => 'icon',                                      // Controls are either 'icon' or 'button'.
+            'id'        => $org->org_id,                                // Gets built as a data-id attribute.
+            'value'     => '',                                          // Gets built as a data-value attribute.
+            'class'     => 'fa fa fa-mobile-alt contact',               // The class for the icon or button.
+            'title'     => $this->_translate->_('DT.CONTACT'),          // The title attribute, often used for tooltips.
+            'label'     => $this->_translate->_('DT.CONTACT'),          // The title attribute.
+        ];
+
+
+        $actions[] = (object) [
             'type'      => 'icon',
             'id'        => $org->org_id,
             'value'     => $org->active,
