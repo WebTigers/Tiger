@@ -174,6 +174,8 @@
             $('body').on('click', 'table i.edit', Class._edit );
             $('body').on('click', 'table i.active, table i.deleted', Class._update );
 
+            $().tigerDOM('initToggleControls');
+
         },
 
         _add : function ( event ) {
@@ -474,7 +476,7 @@
                 'processing': false,
                 'serverSide': false,
                 'orderMulti': true,
-                'order': [[0, 'asc']],
+                'order': [[1, 'asc']],
                 'class': 'hover',
                 'autoWidth': false,
                 'lengthMenu': [ 5, 10, 25, 50, 100 ],

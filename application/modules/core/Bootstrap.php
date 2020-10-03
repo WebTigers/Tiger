@@ -42,12 +42,22 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         $configArray = $configModel->getConfigArray();
         $config->merge( new Zend_Config( $configArray ) );
 
+
         /** Merge the ACL file separately. */
         $filename = realpath(dirname(__FILE__) . '/configs' ) . '/acl.ini';
         $configOptions = new Zend_Config_Ini( $filename, APPLICATION_ENV, [ 'allowModifications' => true ] );
         $config->merge( $configOptions );
-
         Zend_Registry::set( 'Zend_Config', $config );
+
+
+        /** Init Core Translation */
+        $translate = new Zend_Translate([
+            'adapter' => Zend_Translate::AN_ARRAY,
+            'content' => realpath(dirname(__FILE__) . '/languages' ),
+            'scan' => Zend_Translate::LOCALE_FILENAME,
+            'locale'  => LOCALE
+        ]);
+        Zend_Registry::set( 'Zend_Translate', $translate );
 
 
         /** Set a Guest User Id that tries to persist the same across all visits. */
@@ -59,6 +69,8 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         defined('GUEST_USER_ID')
             || define('GUEST_USER_ID', $guest_user_id);
 
+
+        /** Make sure we can do a DB override before setting these AWS constants ... */
 
         /**
          * AWS General Access Keys

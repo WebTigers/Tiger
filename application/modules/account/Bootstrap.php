@@ -43,6 +43,17 @@ class Account_Bootstrap extends Zend_Application_Module_Bootstrap
 
         Zend_Registry::set( 'Zend_Config', $Config );
 
+
+        /** Init Module Translation */
+        $moduleTranslate = new Zend_Translate([
+            'adapter' => Zend_Translate::AN_ARRAY,
+            'content' => realpath(dirname(__FILE__) . '/languages' ),
+            'scan' => Zend_Translate::LOCALE_FILENAME,
+            'locale'  => LOCALE
+        ]);
+        Zend_Registry::get('Zend_Translate')->addTranslation([ 'content' => $moduleTranslate ]);
+        unset( $moduleTranslate );
+
     }
 
 }

@@ -158,6 +158,8 @@
             $('body').on('click', 'table i.edit', Class._edit );
             $('body').on('click', 'table i.active, table i.deleted', Class._update );
 
+            $().tigerDOM('initToggleControls');
+
         },
 
         _add : function ( event ) {
