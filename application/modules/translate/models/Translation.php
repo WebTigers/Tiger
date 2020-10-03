@@ -19,12 +19,15 @@
  * information and software.
  */
 
-class Core_Model_Translation extends Zend_Db_Table_Abstract {
+class Translate_Model_Translation extends Zend_Db_Table_Abstract {
     
     protected $_name        = 'translation';
     protected $_primary     = 'translation_id';
     protected $_rowClass    = 'Tiger_Db_Table_Row';
 
+    /**
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
     public function getLocales () {
 
         $sql = $this->select()->
@@ -35,6 +38,9 @@ class Core_Model_Translation extends Zend_Db_Table_Abstract {
 
     }
 
+    /**
+     * @return array of database locales with translations
+     */
     public function getLocaleOptions ( ) {
 
         $localeRowset = $this->getLocales();
@@ -46,18 +52,23 @@ class Core_Model_Translation extends Zend_Db_Table_Abstract {
 
     }
 
+    /**
+     * @param $translation_id
+     * @return Zend_Db_Table_Row_Abstract|null
+     */
     public function getTranslationById ( $translation_id ) {
 
         $sql = $this->
             select()->
             where('translation_id = ?', $translation_id );
 
-        // pr ( $sql->assemble() );
-
         return $this->fetchRow( $sql );
 
     }
 
+    /**
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
     public function getTranslationsForCache ( ) {
 
         $sql = $this->
@@ -65,13 +76,15 @@ class Core_Model_Translation extends Zend_Db_Table_Abstract {
             where( 'active = 1' )->
             where( 'deleted = 0' );
 
-        // pr ( $sql->assemble() );
-
         return $this->fetchAll( $sql );
 
     }
 
-    public function getTranslationsByLocale ( $locale ) {
+    /**
+     * @param string $locale
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    public function getTranslationsByLocale ( string $locale ) {
 
         $sql = $this->
             select()->
@@ -79,37 +92,63 @@ class Core_Model_Translation extends Zend_Db_Table_Abstract {
             where( 'active = 1' )->
             where( 'deleted = 0' );
 
-        // pr ( $sql->assemble() );
+        return $this->fetchAll( $sql );
+
+    }
+
+    /**
+     * @param $message_id
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    public function getTranslationsByMessageId ($message_id) {
+
+        $sql = $this->
+            select()->
+            where('message_id = ?', $message_id );
 
         return $this->fetchAll( $sql );
 
     }
 
-    public function getTranslationsByKey ( $key ) {
+    /**
+     * @param string $search
+     * @param int $offset
+     * @param int $limit
+     * @param string $orderby
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    public function getTranslationSearchList ( string $search, $offset = 0, $limit = 0, $orderby = '' ) {
 
         $sql = $this->
             select()->
-            where('msg_id = ?', $key );
-
-            // pr ( $sql->assemble() );
-
-        return $this->fetchAll( $sql );
-
-    }
-
-    public function getTranslationListSearch ( $search, $active, $deleted, $offset = 0, $limit = 0, $orderby = '' ) {
-
-        $sql = $this->
-            select()->
-            where( 'active = ?', $active )->
-            where( 'deleted = ?', $deleted )->
-            where( '( msg_id LIKE ?',   "%$search%" )->
-            orwhere( 'msg_str LIKE ?', "%$search%" )->
+            where( '( message_id LIKE ?',   "%$search%" )->
+            orwhere( 'message_text LIKE ?', "%$search%" )->
             orWhere( 'locale LIKE ? )', "%$search%" )->
+            where( 'active = 1' )->
+            where( 'deleted = 0' )->
             order( $orderby )->
             limit( $limit, $offset );
 
-        // pr( $sql->assemble() );
+        return $this->fetchAll( $sql );
+
+    }
+
+    /**
+     * @param string $search
+     * @param int $offset
+     * @param int $limit
+     * @param string $orderby
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    public function getAdminTranslationSearchList ( string $search, $offset = 0, $limit = 0, $orderby = '' ) {
+
+        $sql = $this->
+        select()->
+        where( '( message_id LIKE ?',   "%$search%" )->
+        orwhere( 'message_text LIKE ?', "%$search%" )->
+        orWhere( 'locale LIKE ? )', "%$search%" )->
+        order( $orderby )->
+        limit( $limit, $offset );
 
         return $this->fetchAll( $sql );
 

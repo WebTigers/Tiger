@@ -21,9 +21,6 @@
 
 class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 {
-    protected $_locale;
-    protected $_translate;
-
     protected function _initCore()
     {
         /** Bootstrap database and sessions. */
@@ -43,6 +40,29 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         $config->merge( new Zend_Config( $configArray ) );
 
 
+        /** Init Zend_Cache_Manager */
+        $frontEndOptions = [
+            'lifetime' => 7200,
+            'automatic_serialization' => true,
+        ];
+        $backEndOptions = [
+            'server' => [
+                [
+                    'host' => 'localhost',
+                    'port' => 11211,
+                    'weight' => 1,
+                ],
+            ],
+            'client' => [
+                Memcached::OPT_DISTRIBUTION => Memcached::DISTRIBUTION_CONSISTENT,
+                Memcached::OPT_HASH => Memcached::HASH_MD5,
+                Memcached::OPT_LIBKETAMA_COMPATIBLE => true,
+            ]
+        ];
+        $cache = Zend_Cache::factory( 'Core', 'Libmemcached', $frontEndOptions, $backEndOptions );
+        Zend_Registry::set('Zend_Cache', $cache );
+
+
         /** Merge the ACL file separately. */
         $filename = realpath(dirname(__FILE__) . '/configs' ) . '/acl.ini';
         $configOptions = new Zend_Config_Ini( $filename, APPLICATION_ENV, [ 'allowModifications' => true ] );
@@ -55,7 +75,8 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
             'adapter' => Zend_Translate::AN_ARRAY,
             'content' => realpath(dirname(__FILE__) . '/languages' ),
             'scan' => Zend_Translate::LOCALE_DIRECTORY,
-            'locale'  => LOCALE
+            'locale'  => LOCALE,
+            'cache' => $cache,
         ]);
         Zend_Registry::set( 'Zend_Translate', $translate );
 

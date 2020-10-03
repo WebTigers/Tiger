@@ -33,7 +33,7 @@ class Tiger_Translate_Adapter_Db extends Zend_Translate_Adapter {
      */
     protected function _loadTranslationData ( $data, $locale, array $options = array() ) {
 
-        $translationModel = new Core_Model_Translation;
+        $translationModel = new Translate_Model_Translation();
 
         if ( $this->hasCache() ) {
 
@@ -49,11 +49,11 @@ class Tiger_Translate_Adapter_Db extends Zend_Translate_Adapter {
 
             if ( $this->hasCache() ) {
 
-                $this->_data[ $translationRow->locale ][ $translationRow->msg_id] = $translationRow->msg_str;
+                $this->_data[ $translationRow->locale ][ $translationRow->message_id] = $translationRow->message_text;
 
             } else {
 
-                $this->_data[ $locale ][ $translationRow->msg_id ] = $translationRow->msg_str;
+                $this->_data[ $locale ][ $translationRow->message_id ] = $translationRow->message_text;
 
             }
 
