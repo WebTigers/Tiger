@@ -29,7 +29,7 @@ class Acl_Bootstrap extends Zend_Application_Module_Bootstrap
         $moduleTranslate = new Zend_Translate([
             'adapter' => Zend_Translate::AN_ARRAY,
             'content' => realpath(dirname(__FILE__) . '/languages' ),
-            'scan' => Zend_Translate::LOCALE_FILENAME,
+            'scan' => Zend_Translate::LOCALE_DIRECTORY,
             'locale'  => LOCALE
         ]);
         Zend_Registry::get('Zend_Translate')->addTranslation([ 'content' => $moduleTranslate ]);
