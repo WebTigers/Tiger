@@ -407,7 +407,9 @@
                 method      : 'saveAddress',
                 address_id  : $('#address-form #address_id').val(),
                 entity      : $('#address-form #entity').val(),
-                entity_id   : $('#address-form #entity_id').val()
+                entity_id   : $('#address-form #entity_id').val(),
+                active      : ( $('#address-form #active').is(':checked') ) ? 1 : 0,
+                deleted     : ( $('#address-form #deleted').is(':checked') ) ? 1 : 0
             };
 
             /** Note that our API params will be added to the form data */

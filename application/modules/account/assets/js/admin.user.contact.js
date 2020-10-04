@@ -350,7 +350,9 @@
                 method      : 'saveContact',
                 contact_id  : $('#contact-form #contact_id').val(),
                 entity      : $('#contact-form #entity').val(),
-                entity_id   : $('#contact-form #entity_id').val()
+                entity_id   : $('#contact-form #entity_id').val(),
+                active      : ( $('#contact-form #active').is(':checked') ) ? 1 : 0,
+                deleted     : ( $('#contact-form #deleted').is(':checked') ) ? 1 : 0
             };
 
             /** Note that our API params will be added to the form data */

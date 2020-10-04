@@ -274,19 +274,23 @@
             $('div.block-options [data-tiger-reload-table]').on('click', function ( event ) {
 
                 let datatable = $(this).attr('data-tiger-reload-table');
-                let block = $(this).closest('div.block');
+                let $block = $(this).closest('div.block');
 
                 $( datatable ).DataTable().on('preDraw.block', function ( event ) {
-                    One.block('state_loading', block );
+                    One.block('state_loading', $block );
                 });
 
                 $( datatable ).DataTable().on('draw.block', function( event ) {
-                    One.block('state_normal', block );
-                    $( datatable ).DataTable().off('preDraw.block');
-                    $( datatable ).DataTable().off('draw.block');
+                    /** Added a 1 sec. delay for the keen reload animation to play. */
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                        $(datatable).DataTable().off('preDraw.block');
+                        $(datatable).DataTable().off('draw.block');
+                    }, 1000);
                 });
 
-                $( datatable ).DataTable().draw();
+                $( datatable ).DataTable().ajax.reload();
+                // $( datatable ).DataTable().draw();
 
             });
 

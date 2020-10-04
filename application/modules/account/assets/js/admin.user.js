@@ -791,7 +791,9 @@
             let apiParams = {
                 service : 'account:admin',
                 method  : 'saveUser',
-                user_id : $('#user-form #user_id').val()
+                user_id : $('#user-form #user_id').val(),
+                active  : ( $('#user-form #active').is(':checked') ) ? 1 : 0,
+                deleted : ( $('#user-form #deleted').is(':checked') ) ? 1 : 0
             };
 
             /** Note that our API params will be added to the form data */

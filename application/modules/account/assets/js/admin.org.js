@@ -572,7 +572,9 @@
             let apiParams = {
                 service : 'account:admin',
                 method  : 'saveOrg',
-                org_id  : $('#org-form #org_id').val()
+                org_id  : $('#org-form #org_id').val(),
+                active  : ( $('#org-form #active').is(':checked') ) ? 1 : 0,
+                deleted : ( $('#org-form #deleted').is(':checked') ) ? 1 : 0
             };
 
             /** Note that our API params will be added to the form data */

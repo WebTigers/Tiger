@@ -438,7 +438,9 @@
             /** API params tell Tiger what service will be processing the data. */
             let apiParams = {
                 service : 'acl:admin',
-                method  : 'saveResource'
+                method  : 'saveResource',
+                active  : ( $('#resource-form #active').is(':checked') ) ? 1 : 0,
+                deleted : ( $('#resource-form #deleted').is(':checked') ) ? 1 : 0
             };
 
             /** Note that our API params will be added to the form data */

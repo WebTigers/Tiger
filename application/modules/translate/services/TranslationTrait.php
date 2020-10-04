@@ -124,32 +124,67 @@ trait Translate_Service_TranslationTrait
 
     public function getAdminStaticTranslationsDataTable ( )
     {
-        $records = $this->getTranslationConfigsList();
-
         /** Groom the Config for Datatables response ... */
-
-        $recordsOut = [];
-        foreach( $records as $key => $rec ) {
-
-            $record = (object) $rec->toArray();
-
-            $record->translation_id = $key;
-            $record->module = explode( '_', $record->translation )[0];
-
-            $recordsOut[] = $record;
-
-        }
 
         /** Set the pre-formatted array for datatables */
         $this->_response = new Core_Model_ResponseObjectDT([
-            'data' => $recordsOut,
+            'data' => $this->getStaticTranslationList(),
         ]);
 
     }
 
-    public function getTranslationConfigsList () {
+    public function getStaticTranslationList ( string $limitLocale = null ) {
 
-        return Zend_Registry::get('Zend_Config')->acl->translations;
+        /** Iterate each of the modules and scan the languages folders ... */
+
+        /** $modules is an array of all of the active modules. */
+        $modules = array_keys( Zend_Controller_Front::getInstance()->getDispatcher()->getControllerDirectory() );
+
+        $out = [];
+        foreach( $modules as $module ) {
+
+            /** If the module has a languages/ directory, dive into it ... */
+            $languages_directory = MODULES_PATH . '/' . $module . '/languages';
+            if ( is_dir( $languages_directory ) ) {
+
+                /** Scan the /languages directory for all locale subdirs, ignore the /. and /.. folders. */
+                $locales = array_diff( scandir($languages_directory), array('..', '.') );
+
+                /** Iterate each locale/ dir for its various language files ... */
+                foreach( $locales as $locale ) {
+
+                    /** Sometimes we just want to return translations for just one locale ... */
+                    if ( ! empty( $limitLocal ) && $locale !== $limitLocale ){ contine; }
+
+                    /** Scan the locale directory for any translation files ... */
+                    $locale_directory = MODULES_PATH . '/' . $module . '/languages/' . $locale;
+                    $files = array_diff( scandir($locale_directory), array('..', '.') );
+
+                    foreach ( $files as $file ) {
+
+                        /** Get the translation array within the file ... */
+                        $translations = include $locale_directory . '/' . $file;
+
+                        foreach ( $translations as $message_id => $message_text ) {
+
+                            /** Build a little traanslate object to keep our data flat. */
+                            $translateObject = (object) [
+                                'module' => $module,
+                                'locale' => $locale,
+                                'file' => $file,
+                                'message_id' => $message_id,
+                                'message_text' => $message_text,
+                            ];
+
+                            $out[] = $translateObject;
+
+                        }
+                    }
+                }
+            }
+        }
+
+        return $out;
 
     }
 
@@ -161,7 +196,7 @@ trait Translate_Service_TranslationTrait
             'param'     => '',                                          // Used for some Datatables toggles
             'value'     => '',                                          // Used for some Datatables toggles
             'class'     => 'fa fas fa-pencil-alt edit',                 // The class for the icon or button.
-            'title'     => $this->_translate->_('DT.EDIT_RESOURCE'),    // The title attribute, often used for tooltips.
+            'title'     => $this->_translate->_('DT.EDIT_TRANSLATION'),    // The title attribute, often used for tooltips.
             'label'     => $this->_translate->_('DT.EDIT'),             // The title attribute.
         ];
 
@@ -172,7 +207,7 @@ trait Translate_Service_TranslationTrait
             'class'     => ( intval($translation->active) !== 1 )
                                 ? 'fa fas fa-play active'
                                 : 'fa fas fa-pause active',
-            'title'     => $this->_translate->_('DT.ACTIVE_INACTIVE_RESOURCE'),
+            'title'     => $this->_translate->_('DT.ACTIVE_INACTIVE_TRANSLATION'),
             'label'     => $this->_translate->_('DT.ACTIVE_INACTIVE'),
         ];
 
@@ -183,7 +218,7 @@ trait Translate_Service_TranslationTrait
             'class'     => ( intval($translation->deleted) !== 0 )
                                 ? 'fa fas fa-trash-restore deleted'
                                 : 'fa fas fa-trash deleted',
-            'title'     => $this->_translate->_('DT.DELETE_UNDELETE_RESOURCE'),
+            'title'     => $this->_translate->_('DT.DELETE_UNDELETE_TRANSLATION'),
             'label'     => $this->_translate->_('DT.DELETE_UNDELETE'),
         ];
 
@@ -204,7 +239,7 @@ trait Translate_Service_TranslationTrait
      */
     public function updateTranslation ( $params ) {
 
-        $this->_form = new Acl_Form_Translation();
+        $this->_form = new Translate_Form_Translation();
 
         /**
          * Note that in Tiger, isValid() is subclassed to remove any request routing
@@ -252,7 +287,7 @@ trait Translate_Service_TranslationTrait
              */
             $this->_response->result = 1;
             $this->_response->data = $translation;
-            $this->_response->setTextMessage( 'MESSAGE.RESOURCE_SAVED', 'success' );
+            $this->_response->setTextMessage( 'MESSAGE.TRANSLATION_SAVED', 'success' );
 
         }
         catch ( Exception $e ) {
@@ -265,7 +300,7 @@ trait Translate_Service_TranslationTrait
              */
 
             $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.NEW_RESOURCE_FAILED', 'alert' );
+            $this->_response->setTextMessage( 'MESSAGE.NEW_TRANSLATION_FAILED', 'alert' );
 
             /** We also log what happened ... */
             // Tiger_Log::logger( $e->getMessage() );
@@ -286,7 +321,7 @@ trait Translate_Service_TranslationTrait
 
         try {
 
-            $this->_form = new Acl_Form_Translation();
+            $this->_form = new Translate_Form_Translation();
 
             /**
              * Note that in Tiger, isValid() is subclassed to remove any request routing
@@ -330,7 +365,7 @@ trait Translate_Service_TranslationTrait
              */
             $this->_response->result = 1;
             $this->_response->data = $translationRow;
-            $this->_response->setTextMessage( 'MESSAGE.RESOURCE_SAVED', 'success' );
+            $this->_response->setTextMessage( 'MESSAGE.TRANSLATION_SAVED', 'success' );
 
         }
         catch ( Exception $e ) {
@@ -380,7 +415,7 @@ trait Translate_Service_TranslationTrait
             $translationRow = $this->_translationModel->getTranslationById( $data['translation_id'] );
 
             if ( empty($translationRow) ) {
-                throw new Exception('ERROR.RESOURCE_NOT_FOUND');
+                throw new Exception('ERROR.TRANSLATION_NOT_FOUND');
             }
 
             if ( $partial === false ) {
@@ -419,6 +454,10 @@ trait Translate_Service_TranslationTrait
          * we simply return the entire row object.
          */
         $translationRow->saveRow();
+
+        /** Because translations are a cached resource, we need to clear the cache to see the change ... */
+        Zend_Registry::get('Zend_Cache')->clean( Zend_Cache::CLEANING_MODE_ALL );
+
         return $translationRow;
 
     }

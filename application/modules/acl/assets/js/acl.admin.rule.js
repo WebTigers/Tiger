@@ -450,7 +450,9 @@
             /** API params tell Tiger what service will be processing the data. */
             let apiParams = {
                 service : 'acl:admin',
-                method  : 'saveRule'
+                method  : 'saveRule',
+                active  : ( $('#rule-form #active').is(':checked') ) ? 1 : 0,
+                deleted : ( $('#rule-form #deleted').is(':checked') ) ? 1 : 0
             };
 
             /** Note that our API params will be added to the form data */

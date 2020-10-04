@@ -18,24 +18,24 @@
  */
 
 /**
- * jQuery Tiger ACL Admin Resource Plugin
+ * jQuery Tiger ACL Admin Translation Plugin
  */
 
 (function( $ ){
     
     let Class = {
 
-        resourceDT : null,
-        staticResourceDT : null,
+        translationDT : null,
+        staticTranslationDT : null,
         
         init : function( ) {
 
             $(document).ready(function() {
 
                 // Page init stuff goes here. //
-                Class._initResourceDataTable();
+                Class._initTranslationDataTable();
                 Class._initControls();
-                Class._initStaticResourceDataTable();
+                Class._initStaticTranslationDataTable();
 
             });
 
@@ -43,9 +43,9 @@
 
         // Admin Functions //
 
-        _initResourceDataTable : function () {
+        _initTranslationDataTable : function () {
 
-            Class.resourceDT = $('#resourcesDT').DataTable({
+            Class.translationDT = $('#translationsDT').DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
@@ -63,37 +63,29 @@
                     'dataType': 'json',
                     'dataSrc': 'data',
                     'data': {
-                        service: 'acl:admin',
-                        method: 'getAdminResourcesDataTable'
+                        service: 'translate:admin',
+                        method: 'getAdminTranslationsDataTable'
                     }
                 },
                 'columns': [{
-                    'title': 'Resource Id',
-                    'name': 'resource_id',
-                    'data': 'resource_id',
+                    'title': 'Translation Id',
+                    'name': 'translation_id',
+                    'data': 'translation_id',
                     'visible': false
                 }, {
-                    'title': 'Module',
-                    'name': 'module_name',
-                    'data': 'module_name'
+                    'title': 'Message Key',
+                    'name': 'message_id',
+                    'data': 'message_id'
                 }, {
-                    'title': 'Resource Name',
-                    'name': 'resource_name',
-                    'data': 'resource_name'
+                    'title': 'Message Text',
+                    'name': 'message_text',
+                    'data': 'message_text'
                 }, {
-                    'title': 'Resource Description',
-                    'name': 'resource_description',
-                    'data': 'resource_description'
+                    'title': 'Locale',
+                    'name': 'locale',
+                    'data': 'locale'
                 }, {
-                    'title': 'Resource',
-                    'name': 'resource',
-                    'data': 'resource'
-                }, {
-                    'title': 'Privilege',
-                    'name': 'privilege',
-                    'data': 'privilege'
-                }, {
-                    'title': 'Privilege',
+                    'title': 'Active',
                     'name': 'active',
                     'data': 'active',
                     'class': 'active',
@@ -114,7 +106,7 @@
                 }]
             });
 
-            Class.resourceDT.on('draw', function ( event, settings ) {
+            Class.translationDT.on('draw', function ( event, settings ) {
                 One.helpers('core-bootstrap-tooltip');
             });
 
@@ -156,7 +148,7 @@
 
         _initControls : function () {
 
-            $('#add-resource').on( 'click', Class._add );
+            $('#add-translation').on( 'click', Class._add );
             $('#save-button').on( 'click', Class._save );
 
             $('body').on('click', 'table i.edit', Class._edit );
@@ -168,20 +160,20 @@
 
         _add : function ( event ) {
 
-            $('#add-resource-header').removeClass('hide')
-            $('#edit-resource-header').addClass('hide')
-            $('#resource-form .boiler-plate').addClass('hide')
-            $('#resource-form').tigerForm('reset');
-            $('#modal-resources-form').modal('show');
+            $('#add-translation-header').removeClass('hide')
+            $('#edit-translation-header').addClass('hide')
+            $('#translation-form .boiler-plate').addClass('hide')
+            $('#translation-form').tigerForm('reset');
+            $('#modal-translations-form').modal('show');
 
         },
 
         _edit : function ( event ) {
 
-            $('#add-resource-header').addClass('hide')
-            $('#edit-resource-header').removeClass('hide')
-            $('#resource-form .boiler-plate').removeClass('hide')
-            $('#resource-form').tigerForm('reset');
+            $('#add-translation-header').addClass('hide')
+            $('#edit-translation-header').removeClass('hide')
+            $('#translation-form .boiler-plate').removeClass('hide')
+            $('#translation-form').tigerForm('reset');
 
             function beforeSend ( jqXHR, settings ) {
             }
@@ -195,8 +187,8 @@
 
                 if ( data.result === 1 ) {
 
-                    $('#resource-form').tigerForm('setFormValues', data.data );
-                    $('#modal-resources-form').modal('show');
+                    $('#translation-form').tigerForm('setFormValues', data.data );
+                    $('#modal-translations-form').modal('show');
 
                 }
                 else {
@@ -227,9 +219,9 @@
             };
 
             let data = {
-                service : 'acl:admin',
-                method  : 'getResource',
-                resource_id : $(this).attr('data-id')
+                service : 'translate:admin',
+                method  : 'getTranslation',
+                translation_id : $(this).attr('data-id')
             };
 
             $.ajax({
@@ -321,9 +313,9 @@
             }
 
             /** API params tell Tiger what service will be processing the data. */
-            data.service = 'acl:admin';
-            data.method = 'updateResource';
-            data.resource_id = $elm.attr('data-id');
+            data.service = 'translate:admin';
+            data.method = 'updateTranslation';
+            data.translation_id = $elm.attr('data-id');
 
             $.ajax({
                 type        : "POST",
@@ -368,7 +360,7 @@
 
                 if (parseInt(data.result, 10) === 1) {
 
-                    $('#resource-form .form-message').css('overflow', 'hidden').tigerDOM('insert', {
+                    $('#translation-form .form-message').css('overflow', 'hidden').tigerDOM('insert', {
                         content: data.html[0],
                         removeClick: true,
                         removeTimeout: 0
@@ -393,7 +385,7 @@
 
                         let msgData = {
                             result: 0,
-                            form: 'Acl_Form_Resource',
+                            form: 'Acl_Form_Translation',
                             element: null,
                             messages: []
                         };
@@ -437,12 +429,14 @@
 
             /** API params tell Tiger what service will be processing the data. */
             let apiParams = {
-                service : 'acl:admin',
-                method  : 'saveResource'
+                service : 'translate:admin',
+                method  : 'saveTranslation',
+                active  : ( $('#translation-form #active').is(':checked') ) ? 1 : 0,
+                deleted : ( $('#translation-form #deleted').is(':checked') ) ? 1 : 0
             };
 
             /** Note that our API params will be added to the form data */
-            let data = $('#resource-form').tigerForm('getFormValues', apiParams );
+            let data = $('#translation-form').tigerForm('getFormValues', apiParams );
 
             $.ajax({
                 type        : "POST",
@@ -457,9 +451,9 @@
             
         },
 
-        _initStaticResourceDataTable : function () {
+        _initStaticTranslationDataTable : function () {
 
-            Class.staticResourceDT = $('#staticResourcesDT').DataTable({
+            Class.staticTranslationDT = $('#staticTranslationsDT').DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': false,
@@ -477,35 +471,30 @@
                     'dataType': 'json',
                     'dataSrc': 'data',
                     'data': {
-                        service: 'acl:admin',
-                        method: 'getAdminStaticResourcesDataTable'
+                        service: 'translate:admin',
+                        method: 'getAdminStaticTranslationsDataTable'
                     }
                 },
                 'columns': [{
-                    'title': 'Resource Id',
-                    'name': 'resource_id',
-                    'data': 'resource_id',
-                    'visible': false
-                }, {
                     'title': 'Module',
-                    'name': 'module_name',
-                    'data': 'module_name'
+                    'name': 'module',
+                    'data': 'module'
                 }, {
-                    'title': 'Resource Name',
-                    'name': 'resource_name',
-                    'data': 'resource_name'
+                    'title': 'Locale',
+                    'name': 'locale',
+                    'data': 'locale'
                 }, {
-                    'title': 'Resource Description',
-                    'name': 'resource_description',
-                    'data': 'resource_description'
+                    'title': 'File Name',
+                    'name': 'file',
+                    'data': 'file'
                 }, {
-                    'title': 'Resource',
-                    'name': 'resource',
-                    'data': 'resource'
+                    'title': 'Message Key',
+                    'name': 'message_id',
+                    'data': 'message_id'
                 }, {
-                    'title': 'Privilege',
-                    'name': 'privilege',
-                    'data': 'privilege'
+                    'title': 'Message Text',
+                    'name': 'message_text',
+                    'data': 'message_text'
                 }]
             });
 
@@ -513,7 +502,7 @@
 
     };
   
-    $.fn.aclAdminResource = function( method ) {
+    $.fn.aclAdminTranslation = function( method ) {
         if ( Class[method] ) {
             return Class[ method ].apply( this, Array.prototype.slice.call( arguments, 1 ));
         } else if ( typeof method === 'object' || ! method ) {
@@ -523,6 +512,6 @@
         }
     };
     
-    $().aclAdminResource();
+    $().aclAdminTranslation();
     
 })( jQuery );
