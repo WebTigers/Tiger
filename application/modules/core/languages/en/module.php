@@ -9,4 +9,5 @@
 return [
     'TEST' => 'Test',
     'TITLE.USERS' => 'Users',
+    'MENU.ADMIN.SERVER_PHPINFO' => 'PHP Info',
 ];

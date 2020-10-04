@@ -993,6 +993,16 @@ class AdminController extends Tiger_Controller_Action
     public function dashboardAction ( )
     {
 
+    }
+
+    public function phpinfoAction ( )
+    {
+
+    }
+
+    public function clearcacheAction ()
+    {
+        Zend_Registry::get('Zend_Cache')->clean( Zend_Cache::CLEANING_MODE_ALL );
 
     }
 

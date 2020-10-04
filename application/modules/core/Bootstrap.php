@@ -33,13 +33,6 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         Zend_Registry::set( 'Zend_Session', $session );
 
 
-        /** Init Database Config Overrides. */
-        $config = new Zend_Config( $this->getOptions(), true );
-        $configModel = new Core_Model_Config;
-        $configArray = $configModel->getConfigArray();
-        $config->merge( new Zend_Config( $configArray ) );
-
-
         /** Init Zend_Cache_Manager */
         $frontEndOptions = [
             'lifetime' => 7200,
@@ -63,12 +56,25 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         Zend_Registry::set('Zend_Cache', $cache );
 
 
-        /** Merge the ACL file separately. */
-        $filename = realpath(dirname(__FILE__) . '/configs' ) . '/acl.ini';
-        $configOptions = new Zend_Config_Ini( $filename, APPLICATION_ENV, [ 'allowModifications' => true ] );
-        $config->merge( $configOptions );
-        Zend_Registry::set( 'Zend_Config', $config );
+        /** Init Database Config Overrides. */
+        if ( ( $config = Zend_Registry::get('Zend_Cache')->load('Zend_Config') ) === false ) {
 
+            $config = new Zend_Config($this->getOptions(), true);
+            $configModel = new Core_Model_Config;
+            $configArray = $configModel->getConfigArray();
+            $config->merge(new Zend_Config($configArray));
+
+            /** Merge the ACL file separately. */
+            $filename = realpath(dirname(__FILE__) . '/configs') . '/acl.ini';
+            $configOptions = new Zend_Config_Ini($filename, APPLICATION_ENV, ['allowModifications' => true]);
+            $config->merge($configOptions);
+            Zend_Registry::set( 'Zend_Config', $config );
+
+        }
+        else {
+            /** Store the cached configs. */
+            Zend_Registry::set( 'Zend_Config', $config );
+        }
 
         /** Init Core Translation */
         $translate = new Zend_Translate([
