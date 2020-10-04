@@ -52,6 +52,9 @@
                 'class': 'hover',
                 'autoWidth': false,
                 'lengthMenu': [ 5, 10, 25, 50, 100 ],
+                'language': {
+                    "url": "/assets/translate/js/DataTables/i18n/" + LOCALE + ".json"
+                },
                 'initComplete': function (settings, json) {
 
                 },
