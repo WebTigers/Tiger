@@ -19,7 +19,7 @@
  * information and software.
  */
 
-class Tiger_Controller_Plugin_Config extends Zend_Controller_Plugin_Abstract
+class Tiger_Controller_Plugin_ConfigCache extends Zend_Controller_Plugin_Abstract
 {
     public function routeShutdown(Zend_Controller_Request_Abstract $request) {
 
