@@ -995,6 +995,11 @@ class AdminController extends Tiger_Controller_Action
 
     }
 
+    public function configAction ( )
+    {
+        $this->view->one->page_title = $this->view->translate('HEADING.SERVER_CONFIGURATION');
+    }
+
     public function phpinfoAction ( )
     {
 

@@ -198,7 +198,7 @@
 
                     /** Oops, something went wrong ... */
 
-                    $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'insert', {
+                    $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'change', {
                         content       : data.html[0],
                         removeClick   : true,
                         removeTimeout : 0
@@ -217,7 +217,7 @@
                     removeTimeout : 0
                 };
 
-                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
+                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
 
             };
 
@@ -363,7 +363,7 @@
 
                 if (parseInt(data.result, 10) === 1) {
 
-                    $('#translation-form .form-message').css('overflow', 'hidden').tigerDOM('insert', {
+                    $('#translation-form .form-message').css('overflow', 'hidden').tigerDOM('change', {
                         content: data.html[0],
                         removeClick: true,
                         removeTimeout: 0
@@ -376,7 +376,7 @@
 
                         $('#page-signup-form .form-message')
                             .css('overflow', 'hidden')
-                            .tigerDOM('insert', {
+                            .tigerDOM('change', {
                                 content: data.html[0],
                                 removeClick: true,
                                 removeTimeout: 0
@@ -426,7 +426,7 @@
                     removeTimeout : 0
                 };
 
-                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
+                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
                 
             }
 
