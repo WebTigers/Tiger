@@ -36,7 +36,9 @@ trait Account_Service_OrgTrait
      */
     public function getAdminOrgsDataTable ( $post ) {
 
-        if ( $this->_validateDataTables( $post ) ) {
+        $validationResponse = $this->_utility->validateDataTables( $post );
+
+        if ( $validationResponse === true ) {
 
             /** Are we ordering by some column(s)? */
             $orderby = '';
@@ -88,7 +90,7 @@ trait Account_Service_OrgTrait
                 'recordsTotal'      => 0,
                 'recordsFiltered'   => 0,
                 'data'              => [],
-                'error'             => $this->_searchErrors
+                'error'             => $validationResponse
             ]);
 
         }

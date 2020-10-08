@@ -38,6 +38,7 @@ class Account_Service_Admin
     protected $_request;
     protected $_form;
     protected $_reflection;
+    protected $_utility;
 
     protected $_userModel;
     protected $_orgModel;
@@ -60,7 +61,9 @@ class Account_Service_Admin
         $this->_locale      = Zend_Registry::get('Zend_Locale');
         $this->_translate   = Zend_Registry::get('Zend_Translate');
         $this->_config      = Zend_Registry::get('Zend_Config');
+
         $this->_response    = new Core_Model_ResponseObject();
+        $this->_utility     = new Core_Service_Utility();
 
         $this->_userModel           = new Account_Model_User();
         $this->_orgModel            = new Account_Model_Org();

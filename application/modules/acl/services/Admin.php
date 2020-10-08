@@ -15,6 +15,7 @@ class Acl_Service_Admin
     protected $_request;
     protected $_form;
     protected $_reflection;
+    protected $_utility;
     protected $_searchErrors;
 
     protected $_resourceModel;
@@ -29,6 +30,7 @@ class Acl_Service_Admin
         $this->_translate   = Zend_Registry::get('Zend_Translate');
         $this->_config      = Zend_Registry::get('Zend_Config');
         $this->_response    = new Core_Model_ResponseObject();
+        $this->_utility     = new Core_Service_Utility();
 
         $this->_resourceModel   = new Acl_Model_AclResources;
         $this->_roleModel       = new Acl_Model_AclRoles;
@@ -108,39 +110,6 @@ class Acl_Service_Admin
         $this->_response->result    = 0;
         $this->_response->form = $form->getName();
         $this->_response->messages  = $form->getMessages();
-
-    }
-
-    ### Validation Methods ###
-
-    protected function _validateDataTables ( Array $post ) {
-
-        // pr($post);
-
-        $regexValidator = new Zend_Validate_Regex( array('pattern' => '/^[A-Za-z0-9 \'\.\_\-,]+$/') );
-        $intValidator   = new Zend_Validate_Int();
-
-        $out = array();
-
-        if ( ! empty($post['search']) && ! $regexValidator->isValid( $post['search'] ) ) {
-            foreach ( $regexValidator->getMessages() as $messageId => $message ) {
-                $out[$messageId] = $message;
-            }
-        }
-
-        if ( ! $intValidator->isValid( $post['start'] ) ) {
-            foreach ($intValidator->getMessages() as $messageId => $message) {
-                $out[$messageId] = $message;
-            }
-        }
-
-        if ( ! $intValidator->isValid( $post['length'] ) ) {
-            foreach ($intValidator->getMessages() as $messageId => $message) {
-                $out[$messageId] = $message;
-            }
-        }
-
-        return ( empty($out) ) ? true : $this->_searchErrors = $out;
 
     }
 

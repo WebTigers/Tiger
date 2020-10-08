@@ -17,7 +17,9 @@ trait Acl_Service_RuleTrait
      */
     public function getAdminRulesDataTable ( $post ) {
 
-        if ( $this->_validateDataTables( $post ) ) {
+        $validationResponse = $this->_utility->validateDataTables( $post );
+
+        if ( $validationResponse === true ) {
 
             /** Are we ordering by some column(s)? */
             $orderby = '';
@@ -69,7 +71,7 @@ trait Acl_Service_RuleTrait
                 'recordsTotal'      => 0,
                 'recordsFiltered'   => 0,
                 'data'              => [],
-                'error'             => $this->_searchErrors
+                'error'             => $validationResponse
             ]);
 
         }

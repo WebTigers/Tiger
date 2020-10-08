@@ -42,17 +42,15 @@ class Core_Model_Config extends Zend_Db_Table_Abstract {
         
     }
 
-    public function getConfigListByName ( $search = '', $offset = 0, $limit = 10, $orderby = '' ) {
+    public function getAdminConfigSearchList ( $search = '', $offset = 0, $limit = 10, $orderby = '' ) {
         
         $sql = $this->
             select()->
-                where  ( '( key LIKE ?', "%$search%" )->
-                orWhere( 'value LIKE ? )', "%$search%" )->
+                where  ( '( `key` LIKE ?', "%$search%" )->
+                orWhere( '`value` LIKE ? )', "%$search%" )->
                 order  ( $orderby )->
                 limit  ( $limit, $offset );
-        
-        // pr( $sql->assemble() );
-        
+
         return $this->fetchAll( $sql );
         
     }
@@ -83,7 +81,7 @@ class Core_Model_Config extends Zend_Db_Table_Abstract {
 
     }
 
-    function _parse_ini_string_multi ( $str, $process_sections = false, $scanner_mode = INI_SCANNER_NORMAL ) {
+    protected function _parse_ini_string_multi ( $str, $process_sections = false, $scanner_mode = INI_SCANNER_NORMAL ) {
 
         $explode_str = '.';
         $escape_char = "'";

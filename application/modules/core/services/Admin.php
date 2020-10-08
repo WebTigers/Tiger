@@ -30,6 +30,8 @@
  */
 class Core_Service_Admin
 {
+    use Core_Service_ConfigTrait;
+
     protected $_auth;
     protected $_acl;
     protected $_locale;
@@ -39,6 +41,7 @@ class Core_Service_Admin
     protected $_request;
     protected $_form;
     protected $_reflection;
+    protected $_utility;
 
     protected $_configModel;
 
@@ -50,6 +53,7 @@ class Core_Service_Admin
         $this->_translate   = Zend_Registry::get('Zend_Translate');
         $this->_config      = Zend_Registry::get('Zend_Config');
         $this->_response    = new Core_Model_ResponseObject();
+        $this->_utility     = new Core_Service_Utility();
 
         $this->_configModel = new Core_Model_Config();
 
