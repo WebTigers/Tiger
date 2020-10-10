@@ -28,7 +28,7 @@ require_once realpath(dirname(__FILE__) . '/../functions.php');
 /** Ensure library/ is on include_path */
 set_include_path(implode(PATH_SEPARATOR, [
     VENDOR_PATH,
-    LIBRARY_PATH,
+    CORE_LIBRARY_PATH,
     get_include_path(),
 ]));
 
@@ -45,11 +45,11 @@ require_once realpath(dirname(__FILE__) . '/../locale.php');
 $application = new Zend_Application(
     APPLICATION_ENV,
     ['config' => [
-        TIGER_CONFIG_PATH   . '/tiger-restricted.ini',
-        CORE_MODULE_PATH    . '/configs/application.ini',
-        CORE_MODULE_PATH    . '/configs/constants.ini',
-        CORE_MODULE_PATH    . '/configs/routes.ini',
-        CORE_MODULE_PATH    . '/configs/navigation.ini',
+        TIGER_CONFIG_PATH . '/tiger-restricted.ini',
+        CORE_MODULE_PATH  . '/configs/application.ini',
+        CORE_MODULE_PATH  . '/configs/constants.ini',
+        CORE_MODULE_PATH  . '/configs/routes.ini',
+        CORE_MODULE_PATH  . '/configs/navigation.ini',
     ]]
 );
 

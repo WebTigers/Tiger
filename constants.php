@@ -56,8 +56,8 @@ defined('VENDOR_PATH')
     || define('VENDOR_PATH', realpath(dirname(__FILE__) . '/../tiger-vendor/vendor'));
 
 // Define path to library directory
-defined('LIBRARY_PATH')
-    || define('LIBRARY_PATH', realpath(dirname(__FILE__) . '/library'));
+defined('CORE_LIBRARY_PATH')
+    || define('CORE_LIBRARY_PATH', realpath(dirname(__FILE__) . '/application/modules/core/library'));
 
 // Define path to library directory
 defined('TIGER_CONFIG_PATH')
