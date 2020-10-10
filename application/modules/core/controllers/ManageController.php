@@ -19,7 +19,7 @@
  * information and software.
  */
 
-class AdminController extends Tiger_Controller_Action
+class ManageController extends Tiger_Controller_Action
 {
     public function init()
     {
@@ -248,25 +248,6 @@ class AdminController extends Tiger_Controller_Action
 
     public function dashboardAction ( )
     {
-
-    }
-
-    public function configAction ( )
-    {
-        $this->view->one->page_title = $this->view->translate('HEADING.SERVER_CONFIGURATION');
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.admin.config.js' ) );
-        $this->view->configForm = new Core_Form_Config();
-
-    }
-
-    public function phpinfoAction ( )
-    {
-
-    }
-
-    public function clearcacheAction ()
-    {
-        Zend_Registry::get('Zend_Cache')->clean( Zend_Cache::CLEANING_MODE_ALL );
 
     }
 

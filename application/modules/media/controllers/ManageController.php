@@ -1,33 +1,9 @@
 <?php
 
-/**
- * ————————————————————————————————————————————————————————————————————————————————
- * WEBTIGERS Copyright Notice
- * ————————————————————————————————————————————————————————————————————————————————
- *
- *  Copyright © 2020 WebTigers
- *  All Rights Reserved.
- *
- * NOTICE: All information contained herein is, and remains the property of WebTigers.
- * The intellectual and technical concepts contained herein are proprietary to
- * WebTigers and may be covered by U.S. and Foreign Patents, patents in process, and
- * are protected by trade secret or copyright law. Dissemination of this information
- * or reproduction of this material is strictly forbidden unless prior written
- * permission is obtained from WebTigers.
- *
- * See the LICENSE.txt for full licensing information governing the use of this
- * information and software.
- */
-
-class AdminController extends Tiger_Controller_Action
+class Media_ManageController extends Tiger_Controller_Action
 {
-    public function init()
+    public function init ( )
     {
-        /** The Admin Controller and Admin Service are only available on ports 8080 and 8081 for security purposes. */
-        if ( ! in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
-            throw new Error( 'ADMIN.DISALLOWED' );
-        }
-
         /** Set any custom CSS files you might have. These can also be set statically in the layout. */
         $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/js/plugins/select2/css/select2.min.css' ) );
         $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/js/plugins/datatables/dataTables.bootstrap4.css' ) );
@@ -66,11 +42,12 @@ class AdminController extends Tiger_Controller_Action
         $this->view->one->user = Zend_Auth::getInstance()->getIdentity();
 
         /** Global hero header vars */
-        $this->view->one->page_title = $this->view->translate('DASHBOARD');
+        $this->view->one->page_title = $this->view->translate('TRANSLATIONS');
 
     }
 
-    protected function _setThemeVars ( ) {
+    protected function _setThemeVars ( )
+    {
 
         // **************************************************************************************************
         // TEMPLATE OBJECT
@@ -215,7 +192,7 @@ class AdminController extends Tiger_Controller_Action
         // **************************************************************************************************
 
         $one->main_nav                   = array();
-        $one->menu                      = 'admin';
+        $one->menu                      = 'manage';
 
         return $one;
 
@@ -228,46 +205,27 @@ class AdminController extends Tiger_Controller_Action
         // INCLUDED VIEWS
         // **************************************************************************************************
 
-        $one->inc_side_overlay          = true;
-        $one->inc_sidebar               = true;
-        $one->inc_header                = true;
-        $one->inc_footer                = true;
-
-        // **************************************************************************************************
+        $one->inc_side_overlay           = true;
+        $one->inc_sidebar                = true;
+        $one->inc_header                 = true;
+        $one->inc_footer                 = true;
 
         return $one;
 
     }
 
-    ##### Admin Actions #####
+
+    ##### Manage Actions #####
 
     public function indexAction ( )
     {
-        $this->forward('dashboard');
+        $this->forward( 'dashboard' );
     }
 
     public function dashboardAction ( )
     {
-
-    }
-
-    public function configAction ( )
-    {
-        $this->view->one->page_title = $this->view->translate('HEADING.SERVER_CONFIGURATION');
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.admin.config.js' ) );
-        $this->view->configForm = new Core_Form_Config();
-
-    }
-
-    public function phpinfoAction ( )
-    {
-
-    }
-
-    public function clearcacheAction ()
-    {
-        Zend_Registry::get('Zend_Cache')->clean( Zend_Cache::CLEANING_MODE_ALL );
-
+        // $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/media/js/media.manage.dashboard.js' ) );
+        // $this->view->mediaForm = new Media_Form_Dashboard();
     }
 
 }
