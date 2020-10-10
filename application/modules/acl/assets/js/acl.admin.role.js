@@ -45,12 +45,16 @@
 
         _initRoleDataTable : function () {
 
-            Class.roleDT = $('#rolesDT').DataTable({
+            let $datatable = $('#rolesDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block );
+
+            Class.roleDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
                 'orderMulti': true,
-                'order': [[1, 'asc']],
+                'order': [[0, 'asc']],
                 'class': 'hover',
                 'autoWidth': false,
                 'lengthMenu': [ 5, 10, 25, 50, 100 ],
@@ -58,6 +62,19 @@
                     "url": "/assets/translate/js/DataTables/i18n/" + LOCALE + ".json"
                 },
                 'initComplete': function (settings, json) {
+
+                    $(Class.roleDT.column(0).header()).text( json.i18n['DT.PRIORITY'] );
+                    $(Class.roleDT.column(1).header()).text( json.i18n['DT.ROLE_NAME'] );
+                    $(Class.roleDT.column(2).header()).text( json.i18n['DT.PARENT_ROLE_NAME'] );
+                    $(Class.roleDT.column(3).header()).text( json.i18n['DT.ROLE_DESCRIPTION'] );
+                    $(Class.roleDT.column(4).header()).text( json.i18n['DT.ACTIONS'] );
+                    $(Class.roleDT.column(5).header()).text( json.i18n['DT.ROLE_ID'] );
+                    $(Class.roleDT.column(6).header()).text( json.i18n['DT.ACTIVE'] );
+                    $(Class.roleDT.column(7).header()).text( json.i18n['DT.DELETED'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
 
                 },
                 'ajax': {
@@ -71,45 +88,45 @@
                     }
                 },
                 'columns': [{
-                    'title': 'Role Id',
-                    'name': 'role_id',
-                    'data': 'role_id',
-                    'visible': false
-                }, {
-                    'title': 'Priority',
+                    'title': 'DT.PRIORITY',
                     'name': 'priority',
                     'data': 'priority'
                 }, {
-                    'title': 'Role Name',
+                    'title': 'DT.ROLE_NAME',
                     'name': 'role_name',
                     'data': 'role_name'
                 }, {
-                    'title': 'Parent Role Name',
+                    'title': 'DT.PARENT_ROLE_NAME',
                     'name': 'parent_role_name',
                     'data': 'parent_role_name'
                 }, {
-                    'title': 'Role Description',
+                    'title': 'DT.ROLE_DESCRIPTION',
                     'name': 'role_description',
                     'data': 'role_description'
                 }, {
-                    'title': 'Active',
-                    'name': 'active',
-                    'data': 'active',
-                    'class': 'active',
-                    'visible': false
-                }, {
-                    'title': 'Deleted',
-                    'name': 'deleted',
-                    'data': 'deleted',
-                    'class': 'deleted',
-                    'visible': false
-                }, {
-                    'title': 'Controls',
+                    'title': 'DT.ACTIONS',
                     'targets': -1,
                     'data': null,
                     'orderable': false,
                     'width': '150px',
                     'render': Class._buildControls,
+                }, {
+                    'title': 'DT.ROLE_ID',
+                    'name': 'role_id',
+                    'data': 'role_id',
+                    'visible': false
+                }, {
+                    'title': 'DT.ACTIVE',
+                    'name': 'active',
+                    'data': 'active',
+                    'class': 'active',
+                    'visible': false
+                }, {
+                    'title': 'DT.DELETED',
+                    'name': 'deleted',
+                    'data': 'deleted',
+                    'class': 'deleted',
+                    'visible': false
                 }]
             });
 
@@ -460,7 +477,11 @@
 
         _initStaticRoleDataTable : function () {
 
-            Class.staticRoleDT = $('#staticRolesDT').DataTable({
+            let $datatable = $('#staticRolesDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block );
+
+            Class.staticRoleDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': false,
@@ -474,6 +495,15 @@
                 },
                 'initComplete': function (settings, json) {
 
+                    $(Class.staticRoleDT.column(0).header()).text( json.i18n['DT.PRIORITY'] );
+                    $(Class.staticRoleDT.column(1).header()).text( json.i18n['DT.ROLE_NAME'] );
+                    $(Class.staticRoleDT.column(2).header()).text( json.i18n['DT.PARENT_ROLE_NAME'] );
+                    $(Class.staticRoleDT.column(3).header()).text( json.i18n['DT.ROLE_DESCRIPTION'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
+
                 },
                 'ajax': {
                     'url': '/api',
@@ -486,27 +516,22 @@
                     }
                 },
                 'columns': [{
-                    'title': 'Role Id',
-                    'name': 'role_id',
-                    'data': 'role_id',
-                    'visible': false
-                }, {
-                    'title': 'Priority',
+                    'title': 'DT.PRIORITY',
                     'name': 'priority',
                     'data': 'priority'
                 }, {
-                    'title': 'Role Name',
+                    'title': 'DT.ROLE_NAME',
                     'name': 'role_name',
                     'data': 'role_name'
                 }, {
-                    'title': 'Parent Role Name',
+                    'title': 'DT.PARENT_ROLE_NAME',
                     'name': 'parent_role_name',
                     'data': 'parent_role_name'
                 }, {
-                    'title': 'Role Description',
+                    'title': 'DT.ROLE_DESCRIPTION',
                     'name': 'role_description',
                     'data': 'role_description'
-                }]
+                },]
             });
 
         },

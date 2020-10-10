@@ -49,7 +49,7 @@
             let $block = $datatable.closest('div.block');
             One.block('state_loading', $block );
 
-            Class.configDT = $('#configsDT').DataTable({
+            Class.configDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
@@ -106,16 +106,16 @@
                     'data': 'config_id',
                     'visible': false
                 }, {
-                    'title': 'DT.DELETED',
-                    'name': 'deleted',
-                    'data': 'deleted',
-                    'class': 'deleted',
-                    'visible': false
-                }, {
                     'title': 'DT.ACTIVE',
                     'name': 'active',
                     'data': 'active',
                     'class': 'active',
+                    'visible': false
+                }, {
+                    'title': 'DT.DELETED',
+                    'name': 'deleted',
+                    'data': 'deleted',
+                    'class': 'deleted',
                     'visible': false
                 }]
             });

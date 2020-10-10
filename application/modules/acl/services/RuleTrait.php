@@ -54,12 +54,28 @@ trait Acl_Service_RuleTrait
 
             }
 
+            $headers = $this->_utility->getTranslation([
+                'DT.PRIORITY',
+                'DT.RULE_NAME',
+                'DT.RULE_DESCRIPTION',
+                'DT.PERMISSION',
+                'DT.RESOURCE',
+                'DT.PRIVILEGE',
+                'DT.ASSERTION',
+                'DT.ROLE',
+                'DT.ACTIONS',
+                'DT.RULE_ID',
+                'DT.ACTIVE',
+                'DT.DELETED',
+            ]);
+
             /** Set the pre-formatted array for datatables */
             $this->_response = new Core_Model_ResponseObjectDT([
                 'draw'              => intval( $post['draw'] ),
                 'recordsTotal'      => count( $recordsTotalRowset ),
                 'recordsFiltered'   => count( $recordsTotalRowset ),
                 'data'              => $recordsOut,
+                'i18n'              => $headers,
             ]);
 
         }
@@ -139,9 +155,21 @@ trait Acl_Service_RuleTrait
 
         }
 
+        $headers = $this->_utility->getTranslation([
+            'DT.PRIORITY',
+            'DT.RULE_NAME',
+            'DT.RULE_DESCRIPTION',
+            'DT.PERMISSION',
+            'DT.RESOURCE',
+            'DT.PRIVILEGE',
+            'DT.ASSERTION',
+            'DT.ROLE',
+        ]);
+
         /** Set the pre-formatted array for datatables */
         $this->_response = new Core_Model_ResponseObjectDT([
             'data' => $recordsOut,
+            'i18n' => $headers,
         ]);
 
     }

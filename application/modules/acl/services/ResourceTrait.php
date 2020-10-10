@@ -54,12 +54,25 @@ trait Acl_Service_ResourceTrait
 
             }
 
+            $headers = $this->_utility->getTranslation([
+                'DT.MODULE',
+                'DT.RESOURCE_NAME',
+                'DT.RESOURCE_DESCRIPTION',
+                'DT.RESOURCE',
+                'DT.PRIVILEGE',
+                'DT.ACTIONS',
+                'DT.RESOURCE_ID',
+                'DT.ACTIVE',
+                'DT.DELETED',
+            ]);
+
             /** Set the pre-formatted array for datatables */
             $this->_response = new Core_Model_ResponseObjectDT([
                 'draw'              => intval( $post['draw'] ),
                 'recordsTotal'      => count( $recordsTotalRowset ),
                 'recordsFiltered'   => count( $recordsTotalRowset ),
                 'data'              => $recordsOut,
+                'i18n'              => $headers,
             ]);
 
         }
@@ -142,9 +155,18 @@ trait Acl_Service_ResourceTrait
 
         }
 
+        $headers = $this->_utility->getTranslation([
+            'DT.MODULE',
+            'DT.RESOURCE_NAME',
+            'DT.RESOURCE_DESCRIPTION',
+            'DT.RESOURCE',
+            'DT.PRIVILEGE',
+        ]);
+
         /** Set the pre-formatted array for datatables */
         $this->_response = new Core_Model_ResponseObjectDT([
             'data' => $recordsOut,
+            'i18n' => $headers,
         ]);
 
     }

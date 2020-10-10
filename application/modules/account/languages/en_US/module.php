@@ -29,5 +29,4 @@ return [
     'DT.ROLE' => 'Role',
     'DT.USER_ID' => 'User ID',
 
-
 ];

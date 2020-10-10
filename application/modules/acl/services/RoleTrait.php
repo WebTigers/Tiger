@@ -54,12 +54,24 @@ trait Acl_Service_RoleTrait
 
             }
 
+            $headers = $this->_utility->getTranslation([
+                'DT.PRIORITY',
+                'DT.ROLE_NAME',
+                'DT.PARENT_ROLE_NAME',
+                'DT.ROLE_DESCRIPTION',
+                'DT.ACTIONS',
+                'DT.ROLE_ID',
+                'DT.ACTIVE',
+                'DT.DELETED',
+            ]);
+
             /** Set the pre-formatted array for datatables */
             $this->_response = new Core_Model_ResponseObjectDT([
                 'draw'              => intval( $post['draw'] ),
                 'recordsTotal'      => count( $recordsTotalRowset ),
                 'recordsFiltered'   => count( $recordsTotalRowset ),
                 'data'              => $recordsOut,
+                'i18n'              => $headers,
             ]);
 
         }
@@ -139,9 +151,17 @@ trait Acl_Service_RoleTrait
 
         }
 
+        $headers = $this->_utility->getTranslation([
+            'DT.PRIORITY',
+            'DT.ROLE_NAME',
+            'DT.PARENT_ROLE_NAME',
+            'DT.ROLE_DESCRIPTION',
+        ]);
+
         /** Set the pre-formatted array for datatables */
         $this->_response = new Core_Model_ResponseObjectDT([
             'data' => $recordsOut,
+            'i18n' => $headers,
         ]);
 
     }

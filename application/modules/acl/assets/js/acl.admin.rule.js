@@ -45,7 +45,11 @@
 
         _initRuleDataTable : function () {
 
-            Class.ruleDT = $('#rulesDT').DataTable({
+            let $datatable = $('#rulesDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block );
+
+            Class.ruleDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
@@ -59,6 +63,22 @@
                 },
                 'initComplete': function (settings, json) {
 
+                    $(Class.ruleDT.column(0).header()).text( json.i18n['DT.PRIORITY'] );
+                    $(Class.ruleDT.column(1).header()).text( json.i18n['DT.RULE_NAME'] );
+                    $(Class.ruleDT.column(2).header()).text( json.i18n['DT.RULE_DESCRIPTION'] );
+                    $(Class.ruleDT.column(3).header()).text( json.i18n['DT.PERMISSION'] );
+                    $(Class.ruleDT.column(4).header()).text( json.i18n['DT.RESOURCE'] );
+                    $(Class.ruleDT.column(5).header()).text( json.i18n['DT.PRIVILEGE'] );
+                    $(Class.ruleDT.column(6).header()).text( json.i18n['DT.ASSERTION'] );
+                    $(Class.ruleDT.column(7).header()).text( json.i18n['DT.ROLE'] );
+                    $(Class.ruleDT.column(8).header()).text( json.i18n['DT.RULE_ID'] );
+                    $(Class.ruleDT.column(9).header()).text( json.i18n['DT.ACTIVE'] );
+                    $(Class.ruleDT.column(10).header()).text( json.i18n['DT.DELETED'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
+
                 },
                 'ajax': {
                     'url': '/api',
@@ -71,61 +91,61 @@
                     }
                 },
                 'columns': [{
-                    'title': 'Rule Id',
-                    'name': 'rule_id',
-                    'data': 'rule_id',
-                    'visible': false
-                }, {
-                    'title': 'Priority',
+                    'title': 'DT.PRIORITY',
                     'name': 'priority',
                     'data': 'priority'
                 }, {
-                    'title': 'Rule Name',
+                    'title': 'DT.RULE_NAME',
                     'name': 'rule_name',
                     'data': 'rule_name'
                 }, {
-                    'title': 'Rule Description',
+                    'title': 'DT.RULE_DESCRIPTION',
                     'name': 'rule_description',
                     'data': 'rule_description'
                 }, {
-                    'title': 'Permission',
+                    'title': 'DT.PERMISSION',
                     'name': 'permission',
                     'data': 'permission'
                 }, {
-                    'title': 'Resource',
+                    'title': 'DT.RESOURCE',
                     'name': 'resource',
                     'data': 'resource'
                 }, {
-                    'title': 'Privilege',
+                    'title': 'DT.PRIVILEGE',
                     'name': 'privilege',
                     'data': 'privilege'
                 }, {
-                    'title': 'Assertion',
+                    'title': 'DT.ASSERTION',
                     'name': 'assertion',
                     'data': 'assertion'
                 }, {
-                    'title': 'Role',
+                    'title': 'DT.ROLE',
                     'name': 'role',
                     'data': 'role'
                 }, {
-                    'title': 'Active',
-                    'name': 'active',
-                    'data': 'active',
-                    'class': 'active',
-                    'visible': false
-                }, {
-                    'title': 'Deleted',
-                    'name': 'deleted',
-                    'data': 'deleted',
-                    'class': 'deleted',
-                    'visible': false
-                }, {
-                    'title': 'Controls',
+                    'title': 'DT.ACTIONS',
                     'targets': -1,
                     'data': null,
                     'orderable': false,
                     'width': '150px',
                     'render': Class._buildControls,
+                }, {
+                    'title': 'DT.RULE_ID',
+                    'name': 'rule_id',
+                    'data': 'rule_id',
+                    'visible': false
+                }, {
+                    'title': 'DT.ACTIVE',
+                    'name': 'active',
+                    'data': 'active',
+                    'class': 'active',
+                    'visible': false
+                }, {
+                    'title': 'DT.DELETED',
+                    'name': 'deleted',
+                    'data': 'deleted',
+                    'class': 'deleted',
+                    'visible': false
                 }]
             });
 
@@ -476,12 +496,16 @@
 
         _initStaticRuleDataTable : function () {
 
-            Class.staticRuleDT = $('#staticRulesDT').DataTable({
+            let $datatable = $('#staticRulesDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block );
+
+            Class.staticRuleDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': false,
                 'orderMulti': true,
-                'order': [[1, 'asc']],
+                'order': [[0, 'asc']],
                 'class': 'hover',
                 'autoWidth': false,
                 'lengthMenu': [ 5, 10, 25, 50, 100 ],
@@ -489,6 +513,19 @@
                     "url": "/assets/translate/js/DataTables/i18n/" + LOCALE + ".json"
                 },
                 'initComplete': function (settings, json) {
+
+                    $(Class.staticRuleDT.column(0).header()).text( json.i18n['DT.PRIORITY'] );
+                    $(Class.staticRuleDT.column(1).header()).text( json.i18n['DT.RULE_NAME'] );
+                    $(Class.staticRuleDT.column(2).header()).text( json.i18n['DT.RULE_DESCRIPTION'] );
+                    $(Class.staticRuleDT.column(3).header()).text( json.i18n['DT.PERMISSION'] );
+                    $(Class.staticRuleDT.column(4).header()).text( json.i18n['DT.RESOURCE'] );
+                    $(Class.staticRuleDT.column(5).header()).text( json.i18n['DT.PRIVILEGE'] );
+                    $(Class.staticRuleDT.column(6).header()).text( json.i18n['DT.ASSERTION'] );
+                    $(Class.staticRuleDT.column(7).header()).text( json.i18n['DT.ROLE'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
 
                 },
                 'ajax': {
@@ -502,40 +539,35 @@
                     }
                 },
                 'columns': [{
-                    'title': 'Rule Id',
-                    'name': 'rule_id',
-                    'data': 'rule_id',
-                    'visible': false
-                }, {
-                    'title': 'Priority',
+                    'title': 'DT.PRIORITY',
                     'name': 'priority',
                     'data': 'priority'
                 }, {
-                    'title': 'Rule Name',
+                    'title': 'DT.RULE_NAME',
                     'name': 'rule_name',
                     'data': 'rule_name'
                 }, {
-                    'title': 'Rule Description',
+                    'title': 'DT.RULE_DESCRIPTION',
                     'name': 'rule_description',
                     'data': 'rule_description'
                 }, {
-                    'title': 'Permission',
+                    'title': 'DT.PERMISSION',
                     'name': 'permission',
                     'data': 'permission'
                 }, {
-                    'title': 'Resource',
+                    'title': 'DT.RESOURCE',
                     'name': 'resource',
                     'data': 'resource'
                 }, {
-                    'title': 'Privilege',
+                    'title': 'DT.PRIVILEGE',
                     'name': 'privilege',
                     'data': 'privilege'
                 }, {
-                    'title': 'Assertion',
+                    'title': 'DT.ASSERTION',
                     'name': 'assertion',
                     'data': 'assertion'
                 }, {
-                    'title': 'Role',
+                    'title': 'DT.ROLE',
                     'name': 'role',
                     'data': 'role'
                 }]

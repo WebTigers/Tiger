@@ -45,7 +45,11 @@
 
         _initResourceDataTable : function () {
 
-            Class.resourceDT = $('#resourcesDT').DataTable({
+            let $datatable = $('#resourcesDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block );
+
+            Class.resourceDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
@@ -59,6 +63,19 @@
                 },
                 'initComplete': function (settings, json) {
 
+                    $(Class.resourceDT.column(0).header()).text( json.i18n['DT.MODULE'] );
+                    $(Class.resourceDT.column(1).header()).text( json.i18n['DT.RESOURCE_NAME'] );
+                    $(Class.resourceDT.column(2).header()).text( json.i18n['DT.RESOURCE_DESCRIPTION'] );
+                    $(Class.resourceDT.column(3).header()).text( json.i18n['DT.RESOURCE'] );
+                    $(Class.resourceDT.column(4).header()).text( json.i18n['DT.PRIVILEGE'] );
+                    $(Class.resourceDT.column(5).header()).text( json.i18n['DT.RESOURCE_ID'] );
+                    $(Class.resourceDT.column(6).header()).text( json.i18n['DT.ACTIVE'] );
+                    $(Class.resourceDT.column(7).header()).text( json.i18n['DT.DELETED'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
+
                 },
                 'ajax': {
                     'url': '/api',
@@ -71,49 +88,49 @@
                     }
                 },
                 'columns': [{
-                    'title': 'Resource Id',
-                    'name': 'resource_id',
-                    'data': 'resource_id',
-                    'visible': false
-                }, {
-                    'title': 'Module',
+                    'title': 'DT.MODULE',
                     'name': 'module_name',
                     'data': 'module_name'
                 }, {
-                    'title': 'Resource Name',
+                    'title': 'DT.RESOURCE_NAME',
                     'name': 'resource_name',
                     'data': 'resource_name'
                 }, {
-                    'title': 'Resource Description',
+                    'title': 'DT.RESOURCE_DESCRIPTION',
                     'name': 'resource_description',
                     'data': 'resource_description'
                 }, {
-                    'title': 'Resource',
+                    'title': 'DT.RESOURCE',
                     'name': 'resource',
                     'data': 'resource'
                 }, {
-                    'title': 'Privilege',
+                    'title': 'DT.PRIVILEGE',
                     'name': 'privilege',
                     'data': 'privilege'
                 }, {
-                    'title': 'Privilege',
-                    'name': 'active',
-                    'data': 'active',
-                    'class': 'active',
-                    'visible': false
-                }, {
-                    'title': 'Deleted',
-                    'name': 'deleted',
-                    'data': 'deleted',
-                    'class': 'deleted',
-                    'visible': false
-                }, {
-                    'title': 'Controls',
+                    'title': 'DT.ACTIONS',
                     'targets': -1,
                     'data': null,
                     'orderable': false,
                     'width': '150px',
                     'render': Class._buildControls,
+                }, {
+                    'title': 'DT.RESOURCE_ID',
+                    'name': 'resource_id',
+                    'data': 'resource_id',
+                    'visible': false
+                }, {
+                    'title': 'DT.ACTIVE',
+                    'name': 'active',
+                    'data': 'active',
+                    'class': 'active',
+                    'visible': false
+                }, {
+                    'title': 'DT.DELETED',
+                    'name': 'deleted',
+                    'data': 'deleted',
+                    'class': 'deleted',
+                    'visible': false
                 }]
             });
 
@@ -464,7 +481,11 @@
 
         _initStaticResourceDataTable : function () {
 
-            Class.staticResourceDT = $('#staticResourcesDT').DataTable({
+            let $datatable = $('#staticResourcesDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block );
+
+            Class.staticResourceDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': false,
@@ -478,6 +499,16 @@
                 },
                 'initComplete': function (settings, json) {
 
+                    $(Class.staticResourceDT.column(0).header()).text( json.i18n['DT.MODULE'] );
+                    $(Class.staticResourceDT.column(1).header()).text( json.i18n['DT.RESOURCE_NAME'] );
+                    $(Class.staticResourceDT.column(2).header()).text( json.i18n['DT.RESOURCE_DESCRIPTION'] );
+                    $(Class.staticResourceDT.column(3).header()).text( json.i18n['DT.RESOURCE'] );
+                    $(Class.staticResourceDT.column(4).header()).text( json.i18n['DT.PRIVILEGE'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
+
                 },
                 'ajax': {
                     'url': '/api',
@@ -490,28 +521,23 @@
                     }
                 },
                 'columns': [{
-                    'title': 'Resource Id',
-                    'name': 'resource_id',
-                    'data': 'resource_id',
-                    'visible': false
-                }, {
-                    'title': 'Module',
+                    'title': 'DT.MODULE',
                     'name': 'module_name',
                     'data': 'module_name'
                 }, {
-                    'title': 'Resource Name',
+                    'title': 'DT.RESOURCE_NAME',
                     'name': 'resource_name',
                     'data': 'resource_name'
                 }, {
-                    'title': 'Resource Description',
+                    'title': 'DT.RESOURCE_DESCRIPTION',
                     'name': 'resource_description',
                     'data': 'resource_description'
                 }, {
-                    'title': 'Resource',
+                    'title': 'DT.RESOURCE',
                     'name': 'resource',
                     'data': 'resource'
                 }, {
-                    'title': 'Privilege',
+                    'title': 'DT.PRIVILEGE',
                     'name': 'privilege',
                     'data': 'privilege'
                 }]
