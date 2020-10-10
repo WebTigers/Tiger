@@ -35,7 +35,7 @@
                 // Page init stuff goes here. //
                 Class._initConfigDataTable();
                 Class._initControls();
-                // Class._initStaticConfigDataTable();
+                Class._initStaticConfigDataTable();
 
             });
 
@@ -44,6 +44,10 @@
         // Admin Functions //
 
         _initConfigDataTable : function () {
+
+            let $datatable = $('#configsDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block );
 
             Class.configDT = $('#configsDT').DataTable({
                 'searching': true,
@@ -59,6 +63,17 @@
                 },
                 'initComplete': function (settings, json) {
 
+                    $(Class.configDT.column(0).header()).text( json.i18n['DT.KEY'] );
+                    $(Class.configDT.column(1).header()).text( json.i18n['DT.VALUE'] );
+                    $(Class.configDT.column(2).header()).text( json.i18n['DT.ACTIONS'] );
+                    $(Class.configDT.column(3).header()).text( json.i18n['DT.CONFIG_ID'] );
+                    $(Class.configDT.column(4).header()).text( json.i18n['DT.ACTIVE'] );
+                    $(Class.configDT.column(5).header()).text( json.i18n['DT.DELETED'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
+
                 },
                 'ajax': {
                     'url': '/api',
@@ -71,37 +86,37 @@
                     }
                 },
                 'columns': [{
-                    'title': 'Config Id',
-                    'name': 'config_id',
-                    'data': 'config_id',
-                    'visible': false
-                }, {
-                    'title': 'Key',
+                    'title': 'DT.KEY',
                     'name': 'key',
                     'data': 'key'
                 }, {
-                    'title': 'Value',
+                    'title': 'DT.VALUE',
                     'name': 'value',
                     'data': 'value'
                 }, {
-                    'title': 'Deleted',
-                    'name': 'deleted',
-                    'data': 'deleted',
-                    'class': 'deleted',
-                    'visible': false
-                }, {
-                    'title': 'Active',
-                    'name': 'active',
-                    'data': 'active',
-                    'class': 'active',
-                    'visible': false
-                }, {
-                    'title': 'Controls',
+                    'title': 'DT.ACTIONS',
                     'targets': -1,
                     'data': null,
                     'orderable': false,
                     'width': '150px',
                     'render': Class._buildControls,
+                }, {
+                    'title': 'DT.CONFIG_ID',
+                    'name': 'config_id',
+                    'data': 'config_id',
+                    'visible': false
+                }, {
+                    'title': 'DT.DELETED',
+                    'name': 'deleted',
+                    'data': 'deleted',
+                    'class': 'deleted',
+                    'visible': false
+                }, {
+                    'title': 'DT.ACTIVE',
+                    'name': 'active',
+                    'data': 'active',
+                    'class': 'active',
+                    'visible': false
                 }]
             });
 
@@ -452,7 +467,11 @@
 
         _initStaticConfigDataTable : function () {
 
-            Class.staticConfigDT = $('#staticConfigsDT').DataTable({
+            let $datatable = $('#staticConfigsDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block);
+
+            Class.staticConfigDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': false,
@@ -466,6 +485,15 @@
                 },
                 'initComplete': function (settings, json) {
 
+                    $(Class.staticConfigDT.column(0).header()).text( json.i18n['DT.MODULE'] );
+                    $(Class.staticConfigDT.column(1).header()).text( json.i18n['DT.FILE'] );
+                    $(Class.staticConfigDT.column(2).header()).text( json.i18n['DT.KEY'] );
+                    $(Class.staticConfigDT.column(3).header()).text( json.i18n['DT.VALUE'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
+
                 },
                 'ajax': {
                     'url': '/api',
@@ -473,35 +501,26 @@
                     'dataType': 'json',
                     'dataSrc': 'data',
                     'data': {
-                        service: 'acl:admin',
+                        service: 'core:admin',
                         method: 'getAdminStaticConfigsDataTable'
                     }
                 },
                 'columns': [{
-                    'title': 'Config Id',
-                    'name': 'config_id',
-                    'data': 'config_id',
-                    'visible': false
+                    'title': 'DT.MODULE',
+                    'name': 'module',
+                    'data': 'module'
                 }, {
-                    'title': 'Module',
-                    'name': 'module_name',
-                    'data': 'module_name'
+                    'title': 'DT.FILE',
+                    'name': 'file',
+                    'data': 'file'
                 }, {
-                    'title': 'Config Name',
-                    'name': 'config_name',
-                    'data': 'config_name'
+                    'title': 'DT.KEY',
+                    'name': 'key',
+                    'data': 'key'
                 }, {
-                    'title': 'Config Description',
-                    'name': 'config_description',
-                    'data': 'config_description'
-                }, {
-                    'title': 'Config',
-                    'name': 'config',
-                    'data': 'config'
-                }, {
-                    'title': 'Privilege',
-                    'name': 'privilege',
-                    'data': 'privilege'
+                    'title': 'DT.VALUE',
+                    'name': 'value',
+                    'data': 'value'
                 }]
             });
 

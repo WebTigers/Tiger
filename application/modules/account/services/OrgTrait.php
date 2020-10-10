@@ -73,12 +73,28 @@ trait Account_Service_OrgTrait
 
             }
 
+            $headers = $this->_utility->getTranslation([
+                'DT.ORGNAME',
+                'DT.COMPANY_NAME',
+                'DT.DISPLAY_NAME',
+                'DT.ORG_DESCRIPTION',
+                'DT.REFERRAL_CODE',
+                'DT.ACTIONS',
+                'DT.ORG_ID',
+                'DT.PARENT_ORG_ID',
+                'DT.TYPE_ORG',
+                'DT.DOMAIN',
+                'DT.ACTIVE',
+                'DT.DELETED',
+            ]);
+
             /** Set the pre-formatted array for datatables */
             $this->_response = new Core_Model_ResponseObjectDT([
                 'draw'              => intval( $post['draw'] ),
                 'recordsTotal'      => count( $recordsTotalRowset ),
                 'recordsFiltered'   => count( $recordsTotalRowset ),
                 'data'              => $recordsOut,
+                'i18n'              => $headers
             ]);
 
         }

@@ -73,12 +73,22 @@ trait Core_Service_ConfigTrait
 
             }
 
+            $headers = $this->_utility->getTranslation([
+                'DT.KEY',
+                'DT.VALUE',
+                'DT.ACTIONS',
+                'DT.CONFIG_ID',
+                'DT.ACTIVE',
+                'DT.DELETED',
+            ]);
+
             /** Set the pre-formatted array for datatables */
             $this->_response = new Core_Model_ResponseObjectDT([
                 'draw'              => intval( $post['draw'] ),
                 'recordsTotal'      => count( $recordsTotalRowset ),
                 'recordsFiltered'   => count( $recordsTotalRowset ),
                 'data'              => $recordsOut,
+                'i18n'              => $headers,
             ]);
 
         }
@@ -94,6 +104,24 @@ trait Core_Service_ConfigTrait
             ]);
 
         }
+
+    }
+
+    public function getAdminStaticConfigsDataTable ( ) {
+
+        $headers = $this->_utility->getTranslation([
+            'DT.MODULE',
+            'DT.FILE',
+            'DT.KEY',
+            'DT.VALUE',
+            'DT.ACTIONS'
+        ]);
+
+        /** Set the pre-formatted array for datatables */
+        $this->_response = new Core_Model_ResponseObjectDT([
+            'data' => $this->_configModel->getStaticConfigsList(),
+            'i18n' => $headers,
+        ]);
 
     }
 

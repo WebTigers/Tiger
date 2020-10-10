@@ -26,8 +26,6 @@
 class Core_Service_Utility
 {
 
-    ### Validation Methods ###
-
     public function validateDataTables ( Array $post ) {
 
         $regexValidator = new Zend_Validate_Regex( array('pattern' => '/^[A-Za-z0-9 \'\.\_\-,]+$/') );
@@ -57,8 +55,6 @@ class Core_Service_Utility
 
     }
 
-    ### Public Account Service Functions ###
-
     public function getTypeSelect2List ( $params )
     {
         $typeModel = new Core_Model_Type();
@@ -76,6 +72,23 @@ class Core_Service_Utility
             'error' => null,
             'login' => false,
         ]);
+
+    }
+
+    public function getTranslation ( $keys ) {
+
+        if ( empty( $keys ) ) { return $keys; }
+
+        if ( is_string( $keys ) ) {
+            return Zend_Registry::get('Zend_Translate')->translate( $keys );
+        }
+
+        $out = [];
+        foreach( $keys as $key ) {
+            $out[ $key ] = Zend_Registry::get('Zend_Translate')->translate( $key );
+        }
+
+        return $out;
 
     }
 

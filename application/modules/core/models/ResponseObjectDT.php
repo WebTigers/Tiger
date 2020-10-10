@@ -59,6 +59,11 @@ class Core_Model_ResponseObjectDT
      */
     public $login = false;
 
+    /**
+     * @var array
+     */
+    public $i18n;
+
     public function __construct( array $params = [] )
     {
         foreach ( $params as $key => $value) {
@@ -79,6 +84,7 @@ class Core_Model_ResponseObjectDT
             'data'              => $this->data,
             'error'             => $this->error,
             'login'             => $this->login,
+            'i18n'              => $this->i18n,
         ];
     }
     

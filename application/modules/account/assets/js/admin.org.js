@@ -43,12 +43,16 @@
 
         _initOrgDataTable : function () {
 
-            Class.orgDT = $('#orgsDT').DataTable({
+            let $datatable = $('#orgsDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block);
+
+            Class.orgDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
                 'orderMulti': true,
-                'order': [[1, 'asc']],
+                'order': [[0, 'asc']],
                 'class': 'hover',
                 'autoWidth': false,
                 'lengthMenu': [ 5, 10, 25, 50, 100 ],
@@ -56,6 +60,23 @@
                     "url": "/assets/translate/js/DataTables/i18n/" + LOCALE + ".json"
                 },
                 'initComplete': function (settings, json) {
+
+                    $(Class.orgDT.column(0).header()).text( json.i18n['DT.ORGNAME'] );
+                    $(Class.orgDT.column(1).header()).text( json.i18n['DT.COMPANY_NAME'] );
+                    $(Class.orgDT.column(2).header()).text( json.i18n['DT.DISPLAY_NAME'] );
+                    $(Class.orgDT.column(3).header()).text( json.i18n['DT.ORG_DESCRIPTION'] );
+                    $(Class.orgDT.column(4).header()).text( json.i18n['DT.REFERRAL_CODE'] );
+                    $(Class.orgDT.column(5).header()).text( json.i18n['DT.ACTIONS'] );
+                    $(Class.orgDT.column(6).header()).text( json.i18n['DT.ORG_ID'] );
+                    $(Class.orgDT.column(7).header()).text( json.i18n['DT.PARENT_ORG_ID'] );
+                    $(Class.orgDT.column(8).header()).text( json.i18n['DT.TYPE_ORG'] );
+                    $(Class.orgDT.column(9).header()).text( json.i18n['DT.DOMAIN'] );
+                    $(Class.orgDT.column(10).header()).text( json.i18n['DT.ACTIVE'] );
+                    $(Class.orgDT.column(11).header()).text( json.i18n['DT.DELETED'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
 
                 },
                 'ajax': {
@@ -69,64 +90,64 @@
                     }
                 },
                 'columns': [{
-                    'title': 'Org Id',
-                    'name': 'org_id',
-                    'data': 'org_id',
-                    'visible': false
-                }, {
-                    'title': 'Parent Org Id',
-                    'name': 'parent_org_id',
-                    'data': 'parent_org_id',
-                    'visible': false
-                }, {
-                    'title': 'OrgName',
+                    'title': 'DT.ORGNAME',
                     'name': 'orgname',
                     'data': 'orgname',
                 },  {
-                    'title': 'Company Name',
+                    'title': 'DT.COMPANY_NAME',
                     'name': 'company_name',
                     'data': 'company_name',
                 }, {
-                    'title': 'Display Name',
+                    'title': 'DT.DISPLAY_NAME',
                     'name': 'org_display_name',
                     'data': 'org_display_name',
                 }, {
-                    'title': 'Org Description',
+                    'title': 'DT.ORG_DESCRIPTION',
                     'name': 'org_description',
                     'data': 'org_description'
                 }, {
-                    'title': 'Domain',
-                    'name': 'domain',
-                    'data': 'domain',
-                    'visible': false
-                }, {
-                    'title': 'Referral Code',
+                    'title': 'DT.REFERRAL_CODE',
                     'name': 'referral_code',
                     'data': 'referral_code'
                 }, {
-                    'title': 'Type Org',
-                    'name': 'type_org',
-                    'data': 'type_org',
-                    'visible': false
-                }, {
-                    'title': 'Type Org',
-                    'name': 'type_org',
-                    'data': 'type_org',
-                    'class': 'active',
-                    'visible': false
-                }, {
-                    'title': 'Deleted',
-                    'name': 'deleted',
-                    'data': 'deleted',
-                    'class': 'deleted',
-                    'visible': false
-                }, {
-                    'title': 'Actions',
+                    'title': 'DT.ACTIONS',
                     'targets': -1,
                     'data': null,
                     'orderable': false,
                     'width': '230px',
                     'render': Class._buildControls,
+                }, {
+                    'title': 'DT.ORG_ID',
+                    'name': 'org_id',
+                    'data': 'org_id',
+                    'visible': false
+                }, {
+                    'title': 'DT.PARENT_ORG_ID',
+                    'name': 'parent_org_id',
+                    'data': 'parent_org_id',
+                    'visible': false
+                }, {
+                    'title': 'DT.TYPE_ORG',
+                    'name': 'type_org',
+                    'data': 'type_org',
+                    'visible': false
+                }, {
+                    'title': 'DT.DOMAIN',
+                    'name': 'domain',
+                    'data': 'domain',
+                    'visible': false
+                }, {
+                    'title': 'DT.ACTIVE',
+                    'name': 'actIve',
+                    'data': 'active',
+                    'class': 'active',
+                    'visible': false
+                }, {
+                    'title': 'DT.DELETED',
+                    'name': 'deleted',
+                    'data': 'deleted',
+                    'class': 'deleted',
+                    'visible': false
                 }]
             });
 

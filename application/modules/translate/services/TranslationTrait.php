@@ -52,12 +52,23 @@ trait Translate_Service_TranslationTrait
 
             }
 
+            $headers = $this->_utility->getTranslation([
+                'DT.MESSAGE_KEY',
+                'DT.MESSAGE_TEXT',
+                'DT.LOCALE',
+                'DT.ACTIONS',
+                'DT.TRANSLATION_ID',
+                'DT.ACTIVE',
+                'DT.DELETED',
+            ]);
+
             /** Set the pre-formatted array for datatables */
             $this->_response = new Core_Model_ResponseObjectDT([
                 'draw'              => intval( $post['draw'] ),
                 'recordsTotal'      => count( $recordsTotalRowset ),
                 'recordsFiltered'   => count( $recordsTotalRowset ),
                 'data'              => $recordsOut,
+                'i18n'              => $headers,
             ]);
 
         }
@@ -124,11 +135,19 @@ trait Translate_Service_TranslationTrait
 
     public function getAdminStaticTranslationsDataTable ( )
     {
-        /** Groom the Config for Datatables response ... */
+
+        $headers = $this->_utility->getTranslation([
+            'DT.MODULE',
+            'DT.FILE_NAME',
+            'DT.LOCALE',
+            'DT.MESSAGE_KEY',
+            'DT.MESSAGE_TEXT',
+        ]);
 
         /** Set the pre-formatted array for datatables */
         $this->_response = new Core_Model_ResponseObjectDT([
             'data' => $this->getStaticTranslationList(),
+            'i18n' => $headers,
         ]);
 
     }

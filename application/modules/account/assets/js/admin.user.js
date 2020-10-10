@@ -43,7 +43,11 @@
 
         _inituserDataTable : function () {
 
-            Class.userDT = $('#usersDT').DataTable({
+            let $datatable = $('#usersDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block );
+
+            Class.userDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
@@ -57,6 +61,22 @@
                 },
                 'initComplete': function (settings, json) {
 
+                    $(Class.userDT.column(0).header()).text( json.i18n['DT.USERNAME'] );
+                    $(Class.userDT.column(1).header()).text( json.i18n['DT.USER_DISPLAY_NAME'] );
+                    $(Class.userDT.column(2).header()).text( json.i18n['DT.EMAIL'] );
+                    $(Class.userDT.column(3).header()).text( json.i18n['DT.FIRST_NAME'] );
+                    $(Class.userDT.column(4).header()).text( json.i18n['DT.LAST_NAME'] );
+                    $(Class.userDT.column(5).header()).text( json.i18n['DT.ROLE'] );
+                    $(Class.userDT.column(6).header()).text( json.i18n['DT.ACTIONS'] );
+                    $(Class.userDT.column(7).header()).text( json.i18n['DT.USER_ID'] );
+                    $(Class.userDT.column(8).header()).text( json.i18n['DT.MIDDLE_NAME'] );
+                    $(Class.userDT.column(9).header()).text( json.i18n['DT.ACTIVE'] );
+                    $(Class.userDT.column(10).header()).text( json.i18n['DT.DELETED'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
+
                 },
                 'ajax': {
                     'url': '/api',
@@ -69,58 +89,58 @@
                     }
                 },
                 'columns': [{
-                    'title': 'user Id',
-                    'name': 'user_id',
-                    'data': 'user_id',
-                    'visible': false
-                }, {
-                    'title': 'Username',
+                    'title': 'DT.USERNAME',
                     'name': 'username',
                     'data': 'username',
                 },  {
-                    'title': 'Display Name',
+                    'title': 'DT.USER_DISPLAY_NAME',
                     'name': 'user_display_name',
                     'data': 'user_display_name',
                 }, {
-                    'title': 'Email',
+                    'title': 'DT.EMAIL',
                     'name': 'email',
                     'data': 'email'
                 }, {
-                    'title': 'First Name',
+                    'title': 'DT.FIRST_NAME',
                     'name': 'first_name',
                     'data': 'first_name',
                 }, {
-                    'title': 'Middle Name',
-                    'name': 'middle_name',
-                    'data': 'middle_name',
-                    'visible': false
-                }, {
-                    'title': 'Last Name',
+                    'title': 'DT.LAST_NAME',
                     'name': 'last_name',
                     'data': 'last_name',
                 }, {
-                    'title': 'Role',
+                    'title': 'DT.ROLE',
                     'name': 'role',
                     'data': 'role',
                 }, {
-                    'title': 'Active',
-                    'name': 'active',
-                    'data': 'active',
-                    'class': 'active',
-                    'visible': false
-                }, {
-                    'title': 'Deleted',
-                    'name': 'deleted',
-                    'data': 'deleted',
-                    'class': 'deleted',
-                    'visible': false
-                }, {
-                    'title': 'Actions',
+                    'title': 'DT.ACTIONS',
                     'targets': -1,
                     'data': null,
                     'orderable': false,
                     'width': '230px',
                     'render': Class._buildControls,
+                }, {
+                    'title': 'DT.USER_ID',
+                    'name': 'user_id',
+                    'data': 'user_id',
+                    'visible': false
+                }, {
+                    'title': 'DT.MIDDLE_NAME',
+                    'name': 'middle_name',
+                    'data': 'middle_name',
+                    'visible': false
+                }, {
+                    'title': 'DT.ACTIVE',
+                    'name': 'active',
+                    'data': 'active',
+                    'class': 'active',
+                    'visible': false
+                }, {
+                    'title': 'DT.DELETED',
+                    'name': 'deleted',
+                    'data': 'deleted',
+                    'class': 'deleted',
+                    'visible': false
                 }]
             });
 

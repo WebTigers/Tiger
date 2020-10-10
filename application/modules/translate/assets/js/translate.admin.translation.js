@@ -45,7 +45,11 @@
 
         _initTranslationDataTable : function () {
 
-            Class.translationDT = $('#translationsDT').DataTable({
+            let $datatable = $('#translationsDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block );
+
+            Class.translationDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
@@ -59,6 +63,18 @@
                 },
                 'initComplete': function (settings, json) {
 
+                    $(Class.translationDT.column(0).header()).text( json.i18n['DT.MESSAGE_KEY'] );
+                    $(Class.translationDT.column(1).header()).text( json.i18n['DT.MESSAGE_TEXT'] );
+                    $(Class.translationDT.column(2).header()).text( json.i18n['DT.LOCALE'] );
+                    $(Class.translationDT.column(3).header()).text( json.i18n['DT.ACTIONS'] );
+                    $(Class.translationDT.column(4).header()).text( json.i18n['DT.TRANSLATION_ID'] );
+                    $(Class.translationDT.column(5).header()).text( json.i18n['DT.ACTIVE'] );
+                    $(Class.translationDT.column(6).header()).text( json.i18n['DT.DELETED'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
+
                 },
                 'ajax': {
                     'url': '/api',
@@ -71,41 +87,41 @@
                     }
                 },
                 'columns': [{
-                    'title': 'Translation Id',
-                    'name': 'translation_id',
-                    'data': 'translation_id',
-                    'visible': false
-                }, {
-                    'title': 'Message Key',
+                    'title': 'DT.MESSAGE_KEY',
                     'name': 'message_id',
                     'data': 'message_id'
                 }, {
-                    'title': 'Message Text',
+                    'title': 'DT.MESSAGE_TEXT',
                     'name': 'message_text',
                     'data': 'message_text'
                 }, {
-                    'title': 'Locale',
+                    'title': 'DT.LOCALE',
                     'name': 'locale',
                     'data': 'locale'
                 }, {
-                    'title': 'Active',
-                    'name': 'active',
-                    'data': 'active',
-                    'class': 'active',
-                    'visible': false
-                }, {
-                    'title': 'Deleted',
-                    'name': 'deleted',
-                    'data': 'deleted',
-                    'class': 'deleted',
-                    'visible': false
-                }, {
-                    'title': 'Controls',
+                    'title': 'DT.ACTIONS',
                     'targets': -1,
                     'data': null,
                     'orderable': false,
                     'width': '150px',
                     'render': Class._buildControls,
+                }, {
+                    'title': 'DT.TRANSLATION_ID',
+                    'name': 'translation_id',
+                    'data': 'translation_id',
+                    'visible': false
+                }, {
+                    'title': 'DT.ACTIVE',
+                    'name': 'active',
+                    'data': 'active',
+                    'class': 'active',
+                    'visible': false
+                }, {
+                    'title': 'DT.DELETED',
+                    'name': 'deleted',
+                    'data': 'deleted',
+                    'class': 'deleted',
+                    'visible': false
                 }]
             });
 
@@ -456,7 +472,11 @@
 
         _initStaticTranslationDataTable : function () {
 
-            Class.staticTranslationDT = $('#staticTranslationsDT').DataTable({
+            let $datatable = $('#staticTranslationsDT');
+            let $block = $datatable.closest('div.block');
+            One.block('state_loading', $block );
+
+            Class.staticTranslationDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': false,
@@ -469,6 +489,16 @@
                     "url": "/assets/translate/js/DataTables/i18n/" + LOCALE + ".json"
                 },
                 'initComplete': function (settings, json) {
+
+                    $(Class.staticTranslationDT.column(0).header()).text( json.i18n['DT.MODULE'] );
+                    $(Class.staticTranslationDT.column(1).header()).text( json.i18n['DT.FILE_NAME'] );
+                    $(Class.staticTranslationDT.column(2).header()).text( json.i18n['DT.LOCALE'] );
+                    $(Class.staticTranslationDT.column(3).header()).text( json.i18n['DT.MESSAGE_KEY'] );
+                    $(Class.staticTranslationDT.column(4).header()).text( json.i18n['DT.MESSAGE_TEXT'] );
+
+                    setTimeout( function () {
+                        One.block('state_normal', $block);
+                    }, 1000);
 
                 },
                 'ajax': {
@@ -486,13 +516,13 @@
                     'name': 'module',
                     'data': 'module'
                 }, {
-                    'title': 'Locale',
-                    'name': 'locale',
-                    'data': 'locale'
-                }, {
                     'title': 'File Name',
                     'name': 'file',
                     'data': 'file'
+                }, {
+                    'title': 'Locale',
+                    'name': 'locale',
+                    'data': 'locale'
                 }, {
                     'title': 'Message Key',
                     'name': 'message_id',

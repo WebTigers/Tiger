@@ -82,12 +82,28 @@ trait Account_Service_UserTrait
 
             }
 
+            $headers = $this->_utility->getTranslation([
+                'DT.USERNAME',
+                'DT.USER_DISPLAY_NAME',
+                'DT.USER_DISPLAY_NAME',
+                'DT.EMAIL',
+                'DT.FIRST_NAME',
+                'DT.LAST_NAME',
+                'DT.ROLE',
+                'DT.ACTIONS',
+                'DT.USER_ID',
+                'DT.MIDDLE_NAME',
+                'DT.ACTIVE',
+                'DT.DELETED',
+            ]);
+
             /** Set the pre-formatted array for datatables */
             $this->_response = new Core_Model_ResponseObjectDT([
                 'draw'              => intval( $post['draw'] ),
                 'recordsTotal'      => count( $recordsTotalRowset ),
                 'recordsFiltered'   => count( $recordsTotalRowset ),
                 'data'              => $recordsOut,
+                'i18n'              => $headers
             ]);
 
         }

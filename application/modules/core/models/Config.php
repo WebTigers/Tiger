@@ -81,6 +81,52 @@ class Core_Model_Config extends Zend_Db_Table_Abstract {
 
     }
 
+    public function getStaticConfigsList ( ) {
+
+        /** Iterate each of the modules and scan the languages folders ... */
+
+        /** $modules is an array of all of the active modules. */
+        $modules = array_keys( Zend_Controller_Front::getInstance()->getDispatcher()->getControllerDirectory() );
+
+        $out = [];
+        foreach( $modules as $module ) {
+
+            /** If the module has a languages/ directory, dive into it ... */
+            $configs_directory = MODULES_PATH . '/' . $module . '/configs';
+
+            /** Return an array of only .ini config files from the /configs folder */
+            $configFiles = preg_grep('/.*\.(ini)/', scandir( $configs_directory ));
+
+            foreach ($configFiles as $configFile) {
+
+                $filename = $configs_directory . '/' . $configFile;
+                $configOptions = parse_ini_file( $filename, false, INI_SCANNER_RAW );
+                $configs = $this->_mergeSections( $configOptions );
+
+                if ( empty( $configs ) ) { continue; }
+
+                /** Append medata to configs */
+                $tmpArr = [];
+                foreach( $configs as $key => $value ) {
+
+                    $tmpArr['module'] = $module;
+                    $tmpArr['file'] = $configFile;
+                    $tmpArr['key'] = $key;
+                    $tmpArr['value'] = $value;
+
+                    $out[] = $tmpArr;
+
+                }
+
+            }
+
+        }
+
+        return $out;
+
+    }
+
+
     protected function _parse_ini_string_multi ( $str, $process_sections = false, $scanner_mode = INI_SCANNER_NORMAL ) {
 
         $explode_str = '.';
@@ -136,5 +182,47 @@ class Core_Model_Config extends Zend_Db_Table_Abstract {
         return $data;
 
     }
+
+    /**
+     * Load the ini file and preprocess the section separator (':' in the section name (that is used for section extension)
+     * so that the resultant array has the correct section names and the extension information is stored in a sub-key called
+     * ';extends'. We use ';extends' as this can never be a valid key name in an INI file that has been loaded using
+     * parse_ini_file().
+     *
+     * @param array $configOptions
+     * @throws Zend_Config_Exception
+     * @return array
+     */
+    protected function _mergeSections( $configOptions )
+    {
+        $iniArray = [];
+        foreach ($configOptions as $key => $data)
+        {
+            $pieces = explode( ':', $key );
+            $thisSection = trim($pieces[0]);
+
+            switch ( count($pieces) ) {
+                case 1:
+                    $iniArray[$thisSection] = $data;
+                    break;
+
+                case 2:
+                    $extendedSection = trim($pieces[1]);
+                    $iniArray[$thisSection] = array_merge( [';extends' => $extendedSection], $data);
+                    break;
+
+                default:
+                    /**
+                     * @see Zend_Config_Exception
+                     */
+                    require_once 'Zend/Config/Exception.php';
+                    throw new Zend_Config_Exception("Section '$thisSection' may not extend multiple sections.");
+            }
+        }
+
+        return $iniArray;
+
+    }
+
 
 }
