@@ -92,4 +92,16 @@ class Core_Service_Utility
 
     }
 
+    public function getMediaFolderByAllowedMimeType ( $mimeTypes, $type )
+    {
+        $out = 'other';
+        foreach ( $mimeTypes as $folder => $types ) {
+            if ( in_array($type, $types->toArray() ) ) {
+                $out = $folder;
+                break;
+            }
+        }
+        return $out;
+    }
+
 }

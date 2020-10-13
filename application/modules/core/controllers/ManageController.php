@@ -23,11 +23,6 @@ class ManageController extends Tiger_Controller_Action
 {
     public function init()
     {
-        /** The Admin Controller and Admin Service are only available on ports 8080 and 8081 for security purposes. */
-        if ( ! in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
-            throw new Error( 'ADMIN.DISALLOWED' );
-        }
-
         /** Set any custom CSS files you might have. These can also be set statically in the layout. */
         $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/js/plugins/select2/css/select2.min.css' ) );
         $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/js/plugins/datatables/dataTables.bootstrap4.css' ) );
@@ -66,7 +61,7 @@ class ManageController extends Tiger_Controller_Action
         $this->view->one->user = Zend_Auth::getInstance()->getIdentity();
 
         /** Global hero header vars */
-        $this->view->one->page_title = $this->view->translate('DASHBOARD');
+        $this->view->one->page_title = $this->view->translate( 'DASHBOARD' );
 
     }
 
@@ -249,6 +244,13 @@ class ManageController extends Tiger_Controller_Action
     public function dashboardAction ( )
     {
 
+    }
+
+    public function adminAction ()
+    {
+        $port = ( $_SERVER['REQUEST_SCHEME'] === 'http' ) ? '8080' : '8081' ;
+        $uri = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . ':' . $port . '/admin';
+        $this->redirect( $uri );
     }
 
 }

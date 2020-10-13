@@ -102,11 +102,14 @@
          *
          * @param formValues
          */
-        setFormValues : function ( formValues ) {
+        setFormValues : function ( formValues, staticDataVars ) {
 
             /** "this" is already a jQuery from object. */
 
-            let boilerPlateVars = ['create_user_id', 'update_user_id', 'create_date', 'update_date', 'create_ip', 'update_ip'];
+            let boilerPlateVars = [
+                'create_user_id',   'update_user_id',   'create_date',
+                'update_date',      'create_ip',        'update_ip'
+            ];
 
             for ( let key in formValues ) {
 
@@ -138,6 +141,12 @@
 
                 }
 
+                /** StaticDataVars are optional form data that is read-only. */
+                else if ( staticDataVars && $.inArray( key, staticDataVars ) > -1 ) {
+                    $(this).find('.' + key ).html( formValues[key] );
+                }
+
+                /** BoilerplateVars are standard form data that is read-only. */
                 else if ( $.inArray(key, boilerPlateVars) > -1 ) {
                     $(this).find('.' + key ).html( formValues[key] );
                 }

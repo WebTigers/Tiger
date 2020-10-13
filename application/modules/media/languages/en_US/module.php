@@ -8,12 +8,17 @@
 
 return [
 
-    'TITLE.TRANSLATIONS' => 'Translations',
-    'TITLE.STATIC_TRANSLATIONS' => 'Static Translations',
+    'HEADER.MEDIA_GALLERY' => 'Media Gallery',
 
-    'DT.MESSAGE_KEY' => 'Message Key',
-    'DT.MESSAGE_TEXT' => 'Message Text',
-    'DT.LOCALE' => 'Locale',
-    'DT.FILE_NAME' => 'File Name',
+    'MENU.MANAGE.HEADING' => 'Manage Application',
+    'MENU.MANAGE.MEDIA' => 'Manage Media',
+    'MENU.MEDIA_GALLERY' => 'Media Gallery',
+
+    'BUTTON.EDIT' => 'Edit',
+    'BUTTON.VIEW' => 'View',
+    'BUTTON.COPY_LINK' => 'Link',
+
+    'TEXT.SET_TITLE' => 'Set Media Title',
+    'TEXT.SET_DESCRIPTION' => 'Set media description ...',
 
 ];

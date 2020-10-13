@@ -196,7 +196,8 @@ class Acl_AdminController extends Tiger_Controller_Action
         // MAIN MENU
         // **************************************************************************************************
 
-        $one->main_nav                   = array();
+        $one->main_nav                  = [];
+        $one->menu                      = 'admin';
 
         return $one;
 

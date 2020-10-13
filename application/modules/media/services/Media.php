@@ -1,6 +1,6 @@
 <?php
 
-class Media_Service_Manage
+class Media_Service_Media
 {
     use Media_Service_MediaTrait;
 
@@ -16,7 +16,7 @@ class Media_Service_Manage
     protected $_utility;
     protected $_searchErrors;
 
-    protected $_translationModel;
+    protected $_mediaModel;
 
     public function __construct( $input ) {
 
@@ -28,7 +28,7 @@ class Media_Service_Manage
         $this->_response    = new Core_Model_ResponseObject();
         $this->_utility     = new Core_Service_Utility();
 
-        $this->_translationModel    = new Translate_Model_Translation;
+        $this->_mediaModel    = new Media_Model_Media;
 
         if ( $input instanceof Zend_Controller_Request_Http ) {
             $this->_request = $input;
@@ -107,37 +107,6 @@ class Media_Service_Manage
 
     }
 
-    ### Validation Methods ###
-
-    protected function _validateDataTables ( Array $post ) {
-
-        // pr($post);
-
-        $regexValidator = new Zend_Validate_Regex( array('pattern' => '/^[A-Za-z0-9 \'\.\_\-,]+$/') );
-        $intValidator   = new Zend_Validate_Int();
-
-        $out = array();
-
-        if ( ! empty($post['search']) && ! $regexValidator->isValid( $post['search'] ) ) {
-            foreach ( $regexValidator->getMessages() as $messageId => $message ) {
-                $out[$messageId] = $message;
-            }
-        }
-
-        if ( ! $intValidator->isValid( $post['start'] ) ) {
-            foreach ($intValidator->getMessages() as $messageId => $message) {
-                $out[$messageId] = $message;
-            }
-        }
-
-        if ( ! $intValidator->isValid( $post['length'] ) ) {
-            foreach ($intValidator->getMessages() as $messageId => $message) {
-                $out[$messageId] = $message;
-            }
-        }
-
-        return ( empty($out) ) ? true : $this->_searchErrors = $out;
-
-    }
+    protected function _moveFileToStorage( array $params ) { }
 
 }

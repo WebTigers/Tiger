@@ -26,55 +26,41 @@ class Media_Model_Media extends Zend_Db_Table_Abstract {
     protected $_rowClass    = 'Tiger_Db_Table_Row';
 
     /**
-     * @return Zend_Db_Table_Rowset_Abstract
-     */
-    public function getLocales () {
-
-        $sql = $this->select()->
-            distinct()->
-            from( $this, ['locale'] );
-
-        return $this->fetchAll( $sql );
-
-    }
-
-    /**
-     * @return array of database locales with translations
-     */
-    public function getLocaleOptions ( ) {
-
-        $localeRowset = $this->getLocales();
-        $localeArray = [];
-        foreach ( $localeRowset as $localeRow ) {
-            $localeArray[ $localeRow->locale ] = $localeRow->locale;
-        }
-        return $localeArray;
-
-    }
-
-    /**
-     * @param $translation_id
+     * @param $media_id
      * @return Zend_Db_Table_Row_Abstract|null
      */
-    public function getTranslationById ( $translation_id ) {
+    public function getMediaById ( $media_id ) {
 
         $sql = $this->
             select()->
-            where('translation_id = ?', $translation_id );
+            where('media_id = ?', $media_id );
 
         return $this->fetchRow( $sql );
 
     }
 
     /**
+     * @param string $locale
      * @return Zend_Db_Table_Rowset_Abstract
      */
-    public function getTranslationsForCache ( ) {
+    public function getMediaSearchList ( string $search, $offset = 0, $limit = 0, $orderby = '' ) {
 
         $sql = $this->
             select()->
+
+            where( '( filename LIKE ?', "%$search%" )->
+            orWhere( 'original_filename LIKE ?', "%$search%" )->
+            orWhere( 'extension LIKE ?', "%$search%" )->
+            orWhere( 'description LIKE ?', "%$search%" )->
+            orWhere( 'mime_type LIKE ?', "%$search%" )->
+            orWhere( 'tags LIKE ? )', "%$search%" )->
+
             where( 'active = 1' )->
-            where( 'deleted = 0' );
+            where( 'deleted = 0' )->
+            order( $orderby )->
+            limit( $limit, $offset );
+
+        // pr( $sql->assemble() );
 
         return $this->fetchAll( $sql );
 
@@ -84,71 +70,20 @@ class Media_Model_Media extends Zend_Db_Table_Abstract {
      * @param string $locale
      * @return Zend_Db_Table_Rowset_Abstract
      */
-    public function getTranslationsByLocale ( string $locale ) {
+    public function getAdminMediaSearchList ( string $search, $offset = 0, $limit = 0, $orderby = '' ) {
 
         $sql = $this->
             select()->
-            where( 'locale = ?', $locale )->
-            where( 'active = 1' )->
-            where( 'deleted = 0' );
 
-        return $this->fetchAll( $sql );
+            where( '( filename LIKE ?', "%$search%" )->
+            orWhere( 'original_filename LIKE ?', "%$search%" )->
+            orWhere( 'extension LIKE ?', "%$search%" )->
+            orWhere( 'description LIKE ?', "%$search%" )->
+            orWhere( 'mime_type LIKE ?', "%$search%" )->
+            orWhere( 'tags LIKE ? )', "%$search%" )->
 
-    }
-
-    /**
-     * @param $message_id
-     * @return Zend_Db_Table_Rowset_Abstract
-     */
-    public function getTranslationsByMessageId ($message_id) {
-
-        $sql = $this->
-            select()->
-            where('message_id = ?', $message_id );
-
-        return $this->fetchAll( $sql );
-
-    }
-
-    /**
-     * @param string $search
-     * @param int $offset
-     * @param int $limit
-     * @param string $orderby
-     * @return Zend_Db_Table_Rowset_Abstract
-     */
-    public function getTranslationSearchList ( string $search, $offset = 0, $limit = 0, $orderby = '' ) {
-
-        $sql = $this->
-            select()->
-            where( '( message_id LIKE ?',   "%$search%" )->
-            orwhere( 'message_text LIKE ?', "%$search%" )->
-            orWhere( 'locale LIKE ? )', "%$search%" )->
-            where( 'active = 1' )->
-            where( 'deleted = 0' )->
             order( $orderby )->
             limit( $limit, $offset );
-
-        return $this->fetchAll( $sql );
-
-    }
-
-    /**
-     * @param string $search
-     * @param int $offset
-     * @param int $limit
-     * @param string $orderby
-     * @return Zend_Db_Table_Rowset_Abstract
-     */
-    public function getAdminTranslationSearchList ( string $search, $offset = 0, $limit = 0, $orderby = '' ) {
-
-        $sql = $this->
-        select()->
-        where( '( message_id LIKE ?',   "%$search%" )->
-        orwhere( 'message_text LIKE ?', "%$search%" )->
-        orWhere( 'locale LIKE ? )', "%$search%" )->
-        order( $orderby )->
-        limit( $limit, $offset );
 
         return $this->fetchAll( $sql );
 

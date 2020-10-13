@@ -1,6 +1,6 @@
 <?php
 
-class Media_Form_Dashboard extends Tiger_Form_Base
+class Core_Form_Search extends Tiger_Form_Base
 {
 
     public function init ( ) {
@@ -15,12 +15,14 @@ class Media_Form_Dashboard extends Tiger_Form_Base
      */
     protected function _addFormElements ( ) {
 
-        $this->setName('Translate_Form_Translation');
+        $this->setName('Core_Form_Search');
 
-        $this->addElement( $this->_getTranslationId() );
-        $this->addElement( $this->_getMessageId() );
-        $this->addElement( $this->_getMessageText() );
-        $this->addElement( $this->_getLocale() );
+        $this->addElement( $this->_getId() );
+        $this->addElement( $this->_getSearch() );
+        $this->addElement( $this->_getOffset() );
+        $this->addElement( $this->_getLimit() );
+        $this->addElement( $this->_getOrderBy() );
+        $this->addElement( $this->_getDirection() );
         $this->addElement( $this->_getActive() );
         $this->addElement( $this->_getDeleted() );
 
@@ -28,9 +30,9 @@ class Media_Form_Dashboard extends Tiger_Form_Base
 
     ##### Form Fields #####
 
-    protected function _getTranslationId ( ) {
+    protected function _getId ( ) {
 
-        $name = 'translation_id';
+        $name = 'id';
 
         $options = [
 
@@ -54,9 +56,9 @@ class Media_Form_Dashboard extends Tiger_Form_Base
 
     }
 
-    protected function _getMessageId ( ) {
+    protected function _getSearch ( ) {
 
-        $name = 'message_id';
+        $name = 'search';
 
         $options = [
 
@@ -72,30 +74,27 @@ class Media_Form_Dashboard extends Tiger_Form_Base
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'required'          =>  true,
+            'required'          =>  false,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Z0-9\_.]/',
+                                            'match' => '/[^A-Za-z0-9 \_\.\-]/',
                                             'replace' => ''
                                         ] ]
                                     ],
 
             'validators'        =>  [
-                                        [ 'NotEmpty', false, [
-                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
-                                        ] ],
                                         [ 'StringLength', false, [
                                             'min'   => 1,
-                                            'max'   => 100,
+                                            'max'   => 255,
                                             'messages' => [
                                                 Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                                 Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Z0-9\_.]+$/',
+                                            'pattern' => '/^[A-Za-z0-9 \_\.\-]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]
@@ -105,9 +104,95 @@ class Media_Form_Dashboard extends Tiger_Form_Base
 
     }
 
-    protected function _getMessageText ( ) {
+    protected function _getOffset ( ) {
 
-        $name = 'message_text';
+        $name = 'offset';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'custom-control-input',
+
+            'attribs'           =>  [
+                                        'data-valid' => '0',
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'disableHidden'     =>  true,
+
+            'required'          =>  false,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'Digits', false, [
+                                            'messages' => [
+                                                Zend_Validate_Digits::INVALID => "ERROR.INVALID",
+                                                Zend_Validate_Digits::NOT_DIGITS => "ERROR.INVALID",
+                                            ]
+                                        ] ],
+                                        [ 'Between', false, [
+                                            'min' => 0,
+                                            'max' => 100
+                                        ] ],
+                                    ],
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getLimit ( ) {
+
+        $name = 'limit';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'custom-control-input',
+
+            'attribs'           =>  [
+                                        'data-valid' => '0',
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'disableHidden'     =>  true,
+
+            'required'          =>  false,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'Digits', false, [
+                                            'messages' => [
+                                                Zend_Validate_Digits::INVALID => "ERROR.INVALID",
+                                                Zend_Validate_Digits::NOT_DIGITS => "ERROR.INVALID",
+                                            ]
+                                        ] ],
+                                        [ 'Between', false, [
+                                            'min' => 0,
+                                            'max' => 100
+                                        ] ],
+                                    ],
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getOrderBy ( ) {
+
+        $name = 'orderby';
 
         $options = [
 
@@ -123,16 +208,29 @@ class Media_Form_Dashboard extends Tiger_Form_Base
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'required'          =>  true,
+            'required'          =>  false,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Za-z0-9 \,\_\.\-]/',
+                                            'replace' => ''
+                                        ] ]
                                     ],
 
             'validators'        =>  [
-                                        [ 'NotEmpty', false, [
-                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 255,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
                                         ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Za-z0-9 \,\_\.\-]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
                                     ]
         ];
 
@@ -140,9 +238,9 @@ class Media_Form_Dashboard extends Tiger_Form_Base
 
     }
 
-    protected function _getLocale ( ) {
+    protected function _getDirection ( ) {
 
-        $name = 'locale';
+        $name = 'direction';
 
         $options = [
 
@@ -151,37 +249,34 @@ class Media_Form_Dashboard extends Tiger_Form_Base
             'class'             =>  'form-control form-control-lg form-control-alt',
 
             'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.PRIVILEGE' ),
+                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
                                         'data-valid'    => '0',
                                     ],
 
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'required'          =>  true,
+            'required'          =>  false,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z\_\-]/',
+                                            'match' => '/[^ASC|asc|DESC|desc]/',
                                             'replace' => ''
                                         ] ]
                                     ],
 
             'validators'        =>  [
-                                        [ 'NotEmpty', false, [
-                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
-                                        ] ],
                                         [ 'StringLength', false, [
-                                            'min'   => 1,
-                                            'max'   => 100,
+                                            'min'   => 3,
+                                            'max'   => 4,
                                             'messages' => [
                                                 Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                                 Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9\_\-]+$/',
+                                            'pattern' => '/^[ASC|asc|DESC|desc]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]
@@ -198,7 +293,7 @@ class Media_Form_Dashboard extends Tiger_Form_Base
         $options = [
 
             'name'              =>  $name,
-            'id'                =>  $name . '_translation',
+            'id'                =>  $name . '_media',
             'class'             =>  'custom-control-input',
 
             'attribs'           =>  [
@@ -210,17 +305,13 @@ class Media_Form_Dashboard extends Tiger_Form_Base
 
             'disableHidden'     =>  true,
 
-            'required'          =>  true,
+            'required'          =>  false,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                     ],
 
             'validators'        =>  [
-                                        [ 'NotEmpty', false, [
-                                            Zend_Validate_NotEmpty::INTEGER,
-                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
-                                        ] ],
                                         [ 'Digits', false, [
                                             'messages' => [
                                                 Zend_Validate_Digits::INVALID => "ERROR.INVALID",
@@ -245,7 +336,7 @@ class Media_Form_Dashboard extends Tiger_Form_Base
         $options = [
 
             'name'              =>  $name,
-            'id'                =>  $name . '_translation',
+            'id'                =>  $name . '_media',
             'class'             =>  'custom-control-input',
 
             'attribs'           =>  [
@@ -257,17 +348,13 @@ class Media_Form_Dashboard extends Tiger_Form_Base
 
             'disableHidden'     =>  true,
 
-            'required'          =>  true,
+            'required'          =>  false,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                     ],
 
             'validators'        =>  [
-                                        [ 'NotEmpty', false, [
-                                            Zend_Validate_NotEmpty::INTEGER,
-                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
-                                        ] ],
                                         [ 'Digits', false, [
                                             'messages' => [
                                                 Zend_Validate_Digits::INVALID => "ERROR.INVALID",

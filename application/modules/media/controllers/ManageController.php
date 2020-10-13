@@ -6,19 +6,19 @@ class Media_ManageController extends Tiger_Controller_Action
     {
         /** Set any custom CSS files you might have. These can also be set statically in the layout. */
         $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/js/plugins/select2/css/select2.min.css' ) );
-        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/js/plugins/datatables/dataTables.bootstrap4.css' ) );
+        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/js/plugins/dropzone/dist/min/dropzone.min.css' ) );
+        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/core/vendor/prettyPhoto/css/prettyPhoto.css' ) );
         $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/core/css/oneui/custom/tiger.css' ) );
 
         /** OneUI Dashboard Bundles */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/oneui.core.min.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/oneui.app.min.js' ) );
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/plugins/chart.js/Chart.bundle.min.js' ) );
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/pages/be_pages_dashboard.min.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/vendor/prettyPhoto/js/jquery.prettyPhoto.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/vendor/clipboardJS/dist/clipboard.min.js' ) );
 
         /** Set any custom JS files you might have. These can also be set statically in the layout. */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/plugins/select2/js/select2.full.min.js' ) );
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/plugins/datatables/jquery.dataTables.min.js' ) );
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/plugins/datatables/dataTables.bootstrap4.min.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/plugins/dropzone/dropzone.min.js' ) );
 
         /** Tiger Core DOM Plugins */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
@@ -42,7 +42,7 @@ class Media_ManageController extends Tiger_Controller_Action
         $this->view->one->user = Zend_Auth::getInstance()->getIdentity();
 
         /** Global hero header vars */
-        $this->view->one->page_title = $this->view->translate('TRANSLATIONS');
+        $this->view->one->page_title = $this->view->translate('HEADER.MEDIA_GALLERY');
 
     }
 
@@ -219,13 +219,13 @@ class Media_ManageController extends Tiger_Controller_Action
 
     public function indexAction ( )
     {
-        $this->forward( 'dashboard' );
+        $this->forward( 'gallery' );
     }
 
-    public function dashboardAction ( )
+    public function galleryAction ( )
     {
-        // $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/media/js/media.manage.dashboard.js' ) );
-        // $this->view->mediaForm = new Media_Form_Dashboard();
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/media/js/media.manage.gallery.js' ) );
+        $this->view->mediaForm = new Media_Form_Media();
     }
 
 }
