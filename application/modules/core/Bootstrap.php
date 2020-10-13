@@ -96,43 +96,6 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         defined('GUEST_USER_ID')
             || define('GUEST_USER_ID', $guest_user_id);
 
-
-        /** Make sure we can do a DB override before setting these AWS constants ... */
-
-        /**
-         * AWS General Access Keys
-         * These constants will be automagically recognized by the
-         * AWS SDK. It is best to create keys that only have access
-         * to the resources you application needs.
-         */
-
-        defined('AWS_ACCESS_KEY_ID')
-            || define('AWS_ACCESS_KEY_ID', $config->aws->key);
-
-        defined('AWS_SECRET_ACCESS_KEY')
-            || define('AWS_SECRET_ACCESS_KEY', $config->aws->secret);
-
-        /**
-         * If you need to get more granular with your access keys
-         * you can use the following constants to grant your code
-         * access to AWS resources, but you will need to set these
-         * keys manually within your code.
-         */
-
-        /** AWS S3 (Simple Storage Service) Access Keys */
-        defined('AWS_S3_ACCESS_KEY_ID')
-            || define('AWS_S3_ACCESS_KEY_ID', $config->aws->s3->key);
-
-        defined('AWS_S3_SECRET_ACCESS_KEY')
-            || define('AWS_s3_SECRET_ACCESS_KEY', $config->aws->s3->secret);
-
-        /** AWS SES (Simple Email Service) Access Keys */
-        defined('AWS_SES_ACCESS_KEY_ID')
-            || define('AWS_SES_ACCESS_KEY_ID', $config->aws->ses->key);
-
-        defined('AWS_SES_SECRET_ACCESS_KEY')
-            || define('AWS_SES_SECRET_ACCESS_KEY', $config->aws->ses->secret);
-
     }
 
 }
