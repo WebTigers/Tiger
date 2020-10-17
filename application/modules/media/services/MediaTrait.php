@@ -4,6 +4,43 @@ trait Media_Service_MediaTrait
 {
     ### Admin Service Functions ###
 
+    public function getUploaderConfigs ( ) {
+
+        $this->_response->result = 1;
+        $this->_response->data = [
+            'imageExtensions'   => $this->_getValidExtensions('image'),
+            'allowedExtensions' => $this->_getValidExtensions(),
+            'imageMaxWidth'     => $this->_config->media->upload->image_max_width,
+            'imageMaxHeight'    => $this->_config->media->upload->image_max_height,
+            'fileMinFiles'      => $this->_config->media->upload->min_files,
+            'fileMaxFiles'      => $this->_config->media->upload->max_files,
+            'fileMaxFilesize'   => $this->_config->media->upload->max_filesize,
+            'fileMaxTotalsize'  => $this->_config->media->upload->max_totalsize,
+            'dictionary'        => $this->getUploaderDictionary(),
+        ];
+
+    }
+
+    public function getUploaderDictionary ( )
+    {
+        return [
+            'dictDefaultMessage'            => $this->_translate->_('dictDefaultMessage'),
+            'dictFallbackMessage'           => $this->_translate->_('dictFallbackMessage'),
+            'dictFallbackText'              => $this->_translate->_('dictFallbackText'),
+            'dictFileTooBig'                => $this->_translate->_('dictFileTooBig'),
+            'dictInvalidFileType'           => $this->_translate->_('dictInvalidFileType'),
+            'dictResponseError'             => $this->_translate->_('dictResponseError'),
+            'dictCancelUpload'              => $this->_translate->_('dictCancelUpload'),
+            'dictUploadCanceled'            => $this->_translate->_('dictUploadCanceled'),
+            'dictCancelUploadConfirmation'  => $this->_translate->_('dictCancelUploadConfirmation'),
+            'dictRemoveFile'                => $this->_translate->_('dictRemoveFile'),
+            'dictRemoveFileConfirmation'    => $this->_translate->_('dictRemoveFileConfirmation'),
+            'dictMaxFilesExceeded'          => $this->_translate->_('dictMaxFilesExceeded'),
+            'dictFileSizeUnits'             => $this->_translate->_('dictFileSizeUnits'),
+            'dictInvalidImageDimensions'    => $this->_translate->_('dictInvalidImageDimensions'),
+        ];
+    }
+
     public function getMedia ( $params )
     {
         if ( Tiger_Utility_Uuid::is_valid( $params['media_id'] ) ) {
@@ -87,21 +124,24 @@ trait Media_Service_MediaTrait
 
     }
 
-
     public function upload ( $params ) {
 
         try {
 
             /** Validate our params */
 
+            if ( $this->_validateUpload( $params ) === false ) {
+                return;
+            }
 
             /**
              * We abstract where files are sent via a default storage driver. This
              * can be set as a default or selected via a UI passed param.
              */
-            $storageClass = (!empty($params['storageType']))
+            $storageClass = ( ! empty( $params['storageType'] ) )
                 ? 'Media_Model_' . $params['storageType']
                 : Zend_Registry::get('Zend_Config')->media->default_storage_model;
+
             $storage = new $storageClass;
 
             /** Move the file to permanent storage. */
@@ -135,6 +175,82 @@ trait Media_Service_MediaTrait
             $this->_response->setTextMessage( 'MESSAGE.MEDIA_ERROR_SAVING', 'error' );
 
             pr( $e->getMessage() );
+
+        }
+
+    }
+
+    ### Upload Validation ###
+
+    /**
+     * @return array
+     */
+    protected function _getValidExtensions ( $type = null ) {
+
+        $out = [];
+        foreach( $this->_config->media->allowed as $types => $extensions ) {
+            if ( ! empty($type) && $types !== $type ) { continue; }
+            foreach( $extensions as $ext => $mime_type ) {
+                $out[] = $ext;
+            }
+        }
+        return $out;
+
+    }
+
+    /**
+     * @param $params
+     * @return bool
+     * @throws Zend_File_Transfer_Exception
+     */
+    protected function _validateUpload ( $params ) {
+
+        $uploader = new Zend_File_Transfer_Adapter_Http([
+            'detectInfos' => false,     // This tells the transfer adapter not to overwrite our $_FILES superglobal.
+        ]);
+
+        $uploader
+            ->addValidator('Size',      false, $this->_config->media->upload->max_filesize)    // Set single file size in bytes
+            ->addValidator('FilesSize', false, $this->_config->media->upload->max_totalsize)   // Set aggregate file uploads size in bytes
+            ->addValidator('Extension', false, $this->_getValidExtensions() )                  // Validate file extension
+            ->addValidator('Count',     false, [
+                'min' => $this->_config->media->upload->min_files,  // Set the minimum number of files that can be uploaded
+                'max' => $this->_config->media->upload->max_files   // Set the maximum number of files that can be uploaded
+            ]);
+
+        /** If this is an image file add the imagesize validator ... */
+        if ( explode('/', $_FILES['file']['type'] )[0] === self::MIME_IMAGE ) {
+
+            $uploader
+            ->addValidator('ImageSize', false, [
+                'maxwidth' => $this->_config->media->upload->image_max_width,
+                'maxheight' => $this->_config->media->upload->image_max_height
+            ]);
+
+        }
+
+        /** Instantiate ClamAV and make sure the virus scanner is up and running ... */
+        if ( boolval( $this->_config->media->upload->av_scan ) === true ) {
+
+            $clamAV = new Tiger_Validate_ClamAV();
+            /** Ping the service to make sure it's running ... */
+            if ( $clamAV->ping() === true ) {
+                $uploader->addValidator($clamAV, false);    // Virus Scan the file on upload
+            }
+
+        }
+
+        if ( ! $uploader->isValid() ) {
+
+            $this->_response->result = 0;
+            foreach( $uploader->getErrors() as $error ){
+                $this->_response->setTextMessage( $error , 'alert' );
+            }
+
+        }
+        else {
+
+            return true;
 
         }
 

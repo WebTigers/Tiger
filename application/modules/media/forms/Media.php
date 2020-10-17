@@ -3,6 +3,8 @@
 class Media_Form_Media extends Tiger_Form_Base
 {
 
+    const MIME_IMAGE = 'image';
+
     public function init ( ) {
 
         parent::init();
@@ -571,7 +573,7 @@ class Media_Form_Media extends Tiger_Form_Base
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9\/\_\.\-]/',
+                                            'match' => '/[^A-Za-z0-9\:\/\_\.\-]/',
                                             'replace' => ''
                                         ] ]
                                     ],
@@ -586,7 +588,7 @@ class Media_Form_Media extends Tiger_Form_Base
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9\/\_\.\-]+$/',
+                                            'pattern' => '/^[A-Za-z0-9\:\/\_\.\-]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]
@@ -859,7 +861,7 @@ class Media_Form_Media extends Tiger_Form_Base
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9\/\_\.\-]/',
+                                            'match' => '/[^A-Za-z0-9\:\/\_\.\-]/',
                                             'replace' => ''
                                         ] ]
                                     ],
@@ -874,7 +876,7 @@ class Media_Form_Media extends Tiger_Form_Base
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9\/\_\.\-]+$/',
+                                            'pattern' => '/^[A-Za-z0-9\:\/\_\.\-]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]

@@ -4,6 +4,8 @@ class Media_Service_Media
 {
     use Media_Service_MediaTrait;
 
+    const MIME_IMAGE = "image";
+
     protected $_auth;
     protected $_acl;
     protected $_locale;

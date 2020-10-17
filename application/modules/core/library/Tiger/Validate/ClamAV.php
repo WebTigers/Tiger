@@ -81,7 +81,7 @@ class Tiger_Validate_ClamAV extends Zend_Validate_Abstract {
         }
         catch ( Exception $e ) {
 
-            Tiger_Log::db('ClamAV ERROR', $e->getMessage(), Zend_Log::ERR);
+            // Tiger_Log::db('ClamAV ERROR', $e->getMessage(), Zend_Log::ERR);
 
         }
 
