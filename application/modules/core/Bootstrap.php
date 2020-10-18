@@ -21,72 +21,112 @@
 
 class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 {
+    protected $_config;
+
     protected function _initCore()
     {
         /** Bootstrap database and sessions. */
-        $this->bootstrap( ['db', 'session'] );
+        $this->bootstrap(['db', 'session']);
+    }
 
-
+    protected function _initSessions()
+    {
         /** Init Sessions. */
         Zend_Session::start();
-        $session = new Zend_Session_Namespace( 'Tiger' );
-        Zend_Registry::set( 'Zend_Session', $session );
+        $session = new Zend_Session_Namespace('Tiger');
+        Zend_Registry::set('Zend_Session', $session);
+    }
 
-
+    protected function _initCache()
+    {
         /** Init Zend_Cache_Manager */
-        $frontEndOptions = [
-            'lifetime' => 7200,
-            'automatic_serialization' => true,
-        ];
-        $backEndOptions = [
-            'server' => [
-                [
-                    'host' => 'localhost',
-                    'port' => 11211,
-                    'weight' => 1,
+        if ( boolval( $this->getOptions()['tiger']['useCache'] ) === true ) {
+
+            $frontEndOptions = [
+                'lifetime' => 7200,
+                'automatic_serialization' => true,
+            ];
+
+            $backEndOptions = [
+                'server' => [
+                    [
+                        'host' => 'localhost',
+                        'port' => 11211,
+                        'weight' => 1,
+                    ],
                 ],
-            ],
-            'client' => [
-                Memcached::OPT_DISTRIBUTION => Memcached::DISTRIBUTION_CONSISTENT,
-                Memcached::OPT_HASH => Memcached::HASH_MD5,
-                Memcached::OPT_LIBKETAMA_COMPATIBLE => true,
-            ]
-        ];
-        $cache = Zend_Cache::factory( 'Core', 'Libmemcached', $frontEndOptions, $backEndOptions );
-        Zend_Registry::set('Zend_Cache', $cache );
+                'client' => [
+                    Memcached::OPT_DISTRIBUTION => Memcached::DISTRIBUTION_CONSISTENT,
+                    Memcached::OPT_HASH => Memcached::HASH_MD5,
+                    Memcached::OPT_LIBKETAMA_COMPATIBLE => true,
+                ]
+            ];
 
-
-        /** Init Database Config Overrides. */
-        if ( ( $config = Zend_Registry::get('Zend_Cache')->load('Zend_Config') ) === false ) {
-
-            $config = new Zend_Config($this->getOptions(), true);
-            $configModel = new Core_Model_Config;
-            $configArray = $configModel->getConfigArray();
-            $config->merge(new Zend_Config($configArray));
-
-            /** Merge the ACL file separately. */
-            $filename = realpath(dirname(__FILE__) . '/configs') . '/acl.ini';
-            $configOptions = new Zend_Config_Ini($filename, APPLICATION_ENV, ['allowModifications' => true]);
-            $config->merge($configOptions);
-            Zend_Registry::set( 'Zend_Config', $config );
+            $cache = Zend_Cache::factory('Core', 'Libmemcached', $frontEndOptions, $backEndOptions);
 
         }
         else {
-            /** Store the cached configs. */
-            Zend_Registry::set( 'Zend_Config', $config );
+
+            $cache = null;
+
         }
 
+        Zend_Registry::set('Zend_Cache', $cache);
+
+    }
+
+    protected function _initConfig ( )
+    {
+        /** Init Database Config Overrides. */
+        /** Is Cache enabled? */
+        if ( boolval( $this->getOptions()['tiger']['useCache'] ) === true ) {
+            if ( ($this->_config = Zend_Registry::get('Zend_Cache')->load('Zend_Config') ) === false ) {
+                $this->_loadConfigs();
+            }
+            else {
+                /** Store the cached configs. */
+                Zend_Registry::set('Zend_Config', $this->_config);
+            }
+        }
+        /** If Cache is disabled ... */
+        else {
+            $this->_loadConfigs();
+        }
+    }
+
+    protected function _loadConfigs ( ){
+
+        $this->_config = new Zend_Config($this->getOptions(), true);
+        $configModel = new Core_Model_Config;
+        $configArray = $configModel->getConfigArray();
+        $this->_config->merge(new Zend_Config($configArray));
+
+        /** Merge the ACL file separately. */
+        $filename = realpath(dirname(__FILE__) . '/configs') . '/acl.ini';
+        $configOptions = new Zend_Config_Ini($filename, APPLICATION_ENV, ['allowModifications' => true]);
+        $this->_config->merge($configOptions);
+        Zend_Registry::set('Zend_Config', $this->_config);
+
+    }
+
+    protected function _initTranslations ( )
+    {
         /** Init Core Translation */
         $translate = new Zend_Translate([
             'adapter' => Zend_Translate::AN_ARRAY,
-            'content' => realpath(dirname(__FILE__) . '/languages' ),
+            'content' => realpath(dirname(__FILE__) . '/languages'),
             'scan' => Zend_Translate::LOCALE_DIRECTORY,
-            'locale'  => LOCALE,
-            'cache' => $cache,
+            'locale' => LOCALE,
+            // 'cache' => Zend_Registry::get('Zend_Cache'),
         ]);
-        Zend_Registry::set( 'Zend_Translate', $translate );
+        if ( boolval( $this->_config->tiger->useCache ) === true ) {
+            $translate->setCache( Zend_Registry::get('Zend_Cache') );
+        }
+        Zend_Registry::set('Zend_Translate', $translate);
+    }
 
-
+    protected function _initTigerId ( )
+    {
         /** Set a Guest User Id that tries to persist the same across all visits. */
         $guest_user_id = ( isset( $_COOKIE['TID'] ) )
             ? $_COOKIE['TID']

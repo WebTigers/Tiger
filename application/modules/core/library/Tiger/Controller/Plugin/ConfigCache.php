@@ -24,12 +24,12 @@ class Tiger_Controller_Plugin_ConfigCache extends Zend_Controller_Plugin_Abstrac
     public function routeShutdown(Zend_Controller_Request_Abstract $request) {
 
         /** By routeShutdown we should have loaded all of the modules' and DB configs. */
+        if ( boolval( Zend_Registry::get('Zend_Config')->tiger->useCache ) === true ) {
 
-        if ( ( $config = Zend_Registry::get('Zend_Cache')->load('Zend_Config') ) === false ) {
-
-            $config = Zend_Registry::get('Zend_Config');
-
-            Zend_Registry::get('Zend_Cache')->save( $config, 'Zend_Config');
+            if ( ($config = Zend_Registry::get('Zend_Cache')->load('Zend_Config') ) === false ) {
+                $config = Zend_Registry::get('Zend_Config');
+                Zend_Registry::get('Zend_Cache')->save($config, 'Zend_Config');
+            }
 
         }
 
