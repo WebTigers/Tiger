@@ -21,4 +21,9 @@ return [
     'TEXT.SET_TITLE' => 'Set Media Title',
     'TEXT.SET_DESCRIPTION' => 'Set media description ...',
 
+    'MENU.ADMIN.MEDIA' => 'Admin Media',
+
+    'MENU.ADMIN.MEDIA_GALLERY' => 'Admin Media',
+    'MENU.ADMIN.MEDIA_PURGE' => 'Purge Deleted Media',
+
 ];
