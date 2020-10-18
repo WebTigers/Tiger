@@ -256,7 +256,6 @@ class AdminController extends Tiger_Controller_Action
         $this->view->one->page_title = $this->view->translate('HEADING.SERVER_CONFIGURATION');
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.admin.config.js' ) );
         $this->view->configForm = new Core_Form_Config();
-
     }
 
     public function phpinfoAction ( )
@@ -266,8 +265,7 @@ class AdminController extends Tiger_Controller_Action
 
     public function clearcacheAction ()
     {
-        Zend_Registry::get('Zend_Cache')->clean( Zend_Cache::CLEANING_MODE_ALL );
-
+         $this->view->useCache = boolval( Zend_Registry::get('Zend_Config')->tiger->useCache );
     }
 
 }

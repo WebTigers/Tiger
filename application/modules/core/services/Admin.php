@@ -138,5 +138,12 @@ class Core_Service_Admin
 
     ### Public Admin Service Functions ###
 
+    public function clearcache ( $params ) {
+
+        if ( boolval( Zend_Registry::get('Zend_Config')->tiger->useCache ) === true ) {
+            Zend_Registry::get('Zend_Cache')->clean( Zend_Cache::CLEANING_MODE_ALL );
+        }
+
+    }
 
 }
