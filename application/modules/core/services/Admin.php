@@ -31,6 +31,7 @@
 class Core_Service_Admin
 {
     use Core_Service_ConfigTrait;
+    use Core_Service_CacheTrait;
 
     protected $_auth;
     protected $_acl;
@@ -133,27 +134,6 @@ class Core_Service_Admin
         $this->_response->form = $form->getName();
         $this->_response->messages  = $form->getMessages();
 
-    }
-
-
-    ### Public Admin Service Functions ###
-
-    public function clearcache ( $params ) {
-
-        if ( boolval( Zend_Registry::get('Zend_Config')->tiger->cache->useCache ) === true ) {
-            Zend_Registry::get('Zend_Cache')->clean( Zend_Cache::CLEANING_MODE_ALL );
-        }
-
-    }
-
-    public function getCacheServerTextList ( )
-    {
-        $servers = Zend_Registry::get('Zend_Cache')->getBackend()->getServerList();
-        $list = '';
-        foreach ( $servers as $server ) {
-            $list .= $server['host'] . ' | ' . $server['port'] . ' | ' . $server['type'] . PHP_EOL;
-        }
-        return $list;
     }
 
 }

@@ -43,32 +43,14 @@
 
         _initControls : function () {
 
-            $('#add-config').on( 'click', Class._add );
-            $('#save-config-button').on( 'click', Class._save );
-
-            $('body').on('click', 'table i.edit', Class._edit );
-            $('body').on('click', 'table i.active, table i.deleted', Class._update );
+            $('#clear-cache').on( 'click', Class._clear );
+            $('#useCache').on( 'change', Class._update );
 
             $().tigerDOM('initToggleControls');
 
         },
 
-        _add : function ( event ) {
-
-            $('#add-config-header').removeClass('hide')
-            $('#edit-config-header').addClass('hide')
-            $('#config-form .boiler-plate').addClass('hide')
-            $('#config-form').tigerForm('reset');
-            $('#modal-config-form').modal('show');
-
-        },
-
-        _edit : function ( event ) {
-
-            $('#add-config-header').addClass('hide')
-            $('#edit-config-header').removeClass('hide')
-            $('#config-form .boiler-plate').removeClass('hide')
-            $('#config-form').tigerForm('reset');
+        _clear : function ( event ) {
 
             function beforeSend ( jqXHR, settings ) {
             }
@@ -78,25 +60,13 @@
 
             function success ( data, textStatus, jqXHR ) {
 
-                /** Result Success / Error */
+                /** Result Success / Alert */
 
-                if ( data.result === 1 ) {
-
-                    $('#config-form').tigerForm('setFormValues', data.data );
-                    $('#modal-config-form').modal('show');
-
-                }
-                else {
-
-                    /** Oops, something went wrong ... */
-
-                    $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'insert', {
-                        content       : data.html[0],
-                        removeClick   : true,
-                        removeTimeout : 0
-                    });
-
-                }
+                $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'insert', {
+                    content       : data.html[0],
+                    removeClick   : true,
+                    removeTimeout : 0
+                });
 
             }
 
@@ -115,8 +85,7 @@
 
             let data = {
                 service : 'core:admin',
-                method  : 'getConfig',
-                config_id : $(this).attr('data-id')
+                method  : 'clearcache',
             };
 
             $.ajax({
@@ -152,35 +121,12 @@
 
                 // Success / Error //
 
-                if ( parseInt( data.result, 10 ) === 1 ) {
+                $( '#page-messages' ).css('overflow', 'hidden').tigerDOM('change', {
+                    content: data.html[0],
+                    removeClick: true,
+                    removeTimeout: 0
+                });
 
-                    /** Update the icon's data-value and class. */
-
-                    if ( $elm.hasClass('active') ) {
-                        $elm.attr('data-value', data.data.active);
-                        data.data.active = ( parseInt(data.data.active,10) === 1 )
-                            ? $elm.removeClass('fa-play').addClass('fa-pause')
-                            : $elm.addClass('fa-play').removeClass('fa-pause');
-                    }
-                    else if ( $elm.hasClass('deleted') ) {
-                        $elm.attr('data-value', data.data.deleted);
-                        data.data.deleted = ( parseInt(data.data.deleted,10) === 0 )
-                            ? $elm.addClass('fa-trash').removeClass('fa-trash-restore')
-                            : $elm.removeClass('fa-trash').addClass('fa-trash-restore');
-                    }
-
-                }
-                else {
-
-                    $( '#page-messages' )
-                         .css('overflow', 'hidden')
-                         .tigerDOM('change', {
-                            content: data.html[0],
-                            removeClick: true,
-                            removeTimeout: 0
-                        });
-
-                }
             }
 
             function error ( jqXHR, textStatus, errorThrown ) {
@@ -197,20 +143,11 @@
             }
 
             /** Flip the bool before sending to the server. */
-            if ( $elm.hasClass('active') ) {
-                data.active = ( parseInt($elm.attr('data-value'),10) === 1 ) ? 0 : 1;
-            }
-            else if ( $elm.hasClass('deleted') ) {
-                data.deleted = ( parseInt($elm.attr('data-value'),10) === 1 ) ? 0 : 1;
-            }
-            else {
-                return;
-            }
+            data.active = $elm.is(':checked') ? 1 : 0;
 
             /** API params tell Tiger what service will be processing the data. */
             data.service = 'core:admin';
-            data.method = 'updateConfig';
-            data.config_id = $elm.attr('data-id');
+            data.method = 'useCache';
 
             $.ajax({
                 type        : "POST",
@@ -223,128 +160,7 @@
                 error       : error
             });
 
-        },
-
-        _save : function ( event ) {
-
-            function beforeSend () {
-
-                /* Disable any elements if you like. */
-                $('#save-button').addClass( 'disabled' ).prop( 'disabled', true );
-
-                /* Toggle the ajax indicators. */
-                $('#save-button .ajax').toggleClass( 'hide' );
-                $('#save-button .icon').toggleClass( 'hide' );
-
-            }
-
-            function complete () {
-
-                /* Re-enable any elements we disabled. */
-                $('#save-button').removeClass( 'disabled' ).prop( 'disabled', false );
-
-                /* Toggle the ajax indicators. */
-                $('#save-button .ajax').toggleClass( 'hide' );
-                $('#save-button .icon').toggleClass( 'hide' );
-
-            }
-
-            function success ( data, textStatus, jqXHR ) {
-
-                // Success / Error //
-
-                if (parseInt(data.result, 10) === 1) {
-
-                    $('#config-form .form-message').css('overflow', 'hidden').tigerDOM('insert', {
-                        content: data.html[0],
-                        removeClick: true,
-                        removeTimeout: 0
-                    });
-
-                }
-                else {
-
-                    if ( data.html ) {
-
-                        $('#page-signup-form .form-message')
-                            .css('overflow', 'hidden')
-                            .tigerDOM('insert', {
-                                content: data.html[0],
-                                removeClick: true,
-                                removeTimeout: 0
-                            });
-
-                    }
-
-                    if ( data.messages ) {
-
-                        let msgData = {
-                            result: 0,
-                            form: 'Acl_Form_Config',
-                            element: null,
-                            messages: []
-                        };
-
-                        $.each(data.messages, function (el, msgObj) {
-
-                            // console.log( el, msgObj );
-
-                            msgData.element = el;
-                            msgData.messages = [];
-
-                            $.each(msgObj, function (errName, errMsg) {
-                                console.log(errName, errMsg);
-                                msgData.messages.push({message: errMsg, error: errName, class: "alert"});
-                            });
-
-                            // console.log( msgData );
-
-                            $().tigerForm('_setElementMessage', msgData);
-
-                        });
-
-                    }
-
-                }
-
-            }
-
-            function error ( jqXHR, textStatus, errorThrown ) { 
-
-                // show general error message
-                let oMessage = { 
-                    content       : '<div class="alert alert-danger"><i class="fa fa-ban"></i> &nbsp;' + errorThrown + '</div>',
-                    removeClick   : true,
-                    removeTimeout : 0
-                };
-
-                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
-                
-            }
-
-            /** API params tell Tiger what service will be processing the data. */
-            let apiParams = {
-                service : 'core:admin',
-                method  : 'saveConfig',
-                active  : ( $('#config-form #active').is(':checked') ) ? 1 : 0,
-                deleted : ( $('#config-form #deleted').is(':checked') ) ? 1 : 0
-            };
-
-            /** Note that our API params will be added to the form data */
-            let data = $('#config-form').tigerForm('getFormValues', apiParams );
-
-            $.ajax({
-                type        : "POST",
-                url         : "/api",
-                dataType    : "json",
-                data        : data,
-                beforeSend  : beforeSend,
-                complete    : complete,
-                success     : success,
-                error       : error
-            });
-            
-        },
+        }
 
     };
   

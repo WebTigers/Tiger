@@ -42,6 +42,16 @@ class Core_Model_Config extends Zend_Db_Table_Abstract {
         
     }
 
+    public function getAdminConfigByKey ( $key ) {
+
+        $sql = $this->
+            select()->
+            where('`key` = ?', $key);
+
+        return $this->fetchRow( $sql );
+
+    }
+
     public function getAdminConfigSearchList ( $search = '', $offset = 0, $limit = 10, $orderby = '' ) {
         
         $sql = $this->
