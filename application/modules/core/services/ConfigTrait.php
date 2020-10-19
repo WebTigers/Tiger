@@ -367,7 +367,7 @@ trait Core_Service_ConfigTrait
             $this->_response->setTextMessage( 'MESSAGE.CONFIG_SAVED', 'success' );
 
         }
-        catch ( Exception $e ) {
+        catch ( Error | Exception $e ) {
 
             /** Uh oh, something went wrong, rollback all database activity! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
@@ -378,17 +378,7 @@ trait Core_Service_ConfigTrait
             /** We also log what happened ... */
             // Tiger_Log::logger( $e->getMessage() );
 
-        }
-        catch ( Error $e ) {
-
-            /** Uh oh, something went wrong, rollback all database activity! */
-            Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
-
-            /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
+            pr( $e->getMessage() );
 
         }
 
@@ -459,8 +449,9 @@ trait Core_Service_ConfigTrait
         $configRow->saveRow();
 
         /** Because configs are a cached resource, we need to clear the cache to see the change ... */
-        Zend_Registry::get('Zend_Cache')->clean( Zend_Cache::CLEANING_MODE_ALL );
-
+        if ( boolval( Zend_Registry::get('Zend_Config')->tiger->cache->useCache ) === true ) {
+            Zend_Registry::get('Zend_Cache')->clean(Zend_Cache::CLEANING_MODE_ALL);
+        }
         return $configRow;
 
     }

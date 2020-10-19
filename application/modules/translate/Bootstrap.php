@@ -10,7 +10,7 @@ class Translate_Bootstrap extends Zend_Application_Module_Bootstrap
          * The following code block reads all of the config folder's .ini files and adds those configs
          * to the global config object based on the application environment.
          */
-        if ( boolval( Zend_Registry::get('Zend_Config')->tiger->useCache ) === true ) {
+        if ( boolval( Zend_Registry::get('Zend_Config')->tiger->cache->useCache ) === true ) {
             if ( ($this->_config = Zend_Registry::get('Zend_Cache')->load('Zend_Config')) === false ) {
                 $this->_loadModuleConfigs();
             }

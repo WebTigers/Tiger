@@ -21,15 +21,17 @@
 
 class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 {
+    protected $_configModel;
+    protected $_useCache;
     protected $_config;
 
-    protected function _initCore()
+    protected function _initCore ( )
     {
         /** Bootstrap database and sessions. */
         $this->bootstrap(['db', 'session']);
     }
 
-    protected function _initSessions()
+    protected function _initSessions ( )
     {
         /** Init Sessions. */
         Zend_Session::start();
@@ -37,22 +39,50 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         Zend_Registry::set('Zend_Session', $session);
     }
 
-    protected function _initCache()
+    protected function _initCoreConfigs ( )
     {
-        /** Init Zend_Cache_Manager */
-        if ( boolval( $this->getOptions()['tiger']['useCache'] ) === true ) {
+        /** Pulls in all of our application.ini configs */
+        $this->_config = new Zend_Config($this->getOptions(), true);
 
-            $frontEndOptions = [
+        /** Return an array of only module.ini and acl.ini config files from the /configs folder */
+        $configFiles = preg_grep('/(module|acl)\.(ini)/', scandir(realpath(dirname(__FILE__) . '/configs')));
+
+        foreach ($configFiles as $configFile) {
+            $filename = realpath(dirname(__FILE__) . '/configs') . '/' . $configFile;
+            $configOptions = new Zend_Config_Ini($filename, APPLICATION_ENV, ['allowModifications' => true]);
+            $this->_config->merge($configOptions);
+        }
+
+        Zend_Registry::set('Zend_Config', $this->_config);
+
+    }
+
+    protected function _initDBConfigs ( )
+    {
+        $this->_configModel = new Core_Model_Config();
+        $configArray = $this->_configModel->getConfigArray();
+        $this->_config->merge(new Zend_Config($configArray));
+        Zend_Registry::set('Zend_Config', $this->_config);
+    }
+
+    protected function _initCache ( )
+    {
+        $this->_useCache = boolval( Zend_Registry::get('Zend_Config')->tiger->cache->useCache );
+
+        /** Init Zend_Cache_Manager */
+        if ( $this->_useCache === true ) {
+
+            $frontEndOptions = new Zend_Cache_Core([
                 'lifetime' => 7200,
                 'automatic_serialization' => true,
-            ];
+            ]);
 
-            $backEndOptions = [
+            $backEndOptions = new Tiger_Cache_Backend_Libmemcached([
                 'server' => [
                     [
-                        'host' => 'localhost',
-                        'port' => 11211,
-                        'weight' => 1,
+                        'host'      => $this->_config->tiger->cache->libmemcached->local->host,
+                        'port'      => $this->_config->tiger->cache->libmemcached->local->port,
+                        'weight'    => $this->_config->tiger->cache->libmemcached->local->weight,
                     ],
                 ],
                 'client' => [
@@ -60,9 +90,21 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
                     Memcached::OPT_HASH => Memcached::HASH_MD5,
                     Memcached::OPT_LIBKETAMA_COMPATIBLE => true,
                 ]
-            ];
+            ]);
 
-            $cache = Zend_Cache::factory('Core', 'Libmemcached', $frontEndOptions, $backEndOptions);
+            if ( isset( $this->_config->tiger->cache->libmemcached ) ) {
+                $cacheServers = $this->_config->tiger->cache->libmemcached;
+                foreach ($cacheServers as $type => $server) {
+                    if ( $type === 'local' ) { continue; } // Don't register the same local server twice.
+                    $backEndOptions->addServer(
+                        $server->host,
+                        $server->port,
+                        $server->weight
+                    );
+                }
+            }
+
+            $cache = Zend_Cache::factory( $frontEndOptions, $backEndOptions );
 
         }
         else {
@@ -75,38 +117,14 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 
     }
 
-    protected function _initConfig ( )
+    protected function _initCacheConfigs ( )
     {
-        /** Init Database Config Overrides. */
-        /** Is Cache enabled? */
-        if ( boolval( $this->getOptions()['tiger']['useCache'] ) === true ) {
-            if ( ($this->_config = Zend_Registry::get('Zend_Cache')->load('Zend_Config') ) === false ) {
-                $this->_loadConfigs();
-            }
-            else {
+        if ( $this->_useCache === true ) {
+            if ( ($this->_config = Zend_Registry::get('Zend_Cache')->load('Zend_Config') ) !== false) {
                 /** Store the cached configs. */
                 Zend_Registry::set('Zend_Config', $this->_config);
             }
         }
-        /** If Cache is disabled ... */
-        else {
-            $this->_loadConfigs();
-        }
-    }
-
-    protected function _loadConfigs ( ){
-
-        $this->_config = new Zend_Config($this->getOptions(), true);
-        $configModel = new Core_Model_Config;
-        $configArray = $configModel->getConfigArray();
-        $this->_config->merge(new Zend_Config($configArray));
-
-        /** Merge the ACL file separately. */
-        $filename = realpath(dirname(__FILE__) . '/configs') . '/acl.ini';
-        $configOptions = new Zend_Config_Ini($filename, APPLICATION_ENV, ['allowModifications' => true]);
-        $this->_config->merge($configOptions);
-        Zend_Registry::set('Zend_Config', $this->_config);
-
     }
 
     protected function _initTranslations ( )
@@ -117,9 +135,8 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
             'content' => realpath(dirname(__FILE__) . '/languages'),
             'scan' => Zend_Translate::LOCALE_DIRECTORY,
             'locale' => LOCALE,
-            // 'cache' => Zend_Registry::get('Zend_Cache'),
         ]);
-        if ( boolval( $this->_config->tiger->useCache ) === true ) {
+        if ( $this->_useCache === true ) {
             $translate->setCache( Zend_Registry::get('Zend_Cache') );
         }
         Zend_Registry::set('Zend_Translate', $translate);

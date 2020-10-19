@@ -21,6 +21,8 @@
 
 class AdminController extends Tiger_Controller_Action
 {
+    protected $_adminService;
+
     public function init()
     {
         /** The Admin Controller and Admin Service are only available on ports 8080 and 8081 for security purposes. */
@@ -47,6 +49,8 @@ class AdminController extends Tiger_Controller_Action
         /** Tiger Core DOM Plugins */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerForm.js' ) );
+
+        $this->_adminService = new Core_Service_Admin([]);
 
         $this->view->theme = 'oneui';
 
@@ -263,10 +267,15 @@ class AdminController extends Tiger_Controller_Action
 
     }
 
-    public function clearcacheAction ()
+    public function cacheAction ()
     {
-         $this->view->useCache = boolval( Zend_Registry::get('Zend_Config')->tiger->useCache );
+        $this->view->one->page_title = $this->view->translate('HEADING.CACHE');
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.admin.cache.js' ) );
+        $this->view->useCache = boolval( Zend_Registry::get('Zend_Config')->tiger->cache->useCache );
+        $this->view->cacheServers = $this->_adminService->getCacheServerTextList();
     }
+
+
 
 }
 

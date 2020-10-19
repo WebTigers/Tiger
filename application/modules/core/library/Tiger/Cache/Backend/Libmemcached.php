@@ -19,20 +19,36 @@
  * information and software.
  */
 
-class Tiger_Controller_Plugin_ConfigCache extends Zend_Controller_Plugin_Abstract
+/**
+ * Class Tiger_Cache_Backend_Libmemcached
+ *
+ * This class is simply designed to give you access to all of the various Memcached
+ * functions that the original Zend adapter didn't. Just add whichever PHP functions
+ * are available via Libmemcached as needed.
+ */
+class Tiger_Cache_Backend_Libmemcached extends Zend_Cache_Backend_Libmemcached implements Zend_Cache_Backend_Interface
 {
-    public function routeShutdown(Zend_Controller_Request_Abstract $request) {
-
-        /** By routeShutdown we should have loaded all of the modules' and DB configs. */
-        if ( boolval( Zend_Registry::get('Zend_Config')->tiger->cache->useCache ) === true ) {
-
-            if ( ($config = Zend_Registry::get('Zend_Cache')->load('Zend_Config') ) === false ) {
-                $config = Zend_Registry::get('Zend_Config');
-                Zend_Registry::get('Zend_Cache')->save($config, 'Zend_Config');
-            }
-
-        }
-
+    /**
+     * @param $host
+     * @param $port
+     * @param $weight
+     */
+    public function addServer ( $host, $port, $weight = 0 )
+    {
+        $this->_memcache->addServer( $host, $port, $weight );
     }
+
+    /**
+     * @return array
+     */
+    public function getServerList ( )
+    {
+        return $this->_memcache->getServerList();
+    }
+
+    /**
+     * Add additional functions you may need below ...
+     * See: https://www.php.net/manual/en/book.memcached.php
+     */
 
 }

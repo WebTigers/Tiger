@@ -140,10 +140,20 @@ class Core_Service_Admin
 
     public function clearcache ( $params ) {
 
-        if ( boolval( Zend_Registry::get('Zend_Config')->tiger->useCache ) === true ) {
+        if ( boolval( Zend_Registry::get('Zend_Config')->tiger->cache->useCache ) === true ) {
             Zend_Registry::get('Zend_Cache')->clean( Zend_Cache::CLEANING_MODE_ALL );
         }
 
+    }
+
+    public function getCacheServerTextList ( )
+    {
+        $servers = Zend_Registry::get('Zend_Cache')->getBackend()->getServerList();
+        $list = '';
+        foreach ( $servers as $server ) {
+            $list .= $server['host'] . ' | ' . $server['port'] . ' | ' . $server['type'] . PHP_EOL;
+        }
+        return $list;
     }
 
 }
