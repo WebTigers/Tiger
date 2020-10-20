@@ -60,8 +60,10 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
     protected function _initDBConfigs ( )
     {
         $this->_configModel = new Core_Model_Config();
-        $configArray = $this->_configModel->getConfigArray();
-        $this->_config->merge(new Zend_Config($configArray));
+        $configDBArray = $this->_configModel->getConfigArray();
+        $zendDbConfigs = new Zend_Config( $configDBArray );
+        Zend_Registry::set('Zend_DB_Config', $zendDbConfigs); // <-- this will get used in the ConfigCache plugin later.
+        $this->_config->merge( $zendDbConfigs );
         Zend_Registry::set('Zend_Config', $this->_config);
     }
 

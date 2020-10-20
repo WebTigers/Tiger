@@ -139,8 +139,8 @@ trait Media_Service_MediaTrait
              * can be set as a default or selected via a UI passed param.
              */
             $storageClass = ( ! empty( $params['storageType'] ) )
-                ? 'Media_Model_' . $params['storageType']
-                : Zend_Registry::get('Zend_Config')->media->default_storage_model;
+                ? 'Media_Model_' . ucfirst( strtolower( $params['storageType'] ) )
+                : 'Media_Model_' . ucfirst( strtolower( Zend_Registry::get('Zend_Config')->media->storage_model ) );
 
             $storage = new $storageClass;
 

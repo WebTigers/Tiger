@@ -99,6 +99,8 @@
 
         _initControls : function ( ) {
 
+            Class._initTypeStorageSelect2();
+
             // Init the prettyPhoto library
             // http://www.no-margin-for-errors.com/projects/prettyphoto-jquery-lightbox-clone/
             $("a[rel^='prettyPhoto']").prettyPhoto({
@@ -123,6 +125,60 @@
                 setTimeout(function (){
                     $(event.trigger).removeAttr('title').tooltip('dispose');
                 }, 2000);
+            });
+
+        },
+
+        _initTypeStorageSelect2 ( ) {
+
+            function data( params ) {
+
+                let query = {
+                    service     : 'core:admin',
+                    method      : 'getTypeSelect2List',
+                    reference   : 'storage',
+                    key         : ''
+                }
+
+                return query;
+
+            }
+
+            $('select#type_storage').select2({
+                minimumResultsForSearch : -1,
+                width : '100%',
+                ajax: {
+                    type        : "POST",
+                    url         : "/api",
+                    dataType    : "json",
+                    data        : data
+                }
+            });
+
+        },
+
+        _setTypeStorageSelect2 ( type_storage ) {
+
+            if ( ! type_storage ) { return; }
+
+            let $typeStorage = $('select#type_storage');
+
+            $.ajax({
+                type        : 'GET',
+                dataType    : "json",
+                url         : '/api/service/account:admin/method/getTypeSelect2List/reference/contact/key/' + type_storage
+            }).then( function ( data ) {
+
+                let option = new Option( data.results[0].text, data.results[0].id, true, true);
+                $typeStorage.append(option).trigger('change');
+
+                $typeStorage.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: data
+                    }
+                });
+
             });
 
         },

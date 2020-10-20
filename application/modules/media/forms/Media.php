@@ -78,7 +78,7 @@ class Media_Form_Media extends Tiger_Form_Base
 
             'name'              =>  $name,
             'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
+            'class'             =>  'form-control form-control-lg form-control-alt select2 no-validate',
 
             'attribs'           =>  [
                                         // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
@@ -88,12 +88,15 @@ class Media_Form_Media extends Tiger_Form_Base
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'required'          =>  false,
+            'multiOptions'              =>  [],     // Set vis Select2 Control
+            'registerInArrayValidator'  => false,
+
+            'required'          =>  true,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^FILE|S3]/',
+                                            'match' => '/[^A-Z0-9_]/',
                                             'replace' => ''
                                         ] ]
                                     ],
@@ -101,20 +104,20 @@ class Media_Form_Media extends Tiger_Form_Base
             'validators'        =>  [
                                         [ 'StringLength', false, [
                                             'min'   => 1,
-                                            'max'   => 10,
+                                            'max'   => 50,
                                             'messages' => [
                                                 Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                                 Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[FILE|S3]+$/',
+                                            'pattern' => '/^[A-Z0-9_]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]
         ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 

@@ -241,7 +241,6 @@ class Media_AdminController extends Tiger_Controller_Action
     public function purgeAction ( )
     {
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/media/js/media.admin.purge.js' ) );
-        // $this->view->resourceForm = new Acl_Form_Resource();
     }
 
 }

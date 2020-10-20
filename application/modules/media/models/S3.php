@@ -36,8 +36,8 @@ class Media_Model_S3
         $this->_utility = new Core_Service_Utility();
 
         $this->_allowedMimeTypes = Zend_Registry::get('Zend_Config')->media->allowed;
-        $this->_defaultBucket = Zend_Registry::get('Zend_Config')->media->default->bucket;
-        $this->_defaultPrivateBucket = Zend_Registry::get('Zend_Config')->media->default->private_bucket;
+        $this->_defaultBucket = Zend_Registry::get('Zend_Config')->aws->s3->bucket;
+        $this->_defaultPrivateBucket = Zend_Registry::get('Zend_Config')->aws->s3->private_bucket;
 
         $s3ClientConfigs = Zend_Registry::get('Zend_Config')->aws->s3client->toArray();
         $this->_s3Client = new S3Client( $s3ClientConfigs );

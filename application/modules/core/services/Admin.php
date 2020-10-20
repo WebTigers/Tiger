@@ -44,6 +44,7 @@ class Core_Service_Admin
     protected $_reflection;
     protected $_utility;
 
+    protected $_typeModel;
     protected $_configModel;
 
     public function __construct( $input ) {
@@ -56,6 +57,7 @@ class Core_Service_Admin
         $this->_response    = new Core_Model_ResponseObject();
         $this->_utility     = new Core_Service_Utility();
 
+        $this->_typeModel   = new Core_Model_Type();
         $this->_configModel = new Core_Model_Config();
 
         if ( $input instanceof Zend_Controller_Request_Http ) {
@@ -133,6 +135,29 @@ class Core_Service_Admin
         $this->_response->result    = 0;
         $this->_response->form = $form->getName();
         $this->_response->messages  = $form->getMessages();
+
+    }
+
+    #### Public Admin Functions ###
+
+    /**
+     * @TODO: This method is in a few services. Need to make it more DRY later.
+     */
+    public function getTypeSelect2List ( $params )
+    {
+        $results = [];
+        $typeRowset = $this->_typeModel->getTypeListByReference( $params['reference'], $params['key'] );
+
+        foreach ( $typeRowset as $typeRow ) {
+            $results[] = (object) ['id' => $typeRow->key, 'text' => $typeRow->type_name ];
+        }
+
+        $this->_response = new Core_Model_ResponseObjectSelect2([
+            'results' => $results,
+            'pagination' => (object) ['more' => false ],
+            'error' => null,
+            'login' => false,
+        ]);
 
     }
 

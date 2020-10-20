@@ -109,6 +109,6 @@ class Media_Service_Media
 
     }
 
-    protected function _moveFileToStorage( array $params ) { }
+    // protected function _moveFileToStorage( array $params ) { }
 
 }
