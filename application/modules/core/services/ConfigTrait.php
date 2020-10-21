@@ -211,6 +211,24 @@ trait Core_Service_ConfigTrait
     ### Persistence Methods ###
 
     /**
+     * @param $params
+     * @throws Zend_Form_Exception
+     */
+    public function persistConfigKey ( $params )
+    {
+        /** Look up the key to see if there is an existing record ... */
+        $configRow = $this->_configModel->getAdminConfigByKey( $params['key'] );
+        if ( ! empty( $configRow ) ) {
+            $params['config_id'] = $configRow->config_id;
+            $this->updateConfig( $params );
+        }
+        else {
+            $this->saveConfig( $params );
+        }
+
+    }
+
+    /**
      * Service "update" methods essentially are the gateway to persisting small
      * pieces of form data. Update is responsible for validating and then forwarding
      * the tiny bits of clean data to the "persist" method for any grooming which
@@ -226,7 +244,7 @@ trait Core_Service_ConfigTrait
         /**
          * One of the first things to check for is the existence of unique fields
          * within the saveConfig payload. Tiger will complain if we try to re-insert
-         * or update the config record with the same email or configname. This function
+         * or update the config record with the same email or config key. This function
          * simply removes certain form validators. Note that this function only works
          * if passed a config_id as part of the params payload.
          */
@@ -278,7 +296,7 @@ trait Core_Service_ConfigTrait
              */
             $this->_response->result = 1;
             $this->_response->data = $config;
-            $this->_response->setTextMessage( 'MESSAGE.ORG_SAVED', 'success' );
+            $this->_response->setTextMessage( 'MESSAGE.CONFIG_SAVED', 'success' );
 
         }
         catch ( Exception $e ) {
@@ -472,7 +490,7 @@ trait Core_Service_ConfigTrait
         /** If there is no record for the config_id, then we're outta here as well. */
         if ( empty( $configRow ) ){ return; }
 
-        /** If the configname is the same as the config's existing record, removed the validator. */
+        /** If the config key is the same as the config's existing record, removed the validator. */
         if ( ! empty( $params['key'] ) && $params['key'] === $configRow->key ) {
             $this->_form->getElement('key')->removeValidator('Db_NoRecordExists');
         }

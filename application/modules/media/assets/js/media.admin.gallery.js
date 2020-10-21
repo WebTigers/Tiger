@@ -44,7 +44,10 @@
         orderby     : 'update_date',
         direction   : 'DESC',
 
-        galleryInsert : false,
+        galleryInsert   : false,
+
+        configs         : null,
+        initComplete    : false,
 
         init : function( ) {
 
@@ -55,7 +58,7 @@
                 // Page init stuff goes here. //
                 Class._initGlobals();
                 Class._initControls();
-                Class._fetchMedia();
+                Class._fetchAdminConfigs();
 
             });
 
@@ -76,6 +79,7 @@
                 Class.dictionary        = data.data.dictionary;
 
                 Class._initUploader();
+                Class._fetchMedia();
 
             }
 
@@ -155,6 +159,58 @@
                 }
             });
 
+            $('select#type_storage').on('change', Class._changeStorage );
+
+        },
+
+        _changeStorage : function () {
+
+            console.log( $('select#type_storage').val() );
+
+            if ( $('select#type_storage').val() === 'S3' ) {
+
+                $('#s3-fields').tigerDOM('open');
+
+                if ( Class.initComplete ) {
+
+                    let awsConfigKeys = [
+                        'aws.s3.bucket',
+                        'aws.s3.private_bucket',
+                        'aws.s3client.region',
+                        'aws.s3client.credentials.key',
+                        'aws.s3client.credentials.secret',
+                        'aws.s3client.version'
+                    ];
+
+                    $(awsConfigKeys).each(function (i, el) {
+                        $().tigerForm('persistConfigKey', {
+                            'key': el,
+                            'value': $('#' + el.replace('.', '\\.')).val(),
+                            'active': 1,
+                            'deleted': 0
+                        });
+                    });
+
+                }
+
+            }
+            else if ( $('select#type_storage').val() === 'FILE' ) {
+
+                $('#s3-fields').tigerDOM('close');
+
+            }
+
+            if ( Class.initComplete ) {
+
+                $().tigerForm('persistConfigKey', {
+                    'key': 'media.storage_model',
+                    'value': $('select#type_storage').val(),
+                    'active': 1,
+                    'deleted': 0
+                });
+
+            }
+
         },
 
         _setTypeStorageSelect2 ( type_storage ) {
@@ -166,7 +222,7 @@
             $.ajax({
                 type        : 'GET',
                 dataType    : "json",
-                url         : '/api/service/account:admin/method/getTypeSelect2List/reference/contact/key/' + type_storage
+                url         : '/api/service/core:admin/method/getTypeSelect2List/reference/storage/key/' + type_storage
             }).then( function ( data ) {
 
                 let option = new Option( data.results[0].text, data.results[0].id, true, true);
@@ -178,6 +234,8 @@
                         data: data
                     }
                 });
+
+                Class.initComplete = true;
 
             });
 
@@ -336,6 +394,97 @@
                 success     : success,
                 error       : error
             });
+
+        },
+
+        _fetchAdminConfigs : function ( ) {
+
+            function beforeSend ( jqXHR, settings ) {
+            }
+
+            function complete ( jqXHR, textStatus ) {
+            }
+
+            function success ( data, textStatus, jqXHR ) {
+
+                /** Result Success / Error */
+
+                if ( data.result === 1 ) {
+
+                    console.log( data.data );
+
+                    Class.configs = data.data;
+                    Class._setConfigs();
+
+                }
+                else {
+
+                    /** Oops, something went wrong ... */
+
+                    $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'change', {
+                        content       : data.html[0],
+                        removeClick   : true,
+                        removeTimeout : 0
+                    });
+
+                }
+
+            }
+
+            function error ( jqXHR, textStatus, errorThrown ) {
+
+                // show general error message
+                let oMessage = {
+                    content       : '<div class="alert alert-danger"><i class="fa fa-ban"></i> &nbsp;' + errorThrown + '</div>',
+                    removeClick   : true,
+                    removeTimeout : 0
+                };
+
+                $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
+
+            };
+
+            let data = {
+                service     : 'media:media',
+                method      : 'getAdminConfigs',
+            };
+
+            $.ajax({
+                type        : "POST",
+                url         : "/api",
+                dataType    : "json",
+                data        : data,
+                beforeSend  : beforeSend,
+                complete    : complete,
+                success     : success,
+                error       : error
+            });
+
+        },
+
+        _setConfigs : function ( ) {
+
+            Class._setTypeStorageSelect2( Class._getConfigValueByKey( 'media.storage_model' ) );
+
+            $('#aws\\.s3\\.bucket').val( Class._getConfigValueByKey( 'aws.s3.bucket' ) );
+            $('#aws\\.s3\\.private_bucket').val( Class._getConfigValueByKey( 'aws.s3.private_bucket' ) );
+            $('#aws\\.s3client\\.credentials\\.key').val( Class._getConfigValueByKey( 'aws.s3client.credentials.key' ) );
+            $('#aws\\.s3client\\.credentials\\.secret').val( Class._getConfigValueByKey( 'aws.s3client.credentials.secret' ) );
+            $('#aws\\.s3client\\.region').val( Class._getConfigValueByKey( 'aws.s3client.region' ) );
+            $('#aws\\.s3client\\.version').val( Class._getConfigValueByKey( 'aws.s3client.version' ) );
+
+        },
+
+        _getConfigValueByKey : function ( key ) {
+
+            let out = null;
+            $( Class.configs ).each( function ( i, el ) {
+                if ( el.key === key ) {
+                    out = el.value;
+                    return false;
+                }
+            });
+            return out;
 
         },
 

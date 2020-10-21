@@ -136,6 +136,15 @@ class Core_Model_Config extends Zend_Db_Table_Abstract {
 
     }
 
+    public function getAdminConfigsByKeys ( array $keys ) {
+
+        $sql = $this->
+            select()->
+            where('`key` IN (?)', $keys);
+
+        return $this->fetchAll( $sql );
+
+    }
 
     protected function _parse_ini_string_multi ( $str, $process_sections = false, $scanner_mode = INI_SCANNER_NORMAL ) {
 

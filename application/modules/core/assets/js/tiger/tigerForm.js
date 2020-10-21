@@ -303,7 +303,88 @@
 
             });
 
-        }
+        },
+
+        persistConfigKey : function ( data ) {
+
+            function beforeSend () {
+            }
+
+            function complete () {
+            }
+
+            function success ( data, textStatus, jqXHR ) {
+
+                // Success / Error //
+
+                if ( data.html ) {
+
+                    $('#media-form .form-message')
+                        .css('overflow', 'hidden')
+                        .tigerDOM('change', {
+                            content: data.html[0],
+                            removeClick: true,
+                            removeTimeout: 0
+                        });
+
+                }
+
+                if ( data.messages ) {
+
+                    let msgData = {
+                        result: 0,
+                        form: 'Media_Form_Media',
+                        element: null,
+                        messages: []
+                    };
+
+                    $.each(data.messages, function (el, msgObj) {
+
+                        msgData.element = el;
+                        msgData.messages = [];
+
+                        $.each(msgObj, function (errName, errMsg) {
+                            msgData.messages.push({message: errMsg, error: errName, class: "alert"});
+                        });
+
+                        $().tigerForm('_setElementMessage', msgData);
+
+                    });
+
+                }
+
+            }
+
+            function error ( jqXHR, textStatus, errorThrown ) {
+
+                // show general error message
+                $( '#media-form .form-message' )
+                    .css('overflow', 'hidden')
+                    .tigerDOM('change', {
+                        content: '<div class="alert alert-danger"><i class="fa fa-ban"></i> &nbsp;' + errorThrown + '</div>',
+                        removeClick: true,
+                        removeTimeout: 0
+                    });
+
+            }
+
+            data.service  = 'core:admin';
+            data.method   = 'persistConfigKey';
+
+            $.ajax({
+                type        : "POST",
+                url         : "/api",
+                dataType    : "json",
+                data        : data,
+                beforeSend  : beforeSend,
+                complete    : complete,
+                success     : success,
+                error       : error
+            });
+
+
+
+        },
 
     };
 

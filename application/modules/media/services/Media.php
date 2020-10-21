@@ -18,6 +18,7 @@ class Media_Service_Media
     protected $_utility;
     protected $_searchErrors;
 
+    protected $_configModel;
     protected $_mediaModel;
 
     public function __construct( $input ) {
@@ -30,7 +31,8 @@ class Media_Service_Media
         $this->_response    = new Core_Model_ResponseObject();
         $this->_utility     = new Core_Service_Utility();
 
-        $this->_mediaModel    = new Media_Model_Media;
+        $this->_configModel = new Core_Model_Config();
+        $this->_mediaModel  = new Media_Model_Media();
 
         if ( $input instanceof Zend_Controller_Request_Http ) {
             $this->_request = $input;

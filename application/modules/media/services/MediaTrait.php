@@ -105,6 +105,23 @@ trait Media_Service_MediaTrait
 
     }
 
+    public function getAdminConfigs ( $params )
+    {
+        $configRowset = $this->_configModel->getAdminConfigsByKeys([
+            'media.storage_model',
+            'aws.s3.bucket',
+            'aws.s3.private_bucket',
+            'aws.s3client.region',
+            'aws.s3client.credentials.key',
+            'aws.s3client.credentials.secret',
+            'aws.s3client.version',
+        ]);
+
+        $this->_response->result = 1;
+        $this->_response->data = $configRowset->toArray();
+
+    }
+
     /**
      * getMediaSearchList returns a rowset of media.
      *

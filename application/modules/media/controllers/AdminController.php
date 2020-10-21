@@ -52,7 +52,7 @@ class Media_AdminController extends Tiger_Controller_Action
         $this->view->one->user = Zend_Auth::getInstance()->getIdentity();
 
         /** Global hero header vars */
-        $this->view->one->page_title = $this->view->translate('MEDIA');
+        $this->view->one->page_title = $this->view->translate('MEDIA_ADMIN');
 
     }
 

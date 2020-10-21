@@ -335,7 +335,11 @@
                         }, baseTime, function(){
                             $this.animate({
                                 'height': 0
-                                }, baseTime, callback);
+                                }, baseTime, function (){
+                                $this.addClass('hide');
+                                $this.css('opacity', '').css('height', '').css('display', '');
+                                callback;
+                            });
                 });
                 
             });
