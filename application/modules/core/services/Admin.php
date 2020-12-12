@@ -161,4 +161,11 @@ class Core_Service_Admin
 
     }
 
+    public function persist ( $params )
+    {
+
+        pr( $params );
+
+    }
+
 }

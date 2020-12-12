@@ -30,6 +30,7 @@
     let Class = {
 
         validateAjax : [],  // used to prevent duplicate calls
+        persistAjax : [],
 
         init : function( oParams ) {
 
@@ -39,6 +40,7 @@
                 if ( ! $().tigerDOM ) { alert( 'The TigerDOM plugin is required.' ); }
 
                 Class.initAutoValidate();
+                Class.initAutoPersist();
                 Class.initBlockOptions();
 
             });
@@ -305,86 +307,85 @@
 
         },
 
-        persistConfigKey : function ( data ) {
+        initAutoPersist : function ( ) {
 
-            function beforeSend () {
-            }
+            return $( 'input[data-persist], select[data-persist]' )
+                .not( 'input[type=hidden]' ).each( function( ) {
 
-            function complete () {
-            }
+                    let $this = $(this);
 
-            function success ( data, textStatus, jqXHR ) {
+                    if ( $this.is('input:radio') ) { $(this).on( 'click.autopersist', Class._ajaxPersist ); }
+                    else if ( $this.is('input:checkbox') ) { $(this).on( 'click.autopersist', Class._ajaxPersist ); }
+                    else if ( $this.is('select') ) { $(this).on( 'change.autopersist', Class._ajaxPersist ); }
+                    else if ( $this.is('textarea') ) { $this.on( 'blur.autopersist', Class._ajaxPersist ); }
+                    else if ( $this.is('input') ) { $this.on( 'blur.autopersist', Class._ajaxPersist ); }
 
-                // Success / Error //
+                    // Set change detection so that we only persist on a changed field //
+                    $this.attr( 'data-value', $this.val() );
 
-                if ( data.html ) {
-
-                    $('#media-form .form-message')
-                        .css('overflow', 'hidden')
-                        .tigerDOM('change', {
-                            content: data.html[0],
-                            removeClick: true,
-                            removeTimeout: 0
-                        });
-
-                }
-
-                if ( data.messages ) {
-
-                    let msgData = {
-                        result: 0,
-                        form: 'Media_Form_Media',
-                        element: null,
-                        messages: []
-                    };
-
-                    $.each(data.messages, function (el, msgObj) {
-
-                        msgData.element = el;
-                        msgData.messages = [];
-
-                        $.each(msgObj, function (errName, errMsg) {
-                            msgData.messages.push({message: errMsg, error: errName, class: "alert"});
-                        });
-
-                        $().tigerForm('_setElementMessage', msgData);
-
-                    });
-
-                }
-
-            }
-
-            function error ( jqXHR, textStatus, errorThrown ) {
-
-                // show general error message
-                $( '#media-form .form-message' )
-                    .css('overflow', 'hidden')
-                    .tigerDOM('change', {
-                        content: '<div class="alert alert-danger"><i class="fa fa-ban"></i> &nbsp;' + errorThrown + '</div>',
-                        removeClick: true,
-                        removeTimeout: 0
-                    });
-
-            }
-
-            data.service  = 'core:admin';
-            data.method   = 'persistConfigKey';
-
-            $.ajax({
-                type        : "POST",
-                url         : "/api",
-                dataType    : "json",
-                data        : data,
-                beforeSend  : beforeSend,
-                complete    : complete,
-                success     : success,
-                error       : error
-            });
-
-
+                });
 
         },
+
+        _ajaxPersist : function ( event ) {
+
+            let $this = $( this );
+
+            Class.persistAjax.push( $this.attr('id') );
+
+            // Set the base post data object //
+            let data = {
+                service : 'core:admin',
+                method  : 'persist',
+                model   : $this.closest('form').attr('data-model'),
+                form    : $this.closest('form').attr('name'),
+                id      : $this.attr('id'),
+                value   : '',
+                context : ''
+            };
+
+            let $form = $('form[name="' + data.form + '"]');
+
+            // Set the element value //
+            data.value = $this.val();
+
+            // Override the element value for special input elements like checkboxes and radio buttons //
+            if ( $this.is(':radio') && $( 'input:radio[name=' + $this.attr('name') + ']' ).is(':checked') ) {
+                data.value = $this.val();
+            }
+            if ( $this.is(':checkbox') ) {
+                data.value = ( $this.is(':checked' ) ) ? $this.val() : '';
+            }
+
+            // If the element value and data.value are the same, then no change has occurred, just return.
+            if ( parseInt( $this.attr( 'data-valid' ), 10 ) === 1 &&
+                $this.attr( 'data-value' ) === data.value ) { return; }
+
+            function success ( data ){
+                Class._setElementMessage( data );
+            }
+
+            function error ( ) {
+
+            }
+
+            function complete ( jqXHR, textStatus ) {
+                Class.validateAjax.splice( Class.validateAjax.indexOf( $this.attr('id') ), 1 );
+            }
+
+            $.ajax({
+                dataType :  'json',
+                type     :  'POST',
+                url      :  '/api',
+                data     :  data,
+                success  :  success,
+                error    :  error,
+                complete :  complete
+            });
+
+        },
+
+
 
     };
 

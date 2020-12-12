@@ -92,12 +92,15 @@
                     }
 
                 }
+                else {
 
-                $( '#page-login-form .form-message' ).css('overflow','hidden').tigerDOM( 'change', {
-                    content       : data.html[0],
-                    removeClick   : true,
-                    removeTimeout : 0
-                });
+                    $('#page-login-form .form-message').css('overflow', 'hidden').tigerDOM('change', {
+                        content: data.html[0],
+                        removeClick: true,
+                        removeTimeout: 0
+                    });
+                    
+                }
 
             }
 

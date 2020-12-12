@@ -59,7 +59,7 @@ class IndexController extends Tiger_Controller_Action
         $one->og_url_site                = '';
 
         //                               : The url of your image/logo, used in Open Graph Meta Data (eg 'https://example.com/assets/img/your_logo.png')
-        $one->og_url_image               = '';
+        $one->og_url_image               = 'http://demo.webtigers.com/assets/core/media/images/tiger_og.png';
 
 
         // **************************************************************************************************
@@ -187,7 +187,12 @@ class IndexController extends Tiger_Controller_Action
 
     public function indexAction ( )
     {
+    }
 
+    public function originAction ( )
+    {
+        Zend_Layout::getMvcInstance()->setLayout('origin' );
+        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/core/css/origin/origin.css' ) );
 
     }
 
