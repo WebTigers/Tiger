@@ -241,9 +241,9 @@
             function data( params ) {
 
                 let query = {
-                    service : 'account:admin',
-                    method  : 'getTypeSelect2List',
-                    type    : 'hearabout'
+                    service     : 'account:admin',
+                    method      : 'getTypeSelect2List',
+                    reference   : 'hearabout'
                 }
 
                 return query;

@@ -243,5 +243,11 @@ class Core_Model_Config extends Zend_Db_Table_Abstract {
 
     }
 
+    public function getConfigByKey ( $key ) {
+
+        return Zend_Registry::get('Zend_Config')->$key;
+
+    }
+
 
 }

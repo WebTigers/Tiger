@@ -209,6 +209,8 @@ class Account_Service_Admin
 
     public function getTypeSelect2List ( $params )
     {
+        $params['key'] = ( ! empty( $params['key'] ) ) ? $params['key'] : '';
+
         $results = [];
         $typeRowset = $this->_typeModel->getTypeListByReference( $params['reference'], $params['key'] );
 

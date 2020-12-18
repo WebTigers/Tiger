@@ -201,16 +201,17 @@ trait Account_Service_UserTrait
 
     public function getRoleSelect2List ( $params )
     {
-        $search     = ( isset( $params['search'] ) ) ? $params['search'] : '';
-        $offset     = ( isset( $params['page']   ) ) ? $params['page']   : 1;
-        $limit      = ( isset( $params['limit']  ) ) ? $params['limit']  : 1;
-        $orderby    = ( isset( $params['order']  ) ) ? $params['order']  : '';
+        $acl        = Zend_Registry::get('Zend_Acl');
+        $aclRoles   = Zend_Registry::get('Zend_Config')->acl->roles->toArray();
+        $userRole   = Zend_Auth::getInstance()->getIdentity()->role;
 
-        $results = [];
-        $roleRowset = $this->_roleModel->getRoleSearchList( $search, $offset, $limit, $orderby );
+        foreach ( $aclRoles as $role => $roleData ) {
 
-        foreach ( $roleRowset as $roleRow ) {
-            $results[] = (object) [ 'id' => $roleRow->role_name, 'text' => $roleRow->role_name . ' - ' . $roleRow->role_description ];
+            // Only allow assigning of roles below the user's onw role //
+            if ( $acl->inheritsRole($userRole, $role, false) ) {
+                $results[] = (object)['id' => $role, 'text' => $roleData['role_name'] . ' - ' . $roleData['role_description']];
+            }
+
         }
 
         $this->_response = new Core_Model_ResponseObjectSelect2([

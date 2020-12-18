@@ -265,9 +265,9 @@
             function data( params ) {
 
                 let query = {
-                    service : 'account:admin',
-                    method  : 'getTypeSelect2List',
-                    type    : 'title'
+                    service     : 'account:admin',
+                    method      : 'getTypeSelect2List',
+                    reference   : 'title'
                 }
 
                 return query;
@@ -295,7 +295,7 @@
             $.ajax({
                 type        : 'GET',
                 dataType    : "json",
-                url         : '/api/service/account:admin/method/getTypeSelect2List/type/' + type_title
+                url         : '/api/service/account:admin/method/getTypeSelect2List/reference/' + type_title
             }).then( function ( data ) {
 
                 let option = new Option( data.results[0].text, data.results[0].id, true, true);
@@ -317,9 +317,9 @@
             function data( params ) {
 
                 let query = {
-                    service : 'account:admin',
-                    method  : 'getTypeSelect2List',
-                    type    : 'suffix'
+                    service     : 'account:admin',
+                    method      : 'getTypeSelect2List',
+                    reference   : 'suffix'
                 }
 
                 return query;
@@ -347,7 +347,7 @@
             $.ajax({
                 type        : 'GET',
                 dataType    : "json",
-                url         : '/api/service/account:admin/method/getTypeSelect2List/type/' + type_suffix
+                url         : '/api/service/account:admin/method/getTypeSelect2List/reference/' + type_suffix
             }).then( function ( data ) {
 
                 let option = new Option( data.results[0].text, data.results[0].id, true, true);
