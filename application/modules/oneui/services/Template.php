@@ -5,11 +5,15 @@
  * random content
  *
  * @author pixelcave
+ * @author WebTigers
  *
  */
-class Oneui_Service_Template {
+class Oneui_Service_Template
+{
+
     // Template Variables
-    public  $name               = '',
+    public
+        $name               = '',
         $version            = '',
         $author             = '',
         $robots             = '',
@@ -21,6 +25,7 @@ class Oneui_Service_Template {
         $main_nav           = array(),
         $main_nav_active    = '',
         $theme              = '',
+        $scheme             = '',
         $cookies,
         $page_loader,
         $google_maps_api_key,
@@ -42,10 +47,11 @@ class Oneui_Service_Template {
         $inc_header,
         $inc_footer;
 
-    private $nav_html       = '',
+    private
+        $nav_html           = '',
         $page_classes       = '',
         $placeholder_names  = array(
-        'female' => array(
+        'female'            => array(
             'Helen Jacobs',
             'Amanda Powell',
             'Marie Duncan',
@@ -67,7 +73,7 @@ class Oneui_Service_Template {
             'Carol Ray',
             'Carol White'
         ),
-        'male' => array(
+        'male'              => array(
             'Brian Cruz',
             'Henry Harrison',
             'Thomas Riley',
@@ -97,13 +103,66 @@ class Oneui_Service_Template {
     );
 
     /**
-     * Class constructor
+     * @param $options
+     * @param Zend_Db_Table_Row_Abstract $pageRow
+     * @return void
      */
-    public function __construct($name = '', $version = '', $assets_folder = '') {
-        // Set Template's name, version and assets folder
-        $this->name                 = $name;
-        $this->version              = $version;
-        $this->assets_folder        = $assets_folder;
+    public function setTemplateOptions( $options, Zend_Db_Table_Row_Abstract $pageRow ) {
+
+        $optionKeys = [
+            'name',
+            'version',
+            'author',
+            'robots',
+            'title',
+            'description',
+
+            'og_url_site',
+            'og_url_image',
+
+            'assets_folder',
+
+            'main_nav',
+            'main_nav_active',
+
+            'theme',
+            'cookies',
+
+            'page_loader',
+
+            'google_maps_api_key',
+
+            'l_rtl',
+            'l_sidebar_left',
+            'l_sidebar_mini',
+            'l_sidebar_visible_desktop',
+            'l_sidebar_visible_mobile',
+            'l_sidebar_dark',
+            'l_side_overlay_hoverable',
+            'l_side_overlay_visible',
+            'l_page_overlay',
+            'l_side_scroll',
+            'l_header_fixed',
+            'l_header_style',
+            'l_m_content',
+
+            'inc_side_overlay',
+            'inc_sidebar',
+            'inc_header',
+            'inc_footer',
+        ];
+
+        foreach( $optionKeys as $key ) {
+
+            if ( ! empty( $pageRow->$key ) ) {
+                $this->$key = $pageRow->$key;
+            }
+            else {
+                $this->$key = $options->$key;
+            }
+
+        }
+
     }
 
     /**
@@ -114,6 +173,7 @@ class Oneui_Service_Template {
      * @return  string  Returns the classes if $print is set to false
      */
     public function page_classes($print = true) {
+
         // Build page classes
         if ($this->cookies) {
             $this->page_classes .= ' enable-cookies';
@@ -422,4 +482,5 @@ class Oneui_Service_Template {
             return $tag;
         }
     }
+
 }
