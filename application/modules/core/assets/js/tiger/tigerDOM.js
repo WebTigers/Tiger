@@ -459,8 +459,6 @@
                 
                 adjustedHeight = ( minHeight > 0 ) ? minHeight : adjustedHeight;
 
-                console.log( adjustedHeight );
-
                 // set an element static height on the container
                 $parent.css('height', parentHeight);
                 

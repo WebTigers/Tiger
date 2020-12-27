@@ -63,8 +63,8 @@ class Cms_Model_Page extends Zend_Db_Table_Abstract {
     public function getPageById ( $page_id ){
 
         $sql = $this->
-        select()->
-        where('page_id = ?', $page_id);
+            select()->
+            where('page_id = ?', $page_id);
 
         return $this->fetchRow( $sql );
 
@@ -83,6 +83,7 @@ class Cms_Model_Page extends Zend_Db_Table_Abstract {
         select()->
         from( $this, [
             'page_id',
+            'key',
             'name',
             'category',
             'create_date',
@@ -90,11 +91,11 @@ class Cms_Model_Page extends Zend_Db_Table_Abstract {
             'active',
             'deleted',
         ])->
-        where( 'active = 1' )->
+        // where( 'active = 1' )->
         where( 'deleted = 0' )->
 
         where( '( name LIKE ?',      "%$search%" )->
-        orwhere( 'category LIKE ?',      "%$search%" )->
+        orwhere( 'category LIKE ?',  "%$search%" )->
         orWhere( 'content LIKE ? )', "%$search%" )->
 
         order( $orderby )->

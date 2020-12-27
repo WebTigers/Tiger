@@ -357,19 +357,7 @@ trait Acl_Service_ResourceTrait
             $this->_response->setTextMessage( 'MESSAGE.RESOURCE_SAVED', 'success' );
 
         }
-        catch ( Exception $e ) {
-
-            /** Uh oh, something went wrong, rollback all database activity! */
-            Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
-
-            /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
-
-        }
-        catch ( Error $e ) {
+        catch ( Exception | Error $e ) {
 
             /** Uh oh, something went wrong, rollback all database activity! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();

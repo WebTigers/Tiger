@@ -34,7 +34,7 @@ class Cms_Form_Page extends Zend_Form {
         # Article Content #
 
         $this->addElement($this->_getContent());
-        $this->addElement($this->_getCreateDate());
+        $this->addElement($this->_getTitle());
 
         # CSS and JS #
 
@@ -43,29 +43,13 @@ class Cms_Form_Page extends Zend_Form {
         $this->addElement($this->_getStyles());
         $this->addElement($this->_getScripts());
 
-        # SEO Data #
+        # Meta #
 
-        $this->addElement($this->_getMetaTitle());
-        $this->addElement($this->_getMetaDescription());
+        $this->addElement($this->_getMeta());
 
-        # Open Graph Data #
+        # Links #
 
-        $this->addElement($this->_getOgTitle());
-        $this->addElement($this->_getOgDescription());
-        $this->addElement($this->_getOgUrl());
-        $this->addElement($this->_getOgType());
-        $this->addElement($this->_getOgLocale());
-
-        $this->addElement($this->_getOgImage());
-        $this->addElement($this->_getOgImageWidth());
-        $this->addElement($this->_getOgImageHeight());
-        $this->addElement($this->_getOgImageType());
-        $this->addElement($this->_getOgImageAlt());
-
-        $this->addElement($this->_getOgVideo());
-        $this->addElement($this->_getOgVideoWidth());
-        $this->addElement($this->_getOgVideoHeight());
-        $this->addElement($this->_getOgVideoType());
+        $this->addElement($this->_getLinks());
 
         # Article Controls #
 
@@ -104,7 +88,9 @@ class Cms_Form_Page extends Zend_Form {
     }
     
     // Form Fields //
-    
+
+    // Content //
+
     protected function _getPageId ( ) {
 
         $name = 'page_id';
@@ -293,35 +279,41 @@ class Cms_Form_Page extends Zend_Form {
 
     }
 
-    protected function _getCreateDate ( ) {
+    protected function _getTitle ( ) {
 
-        $name = 'create_date';
+        $name = 'title';
 
         $options = array(
+
             'name'          =>  $name,
             'id'            =>  $name,
-            'class'         =>  'form-control',
+            'class'         =>  'form-control text',
             'attribs'       =>  array(
-                'maxlength'     => 50,
                 'data-valid'    => '1',
+                'placeholder' => $this->_translate->translate('form.page.label.' . $name),
             ),
 
             'label'         =>  'form.page.label.' . $name,
             'description'   =>  'form.page.description.' . $name,
 
-            'disabled'      =>  true,
             'required'      =>  false,
             'filters'       =>  array(
-                array('PregReplace', array('match' => '/[^0-9\-]/', 'replace' => '')),
+                array('PregReplace', array('match' => '/[^A-Za-z 0-9\-]/', 'replace' => '')),
             ),
             'validators'    =>  array(
-                array('Date', false, array( 'format' => 'yyyy-MM-dd' )),    // Uses Zend_Date not PHP date()
+                array('StringLength', false, array(0, 255)),
+                array('Regex', false, array(
+                    'pattern' => '/^[A-Za-z 0-9\-]+$/',
+                    'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
+                )),
             ),
         );
 
-        return new Zend_Form_Element_Text($name, $options);
+        return new Zend_Form_Element_Text( $name, $options );
 
     }
+
+    // JS & CSS //
 
     protected function _getCss ( ) {
 
@@ -337,8 +329,8 @@ class Cms_Form_Page extends Zend_Form {
                                     'rows' => '4',
                                 ),
 
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
+            'label'         =>  'form.page.label.' . $name,
+            'description'   =>  'form.page.description.' . $name,
 
             'required'      =>  false,
             'filters'       =>  array(
@@ -370,8 +362,8 @@ class Cms_Form_Page extends Zend_Form {
                                     'rows' => '4',
                                 ),
 
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
+            'label'         =>  'form.page.label.' . $name,
+            'description'   =>  'form.page.description.' . $name,
 
             'required'      =>  false,
             'filters'       =>  array(
@@ -403,8 +395,8 @@ class Cms_Form_Page extends Zend_Form {
                                     'rows' => '4',
                                 ),
 
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
+            'label'         =>  'form.page.label.' . $name,
+            'description'   =>  'form.page.description.' . $name,
 
             'required'      =>  false,
             'filters'       =>  array(
@@ -431,8 +423,8 @@ class Cms_Form_Page extends Zend_Form {
                                     'rows' => '4',
                                 ),
 
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
+            'label'         =>  'form.page.label.' . $name,
+            'description'   =>  'form.page.description.' . $name,
 
             'required'      =>  false,
             'filters'       =>  array(
@@ -445,7 +437,45 @@ class Cms_Form_Page extends Zend_Form {
 
     }
 
-    protected function _getOgTitle ( ) {
+    // Meta //
+
+    protected function _getMeta ( ) {
+
+        $name = 'meta';
+
+        $options = array(
+
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control text',
+            'attribs'       =>  array(
+                                    'data-valid'    => '1',
+                                    'placeholder' => $this->_translate->translate('form.page.label.' . $name),
+                                ),
+
+            'label'         =>  'form.page.label.' . $name,
+            'description'   =>  'form.page.description.' . $name,
+
+            'required'      =>  false,
+            'filters'       =>  array(
+                                    array('PregReplace', array('match' => '/[^A-Za-z 0-9\-]/', 'replace' => '')),
+                                ),
+            'validators'    =>  array(
+                                    array('StringLength', false, array(0, 255)),
+                                    array('Regex', false, array(
+                                        'pattern' => '/^[A-Za-z 0-9\-]+$/',
+                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
+                                    )),
+                                ),
+        );
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    // Links //
+
+    protected function _getLinks ( ) {
 
         $name = 'og_title';
 
@@ -456,11 +486,11 @@ class Cms_Form_Page extends Zend_Form {
             'class'         =>  'form-control text',
             'attribs'       =>  array(
                                     'data-valid' => '1',
-                                    'placeholder' => $this->_translate->translate('form.article.label.' . $name),
+                                    'placeholder' => $this->_translate->translate('form.page.label.' . $name),
                                 ),
 
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
+            'label'         =>  'form.page.label.' . $name,
+            'description'   =>  'form.page.description.' . $name,
 
             'required'      =>  false,
             'filters'       =>  array(
@@ -479,574 +509,52 @@ class Cms_Form_Page extends Zend_Form {
         
     }
     
-    protected function _getOgDescription ( ) {
-
-        $name = 'og_description';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid' => '1',
-                                    'rows' => '4',
-                                ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-            
-            'required'      =>  false,
-            'filters'       =>  array(
-                                    array( 'StringTrim' ),
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9 \'\-\?\(\)\/\,."_!&%@#$]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 255)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z0-9 \'\-\?\(\)\/\,."_!&%@#$]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
-
-        return new Zend_Form_Element_Textarea( $name, $options );
-        
-    }
-    
-    protected function _getOgUrl ( ) {
-
-        $name = 'og_url';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid'    => '1',
-                                    'placeholder' => $this->_translate->translate('form.article.label.' . $name),
-                                ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-            
-            'required'      =>  false,
-            'filters'       =>  array(
-                                    array('StringTrim'),
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9\/\-\?_&=:.]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 255)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z0-9\/\-\?_&=:.]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
-
-        return new Zend_Form_Element_Text( $name, $options );
-        
-    }
-    
-    protected function _getOgImage ( ) {
-
-        $name = 'og_image';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid'    => '1',
-                                    'placeholder' => $this->_translate->translate('form.article.label.' . $name),
-                                ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                                    array('StringTrim'),
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9\/\-\?_&=:.]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 255)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z0-9\/\-\?_&=:.]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
-
-        return new Zend_Form_Element_Text( $name, $options );
-        
-    }
-
-    protected function _getOgImageWidth ( ) {
-
-        $name = 'og_image_width';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid'    => '1',
-                                ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                                    array('StringTrim'),
-                                    array('PregReplace', array('match' => '/[^0-9]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 4)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[0-9]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
-
-        return new Zend_Form_Element_Text( $name, $options );
-        
-    }
-    
-    protected function _getOgImageHeight ( ) {
-
-        $name = 'og_image_height';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid'    => '1',
-                                ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                                    array('StringTrim'),
-                                    array('PregReplace', array('match' => '/[^0-9]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 4)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[0-9]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
-
-        return new Zend_Form_Element_Text( $name, $options );
-        
-    }
-
-    protected function _getOgImageType ( ) {
-
-        $name = 'og_image_type';
-
-        $typeList = [
-            'image/png' => 'PNG',
-            'image/jpeg' => 'JPG / JPEG',
-            'image/gif' => 'GIF',
-        ];
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control select2-offscreen',
-            'attribs'       =>  array(
-                                    'data-valid'            => '0',
-                                ),
-
-            'multiOptions'  =>  $typeList,
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                                    array('StringTrim'),
-                                    array('PregReplace', array('match' => '/[^a-z\/]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 25)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[a-z\/]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
-
-        return new Zend_Form_Element_Select( $name, $options );
-        
-    }
-
-    protected function _getOgImageAlt ( ) {
-
-        $name = 'og_image_alt';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid' => '1',
-                                    'placeholder' => $this->_translate->translate('form.article.label.' . $name),
-                                ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-            
-            'required'      =>  false,
-            'filters'       =>  array(
-                                    array( 'StringTrim' ),
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9 \'\-\?\(\)\/\,."!&%@#$]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 50)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z0-9 \'\-\?\(\)\/\,."!&%@#$]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
-
-        return new Zend_Form_Element_Text( $name, $options );
-        
-    }
-
-    protected function _getOgVideo ( ) {
-
-        $name = 'og_video';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                'data-valid'    => '1',
-                'placeholder' => $this->_translate->translate('form.article.label.' . $name),
-            ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                array('StringTrim'),
-                array('PregReplace', array('match' => '/[^A-Za-z0-9\/\-\?_&=:.]/', 'replace' => '')),
-            ),
-            'validators'    =>  array(
-                array('StringLength', false, array(1, 255)),
-                array('Regex', false, array(
-                    'pattern' => '/^[A-Za-z0-9\/\-\?_&=:.]+$/',
-                    'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                )),
-            ),
-        );
-
-        return new Zend_Form_Element_Text( $name, $options );
-
-    }
-
-    protected function _getOgVideoWidth ( ) {
-
-        $name = 'og_video_width';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                'data-valid'    => '1',
-            ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                array('StringTrim'),
-                array('PregReplace', array('match' => '/[^0-9]/', 'replace' => '')),
-            ),
-            'validators'    =>  array(
-                array('StringLength', false, array(1, 4)),
-                array('Regex', false, array(
-                    'pattern' => '/^[0-9]+$/',
-                    'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                )),
-            ),
-        );
-
-        return new Zend_Form_Element_Text( $name, $options );
-
-    }
-
-    protected function _getOgVideoHeight ( ) {
-
-        $name = 'og_video_height';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                'data-valid'    => '1',
-            ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                array('StringTrim'),
-                array('PregReplace', array('match' => '/[^0-9]/', 'replace' => '')),
-            ),
-            'validators'    =>  array(
-                array('StringLength', false, array(1, 4)),
-                array('Regex', false, array(
-                    'pattern' => '/^[0-9]+$/',
-                    'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                )),
-            ),
-        );
-
-        return new Zend_Form_Element_Text( $name, $options );
-
-    }
-
-    protected function _getOgVideoType ( ) {
-
-        $name = 'og_video_type';
-
-        $typeList = [
-            'video/x-flv' => 'Flash .flv',
-            'video/mp4' => 'MPEG-4 .mp4',
-            'video/quicktime' => 'QuickTime .mov',
-            'video/x-msvideo' => 'A/V Interleave .avi',
-            'video/x-ms-wmv' => 'Windows Media .wmv',
-        ];
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control select2-offscreen',
-            'attribs'       =>  array(
-                'data-valid'            => '0',
-            ),
-
-            'multiOptions'  =>  $typeList,
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                array('StringTrim'),
-                array('PregReplace', array('match' => '/[^a-z0-9\/]/', 'replace' => '')),
-            ),
-            'validators'    =>  array(
-                array('StringLength', false, array(1, 25)),
-                array('Regex', false, array(
-                    'pattern' => '/^[a-z0-9\/]+$/',
-                    'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                )),
-            ),
-        );
-
-        return new Zend_Form_Element_Select( $name, $options );
-
-    }
-
-    protected function _getOgType ( ) {
-
-        $name = 'og_type';
-
-        $typeList = [
-            'article' => 'Article',
-            'video' => 'Video',
-            'website' => 'Website',
-        ];
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control select2-offscreen',
-            'attribs'       =>  array(
-                                    'data-valid'            => '0',
-                                ),
-
-            'multiOptions'  =>  $typeList,
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                                    array('StringTrim'),
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9\/\-:.]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 50)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z0-9\/\-:.]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
-
-        return new Zend_Form_Element_Select( $name, $options );
-        
-    }
-
-    protected function _getOgLocale ( ) {
-
-        $name = 'og_locale';
-
-        $typeList = [
-            'en_US' => 'English US',
-            'es_US' => 'Spanish US',
-        ];
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control select2-offscreen',
-            'attribs'       =>  array(
-                                    'data-valid'            => '0',
-                                ),
-
-            'multiOptions'  =>  $typeList,
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'validators'    =>  array(
-                                    array('Locale', false),
-                                ),
-        );
-
-        return new Zend_Form_Element_Select( $name, $options );
-
-    }
-
-    protected function _getMetaTitle ( ) {
-
-        $name = 'meta_title';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid'    => '1',
-                                    'placeholder' => $this->_translate->translate('form.article.label.' . $name),
-                                ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                                    array('PregReplace', array('match' => '/[^A-Za-z 0-9\-]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 50)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z 0-9\-]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
-
-        return new Zend_Form_Element_Text( $name, $options );
-
-    }
-
-    protected function _getMetaDescription ( ) {
-
-        $name = 'meta_description';
-
-        $options = array(
-
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid' => '1',
-                                    'rows' => '4',
-                                ),
-
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
-
-            'required'      =>  false,
-            'filters'       =>  array(
-                                    array( 'StringTrim' ),
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9 \'\-,.]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 255)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z0-9 \'\-,.]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
-
-        return new Zend_Form_Element_Textarea( $name, $options );
-
-    }
+    // Boilerplate //
 
     protected function _getActive ( ) {
 
         $name = 'active';
 
-        $options = array(
+        $options = [
 
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid' => '1',
-                                ),
+            'name'              =>  $name,
+            'id'                =>  $name . '_page',
+            'class'             =>  'custom-control-input',
 
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
+            'attribs'           =>  [
+                                        'data-valid' => '0',
+                                    ],
 
-            'required'      =>  true,
-            'filters'       =>  array(
-                                    array( 'StringTrim' ),
-                                    array( 'PregReplace', array( 'match' => '/[^0-1]/', 'replace' => '' ) ),
-                                ),
-            'validators'    =>  array(
-                                    array( 'Between', false, array( 'min' => 0, 'max' => 1 ) ),
-                                ),
-        );
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-        return new Zend_Form_Element_Hidden( $name, $options );
+            'disableHidden'     =>  true,
+
+            'required'          =>  true,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'NotEmpty', false, [
+                                            Zend_Validate_NotEmpty::INTEGER,
+                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                        ] ],
+                                        [ 'Digits', false, [
+                                            'messages' => [
+                                                Zend_Validate_Digits::INVALID => "ERROR.INVALID",
+                                                Zend_Validate_Digits::NOT_DIGITS => "ERROR.INVALID",
+                                            ]
+                                        ] ],
+                                        [ 'Between', false, [
+                                            'min' => 0,
+                                            'max' => 1
+                                        ] ],
+                                    ],
+        ];
+
+        return new Zend_Form_Element_Checkbox( $name, $options );
 
     }
 
@@ -1054,29 +562,46 @@ class Cms_Form_Page extends Zend_Form {
 
         $name = 'deleted';
 
-        $options = array(
+        $options = [
 
-            'name'          =>  $name,
-            'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid' => '1',
-                                ),
+            'name'              =>  $name,
+            'id'                =>  $name . '_page',
+            'class'             =>  'custom-control-input',
 
-            'label'         =>  'form.article.label.' . $name,
-            'description'   =>  'form.article.description.' . $name,
+            'attribs'           =>  [
+                                        'data-valid' => '0',
+                                    ],
 
-            'required'      =>  true,
-            'filters'       =>  array(
-                                    array( 'StringTrim' ),
-                                    array( 'PregReplace', array( 'match' => '/[^0-1]/', 'replace' => '' ) ),
-                                ),
-            'validators'    =>  array(
-                                    array( 'Between', false, array( 'min' => 0, 'max' => 1 ) ),
-                                ),
-        );
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-        return new Zend_Form_Element_Hidden( $name, $options );
+            'disableHidden'     =>  true,
+
+            'required'          =>  true,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'NotEmpty', false, [
+                                            Zend_Validate_NotEmpty::INTEGER,
+                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                        ] ],
+                                        [ 'Digits', false, [
+                                            'messages' => [
+                                                Zend_Validate_Digits::INVALID => "ERROR.INVALID",
+                                                Zend_Validate_Digits::NOT_DIGITS => "ERROR.INVALID",
+                                            ]
+                                        ] ],
+                                        [ 'Between', false, [
+                                            'min' => 0,
+                                            'max' => 1
+                                        ] ],
+                                    ],
+        ];
+
+        return new Zend_Form_Element_Checkbox( $name, $options );
 
     }
 

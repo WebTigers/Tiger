@@ -26,20 +26,18 @@ class IndexController extends Tiger_Controller_Action
 {
     public function init()
     {
-        /** OneUI Dashboard Bundles */
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/oneui.core.min.js' ) );
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/oneui.app.min.js' ) );
+        /** Set theme and theme template options. */
+        $this->view->theme  = 'oneui';
+        $this->view->layout = 'layout';
 
-        $this->view->theme = 'oneui';
+        /** Set the OneUI base theme options. */
+        $contentService = new Core_Service_Content();
+        $contentService->setPageContent( $this->view );
 
-        /** Set the layout path to use the core layout instead of the default user module layout. */
-        Zend_Layout::getMvcInstance()->setLayoutPath(MODULES_PATH .'/'. $this->view->theme . '/layouts/scripts');
-
-        /** Reset the layout path to use the admin layout instead of the default user module layout. */
-        Zend_Layout::getMvcInstance()->setLayout('layout' );
-
-        /** Set the OneUI theme options. */
-        $this->view->template = $this->_setThemeOptions();
+        $this->view->template->inc_side_overlay = '';
+        $this->view->template->inc_sidebar      = '';
+        $this->view->template->inc_header       = '';
+        $this->view->template->inc_footer       = '';
 
     }
 
@@ -206,7 +204,6 @@ class IndexController extends Tiger_Controller_Action
     {
         Zend_Layout::getMvcInstance()->setLayout('origin' );
         $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/core/css/origin/origin.css' ) );
-
     }
 
     public function testAction ( )

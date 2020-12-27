@@ -15,20 +15,27 @@ class Oneui_Service_Template
     public
         $name               = '',
         $version            = '',
-        $author             = '',
-        $robots             = '',
+
         $title              = '',
-        $description        = '',
-        $og_url_site        = '',
-        $og_url_image       = '',
+        $meta               = [],
+        $links              = [],
+        $inlineScripts      = [],
+        $headStyles         = [],
+        $headScripts        = [],
+
         $assets_folder      = '',
-        $main_nav           = array(),
+
+        $main_nav           = [],
         $main_nav_active    = '',
+
         $theme              = '',
         $scheme             = '',
         $cookies,
+
         $page_loader,
+
         $google_maps_api_key,
+
         $l_rtl,
         $l_sidebar_left,
         $l_sidebar_mini,
@@ -42,16 +49,17 @@ class Oneui_Service_Template
         $l_header_fixed,
         $l_header_style,
         $l_m_content,
+
         $inc_side_overlay,
         $inc_sidebar,
         $inc_header,
         $inc_footer;
 
-    private
+    public
         $nav_html           = '',
         $page_classes       = '',
-        $placeholder_names  = array(
-        'female'            => array(
+        $placeholder_names  = [
+        'female' => [
             'Helen Jacobs',
             'Amanda Powell',
             'Marie Duncan',
@@ -72,8 +80,8 @@ class Oneui_Service_Template
             'Betty Kelley',
             'Carol Ray',
             'Carol White'
-        ),
-        'male'              => array(
+        ],
+        'male' => [
             'Brian Cruz',
             'Henry Harrison',
             'Thomas Riley',
@@ -94,31 +102,33 @@ class Oneui_Service_Template
             'Wayne Garcia',
             'Scott Young',
             'Albert Ray'
-        )
-    ),
-        $placeholder_text   = array(
+        ]
+    ],
+        $placeholder_text = [
         'small'     => 'Dolor posuere proin blandit accumsan senectus netus nullam curae, ornare laoreet adipiscing luctus mauris adipiscing pretium eget fermentum, tristique lobortis est ut metus lobortis tortor tincidunt himenaeos habitant quis dictumst proin odio sagittis purus mi, nec taciti vestibulum quis in sit varius lorem sit metus mi.',
         'medium'    => 'Potenti elit lectus augue eget iaculis vitae etiam, ullamcorper etiam bibendum ad feugiat magna accumsan dolor, nibh molestie cras hac ac ad massa, fusce ante convallis ante urna molestie vulputate bibendum tempus ante justo arcu erat accumsan adipiscing risus, libero condimentum venenatis sit nisl nisi ultricies sed, fames aliquet consectetur consequat nostra molestie neque nullam scelerisque neque commodo turpis quisque etiam egestas vulputate massa, curabitur tellus massa venenatis congue dolor enim integer luctus, nisi suscipit gravida fames quis vulputate nisi viverra luctus id leo dictum lorem, inceptos nibh orci.',
         'large'     => 'Felis ullamcorper curae erat nulla luctus sociosqu phasellus posuere habitasse sollicitudin, libero sit potenti leo ultricies etiam blandit id platea augue, erat habitant fermentum lorem commodo taciti tristique etiam curabitur suscipit lacinia habitasse amet mauris eu eget ipsum nec magna in, adipiscing risus aenean turpis proin duis fringilla praesent ornare lorem eros malesuada vitae nullam diam velit potenti consectetur, vehicula accumsan risus lectus tortor etiam facilisis tempus sapien tortor, mi vestibulum taciti dapibus viverra ac justo vivamus erat phasellus turpis nisi class praesent duis ligula, vel ornare faucibus potenti nibh turpis, at id semper nunc dui blandit. Enim et nec habitasse ultricies id tortor curabitur, consectetur eu inceptos ante conubia tempor platea odio, sed sem integer lacinia cras non risus euismod turpis platea erat ultrices iaculis rutrum taciti, fusce lobortis adipiscing dapibus habitant sodales gravida pulvinar, elementum mi tempus ut commodo congue ipsum justo nec dui cursus scelerisque elementum volutpat tellus nulla laoreet taciti, nibh suspendisse primis arcu integer vulputate etiam ligula lobortis nunc, interdum commodo libero aliquam suscipit phasellus sollicitudin arcu varius venenatis erat ornare tempor nullam donec vitae etiam tellus.'
-    );
+    ];
 
     /**
      * @param $options
-     * @param Zend_Db_Table_Row_Abstract $pageRow
-     * @return void
+     * @param Zend_Db_Table_Row_Abstract|null $pageRow
      */
-    public function setTemplateOptions( $options, Zend_Db_Table_Row_Abstract $pageRow ) {
+    public function setTemplateOptions( $options, Zend_Db_Table_Row_Abstract $pageRow = null ) {
 
         $optionKeys = [
+
+            // Theme Vars //
+
             'name',
             'version',
-            'author',
-            'robots',
-            'title',
-            'description',
 
-            'og_url_site',
-            'og_url_image',
+            'title',
+            'meta',
+            'links',
+            'inlineScripts',
+            'headStyles',
+            'headScripts',
 
             'assets_folder',
 
@@ -126,11 +136,14 @@ class Oneui_Service_Template
             'main_nav_active',
 
             'theme',
+            'scheme',
             'cookies',
 
             'page_loader',
 
             'google_maps_api_key',
+
+            // Theme Vars //
 
             'l_rtl',
             'l_sidebar_left',
@@ -172,91 +185,105 @@ class Oneui_Service_Template
      *
      * @return  string  Returns the classes if $print is set to false
      */
-    public function page_classes($print = true) {
+    public function content_classes( $print = true ) {
 
         // Build page classes
-        if ($this->cookies) {
+        if ( $this->cookies === true ) {
             $this->page_classes .= ' enable-cookies';
         }
 
         // If sidebar is included
-        if ($this->inc_sidebar) {
-            if ($this->l_sidebar_visible_desktop) {
+        if ( $this->inc_sidebar === true ) {
+
+            if ( $this->l_sidebar_visible_desktop === true ) {
                 $this->page_classes .= ' sidebar-o';
             }
 
-            if ($this->l_sidebar_visible_mobile) {
+            if ( $this->l_sidebar_visible_mobile === true ) {
                 $this->page_classes .= ' sidebar-o-xs';
             }
 
-            if ($this->l_sidebar_dark) {
+            if ( $this->l_sidebar_dark === true ) {
                 $this->page_classes .= ' sidebar-dark';
             }
 
-            if ($this->l_sidebar_mini) {
+            if ( $this->l_sidebar_mini === true ) {
                 $this->page_classes .= ' sidebar-mini';
             }
+
         }
 
         // If side overlay is included
-        if ($this->inc_side_overlay) {
-            if ($this->l_side_overlay_hoverable) {
+        if ( $this->inc_side_overlay === true ) {
+
+            if ( $this->l_side_overlay_hoverable === true ) {
                 $this->page_classes .= ' side-overlay-hover';
             }
 
-            if ($this->l_side_overlay_visible) {
+            if ( $this->l_side_overlay_visible === true ) {
                 $this->page_classes .= ' side-overlay-o';
             }
 
-            if ($this->l_page_overlay) {
+            if ( $this->l_page_overlay === true ) {
                 $this->page_classes .= ' enable-page-overlay';
             }
+
         }
 
         // if sidebar or side overlay is included
-        if ($this->inc_sidebar || $this->inc_side_overlay) {
-            if ( ! $this->l_sidebar_left) {
+        if ( $this->inc_sidebar === true || $this->inc_side_overlay === true ) {
+
+            if ( $this->l_sidebar_left !== true ) {
                 $this->page_classes .= ' sidebar-r';
             }
 
-            if ($this->l_side_scroll) {
+            if ( $this->l_side_scroll === true ) {
                 $this->page_classes .= ' side-scroll';
             }
+
         }
 
         // If header is included
-        if ($this->inc_header) {
-            if ($this->l_header_fixed) {
+        if ( $this->inc_header === true ) {
+
+            if ( $this->l_header_fixed === true ) {
                 $this->page_classes .= ' page-header-fixed';
             }
 
-            if ($this->l_header_dark) {
+            if ( $this->l_header_dark === true ) {
                 $this->page_classes .= ' page-header-dark';
             }
+
         }
 
         // Main content classes
-        if ($this->l_m_content == 'boxed') {
+        if ( $this->l_m_content === 'boxed' ) {
             $this->page_classes .= ' main-content-boxed';
-        } else if ($this->l_m_content == 'narrow') {
+        }
+        elseif ( $this->l_m_content === 'narrow' ) {
             $this->page_classes .= ' main-content-narrow';
         }
 
         // RTL support class
-        if ($this->l_rtl) {
+        if ( $this->l_rtl === true ) {
             $this->page_classes .= ' rtl-support';
         }
 
         // Print or return page classes
-        if ($this->page_classes) {
-            if ($print) {
-                echo ' class="'. trim($this->page_classes) .'"';
-            } else {
-                return trim($this->page_classes);
+        if ( $this->page_classes ) {
+
+            if ( $print === true ) {
+                echo ' class="'. trim( $this->page_classes ) .'"';
             }
-        } else {
+            else {
+                return trim( $this->page_classes );
+            }
+
+        }
+        else {
             return false;
         }
+
     }
 
     /**

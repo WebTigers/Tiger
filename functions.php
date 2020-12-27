@@ -33,7 +33,11 @@ function zd ($var, $die = true) {
 /** Function to test and return JSON data. */
 function is_json( $string, $return_data = false ) {
 
-    $data = json_decode($string);
+    if ( ! is_string( $string ) ){
+        return false;
+    }
+
+    $data = json_decode( $string );
 
     return ( json_last_error() === JSON_ERROR_NONE )
         ? ( $return_data )

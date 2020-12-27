@@ -21,6 +21,7 @@
 
 class Cms_Service_Content
 {
+    use Core_Service_ContentTrait;
 
     public function setPageContent ( & $view, $params ) {
 
@@ -34,23 +35,38 @@ class Cms_Service_Content
         Zend_Layout::getMvcInstance()->setLayoutPath(MODULES_PATH .'/'. $view->theme . '/layouts/scripts');
         Zend_Layout::getMvcInstance()->setLayout( $view->layout );
 
-        /** Set the theme template vars (if any). */
+        $view->doctype( Zend_View_Helper_Doctype::HTML5 );  // Enables use of certain view helpers.
+
+        $view->headTitle()->set( $pageRow->title );
+
+        /** Set the theme's template option vars (if any), including head links and meta. */
         $this->_setThemeOptions($view, $pageRow );
 
-        /** Set Page Title and Meta */
-        $this->_setPageMeta( $view, $pageRow );
+        /** Set Page Title and Meta, includes OpenGraph and other custom meta. */
+        $this->setPageMeta( $view );
 
-        /** Set OpenGraph View Params */
-        $this->_setOpenGraph( $view, $pageRow );
+        /** Set Page Links, includes favicons and other non-stylesheet links. */
+        $this->setPageLinks( $view );
 
-        /** Set Scripts and Styles Params */
-        $this->_setScriptsStyles( $view, $pageRow );
+        /** Set Inline Scripts */
+        $this->setInlineScripts( $view );
+
+        /** Set HeadStyles */
+        $this->setHeadStyles( $view );
+
+        /** Set HeadScripts */
+        $this->setHeadScripts($view );
 
         /** Render the page Content */
         $view->content = $this->_renderPageContent( $pageRow, [ 'template' => $view->template ] );
 
     }
 
+    /**
+     * @param $view
+     * @param $pageRow
+     * @throws Zend_Exception
+     */
     protected function _setThemeOptions( & $view, $pageRow ) {
 
         $configOptions = Zend_Registry::get('Zend_Config')->themes->{$pageRow->theme}->options;
@@ -113,92 +129,6 @@ class Cms_Service_Content
         unlink( sys_get_temp_dir() . '/' . $filename );
 
         return $content;
-
-    }
-
-    /**
-     * Set Page Meta
-     *
-     * @param $view
-     * @param $pageRow
-     */
-    protected function _setPageMeta ( & $view, $pageRow ) {
-
-        $view->headTitle()->set( $pageRow->meta_title );
-        $view->headMeta( 'description', $pageRow->meta_description );
-
-        // $view->headMeta('viewport', $this->seo_viewport );
-        // $view->headMeta('keywords', $this->seo_keywords );
-        // $view->headMeta('robots', $this->seo_robots );
-
-        // $view->headMeta('Content-Type', 'text/html; charset=UTF-8');
-        // $view->headMeta('Content-Language', LOCALE);
-
-    }
-
-    /**
-     * Set OpenGraph Head Meta
-     *
-     * @param $view
-     * @param $pageRow
-     * @return null
-     */
-    protected function _setOpenGraph ( & $view, $pageRow ) {
-
-        # Set OpenGraph Page Vars #
-        // $view->headMeta()->setProperty('fb:app_id', $pageRow->fb_app_id);
-        // $view->headMeta()->setProperty('og:site_name', $pageRow->og_sitename);
-
-        $view->headMeta( 'og:title', $pageRow->og_title );
-        $view->headMeta( 'og:description', $pageRow->og_description );
-        $view->headMeta( 'og:og_url', $pageRow->og_type );
-        $view->headMeta( 'og:type', $pageRow->og_title );
-        $view->headMeta( 'og:locale', $pageRow->og_locale );
-
-        $view->headMeta( 'og:image', $pageRow->og_image );
-        $view->headMeta( 'og:image:secure_url', $pageRow->og_image );
-        $view->headMeta( 'og:image:width', $pageRow->og_image_width );
-        $view->headMeta( 'og:image:height', $pageRow->og_image_height );
-        $view->headMeta( 'og:image:type', $pageRow->og_image_type );
-        $view->headMeta( 'og:image:alt', $pageRow->og_image_alt );
-
-        $view->headMeta( 'og:video', $pageRow->og_video );
-        $view->headMeta( 'og:video:url', $pageRow->og_video );
-        $view->headMeta( 'og:video:secure_url', $pageRow->og_video );
-        $view->headMeta( 'og:video:width', $pageRow->og_video_width );
-        $view->headMeta( 'og:video:height', $pageRow->og_video_height );
-        $view->headMeta( 'og:video:type', $pageRow->og_video_type );
-
-    }
-
-    /**
-     * Set Script and Style links, and raw page scripts and styles.
-     *
-     * @param $view
-     * @param $pageRow
-     * @return null
-     */
-    protected function _setScriptsStyles ( & $view, $pageRow ) {
-
-        # Set any additional Stylesheet files. #
-        $stylesheets = explode( PHP_EOL, $pageRow->css );
-        foreach( $stylesheets as $stylesheet ) {
-            $view->headLink()->appendStylesheet( $stylesheet );
-        }
-
-        # Set any additional Javascript files. #
-        $javascripts = explode( PHP_EOL, $pageRow->javascript );
-        foreach( $javascripts as $javascript ) {
-            $view->inlineScript()->appendFile( Tiger_Cache::version( $javascript ) );
-        }
-
-        # Set any page-level CSS and JavaScripts. #
-        if ( ! empty( $pageRow->styles ) ) {
-            $view->headStyle()->appendStyle( $pageRow->styles );
-        }
-        if ( ! empty( $pageRow->scripts ) ) {
-            $view->inlineScript()->appendScript( $pageRow->scripts );
-        }
 
     }
 

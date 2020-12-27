@@ -57,6 +57,7 @@ trait Cms_Service_PageTrait
             $headers = $this->_utility->getTranslation([
                 'DT.PAGE_ID',
                 'DT.NAME',
+                'DT.KEY',
                 'DT.CATEGORY',
                 'DT.CONTENT',
                 'DT.CREATE_DATE',
@@ -142,6 +143,36 @@ trait Cms_Service_PageTrait
         ];
 
         return $actions;
+
+    }
+
+    public function getPage ( $params ) {
+
+        if ( Tiger_Utility_Uuid::is_valid( $params['page_id'] ) ) {
+
+            $pageRow = $this->_pageModel->getPageById( $params['page_id'] );
+
+            if ( ! empty( $pageRow ) ) {
+
+                $this->_response->result = 1;
+                $this->_response->data = $pageRow->toArray();
+
+
+            }
+            else {
+
+                $this->_response->result = 0;
+                $this->_response->setTextMessage('ERROR.NOT_FOUND', 'alert');
+
+            }
+
+        }
+        else {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage('ERROR.INVALID', 'alert');
+
+        }
 
     }
 
@@ -275,7 +306,12 @@ trait Cms_Service_PageTrait
             /** Commit the DB transaction. All done! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
 
-            return $pageRow;
+            /**
+             * Populate the responseObject with our success.
+             */
+            $this->_response->result = 1;
+            $this->_response->data = $pageRow->toArray();
+            $this->_response->setTextMessage( 'MESSAGE.PAGE_SAVED', 'success' );
 
         }
         catch ( Exception | Error $e ) {

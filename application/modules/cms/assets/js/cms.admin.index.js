@@ -21,11 +21,14 @@
  * jQuery Tiger CMS Admin Plugin
  */
 
+CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
+
 (function( $ ){
-    
+
     let Class = {
 
         pageDT : null,
+        editor : null,
 
         init : function( ) {
 
@@ -52,7 +55,7 @@
                 'processing': false,
                 'serverSide': true,
                 'orderMulti': true,
-                'order': [[2, 'desc']],
+                'order': [[3, 'desc']],
                 'class': 'hover',
                 'autoWidth': false,
                 'lengthMenu': [ 5, 10, 25, 50, 100 ],
@@ -62,12 +65,13 @@
                 'initComplete': function (settings, json) {
 
                     $(Class.pageDT.column(0).header()).text( json.i18n['DT.NAME'] );
-                    $(Class.pageDT.column(1).header()).text( json.i18n['DT.CATEGORY'] );
-                    $(Class.pageDT.column(2).header()).text( json.i18n['DT.CREATE_DATE'] );
-                    $(Class.pageDT.column(3).header()).text( json.i18n['DT.ACTIONS'] );
-                    $(Class.pageDT.column(4).header()).text( json.i18n['DT.PAGE_ID'] );
-                    $(Class.pageDT.column(5).header()).text( json.i18n['DT.ACTIVE'] );
-                    $(Class.pageDT.column(6).header()).text( json.i18n['DT.DELETED'] );
+                    $(Class.pageDT.column(1).header()).text( json.i18n['DT.KEY'] );
+                    $(Class.pageDT.column(2).header()).text( json.i18n['DT.CATEGORY'] );
+                    $(Class.pageDT.column(3).header()).text( json.i18n['DT.CREATE_DATE'] );
+                    $(Class.pageDT.column(4).header()).text( json.i18n['DT.ACTIONS'] );
+                    $(Class.pageDT.column(5).header()).text( json.i18n['DT.PAGE_ID'] );
+                    $(Class.pageDT.column(6).header()).text( json.i18n['DT.ACTIVE'] );
+                    $(Class.pageDT.column(7).header()).text( json.i18n['DT.DELETED'] );
 
                     setTimeout( function () {
                         One.block('state_normal', $block);
@@ -88,6 +92,10 @@
                     'title': 'DT.NAME',
                     'name': 'name',
                     'data': 'name'
+                }, {
+                    'title': 'DT.KEY',
+                    'name': 'key',
+                    'data': 'key'
                 }, {
                     'title': 'DT.CATEGORY',
                     'name': 'category',
@@ -165,11 +173,6 @@
 
         _initControls : function () {
 
-            $('#content').summernote({
-                minHeight: 500,
-                airMode: true
-            });
-
             $('#add-page').on( 'click', Class._add );
             $('#save-button').on( 'click', Class._save );
 
@@ -180,21 +183,53 @@
 
         },
 
+        _createEditor : function () {
+
+            if ( Class.editor ) { return; }
+
+            let config = {
+                allowedContent: true,
+                protectedSource: /<\?[\s\S]*?\?>/g,
+                extraPlugins: 'codemirror',
+                basicEntities: true,
+                height: 400
+            };
+
+            Class.editor = CKEDITOR.replace('content', config);
+
+        },
+
+        _removeEditor :  function () {
+
+            if ( ! Class.editor ) { return; }
+
+            html = Class.editor.getData();
+
+            $('#content').val( html );
+
+            Class.editor.destroy();
+            Class.editor = null;
+
+        },
+
         _add : function ( event ) {
 
-            $('#add-page-header').removeClass('hide')
-            $('#edit-page-header').addClass('hide')
-            $('#page-form .boiler-plate').addClass('hide')
+            Class._removeEditor();
+            $('#add-page-header').removeClass('hide');
+            $('#edit-page-header').addClass('hide');
+            $('#cms-tabs li:first-child a').tab('show');
             $('#page-form').tigerForm('reset');
+            Class._createEditor();
             $('#modal-pages-form').modal('show');
 
         },
 
         _edit : function ( event ) {
 
-            $('#add-page-header').addClass('hide')
-            $('#edit-page-header').removeClass('hide')
-            $('#page-form .boiler-plate').removeClass('hide')
+            $('#add-page-header').addClass('hide');
+            $('#edit-page-header').removeClass('hide');
+            $('#cms-tabs li:first-child a').tab('show');
+            Class._removeEditor();
             $('#page-form').tigerForm('reset');
 
             function beforeSend ( jqXHR, settings ) {
@@ -209,8 +244,10 @@
 
                 if ( data.result === 1 ) {
 
-                    $('#page-form').tigerForm('setFormValues', data.data );
-                    $('#modal-pages-form').modal('show');
+                    $('#page-form').tigerForm( 'setFormValues', data.data );
+                    $('#content').html( data.data.content );
+                    Class._createEditor();
+                    $('#modal-pages-form').modal( 'show' );
 
                 }
                 else {
@@ -458,9 +495,9 @@
             /** Note that our API params will be added to the form data */
             let data = $('#page-form').tigerForm('getFormValues', apiParams );
 
-            apiParams.active  = ( $('#page-form #active').is(':checked') ) ? 1 : 0;
-            apiParams.deleted = ( $('#page-form #deleted').is(':checked') ) ? 1 : 0;
-            apiParams.content = $('#content').summernote('code');
+            apiParams.active  = ( $('#active_page').is(':checked') ) ? 1 : 0;
+            apiParams.deleted = ( $('#deleted_page').is(':checked') ) ? 1 : 0;
+            apiParams.content = CKEDITOR.instances.content.getData();
 
             $.ajax({
                 type        : "POST",
