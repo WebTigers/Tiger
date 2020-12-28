@@ -18,44 +18,43 @@
  */
 
 /**
- * jQuery Tiger CMS Admin Plugin
+ * jQuery Tiger Admin Doc Plugin
  */
 
-CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
-
 (function( $ ){
-
+    
     let Class = {
 
-        pageDT : null,
-        editor : null,
-
+        docDT : null,
+        
         init : function( ) {
 
             $(document).ready(function() {
 
                 // Page init stuff goes here. //
-                Class._initPageDataTable();
+                Class._initDocDataTable();
                 Class._initControls();
 
+                //var simplemde = new SimpleMDE({ element: $("#doc-form")[0] });
             });
 
         },
 
         // Admin Functions //
 
-        _initPageDataTable : function () {
+        _initDocDataTable : function () {
 
-            let $datatable = $('#pagesDT');
+            let $datatable = $('#docDT');
+            
             let $block = $datatable.closest('div.block');
             One.block('state_loading', $block );
 
-            Class.pageDT = $datatable.DataTable({
+            Class.docDT = $datatable.DataTable({
                 'searching': true,
                 'processing': false,
                 'serverSide': true,
                 'orderMulti': true,
-                'order': [[3, 'desc']],
+                'order': [[1, 'asc']],
                 'class': 'hover',
                 'autoWidth': false,
                 'lengthMenu': [ 5, 10, 25, 50, 100 ],
@@ -64,14 +63,12 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
                 },
                 'initComplete': function (settings, json) {
 
-                    $(Class.pageDT.column(0).header()).text( json.i18n['DT.NAME'] );
-                    $(Class.pageDT.column(1).header()).text( json.i18n['DT.KEY'] );
-                    $(Class.pageDT.column(2).header()).text( json.i18n['DT.CATEGORY'] );
-                    $(Class.pageDT.column(3).header()).text( json.i18n['DT.CREATE_DATE'] );
-                    $(Class.pageDT.column(4).header()).text( json.i18n['DT.ACTIONS'] );
-                    $(Class.pageDT.column(5).header()).text( json.i18n['DT.PAGE_ID'] );
-                    $(Class.pageDT.column(6).header()).text( json.i18n['DT.ACTIVE'] );
-                    $(Class.pageDT.column(7).header()).text( json.i18n['DT.DELETED'] );
+                    $(Class.docDT.column(0).header()).text( json.i18n['DT.DOC_ID'] );
+                    $(Class.docDT.column(1).header()).text( json.i18n['DT.TITLE'] );
+                    $(Class.docDT.column(2).header()).text( json.i18n['DT.PARENT'] );
+                    $(Class.docDT.column(3).header()).text( json.i18n['DT.ACTIVE'] );
+                    $(Class.docDT.column(4).header()).text(json.i18n['DT.ACTIONS']);
+                    $(Class.docDT.column(5).header()).text( json.i18n['DT.DELETED'] );
 
                     setTimeout( function () {
                         One.block('state_normal', $block);
@@ -84,54 +81,49 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
                     'dataType': 'json',
                     'dataSrc': 'data',
                     'data': {
-                        service: 'cms:admin',
-                        method: 'getAdminPagesDataTable'
+                        service: 'doc:admin',
+                        method: 'getAdminDocsDataTable'
                     }
                 },
                 'columns': [{
-                    'title': 'DT.NAME',
-                    'name': 'name',
-                    'data': 'name'
-                }, {
-                    'title': 'DT.KEY',
-                    'name': 'key',
-                    'data': 'key'
-                }, {
-                    'title': 'DT.CATEGORY',
-                    'name': 'category',
-                    'data': 'category'
-                }, {
-                    'title': 'DT.CREATE_DATE',
-                    'name': 'create_date',
-                    'data': 'create_date'
-                }, {
-                    'title': 'DT.ACTIONS',
-                    'targets': -1,
-                    'data': null,
-                    'orderable': false,
-                    'width': '150px',
-                    'render': Class._buildControls,
-                }, {
-                    'title': 'DT.PAGE_ID',
-                    'name': 'page_id',
-                    'data': 'page_id',
+                    'title': 'DT.ID',
+                    'name': 'doc_id',
+                    'data': 'doc_id',
                     'visible': false
+                }, {
+                    'title': 'DT.TITLE',
+                    'name': 'title',
+                        'data': 'title',
+                        'width': '400px',
+                    'visible': true
+                }, {
+                    'title': 'DT.PARENT',
+                    'name': 'parent_id',
+                    'data': 'parent_id',
+                    'visible': true
                 }, {
                     'title': 'DT.ACTIVE',
                     'name': 'active',
                     'data': 'active',
                     'class': 'active',
-                    'visible': false
+                    'visible': true
                 }, {
                     'title': 'DT.DELETED',
                     'name': 'deleted',
                     'data': 'deleted',
                     'class': 'deleted',
                     'visible': false
+                }, {
+                    'title': 'DT.ACTIONS',
+                    'targets': -1,
+                    'data': null,
+                    'orderable': false,
+                    'width': '200px',
+                    'render': Class._buildControls
                 }]
             });
 
-            Class.pageDT.on('draw', function ( event, settings ) {
+            Class.docDT.on('draw', function ( event, settings ) {
                 One.helpers('core-bootstrap-tooltip');
             });
 
@@ -173,7 +165,7 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
 
         _initControls : function () {
 
-            $('#add-page').on( 'click', Class._add );
+            $('#add-doc').on( 'click', Class._add );
             $('#save-button').on( 'click', Class._save );
 
             $('body').on('click', 'table i.edit', Class._edit );
@@ -183,80 +175,50 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
 
         },
 
-        // TAB Functions //
-
-        // TAB Editor //
-
         _createEditor : function () {
 
             if ( Class.editor ) { return; }
 
             let config = {
-                allowedContent: true,
-                protectedSource: /<\?[\s\S]*?\?>/g,
-                extraPlugins: 'codemirror',
-                basicEntities: true,
-                height: 400
+                element: $("#description")[0],
+                toolbar: ["bold", "italic", "heading", "|", "quote"],
+
             };
 
-            Class.editor = CKEDITOR.replace('content', config);
+            Class.editor = new SimpleMDE(config);
 
         },
 
-        _removeEditor :  function () {
-
+        _removeEditor: function () {
+            
             if ( ! Class.editor ) { return; }
 
-            html = Class.editor.getData();
+            html = Class.editor.value();
 
-            $('#content').val( html );
-
-            Class.editor.destroy();
+            $('#description').val( html );
+            Class.editor.toTextArea();
             Class.editor = null;
 
         },
 
-        // TAB Meta, includes SEO and OpenGraph //
-
-        _createMeta : function () {
-
-        },
-
-        _removeMeta : function () {
-
-        },
-
-        // TAB Links, includes Favicons, //
-
-        _createLinks : function () {
-
-        },
-
-        _removeLinks : function () {
-
-        },
-
-        // CRUD Functions //
-
         _add : function ( event ) {
 
             Class._removeEditor();
-            $('#add-page-header').removeClass('hide');
-            $('#edit-page-header').addClass('hide');
-            $('#cms-tabs li:first-child a').tab('show');
-            $('#page-form').tigerForm('reset');
+            $('#add-doc-header').removeClass('hide')
+            $('#edit-doc-header').addClass('hide')
+            $('#doc-form .boiler-plate').addClass('hide')
+            $('#doc-form').tigerForm('reset');
             Class._createEditor();
-            $('#modal-pages-form').modal('show');
-
+            $('#modal-doc-form').modal('show');
         },
 
         _edit : function ( event ) {
-
-            $('#add-page-header').addClass('hide');
-            $('#edit-page-header').removeClass('hide');
-            $('#cms-tabs li:first-child a').tab('show');
+            
+            $('#add-doc-header').addClass('hide')
+            $('#edit-doc-header').removeClass('hide')
+            $('#doc-form .boiler-plate').removeClass('hide')
             Class._removeEditor();
-            $('#page-form').tigerForm('reset');
+            $('#doc-form').tigerForm('reset');
 
             function beforeSend ( jqXHR, settings ) {
             }
@@ -269,18 +231,21 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
                 /** Result Success / Error */
 
                 if ( data.result === 1 ) {
-
-                    $('#page-form').tigerForm( 'setFormValues', data.data );
-                    $('#content').html( data.data.content );
+                    $('#doc-form').tigerForm('setFormValues', data.data);
                     Class._createEditor();
-                    $('#modal-pages-form').modal( 'show' );
-
+                    Class.editor.value(data.data.description);
+                    $('#modal-doc-form').modal('show');
+                    
+                    /**
+                     * Auto select parent id
+                     */
+                    $('#parent_id option[value=' + data.data.parent_id + ']').attr('selected', 'selected');
                 }
                 else {
 
                     /** Oops, something went wrong ... */
 
-                    $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'insert', {
+                    $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'change', {
                         content       : data.html[0],
                         removeClick   : true,
                         removeTimeout : 0
@@ -299,14 +264,14 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
                     removeTimeout : 0
                 };
 
-                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
+                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
 
             };
 
             let data = {
-                service : 'cms:admin',
-                method  : 'getPage',
-                page_id : $(this).attr('data-id')
+                service : 'doc:admin',
+                method  : 'getDoc',
+                doc_id : $(this).attr('data-id')
             };
 
             $.ajax({
@@ -323,7 +288,6 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
         },
 
         _update : function ( event ) {
-
             /**
              * This function is used to persist not entire forms, but merely small
              * pieces of data, typically from datatables. Yes we do send then entire
@@ -346,13 +310,13 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
 
                     /** Update the icon's data-value and class. */
 
-                    if ( $elm.hasClass('active') ) {
+                    if ($elm.hasClass('active')) {
                         $elm.attr('data-value', data.data.active);
-                        data.data.active = ( parseInt(data.data.active,10) === 1 )
+                        
+                        data.data.active = (parseInt(data.data.active, 10) === 1)
                             ? $elm.removeClass('fa-play').addClass('fa-pause')
                             : $elm.addClass('fa-play').removeClass('fa-pause');
-                    }
-                    else if ( $elm.hasClass('deleted') ) {
+                    }else if ( $elm.hasClass('deleted') ) {
                         $elm.attr('data-value', data.data.deleted);
                         data.data.deleted = ( parseInt(data.data.deleted,10) === 0 )
                             ? $elm.addClass('fa-trash').removeClass('fa-trash-restore')
@@ -398,9 +362,9 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
             }
 
             /** API params tell Tiger what service will be processing the data. */
-            data.service = 'cms:admin';
-            data.method = 'updatePage';
-            data.page_id = $elm.attr('data-id');
+            data.service = 'doc:admin';
+            data.method = 'updateDoc';
+            data.doc_id = $elm.attr('data-id');
 
             $.ajax({
                 type        : "POST",
@@ -431,7 +395,7 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
             function complete () {
 
                 /* Re-enable any elements we disabled. */
-                $('#save-button').removeClass( 'disabled' ).prop( 'disabled', false );
+                $('#save-button').removeClass( 'active' ).prop( 'active', false );
 
                 /* Toggle the ajax indicators. */
                 $('#save-button .ajax').toggleClass( 'hide' );
@@ -445,7 +409,7 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
 
                 if (parseInt(data.result, 10) === 1) {
 
-                    $('#page-form .form-message').css('overflow', 'hidden').tigerDOM('insert', {
+                    $('#doc-form .form-message').css('overflow', 'hidden').tigerDOM('change', {
                         content: data.html[0],
                         removeClick: true,
                         removeTimeout: 0
@@ -458,7 +422,7 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
 
                         $('#page-signup-form .form-message')
                             .css('overflow', 'hidden')
-                            .tigerDOM('insert', {
+                            .tigerDOM('change', {
                                 content: data.html[0],
                                 removeClick: true,
                                 removeTimeout: 0
@@ -470,7 +434,7 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
 
                         let msgData = {
                             result: 0,
-                            form: 'Cms_Form_Page',
+                            form: 'Doc_Form_Doc',
                             element: null,
                             messages: []
                         };
@@ -483,7 +447,6 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
                             msgData.messages = [];
 
                             $.each(msgObj, function (errName, errMsg) {
-                                console.log(errName, errMsg);
                                 msgData.messages.push({message: errMsg, error: errName, class: "alert"});
                             });
 
@@ -508,22 +471,23 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
                     removeTimeout : 0
                 };
 
-                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
+                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
                 
             }
+            
+            $('#doc-form #description').val(Class.editor.value());
 
             /** API params tell Tiger what service will be processing the data. */
             let apiParams = {
-                service : 'cms:admin',
-                method  : 'savePage',
+                service : 'doc:admin',
+                method  : 'saveDoc',
+                active: ($('#doc-form #active').is(':checked')) ? 1 : 0,
+                deleted: ($('#doc-form #deleted').is(':checked')) ? 1 : 0,
+                description: Class.editor.value(),
             };
 
             /** Note that our API params will be added to the form data */
-            let data = $('#page-form').tigerForm('getFormValues', apiParams );
-
-            apiParams.active  = ( $('#active_page').is(':checked') ) ? 1 : 0;
-            apiParams.deleted = ( $('#deleted_page').is(':checked') ) ? 1 : 0;
-            apiParams.content = CKEDITOR.instances.content.getData();
+            let data = $('#doc-form').tigerForm('getFormValues', apiParams);
 
             $.ajax({
                 type        : "POST",
@@ -536,11 +500,11 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
                 error       : error
             });
             
-        }
+        },
 
     };
   
-    $.fn.cmsAdminIndex = function( method ) {
+    $.fn.docAdminDoc = function( method ) {
         if ( Class[method] ) {
             return Class[ method ].apply( this, Array.prototype.slice.call( arguments, 1 ));
         } else if ( typeof method === 'object' || ! method ) {
@@ -550,6 +514,6 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
         }
     };
     
-    $().cmsAdminIndex();
+    $().docAdminDoc();
     
 })( jQuery );

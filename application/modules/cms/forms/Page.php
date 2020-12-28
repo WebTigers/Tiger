@@ -27,9 +27,11 @@ class Cms_Form_Page extends Zend_Form {
         # URL Data #
 
         $this->addElement($this->_getKey());
+        $this->addElement($this->_getName());
+        $this->addElement($this->_getTheme());
+        $this->addElement($this->_getLayout());
         $this->addElement($this->_getCategory());
         $this->addElement($this->_getType());
-        $this->addElement($this->_getName());
 
         # Article Content #
 
@@ -177,6 +179,72 @@ class Cms_Form_Page extends Zend_Form {
 
     }
 
+    protected function _getTheme ( ) {
+
+        $name = 'theme';
+
+        $options = array(
+
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control text',
+            'attribs'       =>  array(
+                                    'data-valid'    => '1',
+                                ),
+
+            'label'         =>  'form.page.label.' . $name,
+            'description'   =>  'form.page.description.' . $name,
+
+            'required'      =>  true,
+            'filters'       =>  array(
+                                    array('PregReplace', array('match' => '/[^A-Za-z0-9\-]/', 'replace' => '')),
+                                ),
+            'validators'    =>  array(
+                                    array('StringLength', false, array(1, 50)),
+                                    array('Regex', false, array(
+                                        'pattern' => '/^[A-Za-z0-9\-]+$/',
+                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
+                                    )),
+                                ),
+        );
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getLayout ( ) {
+
+        $name = 'layout';
+
+        $options = array(
+
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control text',
+            'attribs'       =>  array(
+                                    'data-valid'    => '1',
+                                ),
+
+            'label'         =>  'form.page.label.' . $name,
+            'description'   =>  'form.page.description.' . $name,
+
+            'required'      =>  true,
+            'filters'       =>  array(
+                                    array('PregReplace', array('match' => '/[^A-Za-z0-9\-]/', 'replace' => '')),
+                                ),
+            'validators'    =>  array(
+                                    array('StringLength', false, array(1, 50)),
+                                    array('Regex', false, array(
+                                        'pattern' => '/^[A-Za-z0-9\-]+$/',
+                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
+                                    )),
+                                ),
+        );
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
     protected function _getCategory ( ) {
 
         $name = 'category';
@@ -264,12 +332,12 @@ class Cms_Form_Page extends Zend_Form {
             'required'      =>  false,
             'filters'       =>  array(
                                     array( 'StringTrim' ),
-                                    array( 'PregReplace', array('match' => '/[^A-Za-z0-9\W\'\-,.!:\"\<\>\=\&\_\?\+\/]/', 'replace' => '') ),
+                                    array( 'PregReplace', array('match' => '/[^\W\w\S\s]/mu', 'replace' => '') ),
                                 ),
             'validators'    =>  array(
                                     // array( 'StringLength', false, array(1, 10000) ),
                                     array( 'Regex', false, array(
-                                        'pattern' => '/^[A-Za-z0-9\W\'\-,.!:\"\<\>\=\&\_\?\+\/]+$/',
+                                        'pattern' => '/^[\W\w\S\s]+$/mu',
                                         'messages' => array( Zend_Validate_Regex::NOT_MATCH => "Invalid characters." )
                                     )),
                                 ),
