@@ -453,7 +453,7 @@ class Account_Form_Signup extends Tiger_Form_Base
 
         /** This gets us a list of Hearabout Types than can be used in the select control. */
         $type       = new Core_Model_Type;
-        $typeList   = $type->getTypeListByReference( 'hearabout', true );
+        $typeList   = $type->getTypeListByReference( 'hearabout', false, true );
 
         /** Add an empty "Please Select' to the top of the list. */
         array_unshift( $typeList, $this->_translate->translate('SELECT.PLEASE_SELECT') );

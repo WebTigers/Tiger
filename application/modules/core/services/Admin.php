@@ -24,7 +24,7 @@
  *
  * The Core Admin Service deals with setting up Tiger's core server features
  * via various database config overrides, file changes, including module
- * and theme management. Access to the admin area of Tiger is only availble
+ * and theme management. Access to the admin area of Tiger is only available
  * over ports 8080 http and 8081 https for security purposes. You should restrict
  * access to these high ports within your AWS SecurityGroup configuration.
  */

@@ -49,7 +49,7 @@ class Core_Model_Type extends Zend_Db_Table_Abstract
      * @param string $locale
      * @return array | Zend_Db_Table_Rowset_Abstract
      */
-    public function getTypeListByReference ( string $reference, string $key = '', $formatForSelect = false ) {
+    public function getTypeListByReference ( string $reference, string $key = null, $formatForSelect = false ) {
 
         $sql = $this->select()->
         where( 'reference = ?', $reference)->
