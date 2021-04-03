@@ -28,6 +28,10 @@ class Cms_Service_Content
         # Set the view content from the page data. #
         $pageRow = $this->_getPageRow( $params );
 
+        if ( empty( $pageRow ) ) {
+            throw new Zend_Controller_Action_Exception( Zend_Registry::get('Zend_Translate')->translate('ERROR.PAGE_NOT_FOUND'), 404 );
+        }
+
         $view->theme    = $pageRow->theme;
         $view->layout   = $pageRow->layout;
 
@@ -43,22 +47,25 @@ class Cms_Service_Content
         $this->_setThemeOptions($view, $pageRow );
 
         /** Set Page Title and Meta, includes OpenGraph and other custom meta. */
-        $this->setPageMeta( $view );
+        $this->setMeta( $view );
 
-        /** Set Page Links, includes favicons and other non-stylesheet links. */
-        $this->setPageLinks( $view );
+        /** Set Page Links, includes stylesheets, favicons and other non-stylesheet links. */
+        $this->setLinks( $view );
 
         /** Set Inline Scripts */
         $this->setInlineScripts( $view );
 
         /** Set HeadStyles */
-        $this->setHeadStyles( $view );
+        $this->setStyles( $view );
+
+        /** Set inline JS. */
+        $this->setScripts( $view );
 
         /** Set HeadScripts */
         $this->setHeadScripts($view );
 
         /** Render the page Content */
-        $view->content = $this->_renderPageContent( $pageRow, [ 'template' => $view->template ] );
+        $view->content = Tiger_Template::render( $pageRow->content , [ 'template' => $view->template ] );
 
     }
 
@@ -89,46 +96,33 @@ class Cms_Service_Content
      */
     protected function _getPageRow ( $params ) {
 
+        $pageModel = new Cms_Model_Page;
+
+        if ( ! empty( $params['category'] ) && ! empty( $params['key'] ) ) {
+
+            $category = $params['category'];
+            $key = $params['key'];
+            $key = preg_replace("/[^a-zA-Z0-9\-](html)/", '', $key);
+            return $pageModel->getPageByCategoryKey( $category, $key, true );
+
+        }
         if ( ! empty( $params['key'] ) ) {
 
             $key = $params['key'];
+            $key = preg_replace("/[^a-zA-Z0-9\-](html)/", '', $key);
+            return $pageModel->getPageByKey( $key,true );
 
-            $key = preg_replace( "/[^a-zA-Z0-9\-](html)/", '', $key );
+        }
+        elseif ( ! empty( $params['page_id'] ) ) {
 
-            $pageModel = new Cms_Model_Page;
-            return $pageModel->getPageContentByKey( $key );
+            return $pageModel->getPageById( $params['page_id'] );
 
         }
         else {
+
             return null;
+
         }
-
-    }
-
-    /**
-     * Render the page content
-     *
-     * @param $pageRow
-     * @param array $params
-     * @return string
-     * @throws Zend_View_Exception
-     */
-    protected function _renderPageContent ( $pageRow, $params ) {
-
-        # This is a workaround because ZendFramework can only render FILES
-        # and not strings. So, we write the string to a temp file, render
-        # the file and then delete the temp file. Not the best solution but
-        # it works within the framework's modus operandi.
-
-        $filename = Tiger_Utility_Uuid::v4() . '.phtml';
-        file_put_contents( sys_get_temp_dir() . '/' . $filename, $pageRow->content );
-        $view = new Zend_View();
-        $view->setScriptPath( sys_get_temp_dir() );
-        $view->assign( $params );
-        $content = $view->render( $filename );
-        unlink( sys_get_temp_dir() . '/' . $filename );
-
-        return $content;
 
     }
 

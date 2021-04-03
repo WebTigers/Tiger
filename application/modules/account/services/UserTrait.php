@@ -204,14 +204,21 @@ trait Account_Service_UserTrait
         $acl        = Zend_Registry::get('Zend_Acl');
         $aclRoles   = Zend_Registry::get('Zend_Config')->acl->roles->toArray();
         $userRole   = Zend_Auth::getInstance()->getIdentity()->role;
+        $results    = [];
 
         foreach ( $aclRoles as $role => $roleData ) {
 
-            // Only allow assigning of roles below the user's onw role //
-            if ( $acl->inheritsRole($userRole, $role, false) ) {
-                $results[] = (object)['id' => $role, 'text' => $roleData['role_name'] . ' - ' . $roleData['role_description']];
+            // Only allow assigning of roles at or below the user's own role //
+            if ( isset( $params['search'] ) ) {
+                if ( trim( $params['search'] ) === $role ) {
+                    $results[] = (object)['id' => $role, 'text' => $roleData['role_name'] . ' - ' . $roleData['role_description']];
+                }
             }
-
+            else {
+                if ( $acl->inheritsRole($userRole, $role, false) || $role === $userRole ) {
+                    $results[] = (object)['id' => $role, 'text' => $roleData['role_name'] . ' - ' . $roleData['role_description']];
+                }
+            }
         }
 
         $this->_response = new Core_Model_ResponseObjectSelect2([

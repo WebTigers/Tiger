@@ -249,13 +249,6 @@
                 let option = new Option( data.results[0].text, data.results[0].id, true, true);
                 $role.append(option).trigger('change');
 
-                $role.trigger({
-                    type: 'select2:select',
-                    params: {
-                        data: data
-                    }
-                });
-
             });
 
         },

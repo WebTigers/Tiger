@@ -132,14 +132,12 @@
                         }
                     }
 
-                    /*
                     if ( $el.is('select') ) {
                         $el.val( formValues[key] );
                         if ( $el.hasClass('select2') ) {
                             $el.trigger('change');
                         }
                     }
-                    */
 
                 }
 
@@ -169,13 +167,65 @@
                 formValues = {};
             }
 
-            if ( $(this).is('form') ) {
-                $( $(this).serializeArray() ).each(function ( i, el ) {
-                    formValues[el.name] = el.value;
-                });
-            }
+            let value = null;
+
+            $( this ).find(':input').each(function (i, el) {
+
+                if ( $(el).is(':checkbox') || $(el).is(':radio') ) {
+                    value = ( $(el).is(':checked') ) ? 1 : 0
+                }
+                else {
+                    value = el.value;
+                }
+
+                formValues[el.name] = value;
+
+            });
 
             return formValues;
+
+        },
+
+        persistConfigKey : function ( params ) {
+
+            function success ( data, textStatus, jqXHR ) {
+
+                // Success / Error //
+
+                if ( data.html ) {
+
+                    $('#page-messages').css('overflow', 'hidden').tigerDOM('change', {
+                        content: data.html[0],
+                        removeClick: true,
+                        removeTimeout: 0
+                    });
+
+                }
+
+            }
+
+            function error ( jqXHR, textStatus, errorThrown ) {
+
+                // show general error message
+                $( '#page-messages' ).css('overflow', 'hidden').tigerDOM('change', {
+                    content: '<div class="alert alert-danger"><i class="fa fa-ban"></i> &nbsp;' + errorThrown + '</div>',
+                    removeClick: true,
+                    removeTimeout: 0
+                });
+
+            }
+
+            params.service = 'core:admin';
+            params.method  = 'persistConfigKey';
+
+            $.ajax({
+                dataType :  'json',
+                type     :  'POST',
+                url      :  '/api',
+                data     :  params,
+                success  :  success,
+                error    :  error
+            });
 
         },
 
@@ -384,8 +434,6 @@
             });
 
         },
-
-
 
     };
 

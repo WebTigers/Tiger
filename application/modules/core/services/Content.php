@@ -38,16 +38,19 @@ class Core_Service_Content
         $view->headTitle()->set( $view->title );
 
         /** Set Meta, includes OpenGraph and other custom meta. */
-        $this->setPageMeta( $view );
+        $this->setMeta( $view );
 
         /** Set Links, includes favicons and other non-stylesheet links. */
-        $this->setPageLinks( $view );
+        $this->setLinks( $view );
 
         /** Set Inline Scripts. */
         $this->setInlineScripts( $view );
 
         /** Set HeadStyles. */
-        $this->setHeadStyles( $view );
+        $this->setStyles( $view );
+
+        /** Set inline JS. */
+        $this->setScripts( $view );
 
         /** Set HeadScripts. */
         $this->setHeadScripts($view );
@@ -61,14 +64,14 @@ class Core_Service_Content
      */
     protected function _setThemeOptions( & $view ) {
 
-        $configOptions = Zend_Registry::get('Zend_Config')->themes->{$view->theme}->options;
+        $configOptions = Zend_Registry::get('Zend_Config')->themes->{$view->theme};
 
         // Instantiating the theme's main template class auto-loads
         // the default and then page override configs, if any. The
         // template can then be used by the layout to set any options.
 
-        // $templateClass = ucfirst($view->theme) . "_Service_Template";
-        $templateClass = "Core_Service_Template";
+        $templateClass = ucfirst($view->theme) . "_Service_Template";
+        // $templateClass = "Core_Service_Template";
         $view->template = new $templateClass;
         $view->template->setTemplateOptions( $configOptions, null );
 

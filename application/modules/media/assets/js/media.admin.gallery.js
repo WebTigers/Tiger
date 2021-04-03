@@ -165,7 +165,7 @@
 
         _changeStorage : function () {
 
-            console.log( $('select#type_storage').val() );
+            // console.log( $('select#type_storage').val() );
 
             if ( $('select#type_storage').val() === 'S3' ) {
 

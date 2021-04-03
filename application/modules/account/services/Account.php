@@ -689,9 +689,15 @@ class Account_Service_Account
                 setcookie( 'username', '', time()-60*60*24*30, '/' ); // Expired 30 days ago
             }
 
-            if ( in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
-                $this->_response->redirect = '/admin';
+            // If we tried to get to a page but had to login first, remember where we were going ...
+            if ( ! empty( Zend_Registry::get('Zend_Session')->aclRequest ) ) {
+                $this->_response->redirect = Zend_Registry::get('Zend_Session')->aclRequest->getRequestUri();
             }
+
+            // Are we on a high port?
+            // if ( in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
+            //     $this->_response->port = $_SERVER['SERVER_PORT'];
+            // }
 
             $this->_response->result = 1;
             $this->_response->setTextMessage('LOGIN.SUCCESS');

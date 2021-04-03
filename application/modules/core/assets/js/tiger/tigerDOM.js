@@ -125,7 +125,7 @@
 
                 $(this).on('click', {target:$target}, function( event ){
                     event.preventDefault();
-                    if ($target.height() === 0) {
+                    if ( ! $target.is(':visible') ) {
                         $icon.addClass( $control.attr('data-tiger-class-open') );
                         $icon.removeClass( $control.attr('data-tiger-class-close') );
                         $target.tigerDOM('open');
@@ -626,6 +626,23 @@
                     .removeClass('hide')
                     .removeClass('hidden');
             
+        },
+
+        initScrollTo : function ( el ) {
+
+            $('[data-tiger-scrollto]').each(function() {
+
+                let $control = $(this);
+                let $target = $($control.attr('data-tiger-scrollto'));
+
+                $control.on( 'click', function ( ) {
+                    $('html, body').animate({
+                        scrollTop: $target.offset().top
+                    }, 1000);
+                });
+
+            });
+
         }
 
     };

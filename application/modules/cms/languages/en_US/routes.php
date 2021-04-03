@@ -8,4 +8,5 @@
 
 return [
     'TEST' => 'Test',
+    'docs' => 'docs',
 ];

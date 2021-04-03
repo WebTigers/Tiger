@@ -24,12 +24,23 @@
  */
 class Cms_IndexController extends Tiger_Controller_Action
 {
+    protected $translate;
+
     public function init()
     {
+        $this->_translate = Zend_Registry::get('Zend_Translate');
     }
 
     public function indexAction ( )
     {
+        if ( isset( Zend_Registry::get('Zend_Config')->tiger->cms->default_home_page_id ) ){
+            $this->getRequest()->setParam('page_id', Zend_Registry::get('Zend_Config')->tiger->cms->default_home_page_id);
+            $this->forward('page');
+        }
+        else {
+            throw new Zend_Controller_Action_Exception( $this->_translate->translate('ERROR.PAGE_NOT_FOUND'), 404 );
+        }
+
     }
 
     public function pageAction ( )
@@ -38,15 +49,30 @@ class Cms_IndexController extends Tiger_Controller_Action
         $contentService = new Cms_Service_Content();
         $params = $this->getRequest()->getParams();
 
+        // pr( $params );
+
         $contentService->setPageContent( $this->view, $params );
+
+    }
+
+    public function docsAction ( )
+    {
+
+        $contentService = new Cms_Service_Content();
+        $params = $this->getRequest()->getParams();
+
+        // pr( $params );
+
+        $contentService->setPageContent( $this->view, $params );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version('/assets/cms/js/cms.tiger.docs.js' ) );
+
+        // pr( $this->view->template );
 
     }
 
     public function sitemapAction ( ) {
 
         $params = $this->getRequest()->getParams();
-
-        // pr( $params );
 
         $this->_helper->layout->disableLayout();
         $this->_helper->viewRenderer->setNoRender( true );

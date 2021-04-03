@@ -1,10 +1,18 @@
 <?php
 
-class Cms_Form_Page extends Zend_Form {
+class Cms_Form_Page extends Tiger_Form_Base {
     
     protected $_locale;
     protected $_translate;
     protected $_config;
+
+    const PAGE      = 'page';
+    const MENU      = 'menu';
+    const PARTIAL   = 'partial';
+    const BLOG      = 'blog';
+    const LAYOUT    = 'layout';
+    const DOC       = 'doc';
+
 
     public function init() {
         
@@ -32,26 +40,23 @@ class Cms_Form_Page extends Zend_Form {
         $this->addElement($this->_getLayout());
         $this->addElement($this->_getCategory());
         $this->addElement($this->_getType());
+        $this->addElement($this->_getTemplates());
 
         # Article Content #
 
         $this->addElement($this->_getContent());
+        $this->addElement($this->_getLocale());
         $this->addElement($this->_getTitle());
 
-        # CSS and JS #
-
-        $this->addElement($this->_getCss());
-        $this->addElement($this->_getJavascript());
-        $this->addElement($this->_getStyles());
-        $this->addElement($this->_getScripts());
-
-        # Meta #
-
-        $this->addElement($this->_getMeta());
-
-        # Links #
+        # Links, Scripts, Meta, & Options #
 
         $this->addElement($this->_getLinks());
+        $this->addElement($this->_getHeadScripts());
+        $this->addElement($this->_getInlineScripts());
+        $this->addElement($this->_getStyles());
+        $this->addElement($this->_getScripts());
+        $this->addElement($this->_getMeta());
+        $this->addElement($this->_getOptions());
 
         # Article Controls #
 
@@ -73,11 +78,11 @@ class Cms_Form_Page extends Zend_Form {
         
         $this->clearDecorators();
         
-        $this->addDecorators(array('FormElements', 'Form'));
+        $this->addDecorators(['FormElements', 'Form']);
 
-        $this->setElementDecorators(array(
-            array('ViewHelper'),
-        ));
+        $this->setElementDecorators([
+            ['ViewHelper'],
+        ]);
         
     }
     
@@ -98,17 +103,26 @@ class Cms_Form_Page extends Zend_Form {
         $name = 'page_id';
 
         $options = array(
+
             'name'          =>  $name,
             'id'            =>  $name,
+            'class'         =>  'form-control form-control-lg form-control-alt',
+            'attribs'       =>  [
+                                    'data-valid' => '0',
+                                ],
 
-            'filters'       =>  array(
-                                    array( 'StringTrim' ),
-                                ),
-            'validators'    =>  array(
-                                    array( 'Uuid', false ),
-                            ),
+            'required'      =>  false,
+            'filters'       =>  [
+                                    [ 'StringTrim' ],
+                                ],
+            'validators'    =>  [
+                                    [ 'Uuid', false, [
+                                        'messages'  => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID" ]
+                                    ] ],
+
+                                ],
         );
-        
+
         return new Zend_Form_Element_Hidden( $name, $options );
         
     }
@@ -117,30 +131,30 @@ class Cms_Form_Page extends Zend_Form {
 
         $name = 'name';
 
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
             'class'         =>  'form-control text',
-            'attribs'       =>  array(
+            'attribs'       =>  [
                                     'data-valid'    => '1',
-                                ),
+                                ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  true,
-            'filters'       =>  array(
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9\- ]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 50)),
-                                    array('Regex', false, array(
+            'filters'       =>  [
+                                    ['PregReplace', ['match' => '/[^A-Za-z0-9\- ]/', 'replace' => ''] ],
+                                ],
+            'validators'    =>  [
+                                    ['StringLength', false, [1, 50] ],
+                                    ['Regex', false, [
                                         'pattern' => '/^[A-Za-z0-9\- ]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-            ),
-        );
+                                        'messages' => [Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
+        ];
 
         return new Zend_Form_Element_Text( $name, $options );
 
@@ -150,30 +164,30 @@ class Cms_Form_Page extends Zend_Form {
 
         $name = 'key';
 
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
             'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                'data-valid'    => '1',
-            ),
+            'attribs'       =>  [
+                                    'data-valid'    => '1',
+                                ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  true,
-            'filters'       =>  array(
-                array('PregReplace', array('match' => '/[^A-Za-z0-9\-]/', 'replace' => '')),
-            ),
-            'validators'    =>  array(
-                array('StringLength', false, array(1, 50)),
-                array('Regex', false, array(
+            'filters'       =>  [
+                ['PregReplace', ['match' => '/[^A-Za-z0-9\-]/', 'replace' => '']],
+            ],
+            'validators'    =>  [
+                ['StringLength', false, [1, 50]],
+                ['Regex', false, [
                     'pattern' => '/^[A-Za-z0-9\-]+$/',
-                    'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                )),
-            ),
-        );
+                    'messages' => [Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                ]],
+            ],
+        ];
 
         return new Zend_Form_Element_Text( $name, $options );
 
@@ -183,32 +197,35 @@ class Cms_Form_Page extends Zend_Form {
 
         $name = 'theme';
 
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
+            'class'         =>  'form-control form-control-lg select2',
+            'attribs'       =>  [
                                     'data-valid'    => '1',
-                                ),
+                                ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'required'      =>  true,
-            'filters'       =>  array(
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9\-]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 50)),
-                                    array('Regex', false, array(
+            'registerInArrayValidator'  => false,
+            'multiOptions'  =>  [],
+
+            'required'      =>  false,
+            'filters'       =>  [
+                                    ['PregReplace', ['match' => '/[^A-Za-z0-9\-]/', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    ['StringLength', false, [1, 50]],
+                                    ['Regex', false, [
                                         'pattern' => '/^[A-Za-z0-9\-]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
+                                        'messages' => [Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
+        ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 
@@ -216,32 +233,35 @@ class Cms_Form_Page extends Zend_Form {
 
         $name = 'layout';
 
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
+            'class'         =>  'form-control form-control-lg select2',
+            'attribs'       =>  [
                                     'data-valid'    => '1',
-                                ),
+                                ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'required'      =>  true,
-            'filters'       =>  array(
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9\-]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 50)),
-                                    array('Regex', false, array(
+            'registerInArrayValidator'  => false,
+            'multiOptions'  =>  [],
+
+            'required'      =>  false,
+            'filters'       =>  [
+                                    ['PregReplace', ['match' => '/[^A-Za-z0-9\-]/', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    ['StringLength', false, [1, 50]],
+                                    ['Regex', false, [
                                         'pattern' => '/^[A-Za-z0-9\-]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
+                                        'messages' => [Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
+        ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 
@@ -249,30 +269,30 @@ class Cms_Form_Page extends Zend_Form {
 
         $name = 'category';
 
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
             'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                'data-valid'    => '1',
-            ),
+            'attribs'       =>  [
+                                    'data-valid'    => '1',
+                                ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  false,
-            'filters'       =>  array(
-                array('PregReplace', array('match' => '/[^A-Za-z0-9\- ]/', 'replace' => '')),
-            ),
-            'validators'    =>  array(
-                array('StringLength', false, array(1, 50)),
-                array('Regex', false, array(
-                    'pattern' => '/^[A-Za-z0-9\- ]+$/',
-                    'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                )),
-            ),
-        );
+            'filters'       =>  [
+                                    ['PregReplace', ['match' => '/[^A-Za-z0-9\- ]/', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    ['StringLength', false, [1, 50]],
+                                    ['Regex', false, [
+                                        'pattern' => '/^[A-Za-z0-9\- ]+$/',
+                                        'messages' => [Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
+        ];
 
         return new Zend_Form_Element_Text( $name, $options );
 
@@ -280,34 +300,45 @@ class Cms_Form_Page extends Zend_Form {
 
     protected function _getType ( ) {
 
+        $multiOptions = [
+            self::PAGE      => $this->_translate->translate('OPTION.PAGE'),
+            self::BLOG      => $this->_translate->translate('OPTION.BLOG'),
+            self::PARTIAL   => $this->_translate->translate('OPTION.PARTIAL'),
+            self::MENU      => $this->_translate->translate('OPTION.MENU'),
+            self::LAYOUT    => $this->_translate->translate('OPTION.LAYOUT'),
+            self::DOC       => $this->_translate->translate('OPTION.DOC'),
+        ];
+
         $name = 'type';
 
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
+            'class'         =>  'form-control form-control-lg select2',
+            'attribs'       =>  [
                 'data-valid'    => '1',
-            ),
+            ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'required'      =>  false,
-            'filters'       =>  array(
-                array('PregReplace', array('match' => '/[^A-Za-z0-9\-]/', 'replace' => '')),
-            ),
-            'validators'    =>  array(
-                array('StringLength', false, array(1, 50)),
-                array('Regex', false, array(
-                    'pattern' => '/^[A-Za-z0-9\-]+$/',
-                    'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                )),
-            ),
-        );
+            'registerInArrayValidator'  => true,
+            'multiOptions'  =>  $multiOptions,
 
-        return new Zend_Form_Element_Text( $name, $options );
+            'required'      =>  true,
+            'filters'       =>  [
+                                    ['PregReplace', ['match' => '/[^A-Za-z0-9\-]/', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    ['Regex', false, [
+                                        'pattern' => '/^[A-Za-z0-9\-]+$/',
+                                        'messages' => [Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
+        ];
+
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 
@@ -315,35 +346,72 @@ class Cms_Form_Page extends Zend_Form {
 
         $name = 'content';
 
-        $options = array(
+        $options = [
             
             'name'          =>  $name,
             'id'            =>  $name,
             'class'         =>  'form-control text',
-            'attribs'       =>  array(
+            'attribs'       =>  [
                                     'data-valid' => '1',
-                                ),
+                                ],
 
             'value'         => 'Start typing here ... Select text to edit.',
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
             
             'required'      =>  false,
-            'filters'       =>  array(
-                                    array( 'StringTrim' ),
-                                    array( 'PregReplace', array('match' => '/[^\W\w\S\s]/mu', 'replace' => '') ),
-                                ),
-            'validators'    =>  array(
-                                    // array( 'StringLength', false, array(1, 10000) ),
-                                    array( 'Regex', false, array(
+            'filters'       =>  [
+                                    [ 'StringTrim' ],
+                                    [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    // [ 'StringLength', false, [1, 10000) ],
+                                    [ 'Regex', false, [
                                         'pattern' => '/^[\W\w\S\s]+$/mu',
-                                        'messages' => array( Zend_Validate_Regex::NOT_MATCH => "Invalid characters." )
-                                    )),
-                                ),
-        );
+                                        'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
+        ];
 
         return new Zend_Form_Element_Textarea( $name, $options );
+
+    }
+
+    protected function _getLocale ( ) {
+
+        $multiOptions = Zend_Registry::get('Zend_Translate')->getList();
+
+        $name = 'locale';
+
+        $options = [
+
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control form-control-lg select2',
+            'attribs'       =>  [
+                'data-valid'    => '1',
+            ],
+
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'registerInArrayValidator'  => true,
+            'multiOptions'  =>  $multiOptions,
+
+            'required'      =>  false,
+            'filters'       =>  [
+                                    ['PregReplace', ['match' => '/[^A-Za-z\_]/', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    ['Regex', false, [
+                                        'pattern' => '/^[A-Za-z\_]+$/',
+                                        'messages' => [Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+            ],
+        ];
+
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 
@@ -351,101 +419,177 @@ class Cms_Form_Page extends Zend_Form {
 
         $name = 'title';
 
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
             'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                'data-valid'    => '1',
-                'placeholder' => $this->_translate->translate('form.page.label.' . $name),
-            ),
+            'attribs'       =>  [
+                                    'data-valid'    => '1',
+                                    'placeholder' => $this->_translate->translate('form.page.label.' . $name),
+                                ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  false,
-            'filters'       =>  array(
-                array('PregReplace', array('match' => '/[^A-Za-z 0-9\-]/', 'replace' => '')),
-            ),
-            'validators'    =>  array(
-                array('StringLength', false, array(0, 255)),
-                array('Regex', false, array(
-                    'pattern' => '/^[A-Za-z 0-9\-]+$/',
-                    'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                )),
-            ),
-        );
+            'filters'       =>  [
+                                    ['PregReplace', ['match' => '/[^A-Za-z 0-9\-]/', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    ['StringLength', false, [0, 255]],
+                                    ['Regex', false, [
+                                        'pattern' => '/^[A-Za-z 0-9\-]+$/',
+                                        'messages' => [Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
+        ];
 
         return new Zend_Form_Element_Text( $name, $options );
 
     }
 
-    // JS & CSS //
+    protected function _getTemplates ( ) {
 
-    protected function _getCss ( ) {
-
-        $name = 'css';
+        $name = 'templates';
 
         $options = array(
 
             'name'          =>  $name,
             'id'            =>  $name,
-            'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid' => '1',
-                                    'rows' => '4',
-                                ),
+            'class'         =>  'form-control form-control-lg select2',
+            'attribs'       =>  [
+                                    'data-valid' => '0',
+                                ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'multiOptions'              =>  [],     // Set vis Select2 Control
+            'registerInArrayValidator'  => false,
 
             'required'      =>  false,
-            'filters'       =>  array(
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9\/\-:._\s]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z0-9\/\-:._\s)]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters."))
-                                    ),
-                                ),
+            'filters'       =>  [
+                                    ['StringTrim'],
+                                    ['PregReplace', ['match' => '/[^A-Za-z0-9\/\-:._\s]/', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    ['Regex', false, [
+                                        'pattern' => '/^[A-Za-z0-9\/\-:._\s]+$/',
+                                        'messages' => [Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
         );
 
-        return new Zend_Form_Element_Textarea( $name, $options );
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 
-    protected function _getJavascript ( ) {
+    // Links, Scripts, Meta, & Options //
 
-        $name = 'javascript';
+    protected function _getLinks ( ) {
 
-        $options = array(
+        $name = 'links';
+
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
             'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid' => '1',
-                                    'rows' => '4',
-                                ),
+            'attribs'       =>  [
+                'data-valid' => '1',
+                'placeholder' => $this->_translate->translate('form.page.label.' . $name),
+            ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  false,
-            'filters'       =>  array(
-                                    array('PregReplace', array('match' => '/[^A-Za-z0-9\/\-:._\s]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z0-9\/\-:._\s]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-            ),
-        );
+            'filters'       =>  [
+                [ 'StringTrim' ],
+                [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
+            ],
+            'validators'    =>  [
+                // [ 'StringLength', false, [1, 10000) ],
+                [ 'Regex', false, [
+                    'pattern' => '/^[\W\w\S\s]+$/mu',
+                    'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                ]],
+            ],
 
-        return new Zend_Form_Element_Textarea( $name, $options );
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getHeadScripts ( ) {
+
+        $name = 'headScripts';
+
+        $options = [
+
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control text',
+            'attribs'       =>  [
+                                    'data-valid'    => '1',
+                                    'placeholder' => $this->_translate->translate('form.page.label.' . $name),
+                                ],
+
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'required'      =>  false,
+            'filters'       =>  [
+                                    [ 'StringTrim' ],
+                                    [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    // [ 'StringLength', false, [1, 10000) ],
+                                    [ 'Regex', false, [
+                                        'pattern' => '/^[\W\w\S\s]+$/mu',
+                                        'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getInlineScripts ( ) {
+
+        $name = 'inlineScripts';
+
+        $options = [
+
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control text',
+            'attribs'       =>  [
+                                    'data-valid'    => '1',
+                                    'placeholder' => $this->_translate->translate('form.page.label.' . $name),
+                                ],
+
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'required'      =>  false,
+            'filters'       =>  [
+                                    [ 'StringTrim' ],
+                                    [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    // [ 'StringLength', false, [1, 10000) ],
+                                    [ 'Regex', false, [
+                                        'pattern' => '/^[\W\w\S\s]+$/mu',
+                                        'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
 
     }
 
@@ -453,25 +597,25 @@ class Cms_Form_Page extends Zend_Form {
 
         $name = 'styles';
 
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
             'class'         =>  'form-control text',
-            'attribs'       =>  array(
+            'attribs'       =>  [
                                     'data-valid' => '1',
                                     'rows' => '4',
-                                ),
+                                ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  false,
-            'filters'       =>  array(
-            ),
-            'validators'    =>  array(
-            ),
-        );
+            'filters'       =>  [
+                                ],
+            'validators'    =>  [
+                                ],
+        ];
 
         return new Zend_Form_Element_Textarea( $name, $options );
 
@@ -481,102 +625,100 @@ class Cms_Form_Page extends Zend_Form {
 
         $name = 'scripts';
 
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
             'class'         =>  'form-control text',
-            'attribs'       =>  array(
+            'attribs'       =>  [
                                     'data-valid' => '1',
                                     'rows' => '4',
-                                ),
+                                ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  false,
-            'filters'       =>  array(
-                                ),
-            'validators'    =>  array(
-                                ),
-        );
+            'filters'       =>  [
+                                ],
+            'validators'    =>  [
+                                ],
+        ];
 
         return new Zend_Form_Element_Textarea( $name, $options );
 
     }
 
-    // Meta //
-
     protected function _getMeta ( ) {
 
         $name = 'meta';
 
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
             'class'         =>  'form-control text',
-            'attribs'       =>  array(
+            'attribs'       =>  [
                                     'data-valid'    => '1',
                                     'placeholder' => $this->_translate->translate('form.page.label.' . $name),
-                                ),
+                                ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  false,
-            'filters'       =>  array(
-                                    array('PregReplace', array('match' => '/[^A-Za-z 0-9\-]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(0, 255)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z 0-9\-]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
+            'filters'       =>  [
+                                    [ 'StringTrim' ],
+                                    [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
+                                ],
+            'validators'    =>  [
+                                    // [ 'StringLength', false, [1, 10000) ],
+                                    [ 'Regex', false, [
+                                        'pattern' => '/^[\W\w\S\s]+$/mu',
+                                        'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
+        ];
 
         return new Zend_Form_Element_Text( $name, $options );
 
     }
 
-    // Links //
+    protected function _getOptions ( ) {
 
-    protected function _getLinks ( ) {
+        $name = 'options';
 
-        $name = 'og_title';
-
-        $options = array(
+        $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
             'class'         =>  'form-control text',
-            'attribs'       =>  array(
-                                    'data-valid' => '1',
-                                    'placeholder' => $this->_translate->translate('form.page.label.' . $name),
-                                ),
+            'attribs'       =>  [
+                'data-valid'    => '1',
+                'placeholder' => $this->_translate->translate('form.page.label.' . $name),
+            ],
 
-            'label'         =>  'form.page.label.' . $name,
-            'description'   =>  'form.page.description.' . $name,
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  false,
-            'filters'       =>  array(
-                                    array('PregReplace', array('match' => '/[^A-Za-z 0-9\-]/', 'replace' => '')),
-                                ),
-            'validators'    =>  array(
-                                    array('StringLength', false, array(1, 50)),
-                                    array('Regex', false, array(
-                                        'pattern' => '/^[A-Za-z 0-9\-]+$/',
-                                        'messages' => array(Zend_Validate_Regex::NOT_MATCH => "Invalid characters.")
-                                    )),
-                                ),
-        );
+            'filters'       =>  [
+                [ 'StringTrim' ],
+                [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
+            ],
+            'validators'    =>  [
+                // [ 'StringLength', false, [1, 10000) ],
+                [ 'Regex', false, [
+                    'pattern' => '/^[\W\w\S\s]+$/mu',
+                    'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                ]],
+            ],
+        ];
 
         return new Zend_Form_Element_Text( $name, $options );
-        
+
     }
-    
+
     // Boilerplate //
 
     protected function _getActive ( ) {

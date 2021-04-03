@@ -37,7 +37,7 @@ abstract class Tiger_Controller_Action extends Zend_Controller_Action {
      * 
      */
     public function preDispatch ( ) {
-        
+
         parent::preDispatch();
 
         /** Allows us to do stuff within the predispatch phase. */
@@ -48,7 +48,7 @@ abstract class Tiger_Controller_Action extends Zend_Controller_Action {
      * 
      */
     public function postDispatch ( ) {
-        
+
         parent::postDispatch();
 
         /** Allows us to do stuff within the postdispatch phase. */
@@ -57,7 +57,7 @@ abstract class Tiger_Controller_Action extends Zend_Controller_Action {
     }
 
     /**
-     * This stubbed out function is just to let you know that you can create functions that are globablly
+     * This stubbed out function is just to let you know that you can create functions that are globally
      * available to your application just by creating controllers that extend this Tiger_Controller_Action.
      */
     public function globalSomething ( )

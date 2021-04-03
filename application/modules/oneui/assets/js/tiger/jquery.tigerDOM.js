@@ -114,6 +114,7 @@
                        .removeClass('hide');
 
                 $(this).on('click', {target:$target}, function( e ){
+
                     e.preventDefault();
                     if ($target.height() == 0) { 
                         $target.tigerDOM('open'); 

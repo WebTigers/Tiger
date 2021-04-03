@@ -33,6 +33,10 @@ class Tiger_Controller_Plugin_Navigation extends Zend_Controller_Plugin_Abstract
     {
 
         $config = Zend_Registry::get( 'Zend_Config' )->resources->navigation->pages->toArray();
+
+        // Uncomment if you are having navigation issues; allows you to see what's in the navigation config.
+        // pr( $config );
+
         $navigation = new Zend_Navigation( $config );
         Zend_Registry::set( 'Zend_Navigation', $navigation );
         Zend_Layout::getMvcInstance()->getView()->navigation( $navigation );
