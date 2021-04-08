@@ -96,8 +96,6 @@ trait Core_Service_CacheTrait
             $this->_response->result = 0;
             $this->_response->setTextMessage('MESSAGE.CACHE_ERROR', 'error');
 
-            pr( $e->getMessage() );
-
         }
 
     }

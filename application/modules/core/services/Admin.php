@@ -32,6 +32,7 @@ class Core_Service_Admin
 {
     use Core_Service_ConfigTrait;
     use Core_Service_CacheTrait;
+    use Core_Service_BackupTrait;
 
     protected $_auth;
     protected $_acl;

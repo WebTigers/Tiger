@@ -71,7 +71,6 @@ class Core_Service_Content
         // template can then be used by the layout to set any options.
 
         $templateClass = ucfirst($view->theme) . "_Service_Template";
-        // $templateClass = "Core_Service_Template";
         $view->template = new $templateClass;
         $view->template->setTemplateOptions( $configOptions, null );
 

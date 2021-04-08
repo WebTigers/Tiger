@@ -67,7 +67,11 @@ class AdminController extends Tiger_Controller_Admin
         $this->view->cacheServers = $this->_adminService->getCacheServerTextList();
     }
 
-
+    public function backupAction ()
+    {
+        $this->view->template->page_title = $this->view->translate('HEADING.BACKUP');
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.admin.backup.js' ) );
+    }
 
 }
 

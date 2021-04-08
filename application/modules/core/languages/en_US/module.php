@@ -9,8 +9,11 @@
 return [
 
     // Server Admin Translations //
+
+    // PHP Info //
     'MENU.ADMIN.SERVER_PHPINFO' => 'PHP Info',
 
+    // Cache //
     'HEADING.CACHE' => 'Cache',
     'TITLE.CACHE_CONTROLS' => 'Cache Controls',
     'MENU.ADMIN.SERVER_CACHE' => 'Cache',
@@ -23,5 +26,10 @@ return [
     // Configs Translations //
     'TITLE.CONFIGURATION' => 'Configuration',
     'TITLE.STATIC_CONFIGURATION' => 'Static Configuration',
+
+    // Backup //
+    'MENU.ADMIN.SERVER_BACKUP' => 'Backup',
+    'HEADING.BACKUP' => 'Backup',
+
 
 ];
