@@ -65,7 +65,7 @@ defined('TIGER_CONFIG_PATH')
 
 // Define path to logs directory
 defined('LOG_PATH')
-    || define('LOG_PATH', realpath(dirname(__FILE__) . '/tiger-logs'));
+    || define('LOG_PATH', realpath(dirname(__FILE__) . '/../tiger-logs'));
 
 // Define path to the file upload directory
 defined('UPLOAD_PATH')
