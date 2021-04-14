@@ -33,7 +33,7 @@ class Tiger_Log {
      * @param string $extras additional detail
      */
     public static function file ( $string, $priority = Zend_Log::NOTICE, $extras = null ){
-        
+
         $writer = new Zend_Log_Writer_Stream( LOG_PATH . '/application.log' );
         $logger = new Zend_Log( $writer );
 

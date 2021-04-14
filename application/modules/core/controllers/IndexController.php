@@ -51,8 +51,12 @@ class IndexController extends Tiger_Controller_Action
     {
 
         /** Use the test action to play with test code. */
-        $composerService = new Core_Service_Composer();
-        $composerService->status();
+        // $composerService = new Core_Service_Composer([]);
+        // pr( $composerService->status('webtigers/core', true) );
+        // $composerService->status( 'webtigers/core', true );
+        // pr( $composerService->getComposerJSON() );
+        // $composerService->setComposerJSON();
+        // $composerService->sync([]);
 
     }
 

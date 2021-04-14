@@ -20,58 +20,36 @@
  */
 
 /**
- * Class Core_Service_Admin
+ * Class Core_Service_Webservice
  *
- * The Core Admin Service deals with setting up Tiger's core server features
- * via various database config overrides, file changes, including module
- * and theme management. Access to the admin area of Tiger is only available
- * over ports 8080 http and 8081 https for security purposes. You should restrict
- * access to these high ports within your AWS SecurityGroup configuration.
+ * A Core Abstract Service that can be extended by other classes when their functions
+ * need to be made accessible to webservice calls.
+ *
  */
-class Core_Service_Admin
+abstract class Core_Service_Webservice
 {
-    use Core_Service_ConfigTrait;
-    use Core_Service_CacheTrait;
-    use Core_Service_BackupTrait;
-    use Core_Service_PackageTrait;
 
-    protected $_auth;
-    protected $_acl;
     protected $_locale;
-    protected $_translate;
     protected $_config;
     protected $_response;
     protected $_request;
     protected $_form;
     protected $_reflection;
-    protected $_utility;
-
-    protected $_typeModel;
-    protected $_configModel;
-    protected $_packageModel;
 
     public function __construct( $input ) {
 
-        $this->_auth        = Zend_Auth::getInstance();
-        $this->_acl         = Zend_Registry::get('Zend_Acl');
         $this->_locale      = Zend_Registry::get('Zend_Locale');
-        $this->_translate   = Zend_Registry::get('Zend_Translate');
         $this->_config      = Zend_Registry::get('Zend_Config');
         $this->_response    = new Core_Model_ResponseObject();
-        $this->_utility     = new Core_Service_Utility();
-
-        $this->_typeModel   = new Core_Model_Type();
-        $this->_configModel = new Core_Model_Config();
-        $this->_packageModel = new Core_Model_Package();
 
         if ( $input instanceof Zend_Controller_Request_Http ) {
             $this->_request = $input;
             $params = $this->_request->getParams();
-        } 
+        }
         elseif ( is_array($input) ) {
             $params = $input;
         }
-        
+
         if ( ! isset( $this->_reflection ) ) {
             $this->_reflection = new ReflectionClass( $this );
         }
@@ -79,14 +57,13 @@ class Core_Service_Admin
         if ( isset( $params['form'] ) && class_exists( $params['form'], true ) ) {
             $this->_form = new $params['form'];
         }
-        
+
         $this->_dispatch( $params );
-        
+
     }
 
+    // Common Class Functions //
 
-    ### Boilerplate Internal Class Functions ###
-    
     /**
      * If this service is called via the API, the dispatch
      * method will route the $params to the proper function.
@@ -95,35 +72,27 @@ class Core_Service_Admin
     private function _dispatch ( $params ) {
 
         try {
-            
+
             if ( isset( $params['method'] ) ) {
 
                 // filter the method to just camelCase alphaNumeric for security
-                $method = Zend_Filter::filterStatic( $params['method'], 
-                        'PregReplace', array('match' => '/[^A-Za-z0-9]/', 'replace' => '') );
+                $method = Zend_Filter::filterStatic( $params['method'],
+                    'PregReplace', array('match' => '/[^A-Za-z0-9]/', 'replace' => '') );
 
                 // make sure the method exists and that it's public
                 if ( method_exists( $this, $method ) &&
-                        $this->_reflection->getMethod( $method )->isPublic() ) {
-                            $this->{$method}( $params );
+                    $this->_reflection->getMethod( $method )->isPublic() ) {
+                    $this->{$method}( $params );
                 }
             }
         }
-        
+
         catch ( Exception $e ) {
 
             // @TODO Need to log this
 
         }
-        
-    }
 
-    /**
-     * Gets the Core ResponseObject
-     * @return object of ResponseObject
-     */
-    public function getResponse() {
-        return $this->_response;
     }
 
     /**
@@ -142,27 +111,16 @@ class Core_Service_Admin
 
     }
 
-    #### Public Admin Functions ###
+    public function getForm ( ) {
+        return $this->_form;
+    }
 
-    /**
-     * @TODO: This method is in a few services. Need to make it more DRY later.
-     */
-    public function getTypeSelect2List ( $params )
-    {
-        $results = [];
-        $typeRowset = $this->_typeModel->getTypeListByReference( $params['reference'], $params['key'] );
+    public function setForm ( Zend_Form $form ) {
+        $this->_form = $form;
+    }
 
-        foreach ( $typeRowset as $typeRow ) {
-            $results[] = (object) ['id' => $typeRow->key, 'text' => $typeRow->type_name ];
-        }
-
-        $this->_response = new Core_Model_ResponseObjectSelect2([
-            'results' => $results,
-            'pagination' => (object) ['more' => false ],
-            'error' => null,
-            'login' => false,
-        ]);
-
+    public function getResponse ( ) {
+        return $this->_response;
     }
 
 }

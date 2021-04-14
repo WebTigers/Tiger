@@ -73,5 +73,12 @@ class AdminController extends Tiger_Controller_Admin
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.admin.backup.js' ) );
     }
 
+    public function packageAction ()
+    {
+        $this->view->template->page_title = $this->view->translate('HEADING.PACKAGE');
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.admin.package.js' ) );
+        $this->view->packageForm = new Core_Form_Package();
+    }
+
 }
 

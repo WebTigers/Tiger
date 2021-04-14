@@ -49,7 +49,7 @@ class Cms_IndexController extends Tiger_Controller_Action
         $contentService = new Cms_Service_Content();
         $params = $this->getRequest()->getParams();
 
-        // pr( $params );
+        // pr( $params ); // Version Testing
 
         $contentService->setPageContent( $this->view, $params );
 
