@@ -35,6 +35,8 @@ class Core_Service_Admin
     use Core_Service_BackupTrait;
     use Core_Service_PackageTrait;
 
+    const TIGER_TYPES = ['tiger-module', 'tiger-theme'];
+
     protected $_auth;
     protected $_acl;
     protected $_locale;

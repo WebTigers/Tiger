@@ -410,11 +410,11 @@ trait Core_Service_PackageTrait
             /** Writes the response to the application.log */
             Tiger_Log::file( $response );
 
-            /** If this is the Tiger platform, we need to do updates a bit differently. Copy the new files immediately. */
+            /** If this is the Tiger platform, module or theme, we need to do updates a bit differently. Copy the new files immediately. */
             if ( $packageRow->type === 'tiger-platform' ) {
                 $this->updatePlatform();
             }
-            else {
+            elseif ( in_array( $packageRow->type, self::TIGER_TYPES ) ) {
                 $this->copyPackage( $packageRow );
             }
 
