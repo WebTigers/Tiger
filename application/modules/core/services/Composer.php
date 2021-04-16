@@ -113,6 +113,11 @@ final class Core_Service_Composer extends Core_Service_Webservice
 
         $packageInfo = $this->status( $package->name, true );
 
+        /** Check the Extra data ... the core-component bool basically tells us whether or not the package can be safely removed from Tiger. */
+        $required = ( isset( $packageInfo->extra->core_component ) )
+            ? intval( $packageInfo->extra->core_component )
+            : 0;
+
         /** Attempt to get the record from the DB */
         $packageRow = $this->_packageModel->getPackageByName( $packageInfo->name );
 
@@ -120,6 +125,7 @@ final class Core_Service_Composer extends Core_Service_Webservice
 
             $packageRow->type = $packageInfo->type;
             $packageRow->description = $packageInfo->description;
+            $packageRow->required = $this->isRequired( $packageInfo->name );
             $packageRow->target_version = $this->_composerJSON->require->{$packageInfo->name};
             $packageRow->version = $packageInfo->versions[0];
             $packageRow->latest = $packageInfo->latest;
@@ -136,6 +142,7 @@ final class Core_Service_Composer extends Core_Service_Webservice
                 'name' => $packageInfo->name,
                 'type' => $packageInfo->type,
                 'description' => $packageInfo->description,
+                'required' => $this->isRequired( $packageInfo->name ),
                 'target_version' => $this->_composerJSON->require->{$packageInfo->name},
                 'version' => $packageInfo->versions[0],
                 'latest' => $packageInfo->latest,
@@ -151,6 +158,23 @@ final class Core_Service_Composer extends Core_Service_Webservice
         }
 
         return $packageRow;
+
+    }
+
+    public function isRequired ( $name ) {
+
+        $packageConfigs = Zend_Registry::get('Zend_Config')->packages;
+
+        $out = 0;
+        foreach( $packageConfigs as $vendor => $package ) {
+            foreach ( $package as $packageName => $packageData ) {
+                if ( $packageData->require->name === $name ) {
+                    $out = ( $packageData->meta->required ) ? 1 : 0;
+                }
+            }
+        }
+
+        return $out;
 
     }
 

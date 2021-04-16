@@ -67,11 +67,12 @@
                     $(Class.packageDT.column(1).header()).text( json.i18n['DT.PACKAGE_NAME'] );
                     $(Class.packageDT.column(2).header()).text( json.i18n['DT.PACKAGE_TARGET_VERSION'] );
                     $(Class.packageDT.column(3).header()).text( json.i18n['DT.PACKAGE_DESCRIPTION'] );
-                    $(Class.packageDT.column(4).header()).text( json.i18n['DT.PACKAGE_VERSION'] );
-                    $(Class.packageDT.column(5).header()).text( json.i18n['DT.PACKAGE_LATEST'] );
-                    $(Class.packageDT.column(6).header()).text( json.i18n['DT.PACKAGE_REPO_TYPE'] );
-                    $(Class.packageDT.column(7).header()).text( json.i18n['DT.PACKAGE_REPO_URL'] );
-                    $(Class.packageDT.column(8).header()).text( json.i18n['DT.ACTIONS'] );
+                    $(Class.packageDT.column(4).header()).text( json.i18n['DT.PACKAGE_REQUIRED'] );
+                    $(Class.packageDT.column(5).header()).text( json.i18n['DT.PACKAGE_VERSION'] );
+                    $(Class.packageDT.column(6).header()).text( json.i18n['DT.PACKAGE_LATEST'] );
+                    $(Class.packageDT.column(7).header()).text( json.i18n['DT.PACKAGE_REPO_TYPE'] );
+                    $(Class.packageDT.column(8).header()).text( json.i18n['DT.PACKAGE_REPO_URL'] );
+                    $(Class.packageDT.column(9).header()).text( json.i18n['DT.ACTIONS'] );
 
                     setTimeout( function () {
                         One.block('state_normal', $block);
@@ -105,6 +106,11 @@
                     'title': 'DT.PACKAGE_DESCRIPTION',
                     'name': 'description',
                     'data': 'description'
+                }, {
+                    'title': 'DT.PACKAGE_REQUIRED',
+                    'name': 'required',
+                    'data': 'required',
+                    'visible': false
                 }, {
                     'title': 'DT.PACKAGE_VERSION',
                     'name': 'version',
@@ -171,9 +177,14 @@
                         .attr('data-delay', '{ "show": 2000, "hide": 100 }');
 
                     /** We only want to show the activate and deactivate control for Tiger modules and themes. */
-                     if ( el.class.search('active') > -1 && Class.packageTypes.indexOf( data.type ) === -1 ) {
+                     if ( el.class.search('active') > -1 && ( Class.packageTypes.indexOf( data.type ) === -1 || parseInt( data.required, 10 ) === 1) ) {
                          elm.addClass('invisible');
                      }
+
+                    /** We only want to show the delete control for Tiger modules and themes that are non-essential. */
+                    if ( el.class.search('delete') > -1 && parseInt( data.required, 10 ) === 1 ) {
+                        elm.addClass('invisible');
+                    }
 
                      html += elm.prop('outerHTML');
                 }

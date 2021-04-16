@@ -78,6 +78,7 @@ trait Core_Service_PackageTrait
                 'DT.PACKAGE_NAME',
                 'DT.PACKAGE_TARGET_VERSION',
                 'DT.PACKAGE_DESCRIPTION',
+                'DT.PACKAGE_REQUIRED',
                 'DT.PACKAGE_VERSION',
                 'DT.PACKAGE_LATEST',
                 'DT.PACKAGE_REPO_TYPE',
@@ -362,7 +363,7 @@ trait Core_Service_PackageTrait
         if ( file_exists( $target . '/assets' ) ) {
             $module = MODULES_PATH  . '/' . explode('/', $packageRow->name)[1] . '/assets';
             $link = PUBLIC_PATH . '/assets/' . explode('/', $packageRow->name)[1];
-            shell_exec( "ln -s $module $link" );
+            shell_exec( "ln -sf $module $link" );
         }
 
     }
@@ -412,6 +413,9 @@ trait Core_Service_PackageTrait
             /** If this is the Tiger platform, we need to do updates a bit differently. Copy the new files immediately. */
             if ( $packageRow->type === 'tiger-platform' ) {
                 $this->updatePlatform();
+            }
+            else {
+                $this->copyPackage( $packageRow );
             }
 
             $composerService->savePackage($packageRow);

@@ -58,6 +58,34 @@ class IndexController extends Tiger_Controller_Action
         // $composerService->setComposerJSON();
         // $composerService->sync([]);
 
+
+        try {
+
+            // https://docs.aws.amazon.com/aws-sdk-php/v3/api/class-Aws.LocationService.LocationServiceClient.html
+            // https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-location-2020-11-19.html#searchplaceindexfortext
+
+            $clientConfigs = Zend_Registry::get('Zend_Config')->aws->client->toArray();
+            $client = new \Aws\LocationService\LocationServiceClient( $clientConfigs );
+
+            $result = $client->searchPlaceIndexForText([
+                // 'BiasPosition'      => [47.57381439, -120.35188293],          // <float>, ...
+                // 'FilterBBox'        => [],          // <float>, ...
+                'FilterCountries'   => ['USA'],     // '<string>', ...
+                'IndexName'         => 'sample.here.place',          // REQUIRED, <string>
+                'MaxResults'        => 10,          // <integer>
+                'Text'              => '1162 st francis place',     // REQUIRED, <string>
+            ]);
+
+            pr( $result );
+
+        }
+        catch ( Error | Exception $e ) {
+
+            pr( $e->getMessage() );
+
+        }
+
+
     }
 
 }

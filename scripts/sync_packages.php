@@ -35,7 +35,7 @@ curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 // $output contains the output string
 $output = curl_exec($curl);
 
-echo $output;
+echo $output . "\n";
 
 // close curl resource to free up system resources
 // (deletes the variable made by curl_init)
