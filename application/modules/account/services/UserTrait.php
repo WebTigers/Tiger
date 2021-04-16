@@ -371,7 +371,7 @@ trait Account_Service_UserTrait
             $this->_response->setTextMessage( 'MESSAGE.UPDATE_FAILED', 'alert' );
 
             /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
+            Tiger_Log::error( $e->getMessage() );
 
         }
 
@@ -450,7 +450,7 @@ trait Account_Service_UserTrait
             $this->_response->setTextMessage( 'MESSAGE.USER_SAVED', 'success' );
 
         }
-        catch ( Exception $e ) {
+        catch ( Error | Exception $e ) {
 
             /** Uh oh, something went wrong, rollback all database activity! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
@@ -459,21 +459,7 @@ trait Account_Service_UserTrait
             $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
 
             /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
-
-            pr( $e->getMessage() );
-
-        }
-        catch ( Error $e ) {
-
-            /** Uh oh, something went wrong, rollback all database activity! */
-            Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
-
-            /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
+            Tiger_Log::error( $e->getMessage() );
 
         }
 
@@ -533,6 +519,7 @@ trait Account_Service_UserTrait
              */
             $userRow->user_id   = Tiger_Utility_Uuid::v1();
             $userRow->create_ip = $_SERVER['REMOTE_ADDR'];
+            $userRow->update_ip = $_SERVER['REMOTE_ADDR'];
 
         }
 

@@ -243,10 +243,10 @@ class Account_Service_Account
              */
 
             $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.NEWUSER_FAILED' );
+            $this->_response->setTextMessage( 'MESSAGE.NEW_USER_FAILED' );
 
             /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
+            Tiger_Log::errer( $e->getMessage() );
 
         }
 
@@ -282,6 +282,7 @@ class Account_Service_Account
             }
 
             $userRow->setFromArray( $data );
+            $userRow->update_ip = $_SERVER['REMOTE_ADDR'];
 
         }
         else {

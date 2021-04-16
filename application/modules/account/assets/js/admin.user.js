@@ -32,7 +32,7 @@
             $(document).ready(function() {
 
                 // Page init stuff goes here. //
-                Class._inituserDataTable();
+                Class._initUserDataTable();
                 Class._initControls();
 
             });
@@ -41,7 +41,7 @@
 
         // Admin Functions //
 
-        _inituserDataTable : function () {
+        _initUserDataTable : function () {
 
             let $datatable = $('#usersDT');
             let $block = $datatable.closest('div.block');
@@ -117,7 +117,7 @@
                     'targets': -1,
                     'data': null,
                     'orderable': false,
-                    'width': '230px',
+                    'width': '250px',
                     'render': Class._buildControls,
                 }, {
                     'title': 'DT.USER_ID',
@@ -571,7 +571,7 @@
 
                     /** Oops, something went wrong ... */
 
-                    $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'insert', {
+                    $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'change', {
                         content       : data.html[0],
                         removeClick   : true,
                         removeTimeout : 0
@@ -590,7 +590,7 @@
                     removeTimeout : 0
                 };
 
-                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
+                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
 
             };
 
@@ -736,7 +736,12 @@
 
                 if (parseInt(data.result, 10) === 1) {
 
-                    $('#user-form .form-message').css('overflow', 'hidden').tigerDOM('insert', {
+                    $('#modal-users-form').modal('hide');
+
+                    /** Reloads the table with the new data at the page it's currently on. */
+                    Class.userDT.ajax.reload( null, false );
+
+                    $('#page-messages').css('overflow', 'hidden').tigerDOM( 'change', {
                         content: data.html[0],
                         removeClick: true,
                         removeTimeout: 0
@@ -749,7 +754,7 @@
 
                         $('#user-form .form-message')
                             .css('overflow', 'hidden')
-                            .tigerDOM('insert', {
+                            .tigerDOM('change', {
                                 content: data.html[0],
                                 removeClick: true,
                                 removeTimeout: 0
@@ -799,7 +804,7 @@
                     removeTimeout : 0
                 };
 
-                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
+                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
                 
             }
 
