@@ -246,7 +246,7 @@ class Account_Service_Account
             $this->_response->setTextMessage( 'MESSAGE.NEW_USER_FAILED' );
 
             /** We also log what happened ... */
-            Tiger_Log::errer( $e->getMessage() );
+            Tiger_Log::error( $e->getMessage() );
 
         }
 

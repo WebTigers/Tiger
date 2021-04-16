@@ -358,12 +358,19 @@ trait Core_Service_PackageTrait
 
         $source = VENDOR_PATH  . '/' . explode('/', $packageRow->name)[0] . '/' . explode('/', $packageRow->name)[1];
         $target = MODULES_PATH . '/' . explode('/', $packageRow->name)[1];
-        shell_exec( "cp -rf $source $target" );
+        $response = shell_exec( "cp -rf $source $target" );
+        if ( ! empty( $response ) ) {
+            Tiger_Log::error( $response );
+        }
 
         if ( file_exists( $target . '/assets' ) ) {
             $module = MODULES_PATH  . '/' . explode('/', $packageRow->name)[1] . '/assets';
             $link = PUBLIC_PATH . '/assets/' . explode('/', $packageRow->name)[1];
-            shell_exec( "ln -sf $module $link" );
+            $response = shell_exec( "ln -sf $module $link" );
+            if ( ! empty( $response ) ) {
+                Tiger_Log::error( $response );
+            }
+
         }
 
     }
