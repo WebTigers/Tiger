@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Class Core_Service_Composer
+ * Class Package_Service_Composer
  *
  * The purpose of this class is to run at least once each day to catalog and update any
  * WebTigers' Tiger packages (modules) and update the database with the new data. This is
@@ -11,23 +11,19 @@
  * CUSTOM MODULES
  * This Composer class only manages modules managed by Composer. If you create a custom
  * module within Tiger, it will be totally ignored by this class and Composer.  :)
+ *
+ * This class is a utility class and designed to be called by the Package Service.
  */
-final class Core_Service_Composer extends Core_Service_Webservice
+final class Package_Service_Composer
 {
     protected $_composerJSON;
-    protected $_packageModel;
 
     const COMPOSER_JSON_FILEPATH = "/var/www/tiger-vendor/composer.json";
-    const TIGER_TYPES = ['tiger-module', 'tiger-theme'];
 
-    public function __construct ( $input ) {
-
-        $this->_packageModel = new Core_Model_Package;
+    public function __construct ( ) {
 
         /** Automagically pull the contents of the composer.json file */
         $this->getComposerJSON();
-
-        parent::__construct( $input );
 
     }
 
@@ -41,140 +37,6 @@ final class Core_Service_Composer extends Core_Service_Webservice
 
         $json = json_encode( $this->_composerJSON, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
         file_put_contents(self::COMPOSER_JSON_FILEPATH, $json );
-
-    }
-
-    /**
-     * The composer.json file is the canonical source for any and all required modules in Tiger.
-     * We really don't care about listing dependencies. The sync function just reads into the
-     * database whatever is in the composer.json. The sync function should be run by cron at least
-     * once each night and whenever composer is run from the command line.
-     */
-    public function sync ( $params ) {
-
-        try {
-
-            /** First, we remove any packages in the DB that have been removed from Composer. */
-            $this->_removePackages();
-
-            /** Next, we persist any packages that are in Composer but not in the DB. */
-            $this->_persistPackages();
-
-            $this->_response->result = 1;
-            $this->_response->setTextMessage('MESSAGE.SYNC_PACKAGES_COMPLETED', 'success');
-
-        }
-        catch ( Error | Exception $e ) {
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage( $e->getMessage(), 'error');
-
-        }
-
-    }
-
-    protected function _removePackages (  ) {
-
-        $composerPackages   = array_keys( (array) $this->_composerJSON->require );
-        $dbPackages         = $this->_getDbPackages();
-        $removePackages     = array_diff( $dbPackages, $composerPackages );
-
-        foreach ( $removePackages as $packageName ) {
-            $packageRow = $this->_packageModel->getPackageByName( $packageName );
-            $packageRow->delete();
-        }
-
-    }
-
-    protected function _persistPackages ( ) {
-
-        /** Gets the name, version, and description of all installed packages. */
-        $response = $this->status();
-
-        foreach ( $response->installed as $package ) {
-
-            $this->savePackage( $package );
-
-        }
-
-    }
-
-    public function savePackage ( $package ) {
-
-        /**
-         * $package example:
-            [0] => stdClass Object
-                (
-                    [name] => aws/aws-sdk-php
-                    [version] => 3.178.1
-                    [description] => AWS SDK for PHP - Use Amazon Web Services in your PHP project
-            )
-         */
-
-        $packageInfo = $this->status( $package->name, true );
-
-        /** Check the Extra data ... the core-component bool basically tells us whether or not the package can be safely removed from Tiger. */
-        $required = ( isset( $packageInfo->extra->core_component ) )
-            ? intval( $packageInfo->extra->core_component )
-            : 0;
-
-        /** Attempt to get the record from the DB */
-        $packageRow = $this->_packageModel->getPackageByName( $packageInfo->name );
-
-        if ( ! empty( $packageRow ) ) {
-
-            $packageRow->type = $packageInfo->type;
-            $packageRow->description = $packageInfo->description;
-            $packageRow->required = $this->isRequired( $packageInfo->name );
-            $packageRow->target_version = $this->_composerJSON->require->{$packageInfo->name};
-            $packageRow->version = $packageInfo->versions[0];
-            $packageRow->latest = $packageInfo->latest;
-            $packageRow->repo_type = $this->checkCustomRepo( $packageInfo->name,'type' );
-            $packageRow->repo_url = $this->checkCustomRepo( $packageInfo->name, 'url' );
-            $packageRow->active = $this->isActive( $packageInfo );
-            $packageRow->saveRow();
-
-        }
-        else {
-
-            $packageRow = $this->_packageModel->createRow([
-                'package_id' => Tiger_Utility_Uuid::v1(),
-                'name' => $packageInfo->name,
-                'type' => $packageInfo->type,
-                'description' => $packageInfo->description,
-                'required' => $this->isRequired( $packageInfo->name ),
-                'target_version' => $this->_composerJSON->require->{$packageInfo->name},
-                'version' => $packageInfo->versions[0],
-                'latest' => $packageInfo->latest,
-                'repo_type' => $this->checkCustomRepo( $packageInfo->name,'type'),
-                'repo_url' => $this->checkCustomRepo( $packageInfo->name, 'url'),
-            ]);
-
-            $packageRow->saveRow();
-
-            $packageRow->active = $this->isActive( $packageInfo );
-            $packageRow->saveRow();
-
-        }
-
-        return $packageRow;
-
-    }
-
-    public function isRequired ( $name ) {
-
-        $packageConfigs = Zend_Registry::get('Zend_Config')->packages;
-
-        $out = 0;
-        foreach( $packageConfigs as $vendor => $package ) {
-            foreach ( $package as $packageName => $packageData ) {
-                if ( $packageData->require->name === $name ) {
-                    $out = ( $packageData->meta->required ) ? 1 : 0;
-                }
-            }
-        }
-
-        return $out;
 
     }
 
@@ -196,7 +58,10 @@ final class Core_Service_Composer extends Core_Service_Webservice
 
         $output = shell_exec( $command );
 
-        // pr( $output );
+        /** If the output is not JSON, throw an exception and log it. */
+        if ( ! is_json( $output ) ) {
+            throw new Exception('ERROR.PACKAGE_NOT_AVAILABLE' );
+        }
 
         /**
          * Example output for a single package:
@@ -276,64 +141,6 @@ final class Core_Service_Composer extends Core_Service_Webservice
     }
 
     /**
-     * Get DB Packages
-     *
-     * Returns an array of all of the package names in the DB.
-     *
-     * @return array
-     */
-    protected function _getDbPackages ( ) {
-
-        $packageRowset = $this->_packageModel->getPackageNames();
-        $out = [];
-        foreach( $packageRowset as $packageRow ){
-            $out[] = $packageRow->name;
-        }
-        return $out;
-
-    }
-
-    /**
-     * Check for Custom Repository
-     *
-     * Not the most sexy way to do this, but essentially we just parse the composer.json
-     * and look for any matches. The vendor/package name should be part of the repo url.
-     *
-     * @param string $name
-     * @param string $type url | type
-     * @return mixed string | null
-     */
-    public function checkCustomRepo ( $name, $type ) {
-
-        $out = null;
-        foreach ( $this->_composerJSON->repositories as $repository ) {
-            if ( strstr( strtolower( $repository->url ), $name ) ) {
-                $out = $repository->{$type};
-            }
-        }
-        return $out;
-
-    }
-
-    /**
-     * For certain types of packages, this function tells us whether or not
-     * the theme or module is active within Tiger.
-     *
-     * @param $packageInfo
-     * @return integer 1|0
-     */
-    public function isActive ( $packageInfo ) {
-
-        $out = 0;
-        if ( in_array( $packageInfo->type, self::TIGER_TYPES ) ) {
-            $dir = MODULES_PATH . '/' . explode('/', $packageInfo->name)[1];
-            $out = ( file_exists( $dir ) && is_dir( $dir ) ) ? 1 : 0;
-        }
-        return $out;
-
-    }
-
-    /**
      * Package Exists
      *
      * Checks to see of a package name exists in the class' composerJSON array. Note that this is not
@@ -373,6 +180,9 @@ final class Core_Service_Composer extends Core_Service_Webservice
              */
             $this->_composerJSON->repositories = array_intersect_key( $this->_composerJSON->repositories, array_unique( array_column( $this->_composerJSON->repositories, 'url') ) );
 
+            /** Keeps the array sequential so that json_encode doesn't think it's an object now. */
+            $this->_composerJSON->repositories = array_values( $this->_composerJSON->repositories );
+
         }
 
         /** Write the update composer.json file. */
@@ -380,10 +190,6 @@ final class Core_Service_Composer extends Core_Service_Webservice
 
         /** Pull the package into Tiger via composer update call. */
         $this->updatePackage( $name );
-
-        /** Save the package into to the database. */
-        $package = (object) [ 'name' => $name ];
-        $this->savePackage( $package );
 
     }
 
@@ -413,12 +219,12 @@ final class Core_Service_Composer extends Core_Service_Webservice
      */
     public function removeRepository ( $repo_url ) {
 
-        $i = 0;
-        foreach ( $this->_composerJSON->repositories as $repository ) {
+        foreach ( $this->_composerJSON->repositories as $i => $repository ) {
             if ( $repository->url === $repo_url ) {
                 unset( $this->_composerJSON->repositories[$i] );
+                /** Keeps the array sequential so that json_encode doesn't think it's an object now. */
+                $this->_composerJSON->repositories = array_values( $this->_composerJSON->repositories );
             }
-            $i++;
         }
 
     }
@@ -435,7 +241,10 @@ final class Core_Service_Composer extends Core_Service_Webservice
             export COMPOSER_CACHE_DIR=/var/www/tiger-vendor/vendor/composer;
             php composer.phar update $package 2>&1";
 
-        return shell_exec( $command );
+        $response = shell_exec( $command );
+
+        /** Writes the response to the application.log */
+        Tiger_Log::file( $response );
 
     }
 

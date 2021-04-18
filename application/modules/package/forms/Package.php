@@ -19,7 +19,7 @@
  * information and software.
  */
 
-class Core_Form_Package extends Tiger_Form_Base
+class Package_Form_Package extends Tiger_Form_Base
 {
 
     public function init ( ) {

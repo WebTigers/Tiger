@@ -69,7 +69,7 @@ abstract class Core_Service_Webservice
      * method will route the $params to the proper function.
      * @param type $params
      */
-    private function _dispatch ( $params ) {
+    protected function _dispatch ( $params ) {
 
         try {
 

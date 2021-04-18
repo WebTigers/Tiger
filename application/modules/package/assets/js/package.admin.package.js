@@ -85,7 +85,7 @@
                     'dataType': 'json',
                     'dataSrc': 'data',
                     'data': {
-                        service: 'core:admin',
+                        service: 'package:package',
                         method: 'getAdminPackagesDataTable'
                     }
                 },
@@ -332,7 +332,7 @@
             }
 
             /** API params tell Tiger what service will be processing the data. */
-            data.service = 'core:admin';
+            data.service = 'package:package';
             data.method = 'setActivePackage';
             data.package_id = $elm.attr('data-id');
 
@@ -389,7 +389,7 @@
             }
 
             /** API params tell Tiger what service will be processing the data. */
-            data.service = 'core:admin';
+            data.service = 'package:package';
             data.method = 'updatePackage';
             data.package_id = $elm.attr('data-id');
 
@@ -462,7 +462,7 @@
 
             /** API params tell Tiger what service will be processing the data. */
             let apiParams = {
-                service : 'core:admin',
+                service : 'package:package',
                 method  : 'savePackage'
             };
 
@@ -484,6 +484,7 @@
 
         _confirmSync : function ( event ) {
 
+            $('#sync-error-message').css('height', '').children().remove();
             $('#modal-package-confirm-sync').modal('show');
 
         },
@@ -544,7 +545,7 @@
             };
 
             let data = {
-                service : 'core:composer',
+                service : 'package:package',
                 method  : 'sync',
             };
 
@@ -565,6 +566,7 @@
 
             Class.confirm = Class.packageDT.row( $(this).closest('tr') ).data();
             $('#delete-name').html( Class.confirm.name );
+            $('#modal-package-confirm-delete #form-delete-message').css('height', '').children().remove();
             $('#modal-package-confirm-delete').modal('show');
 
         },
@@ -625,9 +627,9 @@
             };
 
             let data = {
-                service : 'core:admin',
-                method  : 'deletePackage',
-                name    : Class.confirm.name
+                service     : 'package:package',
+                method      : 'deletePackage',
+                package_id  : Class.confirm.package_id
             };
 
             $.ajax({
@@ -645,7 +647,7 @@
 
     };
   
-    $.fn.coreAdminPackage = function( method ) {
+    $.fn.packageAdminPackage = function( method ) {
         if ( Class[method] ) {
             return Class[ method ].apply( this, Array.prototype.slice.call( arguments, 1 ));
         } else if ( typeof method === 'object' || ! method ) {
@@ -655,6 +657,6 @@
         }
     };
     
-    $().coreAdminPackage();
+    $().packageAdminPackage();
     
 })( jQuery );

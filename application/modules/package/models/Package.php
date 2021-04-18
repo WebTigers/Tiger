@@ -19,7 +19,7 @@
  * information and software.
  */
 
-class Core_Model_Package extends Zend_Db_Table_Abstract {
+class Package_Model_Package extends Zend_Db_Table_Abstract {
     
     protected $_name = 'package';
     protected $_primary = 'package_id';

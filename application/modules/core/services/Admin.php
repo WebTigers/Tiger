@@ -33,9 +33,6 @@ class Core_Service_Admin
     use Core_Service_ConfigTrait;
     use Core_Service_CacheTrait;
     use Core_Service_BackupTrait;
-    use Core_Service_PackageTrait;
-
-    const TIGER_TYPES = ['tiger-module', 'tiger-theme'];
 
     protected $_auth;
     protected $_acl;
@@ -64,7 +61,6 @@ class Core_Service_Admin
 
         $this->_typeModel   = new Core_Model_Type();
         $this->_configModel = new Core_Model_Config();
-        $this->_packageModel = new Core_Model_Package();
 
         if ( $input instanceof Zend_Controller_Request_Http ) {
             $this->_request = $input;
