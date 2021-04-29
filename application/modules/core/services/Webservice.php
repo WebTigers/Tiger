@@ -106,7 +106,7 @@ abstract class Core_Service_Webservice
         $form = ( ! is_null( $frm ) ) ? $frm : $this->_form;
 
         $this->_response->result    = 0;
-        $this->_response->form = $form->getName();
+        $this->_response->form      = $form->getName();
         $this->_response->messages  = $form->getMessages();
 
     }

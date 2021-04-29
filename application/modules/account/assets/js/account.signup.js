@@ -144,17 +144,12 @@
 
                         $.each( data.messages, function ( el, msgObj ) {
 
-                            // console.log( el, msgObj );
-
                             msgData.element = el;
                             msgData.messages = [];
 
                             $.each( msgObj, function (errName, errMsg) {
-                                console.log( errName, errMsg );
                                 msgData.messages.push( {message: errMsg, error: errName, class: "alert"} );
                             });
-
-                            // console.log( msgData );
 
                             $().tigerForm('_setElementMessage', msgData );
 

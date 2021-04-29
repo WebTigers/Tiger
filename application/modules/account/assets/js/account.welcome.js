@@ -75,7 +75,7 @@
                 
                 // Resend Success / Error //
 
-                $( '#page-resend-form .form-message' ).css('overflow','hidden').tigerDOM( 'insert', {
+                $( '#page-resend-form .form-message' ).css('overflow','hidden').tigerDOM( 'change', {
                     content       : data.html[0],
                     removeClick   : true,
                     removeTimeout : 0
@@ -94,7 +94,7 @@
                     removeTimeout : 0
                 };
 
-                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'insert', oMessage );
+                $( '#form-message' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
                 
             };
 

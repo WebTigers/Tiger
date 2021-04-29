@@ -286,7 +286,7 @@
             if ( parseInt( $this.attr( 'data-valid' ), 10 ) === 1 &&
                 $this.attr( 'data-value' ) === data.value ) { return; }
 
-            function success ( data ){
+            function success ( data ) {
                 Class._setElementMessage( data );
             }
 
@@ -318,7 +318,7 @@
 
                 let content = '<div id="' + data.element + '-error" class="invalid-feedback">' + data.messages[0].message + '</div>';
                 $element.closest('div.form-group').find('.message-container').tigerDOM('change', { content : content } );
-                $element.addClass('is-invalid');
+                $element.removeClass('is-valid').addClass('is-invalid');
 
             }
             else {

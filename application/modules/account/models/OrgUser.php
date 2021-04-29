@@ -46,9 +46,8 @@ class Account_Model_OrgUser extends Zend_Db_Table_Abstract
     public function getOrgByUserId ( $user_id )
     {
         /**
-         * Note that this method assumes that a user can only be active with one org at a time.
-         * If your business rules allow otherwise, multiple active orgs, use get getOrgsByUserId()
-         * instead and not that the function returns multiple orgs within a rowset.
+         * Note that a user may not be associated to an org at all, or may be associated to more than one
+         * org at a time. We set an active flag on the org_user record in hopes of tagging a user's primary org.
          */
         $orgUserRow = $this->fetchRow(
             $this->select()->
@@ -57,7 +56,12 @@ class Account_Model_OrgUser extends Zend_Db_Table_Abstract
             where( 'deleted = 0' )
         );
 
-        return $this->_orgModel->getOrgById( $orgUserRow->org_id );
+        $orgRow = null;
+        if ( ! empty( $orgUserRow ) ) {
+            $orgRow = $this->_orgModel->getOrgById( $orgUserRow->org_id );
+        }
+
+        return $orgRow;
 
     }
 

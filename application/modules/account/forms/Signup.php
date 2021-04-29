@@ -231,7 +231,7 @@ class Account_Form_Signup extends Tiger_Form_Base
             'label'             =>  'label.first_name',
             'description'       =>  'description.first_name',
 
-            'required'          =>  true,
+            'required'          =>  false,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
@@ -371,13 +371,13 @@ class Account_Form_Signup extends Tiger_Form_Base
                                     ] ],
                                     [ 'Strength', false, [
                                         'messages' => [
-                                            Tiger_Validate_Strength::PW_LENGTH    => "Must have at least %pw_length% characters.",
-                                            Tiger_Validate_Strength::PW_UPPER     => "Must contain %pw_upper% uppercase.",
-                                            Tiger_Validate_Strength::PW_LOWER     => "Must contain %pw_lower% lowercase.",
-                                            Tiger_Validate_Strength::PW_DIGIT     => "Must contain %pw_digit% number(s).",
-                                            Tiger_Validate_Strength::PW_SPECIAL   => "Must contain %pw_special% punctuation.",
-                                            Tiger_Validate_Strength::PW_ILLEGAL   => "Cannot contain spaces.",
-                                            Tiger_Validate_Strength::PW_REPEATING => "More than %pw_repeating% repeat characters.",
+                                            Tiger_Validate_Strength::PW_LENGTH    => "ERROR.PW_LENGTH",
+                                            Tiger_Validate_Strength::PW_UPPER     => "ERROR.PW_UPPER",
+                                            Tiger_Validate_Strength::PW_LOWER     => "ERROR.PW_LOWER",
+                                            Tiger_Validate_Strength::PW_DIGIT     => "ERROR.PW_DIGIT",
+                                            Tiger_Validate_Strength::PW_SPECIAL   => "ERROR.PW_SPECIAL",
+                                            Tiger_Validate_Strength::PW_ILLEGAL   => "ERROR.PW_ILLEGAL",
+                                            Tiger_Validate_Strength::PW_REPEATING => "ERROR.PW_REPEATING",
                                         ],
                                     ] ],
                                 ],

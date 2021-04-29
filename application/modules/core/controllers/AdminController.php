@@ -45,6 +45,7 @@ class AdminController extends Tiger_Controller_Admin
     public function dashboardAction ( )
     {
         $this->view->template->page_title = $this->view->translate('DASHBOARD');
+        $this->_checkSetup();
     }
 
     public function configAction ( )
@@ -71,6 +72,23 @@ class AdminController extends Tiger_Controller_Admin
     {
         $this->view->template->page_title = $this->view->translate('HEADING.BACKUP');
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.admin.backup.js' ) );
+    }
+
+    private function _checkSetup(){
+
+        /**
+         * The rule to allow superadmin access to AdminSetup exists only in the database. Once setup is complete,
+         * this rule is disabled and no one is allowed access to the AdminSetup service again unless you manually
+         * re-enable this rule. This prevents the AdminSetup from being run more than once.
+         */
+
+        if ( Zend_Registry::get('Zend_Acl')->isAllowed( 'superadmin', 'Core_Service_AdminSetup', 'setup' ) ) {
+            $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerFormWizard.js' ) );
+            $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerPassword.js' ) );
+            $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.admin.setup.js' ) );
+            $this->view->setupForm = new Core_Form_Setup();
+        }
+
     }
 
 }

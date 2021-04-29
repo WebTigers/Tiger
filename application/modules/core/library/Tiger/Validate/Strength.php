@@ -109,7 +109,7 @@ class Tiger_Validate_Strength extends Zend_Validate_Abstract {
         }
 
         if ( $this->pw_illegal !== '' ) {
-            // Reference: /^[(\S)]+$/
+            // Reference: /^[\S]+$/
             if ( !preg_match($this->pw_illegal, $value) ) {
                 $this->_error(self::PW_ILLEGAL);
                 $isValid = false;

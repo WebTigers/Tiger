@@ -194,13 +194,8 @@ class Account_Service_Account
             $userRow = $this->persistUser( $data );
             $data['user_id'] = $userRow->user_id;
 
-            $orgRow  = $this->persistOrg( $data );
-            $data['org_id'] = $orgRow->org_id;
+            /** Persist email contact in the contacts table for both the user. */
 
-            $this->persistOrgUser( $data );
-
-            /** Persist email contact in the contacts table for both the user and org. */
-            
             $contactData = [
                 'type_contact'  => 'EMAIL', // <-- from the type table
                 'contact_value' => $data['email'],
@@ -210,7 +205,23 @@ class Account_Service_Account
             $data['contact_id'] = $contactRow->contact_id;
 
             $this->persistUserContact( $data );
-            $this->persistOrgContact( $data );
+
+            /**
+             * Only if we have a company_name should we attempt to persist the new org.
+             * $orgRow should be null if there his no company_name at signup.
+             */
+
+            $orgRow = null;
+
+            if ( ! empty( $data['company_name'] ) ) {
+
+                $orgRow  = $this->persistOrg( $data );
+                $data['org_id'] = $orgRow->org_id;
+
+                $this->persistOrgUser( $data );
+                $this->persistOrgContact( $data );
+
+            }
 
             /** Commit the DB transaction. All done! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
@@ -220,7 +231,6 @@ class Account_Service_Account
              */
             $identity = $this->_setIdentity( $userRow, $orgRow );
 
-            // All of these messages should probably triggered by an event.
             /** Send the new user and admins various messages that a new user signed up. */
             Core_Service_Message::sendUserWelcomeEmail( $userRow );
             Core_Service_Message::sendUserVerifyEmail( $userRow );
@@ -243,7 +253,7 @@ class Account_Service_Account
              */
 
             $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.NEW_USER_FAILED' );
+            $this->_response->setTextMessage( 'ERROR.NEW_USER_FAILED' );
 
             /** We also log what happened ... */
             Tiger_Log::error( $e->getMessage() );
@@ -297,6 +307,7 @@ class Account_Service_Account
             $userRow->email_verify_key = Tiger_Utility_Uuid::v1();
             $userRow->locale_preference = LOCALE;
             $userRow->create_ip = $_SERVER['REMOTE_ADDR'];
+            $userRow->update_ip = $_SERVER['REMOTE_ADDR'];
 
             /**
              * The idea of the GUEST_USER_ID is an attempt to track a user at the very
@@ -333,7 +344,7 @@ class Account_Service_Account
      */
     public function persistOrg( $data )
     {
-        /** If we have a user_id, then we know this is an update. */
+        /** If we have a org_id, then we know this is an update. */
         if ( isset($data['org_id']) ) {
 
             $orgRow = $this->_orgModel->getOrgById( $data['org_id'] );
@@ -573,7 +584,7 @@ class Account_Service_Account
 
                 try {
 
-                    Core_Service_Message::verifyEmail( $userRow );
+                    Core_Service_Message::sendUserVerifyEmail( $userRow );
 
                 }
                 catch ( Exception $e ) {
@@ -617,7 +628,7 @@ class Account_Service_Account
 
             if ( ! empty( $userRow ) ) {
 
-                /** If you allow multiple active orgs per user, this might not return the exact org you are looking for. */
+                /** If you allow multiple active orgs per user, this might not return the exact org you are looking for. $orgRow could be null. */
                 $orgRow = $this->_orgUserModel->getOrgByUserId( $userRow->user_id  );
 
                 try {
@@ -631,7 +642,8 @@ class Account_Service_Account
                 catch ( Exception $e ) {
 
                     $this->_response->result = 0;
-                    $this->_response->setTextMessage( $e->getMessage(), 'error' );
+                    $this->_response->setTextMessage( 'ERROR.UNKNOWN', 'error' );
+                    Tiger_Log::error( $e->getMessage() );
 
                 }
 

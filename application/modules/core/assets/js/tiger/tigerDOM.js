@@ -366,55 +366,47 @@
                 ? oParams.callback 
                 : null;
 
-            return this.each(function(){
+            return this.each( function ( ) {
+
                 let $this = $(this);
 
                 // Get the current height of the parent container element 
-                // let parentHeight = parseInt($this.innerHeight(), 10) + 1;
-                let parentHeight = $this.innerHeight();
-                
-                // console.log( parentHeight );
-                
+                // let parentHeight = $this.prop('clientHeight');
+                let parentHeight = $this.prop('scrollHeight');
+
                 // Now specifically set the height of container element
                 $this.css('height', parentHeight).css('overflow', 'auto');
 
                 // Create and insert the content
-                let $content = $( oParams.content )
-                        .css('opacity', 0)
-                        .appendTo( $this );
+                let $content = $( oParams.content ).css('opacity', 0).appendTo( $this );
 
                 // Calculate what the total height of the container needs to be
-                // let containerHeight = parentHeight + parseInt($content.outerHeight(), 10);
-                let minHeight = parseInt( $this.css('min-height'), 10 );
-                
+                let minHeight = $this.prop('clientHeight');
+
                 $this.css('height', 'auto');
                 let containerHeight = $this.innerHeight();
                 
-                // console.log( containerHeight );
-                
                 $this.css('overflow','hidden').css('height', parentHeight);
                 
-                /*
-                $this.children().each( function(){
-                    containerHeight += $(this).outerHeight() 
-                        + parseInt($(this).css('margin-top'),10) 
-                        + parseInt($(this).css('margin-bottom'),10);
-                });
-                */
-               
-                containerHeight = ( minHeight > 0 && minHeight > containerHeight) 
+                containerHeight = ( minHeight > 0 && minHeight > containerHeight )
                     ? minHeight 
                     : containerHeight;
                 
-                // Expand/contract the target container to accomodate the new invisible content
+                // Expand/contract the target container to accommodate the new invisible content
                 $this.animate({
-                        'height' : containerHeight
-                        }, baseTime, function(){
-                            $content.animate({
-                                opacity: 1
-                            }, baseTime, callback );
+                    'height': containerHeight
+                }, baseTime, function () {
+                    $content.animate({
+                        opacity: 1
+                    }, baseTime, callback);
                 });
-                
+
+                // Sometimes we add messages to wizard forms where the content is not visible. Just
+                // set the height to auto so that we can see the error message.
+                setTimeout(function(){
+                    if ( ! $this.is(':visible') ) { $this.css('height','auto'); }
+                }, 500);
+
                 // Attach a removeClick listener (optional)
                 if (oParams.removeClick && oParams.removeClick === true) {
                     $content
@@ -530,7 +522,7 @@
                     $target.dequeue('change');
     
                 } else {
-                    
+
                     $target.tigerDOM('insert', oParams);
                 
                 }

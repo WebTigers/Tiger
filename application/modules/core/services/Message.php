@@ -59,18 +59,18 @@ class Core_Service_Message
     {
 
         // Now send New Account Verification Email
-        $activation_link = "http://" . $_SERVER['HTTP_HOST'] . "/account/activation/key/" . $userRow->email_verify_key;
+        $activation_link = "http://" . $_SERVER['HTTP_HOST'] . "/account/verify/key/" . $userRow->email_verify_key;
 
         // The Plain-text Portion (boring!)
-        $text    = self::translate( 'MAIL.VERIFY.LINE_1' ) . "\n\n";
-        $text   .= self::translate( 'MAIL.VERIFY.LINE_2' ) . "\n\n";
-        $text   .= self::translate( 'MAIL.VERIFY.LINE_3' ) . "\n\n";
+        $text    = self::translate( 'MAIL.VERIFY.TEXT_LINE_1' ) . "\n\n";
+        $text   .= self::translate( 'MAIL.VERIFY.TEXT_LINE_2' ) . "\n\n";
+        $text   .= self::translate( 'MAIL.VERIFY.TEXT_LINE_3' ) . "\n\n";
         $text   .= "\n\n";
         $text   .= $activation_link;
         $text   .= "\n\n";
-        $text   .= self::translate( 'MAIL.VERIFY.LINE_4' ) . "\n\n";
+        $text   .= self::translate( 'MAIL.VERIFY.TEXT_LINE_4' ) . "\n\n";
         $text   .= "\n\n";
-        $text   .= self::translate( 'MAIL.VERIFY.LINE_5' ) . "\n\n";
+        $text   .= self::translate( 'MAIL.VERIFY.TEXT_LINE_5' ) . "\n\n";
 
         // The HTML Portion (super-awesome!)
         $view = new Zend_View();

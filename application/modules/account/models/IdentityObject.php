@@ -38,16 +38,16 @@ class Account_Model_IdentityObject
     public $org_display_name;
     public $company_name;
 
-    public function __construct( Zend_Db_Table_Row_Abstract $userRow = null, Zend_Db_Table_Row_Abstract $orgRow = null ) {
+    public function __construct( $userRow = null, $orgRow = null ) {
 
-        $this->setParams( $userRow->toArray() );
-        $this->setParams( $orgRow->toArray() );
+        $this->setParams( $userRow );
+        $this->setParams( $orgRow );
 
     }
 
-    public function setParams ( Array $params = null ) {
+    public function setParams ( $params ) {
 
-        if ( is_array( $params ) ) {
+        if ( is_array( $params ) || is_object( $params ) ) {
             foreach ( $params as $key => $value ) {
                 if ( property_exists( $this, $key ) ) {
                     $this->$key = $value;

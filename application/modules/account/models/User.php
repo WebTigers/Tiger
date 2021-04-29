@@ -40,6 +40,20 @@ class Account_Model_User extends Zend_Db_Table_Abstract
     }
 
     /**
+     * @param $username
+     * @return Zend_Db_Table_Row_Abstract|null
+     */
+    public function getUserByUsername ( $username )
+    {
+        $sql = $this->
+            select()->
+            where('username = ?', $username);
+
+        return $this->fetchRow( $sql );
+
+    }
+
+    /**
      * @param $key
      * @return Zend_Db_Table_Row_Abstract|null
      */
