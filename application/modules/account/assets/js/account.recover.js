@@ -18,7 +18,7 @@
  */
 
 /**
- * jQuery Tiger Account Login Plugin
+ * jQuery Tiger Account Recover Plugin
  */
 
 (function( $ ){
@@ -33,7 +33,7 @@
             $(document).ready(function() {
 
                 // Page init stuff goes here. //
-                Class._initLoginForm();
+                Class._initRecoverForm();
 
             });
 
@@ -41,20 +41,20 @@
 
         // Login Functions //
 
-        _initLoginForm : function () {
+        _initRecoverForm : function () {
 
             // Allow submit form from an input field if it's not empty.
             $('#page-login-form input').on( 'keyup', function( event ){
                 let keycode = (event.keyCode ? event.keyCode : event.which);
                 if ( parseInt(keycode, 10) === 13 && parseInt( $(this).val().length, 10 ) > 0 ) {
-                    Class._submitForm();
+                    Class._send();
                 }
             });
 
-            $('#login-button').on('click', Class._submitForm);
+            $('#recover-button').on('click', Class._send);
         },
         
-        _submitForm : function ( event ) {
+        _send : function ( event ) {
 
             function beforeSend () {
 
@@ -62,8 +62,8 @@
                 // $('#form_id').find('input, select').addClass( 'disabled' ).prop( 'disabled', true );
 
                 /* Toggle the ajax indicators. */
-                $('#login-button .ajax').toggleClass( 'hide' );
-                $('#login-button .icon').toggleClass( 'hide' );
+                $('#recover-button .ajax').toggleClass( 'hide' );
+                $('#recover-button .icon').toggleClass( 'hide' );
 
             }
 
@@ -73,8 +73,8 @@
                 // $('#form_id').find('input, select').removeClass( 'disabled' ).prop( 'disabled', false );
 
                 /* Toggle the ajax indicators. */
-                $('#login-button .ajax').toggleClass( 'hide' );
-                $('#login-button .icon').toggleClass( 'hide' );
+                $('#recover-button .ajax').toggleClass( 'hide' );
+                $('#recover-button .icon').toggleClass( 'hide' );
 
             }
 
@@ -82,26 +82,12 @@
                 
                 // Login Success / Error //
 
-                if ( data.result === 1 ) {
-
-                    if ( data.redirect ) {
-                        window.location = data.redirect;
-                    }
-                    else {
-                        window.location = '/account/dashboard';
-                    }
-
-                }
-                else {
-
-                    $('#page-login-form .form-message').css('overflow', 'hidden').tigerDOM('change', {
-                        content: data.html[0],
-                        removeClick: true,
-                        removeTimeout: 0
-                    });
+                $('#page-login-form .form-message').css('overflow', 'hidden').tigerDOM('change', {
+                    content: data.html[0],
+                    removeClick: true,
+                    removeTimeout: 0
+                });
                     
-                }
-
             }
 
             function error ( jqXHR, textStatus, errorThrown ) { 
@@ -122,7 +108,7 @@
             /** API params tell Tiger what service will be processing the data. */
             let apiParams = {
                 service : 'account:account',
-                method  : 'login'
+                method  : 'recover'
             };
 
             /** Note that our API params will be added to the form data */
@@ -143,7 +129,7 @@
 
     };
   
-    $.fn.accountLogin = function( method ) {
+    $.fn.accountRecover = function( method ) {
         if ( Class[method] ) {
             return Class[ method ].apply( this, Array.prototype.slice.call( arguments, 1 ));
         } else if ( typeof method === 'object' || ! method ) {
@@ -153,6 +139,6 @@
         }
     };
     
-    $().accountLogin();
+    $().accountRecover();
     
 })( jQuery );

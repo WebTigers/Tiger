@@ -54,7 +54,6 @@ class Core_Service_Message
 
     }
 
-
     public static function sendUserVerifyEmail ( $userRow )
     {
 
@@ -88,6 +87,41 @@ class Core_Service_Message
         $mail->send();
 
     }
+
+    public static function sendUserRecoverEmail ( $userRow )
+    {
+
+        // Now send New Account Verification Email
+        $login_link = "http://" . $_SERVER['HTTP_HOST'] . "/password/username/" . $userRow->username . '/password/' . $userRow->password_reset_key;
+
+        // The Plain-text Portion (boring!)
+        $text    = self::translate( 'MAIL.RECOVER.TEXT_LINE_1' ) . "\n\n";
+        $text   .= self::translate( 'MAIL.RECOVER.TEXT_LINE_2' ) . "\n\n";
+        $text   .= self::translate( 'MAIL.RECOVER.TEXT_LINE_3' ) . "\n\n";
+        $text   .= "\n\n";
+        $text   .= $login_link;
+        $text   .= "\n\n";
+        $text   .= self::translate( 'MAIL.RECOVER.TEXT_LINE_4' ) . "\n\n";
+        $text   .= "\n\n";
+        $text   .= self::translate( 'MAIL.RECOVER.TEXT_LINE_5' ) . "\n\n";
+
+        // The HTML Portion (super-awesome!)
+        $view = new Zend_View();
+        $view->setScriptPath( Zend_Registry::get('Zend_Config')->mail->templateScriptPath );
+        $view->assign( 'site', Zend_Registry::get('Zend_Config')->site );
+        $view->assign( 'login_link', $login_link );
+        $html = $view->render( 'recover.phtml' );
+
+        $mail = new Zend_Mail();
+        $mail->setFrom( Zend_Registry::get('Zend_Config')->mail->fromAddress, self::translate( 'MAIL.FROM_NAME' ) );
+        $mail->addTo( $userRow->email );
+        $mail->setSubject( self::translate( 'MAIL.RECOVER.SUBJECT' ) );
+        $mail->setBodyText( $text );
+        $mail->setBodyHtml( $html );
+        $mail->send();
+
+    }
+
 
 
     public static function sms ( $phone, $message ) {

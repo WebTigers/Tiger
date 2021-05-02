@@ -44,7 +44,8 @@ class Account_AccountController extends Tiger_Controller_Manage
 
     public function indexAction ( )
     {
-        $this->forward('dashboard');
+        $this->forward('dashboard', 'manage', 'core');
+
     }
 
     public function signupAction ( )
@@ -87,6 +88,21 @@ class Account_AccountController extends Tiger_Controller_Manage
 
     }
 
+    public function lockAction ( )
+    {
+        $username =  Zend_Auth::getInstance()->getIdentity()->username;
+
+        Zend_Auth::getInstance()->clearIdentity();  // <-- This logs us out of the application.
+        Zend_Session::regenerateId();               // <-- Gets us a shiny new session id.
+
+        $this->view->loginForm = new Account_Form_Login();
+        $this->view->loginForm->getElement('username')->setValue( $username );
+
+        /** Add the login page JS plugin. */
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.login.js' ) );
+
+    }
+
     public function logoutAction ( )
     {
         Zend_Auth::getInstance()->clearIdentity();  // <-- This logs us out of the application.
@@ -125,15 +141,37 @@ class Account_AccountController extends Tiger_Controller_Manage
 
     }
 
-    public function dashboardAction ( )
+    public function recoverAction ( )
     {
-        /** Adds the backend dashboard settings. */
-        $this->view->template->inc_side_overlay = true;
-        $this->view->template->inc_sidebar      = true;
-        $this->view->template->inc_header       = true;
-        $this->view->template->inc_footer       = true;
+        $this->view->loginForm = new Account_Form_Login();
+        $this->view->loginForm->getElement('username')->setAttrib('placeholder', $this->view->translate('RECOVER.USERNAME_EMAIL'));
 
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/pages/be_pages_dashboard.min.js' ) );
+        /** Add the login page JS plugin. */
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.recover.js' ) );
+
+    }
+
+    public function passwordAction ( ) {
+
+        $request = $this->getRequest();
+        $request->setParam('method', 'login');
+
+        /**
+         * Notice how we can just pass in the request object to have to Account Service auto-route to the login method,
+         * auto-login, and then we can just poll the service for the response once the service in instantiated.
+         */
+        $accountService = new Account_Service_Account( $request );
+        $this->view->response = $accountService->getResponse();
+
+        /** If we have a valid login, just redirect the user to their profile password reset page. */
+
+        $role = Zend_Auth::getInstance()->getIdentity()->role;
+        if ( Zend_Registry::get('Zend_Acl')->isAllowed( $role, 'Core_Controller_Manage', 'dashboard' ) ) {
+            $this->forward('dashboard', 'manage', 'core');
+        }
+        else {
+            $this->forward('recover');
+        }
 
     }
 

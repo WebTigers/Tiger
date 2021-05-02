@@ -59,7 +59,7 @@ class Tiger_Api_ServiceFactory {
 
     protected function _authenticate ( ) {
 
-        if ( isset( $this->_params['username'] ) && isset( $this->_params['password'] ) ){
+        if ( isset( $this->_params['user'] ) && isset( $this->_params['pass'] ) ){
 
             $accountService = new Account_Service_Account( [] );
             $accountService->login( $this->_params );

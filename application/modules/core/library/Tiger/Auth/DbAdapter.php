@@ -78,52 +78,69 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
 
             $user = $this->_dbRow;
             
-            // First let's check if we are passing in a valid UUID, if so this will be
-            // considered an AutoAuth call and authenticated accordingly.
-            
-            if ( ! $user instanceof Zend_Db_Table_Row && ! Tiger_Utility_Uuid::is_valid( $this->_identity ) ) {
-            
-                // Standard Login //
-                
+            /** First let's check if we are passing in a valid UserRow */
+
+            if ( $user instanceof Zend_Db_Table_Row || ( ! empty( $this->_identity ) && ! empty( $this->_credential ) ) ) {
+
                 if ( ! empty( $this->_identity ) && ! empty( $this->_credential ) ) {
-
                     $user = $this->_userModel->getUserByIdentity( $this->_identity );
+                }
 
-                    if ( ! empty( $user ) ) {
+                if ( $user instanceof Zend_Db_Table_Row ) {
 
-                        // Password hashes must match to authenticate.
+                    /** Authenticate if user is using a password. */
+                    if ( ! empty( $this->_credential ) && Tiger_Utility_Cryption::hash( $this->_credential ) === $user->password ) {
 
-                        if ( Tiger_Utility_Cryption::hash( $this->_credential ) === $user->password ) {
+                        /** We log the user's last access within their account. */
+                        $user->password_reset_key = null;
+                        $this->_authenticateUser( $user );
 
-                            // Since this is a normal login, we log the user's last 
-                            // access within their account.
+                    }
+                    /** Authenticate if user is using a password reset key. */
+                    elseif ( ! empty( $user->password_reset_key ) && $this->_credential === $user->password_reset_key ) {
 
-                            $now = new DateTime();
-                            $timestamp = $now->format('Y-m-d H:i:s');
-                            $user->last_login_date = $timestamp;
-                            $user->last_login_ip = $_SERVER['REMOTE_ADDR'];
-                            $user->update_user_id = $user->user_id;
-                            $user->update_date = $timestamp;
-                            $user->save();
+                        /** A password reset key has a limited lifespan. If we are outside of that lifespan, we don't authenticate. */
+                        $lifetime = Zend_Registry::get('Zend_Config')->password->resetKeyLifetime;
+                        $created  = Tiger_Utility_Uuid::time( $user->password_reset_key );
 
-                            $this->_dbRow = $user;
+                        if ( ( $this->_timestamp - $created ) < $lifetime ) {
 
-                        } else {
+                            /** We log the user's last access within their account. */
+                            $this->_authenticateUser( $user );
 
-                            // Toast the user row if the password fails to 
-                            // authenticate.
+                        }
+                        else {
 
+                            /** Toast the user row if the password reset key is too old. */
                             $user = null;
 
                         }
-                        
+
+                    }
+                    else {
+
+                        /** Toast the user row if the password fails to authenticate. */
+                        $user = null;
+
+                        $this->_logFailure();
+
                     }
 
                 }
-                
+                else {
+
+                    $this->_logFailure();
+
+                }
+
+            }
+            else {
+
+                $this->_logFailure();
+
             }
             
-            // By now we should have a valid user. If not, we were passed bogus data.
+            /** By now we should have a valid user. If not, we were passed bad data. */
 
             if ( $user instanceof Zend_Db_Table_Row ) {
                 
@@ -138,26 +155,50 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
             }
             
         }
-        catch ( Exception $e ) {
+        catch ( Error | Exception $e ) {
 
-            pr( $e->getMessage() );
-
-        }
-        catch ( Error $e ) {
-
-            pr( $e->getMessage() );
+            Tiger_Log::error( 'ERROR AUTHENTICATE: ' . $e->getMessage() );
 
         }
 
     }
-    
+
+    private function _logFailure ( ) {
+
+        Tiger_Log::db(
+            'Authentication Failed',
+            json_encode([
+                'identity' => $this->_identity,
+                'credential' => $this->_credential,
+                'remote_ip' => $_SERVER['REMOTE_ADDR'],
+            ]),
+            Zend_Log::ALERT,
+            null
+        );
+
+    }
+
+    private function _authenticateUser ( $user ) {
+
+        $now = new DateTime();
+        $timestamp = $now->format('Y-m-d H:i:s');
+
+        $user->last_login_date = $timestamp;
+        $user->last_login_ip = $_SERVER['REMOTE_ADDR'];
+
+        $user->saveRow();
+
+        $this->_dbRow = $user;
+
+    }
+
     /**
      * A convenience method for returning certain pieces of data from the dbRow
      * Just pass in an array of the columns (keys) you want populated and the function
      * returns those key with values from the row. SWEET!
      * 
      * @param type $params
-     * @return null
+     * @return array
      */
     public function getResultRow( $params = array() ) {
 

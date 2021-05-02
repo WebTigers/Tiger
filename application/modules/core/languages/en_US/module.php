@@ -8,6 +8,12 @@
 
 return [
 
+    // Admin //
+    'ADMIN.DASHBOARD' => 'Admin Dashboard',
+
+    // Manage //
+    'MANAGE.DASHBOARD' => 'Dashboard',
+
     // Generic Translations //
     'DT.ACTIVE' => 'Active',
     'DT.ACTIONS' => 'Actions',

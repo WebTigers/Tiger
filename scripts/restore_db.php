@@ -25,7 +25,7 @@ $password = $opts['p'];
 $curl = curl_init();
 
 // set our url with curl_setopt()
-curl_setopt($curl, CURLOPT_URL, "localhost/api/service/core:database/method/restore/filename/$filename/username/$username/password/$password");
+curl_setopt($curl, CURLOPT_URL, "localhost/api/service/core:database/method/restore/filename/$filename/user/$username/pass/$password");
 
 // return the transfer as a string, also with setopt()
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);

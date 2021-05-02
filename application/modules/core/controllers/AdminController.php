@@ -44,8 +44,9 @@ class AdminController extends Tiger_Controller_Admin
 
     public function dashboardAction ( )
     {
-        $this->view->template->page_title = $this->view->translate('DASHBOARD');
+        $this->view->template->page_title = $this->view->translate('ADMIN.DASHBOARD');
         $this->_checkSetup();
+        $this->_checkPassword();
     }
 
     public function configAction ( )
@@ -68,14 +69,14 @@ class AdminController extends Tiger_Controller_Admin
         $this->view->cacheServers = $this->_adminService->getCacheServerTextList();
     }
 
-    public function backupAction ()
+    public function backupAction ( )
     {
         $this->view->template->page_title = $this->view->translate('HEADING.BACKUP');
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.admin.backup.js' ) );
     }
 
-    private function _checkSetup(){
-
+    private function _checkSetup ( )
+    {
         /**
          * The rule to allow superadmin access to AdminSetup exists only in the database. Once setup is complete,
          * this rule is disabled and no one is allowed access to the AdminSetup service again unless you manually
@@ -90,6 +91,17 @@ class AdminController extends Tiger_Controller_Admin
         }
 
     }
+
+    private function _checkPassword ( )
+    {
+        if ( ! empty( Zend_Auth::getInstance()->getIdentity()->password_reset_key )  ) {
+            $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerPassword.js' ) );
+            $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.reset.password.js' ) );
+            $this->view->passwordForm = new Account_Form_Password();
+        }
+
+    }
+
 
 }
 

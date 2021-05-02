@@ -144,7 +144,7 @@ class Account_Service_Account
     }
 
 
-    ### Public Account Service Functions ###
+    ### User Authentication Functions ###
 
     /**
      * The largest of our account methods, signup does a lot under the
@@ -208,18 +208,26 @@ class Account_Service_Account
 
             /**
              * Only if we have a company_name should we attempt to persist the new org.
-             * $orgRow should be null if there his no company_name at signup.
+             * $orgRow should be set to the default org if there is no company_name at signup.
              */
 
             $orgRow = null;
 
             if ( ! empty( $data['company_name'] ) ) {
 
-                $orgRow  = $this->persistOrg( $data );
+                $orgRow = $this->persistOrg( $data );
                 $data['org_id'] = $orgRow->org_id;
 
                 $this->persistOrgUser( $data );
                 $this->persistOrgContact( $data );
+
+            }
+            else {
+
+                $orgRow = $this->_orgModel->getOrgDefault();
+                $data['org_id'] = $orgRow->org_id;
+
+                $this->persistOrgUser( $data );
 
             }
 
@@ -261,6 +269,301 @@ class Account_Service_Account
         }
 
     }
+
+    /**
+     * Resends the user a verify emil address email.
+     *
+     * @param $user_id UUID
+     * @throws Zend_Validate_Exception
+     */
+    public function resend( $params )
+    {
+
+        if ( isset( $params['user_id'] ) && Zend_Validate::is( $params['user_id'], 'Uuid', [], ['Tiger_Validate'] ) ) {
+
+            $userRow = $this->_userModel->getUserById( $params['user_id'] );
+
+            if ( ! empty( $userRow ) ) {
+
+                try {
+
+                    Core_Service_Message::sendUserVerifyEmail( $userRow );
+
+                }
+                catch ( Exception $e ) {
+
+                    $this->_response->result = 0;
+                    $this->_response->setTextMessage( $e->getMessage(), 'error' );
+
+                }
+
+                $this->_response->result = 1;
+                $this->_response->setTextMessage( 'SUCCESS.EMAIL_RESENT', 'success' );
+
+            }
+            else {
+
+                $this->_response->result = 0;
+                $this->_response->setTextMessage( 'ERROR.USER_NOT_FOUND', 'error' );
+
+            }
+
+        }
+        else {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage( 'ERROR.INVALID_ID', 'error' );
+
+        }
+
+    }
+
+    /**
+     * @param $params
+     * @throws Zend_Validate_Exception
+     */
+    public function verify( $params )
+    {
+
+        if ( isset( $params['key'] ) && Zend_Validate::is( $params['key'], 'Uuid', [], ['Tiger_Validate'] ) ) {
+
+            $userRow = $this->_userModel->getUserByEmailVerifyKey( $params['key'] );
+
+            if ( ! empty( $userRow ) ) {
+
+                /** If you allow multiple active orgs per user, this might not return the exact org you are looking for. $orgRow could be null. */
+                $orgRow = $this->_orgUserModel->getOrgByUserId( $userRow->user_id  );
+
+                try {
+
+                    $userRow->role = self::ROLE_USER;
+                    $userRow->email_verify_key = null;
+                    $userRow->saveRow();    // <-- saveRow() adds boilerplate values.
+                    $this->_setIdentity( $userRow, $orgRow );
+
+                }
+                catch ( Exception $e ) {
+
+                    $this->_response->result = 0;
+                    $this->_response->setTextMessage( 'ERROR.UNKNOWN', 'error' );
+                    Tiger_Log::error( $e->getMessage() );
+
+                }
+
+                $this->_response->result = 1;
+                $this->_response->setTextMessage( 'SUCCESS.EMAIL_VERIFIED', 'success' );
+
+            }
+            else {
+
+                $this->_response->result = 0;
+                $this->_response->setTextMessage( 'ERROR.USER_NOT_FOUND', 'error' );
+
+            }
+
+        }
+        else {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage( 'ERROR.INVALID_KEY', 'error' );
+
+        }
+
+    }
+
+    /**
+     * @param $params
+     * @throws Zend_Auth_Adapter_Exception
+     * @throws Zend_Auth_Storage_Exception
+     * @throws Zend_Exception
+     * @throws Zend_Form_Exception
+     */
+    public function login ( $params )
+    {
+        $this->_form = new Account_Form_Login();
+
+        /**
+         * First sanity check the login credentials. Note the generic failed message. We don't
+         * want to give hackers clues about which part of the credentials might be bad.
+         */
+        if ( ! $this->_form->isValid( $params ) ) {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage('LOGIN.FAILED');
+            return;
+
+        }
+
+        $data = $this->_form->getValues();
+
+        // pr( $data );
+
+        $tigerAuth = new Tiger_Auth_DbAdapter( $data['username'], $data['password'], time() );
+
+        $authResult = $tigerAuth->authenticate();   // <-- This is where the magic happens ...
+
+        if ( $authResult->isValid() ) {
+
+            $userRow = $tigerAuth->getUser();
+            $orgRow  = $this->_orgUserModel->getOrgByUserId( $userRow->user_id );
+            $this->_setIdentity( $userRow, $orgRow );
+
+            if ( intval( $data['remember_me'] ) === 1 ) {
+                setcookie( 'username', $userRow->username, time()+60*60*24*30,'/' ); // Expire in 30 days
+            }
+            else {
+                setcookie( 'username', '', time()-60*60*24*30, '/' ); // Expired 30 days ago
+            }
+
+            // If we tried to get to a page but had to login first, remember where we were going ...
+            if ( ! empty( Zend_Registry::get('Zend_Session')->aclRequest ) ) {
+                $this->_response->redirect = Zend_Registry::get('Zend_Session')->aclRequest->getRequestUri();
+            }
+
+            $this->_response->result = 1;
+            $this->_response->setTextMessage('LOGIN.SUCCESS');
+
+        }
+        else {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage('LOGIN.FAILED');
+
+        }
+
+    }
+
+    /**
+     * @param $params
+     */
+    public function recover ( $params ) {
+
+        $this->_form = new Account_Form_Login();
+
+        if ( ! $this->_form->isValidPartial( $params ) ) {
+
+            $this->_response->result = 1;
+            $this->_response->setTextMessage( 'SUCCESS.EMAIL_SENT', 'success' );
+            return;
+
+        }
+
+        $data = $this->_form->getValues();
+
+        if ( isset( $data['username'] ) ) {
+
+            $userRow = $this->_userModel->getUserByIdentity( $params['username'] );
+
+            if ( ! empty( $userRow ) ) {
+
+                try {
+
+                    $userRow->password_reset_key = Tiger_Utility_Uuid::v1();
+                    $userRow->update_ip = $_SERVER['REMOTE_ADDR'];
+
+                    $userRow->saveRow();
+
+                    Core_Service_Message::sendUserRecoverEmail( $userRow );
+
+                    $this->_response->result = 1;
+                    $this->_response->setTextMessage( 'SUCCESS.EMAIL_SENT', 'success' );
+                    return;
+
+                }
+                catch ( Exception $e ) {
+
+                    $this->_response->result = 0;
+                    $this->_response->setTextMessage( 'ERROR.EMAIL_NOT_SENT', 'error' );
+                    Tiger_Log::error( 'ERROR: Password Recover: ' . $e->getMessage() );
+                    return;
+
+                }
+
+            }
+
+        }
+
+        /**
+         * The default error condition is still happy-happy-joy-joy to the end user so that we don't
+         * have bad actors attempting to use password reset as a way to learn user credentials.
+         */
+
+        $this->_response->result = 1;
+        $this->_response->setTextMessage( 'SUCCESS.EMAIL_SENT', 'success' );
+
+        $this->_logRecoverFailure( $data );
+
+    }
+
+    public function password ( $params ) {
+
+        $this->_form = new Account_Form_Password();
+
+        if ( ! $this->_form->isValid( $params ) ) {
+
+            $this->_setFormErrors();
+            return;
+
+        }
+
+        $data = $this->_form->getValues();
+
+        if ( isset( $data['password'] ) ) {
+
+            $userRow = $this->_userModel->getUserById( $this->_auth->getIdentity()->user_id );
+
+            if ( ! empty( $userRow ) ) {
+
+                try {
+
+                    $userRow->password = Tiger_Utility_Cryption::hash( $data['password'] );
+                    $userRow->password_reset_key = null;
+                    $userRow->update_ip = $_SERVER['REMOTE_ADDR'];
+
+                    $userRow->saveRow();
+
+                    $this->_auth->getIdentity()->password_reset_key = '';
+                    $this->_auth->getStorage()->write( $this->_auth->getIdentity() );
+
+                    $this->_response->result = 1;
+                    $this->_response->setTextMessage( 'SUCCESS.PASSWORD_RESET', 'success' );
+                    return;
+
+                }
+                catch ( Exception $e ) {
+
+                    $this->_response->result = 0;
+                    $this->_response->setTextMessage( 'ERROR.INVALID', 'error' );
+                    Tiger_Log::error( 'ERROR: Password Reset: ' . $e->getMessage() );
+                    return;
+
+                }
+
+            }
+
+        }
+
+        $this->_response->result = 0;
+        $this->_response->setTextMessage( 'ERROR.INVALID', 'error' );
+
+    }
+
+    private function _logRecoverFailure ( $data ) {
+
+        Tiger_Log::db(
+            'Password Recover Failed',
+            json_encode([
+                'identity' => $data['username'],
+                'remote_ip' => $_SERVER['REMOTE_ADDR'],
+            ]),
+            Zend_Log::ALERT,
+            null
+        );
+
+    }
+
+
+    ### Persist User Functions ###
 
     /**
      * PersistUser is unconcerned with data validation and only concerned with raw
@@ -330,6 +633,22 @@ class Account_Service_Account
         return $userRow;
 
     }
+
+    /**
+     * Sets the identity of a user using the user_id and org_id within an array. This function cannot
+     * be called by the Tiger API since it is both protected and requires both $userRow and $orgRow data.
+     *
+     * @param $data
+     * @throws Zend_Auth_Storage_Exception
+     */
+    protected function _setIdentity( $userRow, $orgRow )
+    {
+        $identityObject = new Account_Model_IdentityObject( $userRow, $orgRow );
+        Zend_Auth::getInstance()->getStorage()->write( (object) $identityObject->toArray() );
+    }
+
+
+    ### Persist Org Functions ###
 
     /**
      * Like persistUser(), persistOrg is unconcerned with data validation and only
@@ -419,6 +738,9 @@ class Account_Service_Account
         return $orgUserRow;
 
     }
+
+
+    ### Persist Contact Functions ###
 
     /**
      * PersistContact is unconcerned with data validation and only concerned with raw
@@ -554,175 +876,5 @@ class Account_Service_Account
 
     }
 
-    /**
-     * Sets the identity of a user using the user_id and org_id within an array. This function cannot
-     * be called by the Tiger API since it is both protected and requires both $userRow and $orgRow data.
-     *
-     * @param $data
-     * @throws Zend_Auth_Storage_Exception
-     */
-    protected function _setIdentity( $userRow, $orgRow )
-    {
-        $identityObject = new Account_Model_IdentityObject( $userRow, $orgRow );
-        Zend_Auth::getInstance()->getStorage()->write( (object) $identityObject->toArray() );
-    }
-
-    /**
-     * Resends the user a verify emil address email.
-     *
-     * @param $user_id UUID
-     * @throws Zend_Validate_Exception
-     */
-    public function resend( $params )
-    {
-
-        if ( isset( $params['user_id'] ) && Zend_Validate::is( $params['user_id'], 'Uuid', [], ['Tiger_Validate'] ) ) {
-
-            $userRow = $this->_userModel->getUserById( $params['user_id'] );
-
-            if ( ! empty( $userRow ) ) {
-
-                try {
-
-                    Core_Service_Message::sendUserVerifyEmail( $userRow );
-
-                }
-                catch ( Exception $e ) {
-
-                    $this->_response->result = 0;
-                    $this->_response->setTextMessage( $e->getMessage(), 'error' );
-
-                }
-
-                $this->_response->result = 1;
-                $this->_response->setTextMessage( 'SUCCESS.EMAIL_RESENT', 'success' );
-
-            }
-            else {
-
-                $this->_response->result = 0;
-                $this->_response->setTextMessage( 'ERROR.USER_NOT_FOUND', 'error' );
-
-            }
-
-        }
-        else {
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage( 'ERROR.INVALID_ID', 'error' );
-
-        }
-
-    }
-
-    /**
-     * @param $params
-     * @throws Zend_Validate_Exception
-     */
-    public function verify( $params )
-    {
-
-        if ( isset( $params['key'] ) && Zend_Validate::is( $params['key'], 'Uuid', [], ['Tiger_Validate'] ) ) {
-
-            $userRow = $this->_userModel->getUserByEmailVerifyKey( $params['key'] );
-
-            if ( ! empty( $userRow ) ) {
-
-                /** If you allow multiple active orgs per user, this might not return the exact org you are looking for. $orgRow could be null. */
-                $orgRow = $this->_orgUserModel->getOrgByUserId( $userRow->user_id  );
-
-                try {
-
-                    $userRow->role = self::ROLE_USER;
-                    $userRow->email_verify_key = null;
-                    $userRow->saveRow();    // <-- saveRow() adds boilerplate values.
-                    $this->_setIdentity( $userRow, $orgRow );
-
-                }
-                catch ( Exception $e ) {
-
-                    $this->_response->result = 0;
-                    $this->_response->setTextMessage( 'ERROR.UNKNOWN', 'error' );
-                    Tiger_Log::error( $e->getMessage() );
-
-                }
-
-                $this->_response->result = 1;
-                $this->_response->setTextMessage( 'SUCCESS.EMAIL_VERIFIED', 'success' );
-
-            }
-            else {
-
-                $this->_response->result = 0;
-                $this->_response->setTextMessage( 'ERROR.USER_NOT_FOUND', 'error' );
-
-            }
-
-        }
-        else {
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage( 'ERROR.INVALID_KEY', 'error' );
-
-        }
-
-    }
-
-    public function login ( $params )
-    {
-        $this->_form = new Account_Form_Login();
-
-        /**
-         * First sanity check the login credentials. Note the generic failed message. We don't
-         * want to give hackers clues about which part of the credentials might be bad.
-         */
-        if ( ! $this->_form->isValid( $params ) ) {
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage('LOGIN.FAILED');
-            return;
-
-        }
-
-        $data = $this->_form->getValues();
-        $tigerAuth = new Tiger_Auth_DbAdapter( $data['username'], $data['password'], time() );
-
-        $authResult = $tigerAuth->authenticate();   // <-- This is where the magic happens ...
-
-        if ( $authResult->isValid() ) {
-
-            $userRow = $tigerAuth->getUser();
-            $orgRow  = $this->_orgUserModel->getOrgByUserId( $userRow->user_id );
-            $this->_setIdentity( $userRow, $orgRow );
-
-            if ( intval( $data['remember_me'] ) === 1 ) {
-                setcookie( 'username', $userRow->username, time()+60*60*24*30,'/' ); // Expire in 30 days
-            }
-            else {
-                setcookie( 'username', '', time()-60*60*24*30, '/' ); // Expired 30 days ago
-            }
-
-            // If we tried to get to a page but had to login first, remember where we were going ...
-            if ( ! empty( Zend_Registry::get('Zend_Session')->aclRequest ) ) {
-                $this->_response->redirect = Zend_Registry::get('Zend_Session')->aclRequest->getRequestUri();
-            }
-
-            // Are we on a high port?
-            // if ( in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
-            //     $this->_response->port = $_SERVER['SERVER_PORT'];
-            // }
-
-            $this->_response->result = 1;
-            $this->_response->setTextMessage('LOGIN.SUCCESS');
-
-        }
-        else {
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage('LOGIN.FAILED');
-
-        }
-
-    }
 
 }

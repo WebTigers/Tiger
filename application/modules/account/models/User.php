@@ -84,6 +84,7 @@ class Account_Model_User extends Zend_Db_Table_Abstract
 
             where('( u.user_id = ?', $identity)->
             orWhere('u.username = ?', $identity)->
+            orWhere('u.password_reset_key = ?', $identity)->
             orWhere('u.email = ? )', $identity)->
 
             where('ou.active = 1')->

@@ -52,6 +52,18 @@ class Account_Model_Org extends Zend_Db_Table_Abstract {
 
     }
 
+    public function getOrgDefault ( ) {
+
+        $sql = $this->
+        select()->
+        where('type_org = ?', 'DEFAULT')->
+        where( 'active = 1' )->
+        where( 'deleted = 0' );
+
+        return $this->fetchRow( $sql );
+
+    }
+
     /**
      * Get Org Search List
      *

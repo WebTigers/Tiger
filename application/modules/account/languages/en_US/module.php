@@ -115,22 +115,46 @@ return [
     'ERROR.INVALID_KEY' => 'Invalid Activation Key',
     'MESSAGE.VERIFY.INVALID_TEXT_1' => 'The activation key supplied is invalid. Please contact our support team if you continue to experience issues activating your new account.',
 
+    // Recover Password //
+    'SUCCESS.EMAIL_SENT' => 'If your account exists, a password reset email has been sent.',
+
     // Login //
-    'HEADING.LOGIN' => 'TIGER LOGIN',
+    'LOGIN.HEADING' => 'LOGIN',
+    'LOGIN.FORGOT_PASSWORD' => 'Forgot Password?',
+    'LOGIN.NEW_ACCOUNT' => 'New Account',
+    'LOGIN.TIGER' => 'Tiger',
+    'LOGIN.TEXT' => 'Welcome, please login.',
     'LABEL.REMEMBER_ME' => 'Remember Me',
     'BUTTON.LOGIN' => 'Login',
     'ALERT.LOGIN_FAILED' => '',
 
+    // Lock //
+    'LOCK.ACCOUNT_LOCKED' => 'Account Locked',
+    'LOCK.SIGNIN_DIFFERENT_ACCOUNT' => 'Sign-in with a different account.',
+    'LOCK.LOGIN' => 'Login',
+
     // Logout //
+    'LOGOUT.LOGGED_OUT' => 'Logged Out',
+    'LOGOUT.LOGIN' => 'Login',
 
+    // Recover Password //
+    'RECOVER.PASSWORD' => 'Recover Password',
+    'RECOVER.LOGIN' => 'Login',
+    'RECOVER.TIGER' => 'Tiger',
+    'RECOVER.TEXT' => 'Please provide your account’s username or email and we will send you a link to reset your password.',
+    'RECOVER.USERNAME_EMAIL' => 'Username or Email',
+    'RECOVER.SEND_MAIL' => 'Send Mail',
 
-    // Forgot Password //
-
+    // Reset Password Modal //
+    'FORM.RESET_PASSWORD' => 'Reset Password',
+    'FORM.NEW_PASSWORD' => 'New Password',
+    'FORM.SAVE_PASSWORD' => 'Save Password',
+    'SUCCESS.PASSWORD_RESET' => 'New password saved.',
 
     // Email Templates //
 
     // Verify Email //
-    'MAIL.VERIFY.SUBJECT' => 'WebTigers: Verify Email Link',
+    'MAIL.VERIFY.SUBJECT' => 'Tiger: Verify Email Link',
 
     'MAIL.VERIFY.TEXT_LINE_1' => 'Welcome to TIGER!',
     'MAIL.VERIFY.TEXT_LINE_2' => 'Please verify your email.',
@@ -149,7 +173,19 @@ return [
     'VERIFY.VERIFY' => 'Verify',
     'VERIFY.SITE_NAME' => 'Tiger Platform 2.0',
 
-    // Forgot Password //
+    // Recover Password //
+    'MAIL.RECOVER.SUBJECT' => 'Tiger: Password Reset Request',
+    'RECOVER.REST_PASSWORD' => 'Reset Password',
+    'RECOVER.ALT_IMAGE' => 'Alt Image',
+    'RECOVER.HEADER' => 'Reset Password',
+    'RECOVER.BODY_1' => 'Click the reset password button below to login and update your password.',
+    'RECOVER.BODY_2' => 'If you did not request a password reset, you can safely ignore and delete this email.',
+    'RECOVER.RESET_PASSWORD' => 'Reset Password',
+    // Button link is inserted here. //
+    'RECOVER.COMPANY_FOOTER' => 'WebTigers',
+    'RECOVER.VERIFY' => 'Recover',
+    'RECOVER.SITE_NAME' => 'Tiger Platform 2.0',
+
 
     // Welcome Email //
     // Note this template has not yet been translated. //

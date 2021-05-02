@@ -41,7 +41,8 @@ class ManageController extends Tiger_Controller_Manage
     public function dashboardAction ( )
     {
         /** Global hero header vars */
-        $this->view->template->page_title = $this->view->translate( 'DASHBOARD' );
+        $this->view->template->page_title = $this->view->translate( 'MANAGE.DASHBOARD' );
+        $this->_checkPassword();
     }
 
     public function adminAction ( )
@@ -49,6 +50,16 @@ class ManageController extends Tiger_Controller_Manage
         $port = ( $_SERVER['REQUEST_SCHEME'] === 'http' ) ? '8080' : '8081' ;
         $uri = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . ':' . $port . '/admin';
         $this->redirect( $uri );
+    }
+
+    private function _checkPassword ( )
+    {
+        if ( ! empty( Zend_Auth::getInstance()->getIdentity()->password_reset_key )  ) {
+            $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerPassword.js' ) );
+            $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.reset.password.js' ) );
+            $this->view->passwordForm = new Account_Form_Password();
+        }
+
     }
 
 }
