@@ -56,5 +56,6 @@ return [
 
     'MENU.LICENSING' => 'Licensing',
 
+    'MENU.MANAGE.DASHBOARD' => 'Dashboard',
 
 ];

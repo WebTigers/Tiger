@@ -38,8 +38,11 @@ abstract class Tiger_Controller_Manage extends Zend_Controller_Action {
 
         $this->loadCommonAdminAssets();
 
-        /** Set User to the theme container */
+        /** Set User to the theme container. */
         $this->view->template->user = Zend_Auth::getInstance()->getIdentity();
+
+        /** This makes use of the manage branch of the menu tree. */
+        $this->view->template->menu = 'manage';
 
     }
     

@@ -29,6 +29,10 @@ class ManageController extends Tiger_Controller_Manage
 
         parent::init();
 
+        /** Global Footer */
+        $this->view->template->name = Zend_Registry::get('Zend_Config')->tiger->platform->name;
+        $this->view->template->version = Zend_Registry::get('Zend_Config')->tiger->platform->version;
+
     }
 
     ##### Admin Actions #####

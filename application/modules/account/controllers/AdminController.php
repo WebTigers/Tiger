@@ -33,6 +33,10 @@ class Account_AdminController extends Tiger_Controller_Admin
         /** Global hero header vars */
         $this->view->template->page_title = $this->view->translate('ACCOUNTS');
 
+        /** Global Footer */
+        $this->view->template->name = Zend_Registry::get('Zend_Config')->tiger->platform->name;
+        $this->view->template->version = Zend_Registry::get('Zend_Config')->tiger->platform->version;
+
     }
 
     ##### Admin Actions #####

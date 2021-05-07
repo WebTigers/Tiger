@@ -8,6 +8,9 @@
 
 return [
 
+    // Platform Name //
+    'PLATFORM.NAME' => 'Tiger',
+
     // Admin //
     'ADMIN.DASHBOARD' => 'Admin Dashboard',
 

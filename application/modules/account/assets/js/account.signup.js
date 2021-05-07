@@ -33,7 +33,7 @@
             $(document).ready(function() {
 
                 // Page init stuff goes here. //
-                Class._initSignupForm();
+                Class._initSignup();
 
             });
 
@@ -41,7 +41,7 @@
 
         // Signup Functions //
 
-        _initSignupForm : function () {
+        _initSignup : function () {
 
             // Init Select2 Controls
             $( '#type_hearabout' ).select2({
@@ -60,7 +60,7 @@
             //     });
             // }
 
-            $('#signup-button').on( 'click', Class._submitForm );
+            $('#signup-button').on( 'click', Class._signup );
 
         },
         
@@ -82,21 +82,19 @@
             
         },
 
-        _submitForm : function ( event ) {
+        _signup : function ( event ) {
             
-            function disableElements () {
+            function beforeSend () {
 
-                $('#signup').find('input, select').addClass( 'disabled' ).prop( 'disabled', true );
-                $('#signup-form-processing').removeClass( 'hide' );
-                $('#signup-form-arrow').addClass( 'hide' );
+                $('#signup-button i.ajax').removeClass( 'hide' );
+                $('#signup-button i.icon').addClass( 'hide' );
 
             }
             
-            function enableElements () {
+            function complete () {
 
-                $('#signup').find('input, select').removeClass( 'disabled' ).prop( 'disabled', false );
-                $('#signup-form-processing').addClass( 'hide' );
-                $('#signup-form-arrow').removeClass( 'hide' );
+                $('#signup-button i.ajax').addClass( 'hide' );
+                $('#signup-button i.icon').removeClass( 'hide' );
 
             }
             
@@ -117,7 +115,6 @@
 
                     // Signup Error //
                     
-                    enableElements();
                     // grecaptcha.reset( reCaptchaSignup );
 
                     if ( data.html ) {
@@ -189,7 +186,8 @@
                 url         : "/api",
                 dataType    : "json",
                 data        : data,
-                beforeSend  : disableElements,
+                beforeSend  : beforeSend,
+                complete    : complete,
                 success     : success,
                 error       : error
             });

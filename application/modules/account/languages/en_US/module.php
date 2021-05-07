@@ -155,22 +155,19 @@ return [
 
     // Verify Email //
     'MAIL.VERIFY.SUBJECT' => 'Tiger: Verify Email Link',
-
     'MAIL.VERIFY.TEXT_LINE_1' => 'Welcome to TIGER!',
     'MAIL.VERIFY.TEXT_LINE_2' => 'Please verify your email.',
     'MAIL.VERIFY.TEXT_LINE_3' => 'Click on the link below to verify your email address.',
-    // Link is inserted here. //
     'MAIL.VERIFY.TEXT_LINE_4' => 'WebTIGERS',
     'MAIL.VERIFY.TEXT_LINE_5' => 'Tiger Platform 2.0',
 
     // These translations are all located within the email template. //
-    'VERIFY.WELCOME_TO' => 'Welcome to Tiger!',
+    'VERIFY.HEADER' => 'Welcome to Tiger!',
     'VERIFY.ALT_IMAGE' => 'Alt Image',
-    'VERIFY.WELCOME_HEADER' => 'Verify Email',
+    'VERIFY.SUBHEADING' => 'Verify Email',
     'VERIFY.BODY_1' => 'Click the verify button below to verify your email and activate your account.',
-    // Button link is inserted here. //
-    'VERIFY.COMPANY_FOOTER' => 'WebTigers',
     'VERIFY.VERIFY' => 'Verify',
+    'VERIFY.COMPANY_FOOTER' => 'WebTigers',
     'VERIFY.SITE_NAME' => 'Tiger Platform 2.0',
 
     // Recover Password //
@@ -181,14 +178,18 @@ return [
     'RECOVER.BODY_1' => 'Click the reset password button below to login and update your password.',
     'RECOVER.BODY_2' => 'If you did not request a password reset, you can safely ignore and delete this email.',
     'RECOVER.RESET_PASSWORD' => 'Reset Password',
-    // Button link is inserted here. //
     'RECOVER.COMPANY_FOOTER' => 'WebTigers',
     'RECOVER.VERIFY' => 'Recover',
     'RECOVER.SITE_NAME' => 'Tiger Platform 2.0',
 
-
     // Welcome Email //
-    // Note this template has not yet been translated. //
+    'MAIL.WELCOME.SUBJECT' => 'Tiger: Welcome to Tiger!',
+    'WELCOME.HEADING' => 'Welcome to Tiger!',
+    'WELCOME.SUBHEADING' => 'Thanks for joining us!',
+    'WELCOME.BODY_1' => 'Feel free to explore our product and get in touch if you have any questions, we will be more than happy to assist you.',
+    'WELCOME.GET_STARTED' => 'Get Started',
+    'WELCOME.COMPANY_FOOTER' => 'WebTigers',
+    'WELCOME.SITE_NAME' => 'Tiger Platform 2.0',
 
 
 

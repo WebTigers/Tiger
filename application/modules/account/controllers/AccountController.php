@@ -38,6 +38,9 @@ class Account_AccountController extends Tiger_Controller_Manage
         $this->view->template->inc_header       = '';
         $this->view->template->inc_footer       = '';
 
+        $this->view->template->name = Zend_Registry::get('Zend_Config')->tiger->platform->name;
+        $this->view->template->version = Zend_Registry::get('Zend_Config')->tiger->platform->version;
+
     }
 
     ### Public Actions ###
@@ -151,7 +154,8 @@ class Account_AccountController extends Tiger_Controller_Manage
 
     }
 
-    public function passwordAction ( ) {
+    public function passwordAction ( )
+    {
 
         $request = $this->getRequest();
         $request->setParam('method', 'login');
@@ -172,6 +176,23 @@ class Account_AccountController extends Tiger_Controller_Manage
         else {
             $this->forward('recover');
         }
+
+    }
+
+    public function profileAction ( )
+    {
+        $this->view->userForm       = new Account_Form_User();
+        $this->view->orgForm        = new Account_Form_Org();
+        $this->view->addressForm    = new Account_Form_Address();
+        $this->view->contactForm    = new Account_Form_Contact();
+
+        /** Add the profile page JS plugin. */
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.profile.js' ) );
+
+        $this->view->template->inc_side_overlay = true;
+        $this->view->template->inc_sidebar      = true;
+        $this->view->template->inc_header       = true;
+        $this->view->template->inc_footer       = true;
 
     }
 
