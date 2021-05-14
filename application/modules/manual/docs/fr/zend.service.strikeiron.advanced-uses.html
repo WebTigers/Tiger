@@ -1,0 +1,151 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Service_StrikeIron: Advanced Uses</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.service.html" title="Zend_Service">
+<link rel="prev" href="zend.service.strikeiron.bundled-services.html" title="Zend_Service_StrikeIron: Bundled Services">
+<link rel="next" href="zend.service.twitter.html" title="Zend_Service_Twitter">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Service_StrikeIron: Advanced Uses</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.service.strikeiron.bundled-services.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Service</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.service.twitter.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.service.strikeiron.advanced-uses"></a>Zend_Service_StrikeIron: Advanced Uses</h2></div></div></div>
+    
+
+    <p>
+        This section describes the more advanced uses of
+        <code class="classname">Zend_Service_StrikeIron</code>.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.strikeiron.advanced-uses.services-by-wsdl"></a>Using Services by WSDL</h3></div></div></div>
+        
+
+        <p>
+            Some StrikeIron services may have a <acronym class="acronym">PHP</acronym> wrapper class available,
+            such as those described in
+            <a class="link" href="zend.service.strikeiron.bundled-services.html" title="Zend_Service_StrikeIron: Bundled Services">Bundled Services</a>.
+            However, StrikeIron offers hundreds of services and many of these
+            may be usable even without creating a special wrapper class.
+        </p>
+
+        <p>
+            To try a StrikeIron service that does not have a wrapper class available,
+            give the <span class="property">wsdl</span> option to <code class="methodname">getService()</code>
+            instead of the <span class="property">class</span> option:
+        </p>
+
+        <pre class="programlisting">
+$strikeIron = new Zend_Service_StrikeIron(array('username' =&gt; 'your-username',
+                                                'password' =&gt; 'your-password'));
+
+// Get a generic client to the Reverse Phone Lookup service
+$phone = $strikeIron-&gt;getService(
+    array('wsdl' =&gt; 'http://ws.strikeiron.com/ReversePhoneLookup?WSDL')
+);
+
+$result = $phone-&gt;lookup(array('Number' =&gt; '(408) 253-8800'));
+echo $result-&gt;listingName;
+
+// Zend Technologies USA Inc
+</pre>
+
+        <p>
+            Using StrikeIron services from the WSDL will require at least some understanding
+            of the WSDL files. StrikeIron has many resources on its site to help with this. Also,
+            <a class="ulink" href="http://janschneider.de" target="_top">Jan Schneider</a> from the <a class="ulink" href="http://horde.org" target="_top">Horde project</a> has written a <a class="ulink" href="http://janschneider.de/news/25/268" target="_top">small <acronym class="acronym">PHP</acronym>
+                routine</a> that will format a WSDL file into more readable
+            <acronym class="acronym">HTML</acronym>.
+        </p>
+
+        <p>
+            Please note that only the services described in the <a class="link" href="zend.service.strikeiron.bundled-services.html" title="Zend_Service_StrikeIron: Bundled Services">Bundled Services</a>
+            section are officially supported.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.strikeiron.viewing-soap-transactions"></a>Viewing SOAP Transactions</h3></div></div></div>
+        
+
+        <p>
+            All communication with StrikeIron is done using the <acronym class="acronym">SOAP</acronym> extension.
+            It is sometimes useful to view the <acronym class="acronym">XML</acronym> exchanged with StrikeIron for
+            debug purposes.
+        </p>
+
+        <p>
+            Every StrikeIron client (subclass of
+            <code class="classname">Zend_Service_StrikeIron_Base</code>) contains a
+            <code class="methodname">getSoapClient()</code> method to return the underlying instance of
+            <code class="classname">SOAPClient</code> used to communicate with StrikeIron.
+        </p>
+
+        <p>
+            <acronym class="acronym">PHP</acronym>' <a class="ulink" href="http://www.php.net/manual/en/function.soap-soapclient-construct.php" target="_top">SOAPClient</a>
+            has a <span class="property">trace</span> option that causes it to remember the
+            <acronym class="acronym">XML</acronym> exchanged during the last transaction.
+            <code class="classname">Zend_Service_StrikeIron</code> does not enable the
+            <span class="property">trace</span> option by default but this can easily by changed
+            by specifying the options that will be passed to the <code class="classname">SOAPClient</code>
+            constructor.
+        </p>
+
+        <p>
+            To view a SOAP transaction, call the <code class="methodname">getSoapClient()</code> method
+            to get the <code class="classname">SOAPClient</code> instance and then call the appropriate
+            methods like <a class="ulink" href="http://www.php.net/manual/en/function.soap-soapclient-getlastrequest.php" target="_top"><code class="methodname">__getLastRequest()</code></a>
+            and <a class="ulink" href="http://www.php.net/manual/en/function.soap-soapclient-getlastresponse.php" target="_top"><code class="methodname">__getLastRequest()</code></a>:
+        </p>
+
+        <pre class="programlisting">
+$strikeIron =
+    new Zend_Service_StrikeIron(array('username' =&gt; 'your-username',
+                                      'password' =&gt; 'your-password',
+                                      'options'  =&gt; array('trace' =&gt; true)));
+
+// Get a client for the Sales &amp; Use Tax Basic service
+$taxBasic = $strikeIron-&gt;getService(array('class' =&gt; 'SalesUseTaxBasic'));
+
+// Perform a method call
+$taxBasic-&gt;getTaxRateCanada(array('province' =&gt; 'ontario'));
+
+// Get SOAPClient instance and view XML
+$soapClient = $taxBasic-&gt;getSoapClient();
+echo $soapClient-&gt;__getLastRequest();
+echo $soapClient-&gt;__getLastResponse();
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.service.strikeiron.bundled-services.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.service.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.service.twitter.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Service_StrikeIron: Bundled Services </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_Service_Twitter</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

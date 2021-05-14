@@ -1,0 +1,215 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Framework</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.queue.html" title="Zend_Queue">
+<link rel="prev" href="zend.queue.example.html" title="Example usage">
+<link rel="next" href="zend.queue.adapters.html" title="Adapters">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Framework</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.queue.example.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Queue</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.queue.adapters.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.queue.framework"></a>Framework</h2></div></div></div>
+    
+
+    <p>
+        The <code class="classname">Zend_Queue</code> is a proxy that hides the details
+        of the queue services. The queue services are represented by
+        <code class="classname">Zend_Queue_Adapter_&lt;service&gt;</code>. For example,
+        <code class="classname">Zend_Queue_Adapter_Db</code> is a queue that will use
+        database tables to store and retrieve messages.
+    </p>
+
+    <p>
+        Below is an example for using database tables for a queuing system:
+    </p>
+
+    <pre class="programlisting">
+$options = array(
+    'name'          =&gt; 'queue1',
+    'driverOptions' =&gt; array(
+        'host'      =&gt; '127.0.0.1',
+        'port'      =&gt; '3306',
+        'username'  =&gt; 'queue',
+        'password'  =&gt; 'queue',
+        'dbname'    =&gt; 'queue',
+        'type'      =&gt; 'pdo_mysql'
+    )
+);
+
+// Create a database queue.
+// Zend_Queue will prepend Zend_Queue_Adapter_ to 'Db' for the class name.
+$queue = new Zend_Queue('Db', $options);
+</pre>
+
+    <p>
+        The <code class="classname">Zend_Queue</code> constructor will create a
+        <code class="classname">Zend_Queue_Adapter_Db</code> and initialize the adapter
+        with the configuration settings.
+    </p>
+
+    <p>
+        The accepted configuration settings for each adapter are provided
+        in the <a class="link" href="zend.queue.adapters.html" title="Adapters">adapter notes</a>.
+    </p>
+
+    <p>
+        <code class="classname">Zend_Queue</code> returns messages using the class
+        <code class="classname">Zend_Queue_Message_Iterator</code>, which is an
+        implementation of <acronym class="acronym">SPL</acronym> <code class="classname">Iterator</code> and
+        <code class="classname">Countable</code>.
+        <code class="classname">Zend_Queue_Message_Iterator</code> contains an array of
+        <code class="classname">Zend_Queue_Message</code> objects.
+    </p>
+
+    <pre class="programlisting">
+$messages = $queue-&gt;receive(5);
+foreach ($messages as $i =&gt; $message) {
+    echo "$i) Message =&gt; ", $message-&gt;body, "\n";
+}
+</pre>
+
+    <p>
+        Any exceptions thrown are of class
+        <code class="classname">Zend_Queue_Exception</code>.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.queue.framework.basics"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Queue</code> is a proxy class that represents
+            an adapter.
+        </p>
+
+        <p>
+            The <code class="methodname">send()</code>,
+            <code class="methodname">count($queue)</code>, and
+            <code class="methodname">receive()</code> methods are employed by each
+            adapter to interact with queues.
+        </p>
+
+        <p>
+            The <code class="methodname">createQueue()</code>,
+            <code class="methodname">deleteQueue()</code> methods are used to manage
+            queues.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.queue.framework.support"></a>Commonality among adapters</h3></div></div></div>
+        
+
+        <p>
+            The queue services supported by <code class="classname">Zend_Queue</code> do
+            not all support the same functions. For example,
+            <code class="classname">Zend_Queue_Adapter_Array</code>,
+            <code class="classname">Zend_Queue_Adapter_Db</code>, support all functions,
+            while <code class="classname">Zend_Queue_Adapter_Activemq</code> does not
+            support queue listing, queue deletion, or counting of messages.
+        </p>
+
+        <p>
+            You can determine what functions are supported by using
+            <code class="methodname">Zend_Queue::isSupported()</code> or
+            <code class="methodname">Zend_Queue::getCapabilities()</code>.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">createQueue()</code></em></span> - create a queue
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">deleteQueue()</code></em></span> - delete a queue
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">send()</code></em></span> - send a message
+                </p>
+
+                <p>
+                    <code class="methodname">send()</code> is not available in all adapters; the
+                    <code class="classname">Zend_Queue_Adapter_Null</code> does not
+                    support <code class="methodname">send()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">receive()</code></em></span> - receive messages
+                </p>
+
+                <p>
+                    <code class="methodname">receive()</code> is not available in all adapters;
+                    the <code class="classname">Zend_Queue_Adapter_Null</code> does not
+                    support <code class="methodname">receive()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">deleteMessage()</code></em></span> - delete a
+                    message
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">count()</code></em></span> - count the number of
+                    messages in a queue
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">isExists()</code></em></span> - checks the existence
+                    of a queue
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            <code class="methodname">receive()</code> methods are employed by each
+            adapter to interact with queues.
+        </p>
+
+        <p>
+            The <code class="methodname">createQueue()</code> and
+            <code class="methodname">deleteQueue()</code> methods are used to manage
+            queues.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.queue.example.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.queue.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.queue.adapters.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Example usage </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Adapters</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

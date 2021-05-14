@@ -1,0 +1,152 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Resource Autoloading</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="learning.autoloading.html" title="Auto-carregamento no Zend Framework">
+<link rel="prev" href="learning.autoloading.usage.html" title="Basic Autoloader Usage">
+<link rel="next" href="learning.autoloading.conclusion.html" title="Conclusion">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Resource Autoloading</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.autoloading.usage.html">Anterior</a> </td>
+<th width="60%" align="center">Auto-carregamento no Zend Framework</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.autoloading.conclusion.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.autoloading.resources"></a>Resource Autoloading</h2></div></div></div>
+    
+
+    <p>
+        Often, when developing an application, it's either difficult to package classes in the 1:1
+        classname:filename standard Zend Framework recommends, or it's advantageous for purposes of
+        packaging not to do so. However, this means you class files will not be found by the
+        autoloader.
+    </p>
+
+    <p>
+        If you read through <a class="link" href="learning.autoloading.design.html" title="Goals and Design">the design goals</a> for
+        the autoloader, the last point in that section indicated that the solution should cover this
+        situation. Zend Framework does so with
+        <code class="classname">Zend_Loader_Autoloader_Resource</code>.
+    </p>
+
+    <p>
+        A resource is just a name that corresponds to a component namespace (which
+        is appended to the autoloader's namespace) and a path (which is relative to
+        the autoloader's base path). In action, you'd do something like this:
+    </p>
+
+    <pre class="programlisting">
+$loader = new Zend_Application_Module_Autoloader(array(
+    'namespace' =&gt; 'Blog',
+    'basePath'  =&gt; APPLICATION_PATH . '/modules/blog',
+));
+</pre>
+
+    <p>
+        Once you have the loader in place, you then need to inform it of the various resource types
+        it's aware of. These resource types are simply pairs of subtree and prefix.
+    </p>
+
+    <p>
+        As an example, consider the following tree:
+    </p>
+
+    <pre class="programlisting">
+path/to/some/resources/
+|-- forms/
+|   `-- Guestbook.php        // Foo_Form_Guestbook
+|-- models/
+|   |-- DbTable/
+|   |   `-- Guestbook.php    // Foo_Model_DbTable_Guestbook
+|   |-- Guestbook.php        // Foo_Model_Guestbook
+|   `-- GuestbookMapper.php  // Foo_Model_GuestbookMapper
+</pre>
+
+    <p>
+        Our first step is creating the resource loader:
+    </p>
+
+    <pre class="programlisting">
+$loader = new Zend_Loader_Autoloader_Resource(array(
+    'basePath'  =&gt; 'path/to/some/resources/',
+    'namespace' =&gt; 'Foo',
+));
+</pre>
+
+    <p>
+        Next, we need to define some resource types.
+        <code class="methodname">Zend_Loader_Autoloader_Resourse::addResourceType()</code> has three
+        arguments: the "type" of resource (an arbitrary string), the path under the base path in
+        which the resource type may be found, and the component prefix to use for the resource type.
+        In the above tree, we have three resource types: form (in the subdirectory "forms", with a
+        component prefix of "Form"), model (in the subdirectory "models", with a component prefix of
+        "Model"), and dbtable (in the subdirectory "<code class="filename">models/DbTable</code>",
+        with a component prefix of "<code class="classname">Model_DbTable</code>"). We'd define them as
+        follows:
+    </p>
+
+    <pre class="programlisting">
+$loader-&gt;addResourceType('form', 'forms', 'Form')
+       -&gt;addResourceType('model', 'models', 'Model')
+       -&gt;addResourceType('dbtable', 'models/DbTable', 'Model_DbTable');
+</pre>
+
+    <p>
+        Once defined, we can simply use these classes:
+    </p>
+
+    <pre class="programlisting">
+$form      = new Foo_Form_Guestbook();
+$guestbook = new Foo_Model_Guestbook();
+</pre>
+
+    <div class="note"><table border="0" summary="Note: Module Resource Autoloading">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Module Resource Autoloading</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Zend Framework's <acronym class="acronym">MVC</acronym> layer encourages the use of "modules", which
+            are self-contained applications within your site. Modules typically have a number of
+            resource types by default, and Zend Framework even
+            <a class="link" href="project-structure.filesystem.html" title="Module Structure">recommends a standard directory layout
+                for modules</a>. Resource autoloaders are therefore
+            quite useful in this paradigm -- so useful that they are enabled by default when you
+            create a bootstrap class for your module that extends
+            <code class="classname">Zend_Application_Module_Bootstrap</code>. For more information, read
+            the <a class="link" href="zend.loader.autoloader-resource.html#zend.loader.autoloader-resource.module" title="The Module Resource Autoloader">Zend_Loader_Autoloader_Module
+                documentation</a>.
+        </p>
+    </td></tr>
+</table></div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.autoloading.usage.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.autoloading.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.autoloading.conclusion.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Basic Autoloader Usage </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Conclusion</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Rewrite Configuration Guide</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="project-structure.html" title="Recommended Project Structure for Zend Framework MVC Applications">
+<link rel="prev" href="project-structure.filesystem.html" title="Module Structure">
+<link rel="next" href="performance.html" title="Zend Framework Performance Guide">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Rewrite Configuration Guide</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="project-structure.filesystem.html">Prev</a> </td>
+<th width="60%" align="center">Recommended Project Structure for Zend Framework MVC Applications</th>
+<td width="20%" align="right"> <a accesskey="n" href="performance.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="project-structure.rewrite"></a>Rewrite Configuration Guide</h2></div></div></div>
+        
+
+        <p>
+            <acronym class="acronym">URL</acronym> rewriting is a common function of <acronym class="acronym">HTTP</acronym>
+            servers. However, the rules and configuration differ widely between them. Below are
+            some common approaches across a variety of popular web servers available at the time of
+            writing.
+        </p>
+
+        <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="project-structure.rewrite.apache"></a>Apache HTTP Server</h3></div></div></div>
+            
+
+            <p>
+                All examples that follow use <span class="property">mod_rewrite</span>, an official
+                module that comes bundled with Apache. To use it,
+                <span class="property">mod_rewrite</span> must either be included at compile time or
+                enabled as a Dynamic Shared Object (<acronym class="acronym">DSO</acronym>). Please consult the
+                <a class="ulink" href="http://httpd.apache.org/docs/" target="_top">Apache documentation</a> for your
+                version for more information.
+            </p>
+
+            <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="project-structure.rewrite.apache.vhost"></a>Rewriting inside a VirtualHost</h4></div></div></div>
+                
+
+                <p>
+                    Here is a very basic virtual host definition. These rules direct all requests
+                    to <code class="filename">index.php</code>, except when a matching file is found under
+                    the <span class="property">document_root</span>.
+                </p>
+
+                <pre class="programlisting">
+&lt;VirtualHost my.domain.com:80&gt;
+    ServerName   my.domain.com
+    DocumentRoot /path/to/server/root/my.domain.com/public
+
+    RewriteEngine off
+
+    &lt;Location /&gt;
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} -s [OR]
+        RewriteCond %{REQUEST_FILENAME} -l [OR]
+        RewriteCond %{REQUEST_FILENAME} -d
+        RewriteRule ^.*$ - [NC,L]
+        RewriteRule ^.*$ /index.php [NC,L]
+    &lt;/Location&gt;
+&lt;/VirtualHost&gt;
+</pre>
+
+                <p>
+                    Note the slash ("/") prefixing <code class="filename">index.php</code>; the rules for
+                    <code class="filename">.htaccess</code> differ in this regard.
+                </p>
+            </div>
+
+            <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="project-structure.rewrite.apache.htaccess"></a>Rewriting within a .htaccess file</h4></div></div></div>
+                
+
+                <p>
+                    Below is a sample <code class="filename">.htaccess</code> file that utilizes
+                    <span class="property">mod_rewrite</span>. It is similar to the virtual host
+                    configuration, except that it specifies only the rewrite rules, and the leading
+                    slash is omitted from <code class="filename">index.php</code>.
+                </p>
+
+                <pre class="programlisting">
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} -s [OR]
+RewriteCond %{REQUEST_FILENAME} -l [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^.*$ - [NC,L]
+RewriteRule ^.*$ index.php [NC,L]
+</pre>
+
+                <p>
+                    There are many ways to configure <span class="property">mod_rewrite</span>; if you
+                    would like more information, see Jayson Minard's <a class="ulink" href="http://devzone.zend.com/a/70" target="_top">Blueprint for PHP Applications:
+                    Bootstrapping</a>.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="project-structure.rewrite.iis"></a>Microsoft Internet Information Server</h3></div></div></div>
+            
+
+            <p>
+                As of version 7.0, <acronym class="acronym">IIS</acronym> now ships with a standard rewrite engine.
+                You may use the following configuration to create the appropriate rewrite rules.
+            </p>
+
+            <pre class="programlisting">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;configuration&gt;
+    &lt;system.webServer&gt;
+        &lt;rewrite&gt;
+            &lt;rules&gt;
+                &lt;rule name="Imported Rule 1" stopProcessing="true"&gt;
+                    &lt;match url="^.*$" /&gt;
+                    &lt;conditions logicalGrouping="MatchAny"&gt;
+                        &lt;add input="{REQUEST_FILENAME}"
+                             matchType="IsFile" pattern=""
+                             ignoreCase="false" /&gt;
+                        &lt;add input="{REQUEST_FILENAME}"
+                             matchType="IsDirectory"
+                             pattern=""
+                             ignoreCase="false" /&gt;
+                    &lt;/conditions&gt;
+                    &lt;action type="None" /&gt;
+                &lt;/rule&gt;
+                &lt;rule name="Imported Rule 2" stopProcessing="true"&gt;
+                    &lt;match url="^.*$" /&gt;
+                    &lt;action type="Rewrite" url="index.php" /&gt;
+                &lt;/rule&gt;
+            &lt;/rules&gt;
+        &lt;/rewrite&gt;
+    &lt;/system.webServer&gt;
+&lt;/configuration&gt;
+</pre>
+        </div>
+    </div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="project-structure.filesystem.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="project-structure.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="performance.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Module Structure </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend Framework Performance Guide</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

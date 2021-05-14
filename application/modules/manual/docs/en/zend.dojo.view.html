@@ -1,0 +1,1921 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Dojo View Helpers</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.dojo.html" title="Zend_Dojo">
+<link rel="prev" href="zend.dojo.data.html" title="Zend_Dojo_Data: dojo.data Envelopes">
+<link rel="next" href="zend.dojo.form.html" title="Dojo Form Elements and Decorators">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Dojo View Helpers</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.dojo.data.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Dojo</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.dojo.form.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.dojo.view"></a>Dojo View Helpers</h2></div></div></div>
+    
+
+    <p>
+        Zend Framework provides the following Dojo-specific view helpers:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+            <p>
+                <span class="emphasis"><em><code class="methodname">dojo()</code>:</em></span> setup the Dojo environment
+                for your page, including dojo configuration values, custom module paths, module
+                require statements, theme stylesheets, <acronym class="acronym">CDN</acronym> usage, and more.
+            </p>
+        </li></ul></div>
+
+    <div class="example">
+<a name="zend.dojo.view.setup"></a><p class="title"><b>Example 351. Using Dojo View Helpers</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            To use Dojo view helpers, you will need to tell your view object
+            where to find them. You can do this by calling
+            <code class="methodname">addHelperPath()</code>:
+        </p>
+
+        <pre class="programlisting">
+$view-&gt;addHelperPath('Zend/Dojo/View/Helper/', 'Zend_Dojo_View_Helper');
+</pre>
+
+        <p>
+            Alternately, you can use <code class="classname">Zend_Dojo</code>'s
+            <code class="methodname">enableView()</code> method to do the work for you:
+        </p>
+
+        <pre class="programlisting">
+Zend_Dojo::enableView($view);
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.dojo.view.dojo"></a>dojo() View Helper</h3></div></div></div>
+    
+
+    <p>
+        The <code class="methodname">dojo()</code> view helper is intended to simplify setting up
+        the Dojo environment, including the following responsibilities:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                Specifying either a <acronym class="acronym">CDN</acronym> or a local path to a Dojo install.
+            </p>
+        </li>
+<li class="listitem"><p>Specifying paths to custom Dojo modules.</p></li>
+<li class="listitem"><p>Specifying <span class="command"><strong>dojo.require</strong></span> statements.</p></li>
+<li class="listitem"><p>Specifying dijit stylesheet themes to use.</p></li>
+<li class="listitem">
+            <p>Specifying <span class="command"><strong>dojo.addOnLoad()</strong></span> events.</p>
+        </li>
+</ul></div>
+
+    <p>
+        The <code class="methodname">dojo()</code> view helper implementation is an example of a
+        placeholder implementation. The data set in it persists between view
+        objects and may be directly echoed from your layout script.
+    </p>
+
+    <div class="example">
+<a name="zend.dojo.view.dojo.usage"></a><p class="title"><b>Example 352. dojo() View Helper Usage Example</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            For this example, let's assume the developer will be using Dojo from
+            a local path, will require several dijits, and will be
+            utilizing the Tundra dijit theme.
+        </p>
+
+        <p>
+            On many pages, the developer may not utilize Dojo at all. So, we
+            will first focus on a view script where Dojo is needed and then on the
+            layout script, where we will setup some of the Dojo environment and
+            then render it.
+        </p>
+
+        <p>
+            First, we need to tell our view object to use the Dojo view helper
+            paths. This can be done in your bootstrap or an early-running
+            plugin; simply grab your view object and execute the following:
+        </p>
+
+        <pre class="programlisting">
+$view-&gt;addHelperPath('Zend/Dojo/View/Helper/', 'Zend_Dojo_View_Helper');
+</pre>
+
+        <p>
+            Next, the view script. In this case, we're going to specify
+            that we will be using a FilteringSelect -- which will consume a
+            custom store based on QueryReadStore, which we'll call
+            'PairedStore' and store in our 'custom' module.
+        </p>
+
+        <pre class="programlisting">
+&lt;?php // setup data store for FilteringSelect ?&gt;
+&lt;div dojoType="custom.PairedStore" jsId="stateStore"
+    url="/data/autocomplete/type/state/format/ajax"
+    requestMethod="get"&gt;&lt;/div&gt;
+
+&lt;?php // Input element: ?&gt;
+State: &lt;input id="state" dojoType="dijit.form.FilteringSelect"
+    store="stateStore" pageSize="5" /&gt;
+
+&lt;?php // setup required dojo elements:
+$this-&gt;dojo()-&gt;enable()
+             -&gt;setDjConfigOption('parseOnLoad', true)
+             -&gt;registerModulePath('custom', '../custom/')
+             -&gt;requireModule('dijit.form.FilteringSelect')
+             -&gt;requireModule('custom.PairedStore'); ?&gt;
+</pre>
+
+        <p>
+            In our layout script, we'll then check to see if Dojo is enabled,
+            and, if so, we'll do some more general configuration and assemble
+            it:
+        </p>
+
+        <pre class="programlisting">
+&lt;?php echo $this-&gt;doctype() ?&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;?php echo $this-&gt;headTitle() ?&gt;
+    &lt;?php echo $this-&gt;headMeta() ?&gt;
+    &lt;?php echo $this-&gt;headLink() ?&gt;
+    &lt;?php echo $this-&gt;headStyle() ?&gt;
+&lt;?php if ($this-&gt;dojo()-&gt;isEnabled()){
+    $this-&gt;dojo()-&gt;setLocalPath('/js/dojo/dojo.js')
+                 -&gt;addStyleSheetModule('dijit.themes.tundra');
+    echo $this-&gt;dojo();
+   }
+?&gt;
+    &lt;?php echo $this-&gt;headScript() ?&gt;
+&lt;/head&gt;
+&lt;body class="tundra"&gt;
+    &lt;?php echo $this-&gt;layout()-&gt;content ?&gt;
+    &lt;?php echo $this-&gt;inlineScript() ?&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+        <p>
+            At this point, you only need to ensure that your files are in the
+            correct locations and that you've created the end point action for
+            your FilteringSelect!
+        </p>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="note"><table border="0" summary="Note: UTF-8 encoding used by default">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">UTF-8 encoding used by default</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            By default, Zend Framework uses <acronym class="acronym">UTF-8</acronym> as its default encoding, and,
+            specific to this case, <code class="classname">Zend_View</code> does as well. Character encoding
+            can be set differently on the view object itself using the
+            <code class="methodname">setEncoding()</code> method (or the <span class="property">encoding</span>
+            instantiation parameter). However, since <code class="classname">Zend_View_Interface</code> does
+            not define accessors for encoding, it's possible that if you are using a custom view
+            implementation with the Dojo view helper, you will not have a
+            <code class="methodname">getEncoding()</code> method, which is what the view helper uses
+            internally for determining the character set in which to encode.
+        </p>
+
+        <p>
+            If you do not want to utilize <acronym class="acronym">UTF-8</acronym> in such a situation, you will
+            need to implement a <code class="methodname">getEncoding()</code> method in your custom view
+            implementation.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dojo.declarative"></a>Programmatic and Declarative Usage of Dojo</h4></div></div></div>
+        
+
+        <p>
+            Dojo allows both <span class="emphasis"><em>declarative</em></span> and
+            <span class="emphasis"><em>programmatic</em></span> usage of many of its features.
+            <span class="emphasis"><em>Declarative</em></span> usage uses standard <acronym class="acronym">HTML</acronym> elements
+            with non-standard attributes that are parsed when the page is
+            loaded. While this is a powerful and simple syntax to utilize, for
+            many developers this can cause issues with page validation.
+        </p>
+
+        <p>
+            <span class="emphasis"><em>Programmatic</em></span> usage allows the developer to
+            decorate existing elements by pulling them by ID or <acronym class="acronym">CSS</acronym> selectors
+            and passing them to the appropriate object constructors in Dojo.
+            Because no non-standard <acronym class="acronym">HTML</acronym> attributes are used, pages continue to
+            validate.
+        </p>
+
+        <p>
+            In practice, both use cases allow for graceful degradation when
+            javascript is disabled or the various Dojo script resources are
+            unreachable. To promote standards and document validation,
+            Zend Framework uses programmatic usage by default; the various view
+            helpers will generate javascript and push it to the
+            <code class="methodname">dojo()</code> view helper for inclusion when rendered.
+        </p>
+
+        <p>
+            Developers using this technique may also wish to explore the option
+            of writing their own programmatic decoration of the page. One
+            benefit would be the ability to specify handlers for dijit events.
+        </p>
+
+        <p>
+            To allow this, as well as the ability to use declarative syntax,
+            there are a number of static methods available to set this behavior
+            globally.
+        </p>
+
+        <div class="example">
+<a name="zend.dojo.view.dojo.declarative.usage"></a><p class="title"><b>Example 353. Specifying Declarative and Programmatic Dojo Usage</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                To specify declarative usage, simply call the static
+                <code class="methodname">setUseDeclarative()</code> method:
+            </p>
+
+            <pre class="programlisting">
+Zend_Dojo_View_Helper_Dojo::setUseDeclarative();
+</pre>
+
+            <p>
+                If you decide instead to use programmatic usage, call the static
+                <code class="methodname">setUseProgrammatic()</code> method:
+            </p>
+
+            <pre class="programlisting">
+Zend_Dojo_View_Helper_Dojo::setUseProgrammatic();
+</pre>
+
+            <p>
+                Finally, if you want to create your own programmatic rules, you
+                should specify programmatic usage, but pass in the value '-1';
+                in this situation, no javascript for decorating any dijits used
+                will be created.
+            </p>
+
+            <pre class="programlisting">
+Zend_Dojo_View_Helper_Dojo::setUseProgrammatic(-1);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dojo.themes"></a>Themes</h4></div></div></div>
+        
+
+        <p>
+            Dojo allows the creation of themes for its dijits (widgets). You may
+            select one by passing in a module path:
+        </p>
+
+        <pre class="programlisting">
+$view-&gt;dojo()-&gt;addStylesheetModule('dijit.themes.tundra');
+</pre>
+
+        <p>
+            The module path is discovered by using the character '.' as a
+            directory separator and using the last value in the list as the name
+            of the <acronym class="acronym">CSS</acronym> file in that theme directory to use; in the example
+            above, Dojo will look for the theme in
+            '<code class="filename">dijit/themes/tundra/tundra.css</code>'.
+        </p>
+
+        <p>
+            When using a theme, it is important to remember to pass the theme
+            class to, at the least, a container surrounding any dijits you are
+            using; the most common use case is to pass it in the body:
+        </p>
+
+        <pre class="programlisting">
+&lt;body class="tundra"&gt;
+</pre>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dojo.layers"></a>Using Layers (Custom Builds)</h4></div></div></div>
+        
+
+        <p>
+            By default, when you use a <span class="command"><strong>dojo.require</strong></span> statement, dojo will make a
+            request back to the server to grab the appropriate javascript file.
+            If you have many dijits in place, this results in many requests to
+            the server -- which is not optimal.
+        </p>
+
+        <p>
+            Dojo's answer to this is to provide the ability to create
+            <span class="emphasis"><em>custom builds</em></span>. Builds do several things:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Groups required files into <span class="emphasis"><em>layers</em></span>; a layer
+                    lumps all required files into a single JS file. (Hence the name
+                    of this section.)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    "Interns" non-javascript files used by dijits (typically,
+                    template files). These are also grouped in the same JS file as
+                    the layer.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Passes the file through ShrinkSafe, which strips whitespace and
+                    comments, as well as shortens variable names.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Some files can not be layered, but the build process will create a
+            special release directory with the layer file and all other files.
+            This allows you to have a slimmed-down distribution customized for
+            your site or application needs.
+        </p>
+
+        <p>
+            To use a layer, the <code class="methodname">dojo()</code> view helper has a
+            <code class="methodname">addLayer()</code> method for adding paths to required layers:
+        </p>
+
+        <pre class="programlisting">
+$view-&gt;dojo()-&gt;addLayer('/js/foo/foo.js');
+</pre>
+
+        <p>
+            For more information on creating custom builds, please <a class="ulink" href="http://dojotoolkit.org/reference-guide/dojo/index.html#package-system" target="_top">refer
+                to the Dojo build documentation</a>.
+        </p>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dojo.methods"></a>Methods Available</h4></div></div></div>
+        
+
+        <p>
+            The <code class="methodname">dojo()</code> view helper always returns an instance of
+            the dojo placeholder container. That container object has the
+            following methods available:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setView(Zend_View_Interface $view)</code>: set a view instance
+                    in the container.
+                </p>
+            </li>
+<li class="listitem">
+                <p><code class="methodname">enable()</code>: explicitly enable Dojo integration.</p>
+            </li>
+<li class="listitem">
+                <p><code class="methodname">disable()</code>: disable Dojo integration.</p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">isEnabled()</code>: determine whether or not Dojo integration
+                    is enabled.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">requireModule($module)</code>: setup a
+                    <span class="command"><strong>dojo.require</strong></span> statement.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getModules()</code>: determine what modules have been
+                    required.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">registerModulePath($module, $path)</code>:
+                    register a custom Dojo module path.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getModulePaths()</code>: get list of registered module paths.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addLayer($path)</code>: add a layer (custom build) path to
+                    use.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getLayers()</code>: get a list of all registered layer paths
+                    (custom builds).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removeLayer($path)</code>: remove the layer
+                    that matches <code class="varname">$path</code> from the list of registered
+                    layers (custom builds).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setCdnBase($url)</code>: set the base <acronym class="acronym">URL</acronym>
+                    for a <acronym class="acronym">CDN</acronym>; typically, one of the
+                    <code class="constant">Zend_Dojo::CDN_BASE_AOL</code> or
+                    <code class="constant">Zend_Dojo::CDN_BASE_GOOGLE</code>, but it only needs
+                    to be the <acronym class="acronym">URL</acronym> string prior to the version number.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getCdnBase()</code>: retrieve the base <acronym class="acronym">CDN</acronym>
+                    url to utilize.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setCdnVersion($version = null)</code>: set
+                    which version of Dojo to utilize from the <acronym class="acronym">CDN</acronym>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getCdnVersion()</code>: retrieve what
+                    version of Dojo from the <acronym class="acronym">CDN</acronym> will be used.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setCdnDojoPath($path)</code>: set the relative
+                    path to the <code class="filename">dojo.js</code> or <code class="filename">dojo.xd.js</code>
+                    file on a <acronym class="acronym">CDN</acronym>; typically, one of the
+                    <code class="constant">Zend_Dojo::CDN_DOJO_PATH_AOL</code> or
+                    <code class="constant">Zend_Dojo::CDN_DOJO_PATH_GOOGLE</code>, but it only
+                    needs to be the path string following the version number.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getCdnDojoPath()</code>: retrieve the last path segment of the
+                    <acronym class="acronym">CDN</acronym> url pointing to the <code class="filename">dojo.js</code> file.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">useCdn()</code>: tell the container to
+                    utilize the <acronym class="acronym">CDN</acronym>; implicitly enables integration.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setLocalPath($path)</code>: tell the container
+                    the path to a local Dojo install (should be a path relative
+                    to the server, and contain the <code class="filename">dojo.js</code> file itself);
+                    implicitly enables integration.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getLocalPath()</code>: determine what local
+                    path to Dojo is being used.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">useLocalPath()</code>: is the integration
+                    utilizing a Dojo local path?
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setDjConfig(array $config)</code>: set
+                    dojo or dijit configuration values (expects assoc array).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setDjConfigOption($option, $value)</code>: set
+                    a single dojo or dijit configuration value.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getDjConfig()</code>: get all dojo or dijit configuration
+                    values.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getDjConfigOption($option, $default = null)</code>: get a
+                    single dojo or dijit configuration value.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addStylesheetModule($module)</code>: add a
+                    stylesheet based on a module theme.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getStylesheetModules()</code>: get stylesheets
+                    registered as module themes.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addStylesheet($path)</code>: add a local
+                    stylesheet for use with Dojo.
+                </p>
+            </li>
+<li class="listitem">
+                <p><code class="methodname">getStylesheets()</code>: get local Dojo stylesheets.</p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addOnLoad($spec, $function = null)</code>: add
+                    a lambda for <span class="command"><strong>dojo.onLoad</strong></span> to call. If one argument is passed,
+                    it is assumed to be either a function name or a javascript
+                    closure. If two arguments are passed, the first is assumed
+                    to be the name of an object instance variable and the second
+                    either a method name in that object or a closure to utilize
+                    with that object.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">prependOnLoad($spec, $function = null)</code>:
+                    exactly like <code class="methodname">addOnLoad()</code>, excepts prepends to
+                    beginning of onLoad stack.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getOnLoadActions()</code>: retrieve all
+                    <span class="command"><strong>dojo.onLoad</strong></span> actions registered with the container. This will
+                    be an array of arrays.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">onLoadCaptureStart($obj = null)</code>:
+                    capture data to be used as a lambda for <span class="command"><strong>dojo.onLoad()</strong></span>.
+                    If <code class="varname">$obj</code> is provided, the captured JS code will be considered
+                    a closure to use with that Javascript object.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">onLoadCaptureEnd($obj = null)</code>: finish
+                    capturing data for use with <span class="command"><strong>dojo.onLoad()</strong></span>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">javascriptCaptureStart()</code>:
+                    capture arbitrary javascript to be included with Dojo JS
+                    (onLoad, require, etc. statements).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">javascriptCaptureEnd()</code>: finish capturing javascript.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">__toString()</code>: cast the container to a
+                    string; renders all <acronym class="acronym">HTML</acronym> style and script elements.
+                </p>
+            </li>
+</ul></div>
+    </div>
+</div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.dojo.view.dijit"></a>Dijit-Specific View Helpers</h3></div></div></div>
+    
+
+    <p>
+        From the Dojo manual: "Dijit is a widget system layered on top of
+        dojo." Dijit includes a variety of layout and form widgets designed to
+        provide accessibility features, localization, and standardized (and
+        themeable) look-and-feel.
+    </p>
+
+    <p>
+        Zend Framework ships a variety of view helpers that allow you to render
+        and utilize dijits within your view scripts. There are three basic
+        types:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Layout Containers</em></span>: these are designed to be
+                used within your view scripts or consumed by form decorators
+                for forms, sub forms, and display groups. They wrap the various
+                classes offerred in <span class="command"><strong>dijit.layout</strong></span>. Each dijit layout view helper
+                expects the following arguments:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                    <p>
+                        <code class="varname">$id</code>: the container name or <acronym class="acronym">DOM</acronym> ID.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$content</code>: the content to wrap in the
+                        layout container.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$params</code> (optional): dijit-specific
+                        parameters. Basically, any non-HTML attribute that can
+                        be used to configure the dijit layout container.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$attribs</code> (optional): any additional
+                        <acronym class="acronym">HTML</acronym> attributes that should be used to render the
+                        container div. If the key 'id' is passed in this array, it will
+                        be used for the form element <acronym class="acronym">DOM</acronym> id, and
+                        <code class="varname">$id</code> will be used for its name.
+                    </p>
+                </li>
+</ul></div>
+
+            <p>
+                If you pass no arguments to a dijit layout view helper, the
+                helper itself will be returned. This allows you to capture
+                content, which is often an easier way to pass content to the
+                layout container. Examples of this functionality will be shown
+                later in this section.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Form Dijit</em></span>: the <span class="command"><strong>dijit.form.Form</strong></span> dijit, while
+                not completely necessary for use with dijit form elements, will
+                ensure that if an attempt is made to submit a form that does
+                not validate against client-side validations, submission will
+                be halted and validation error messages raised. The form dijit
+                view helper expects the following arguments:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                    <p>
+                        <code class="varname">$id</code>: the container name or <acronym class="acronym">DOM</acronym> ID.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$attribs</code> (optional): any additional
+                        <acronym class="acronym">HTML</acronym> attributes that should be used to render the
+                        container div.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$content</code> (optional): the content to wrap
+                        in the form. If none is passed, an empty string will be
+                        used.
+                    </p>
+                </li>
+</ul></div>
+
+            <p>
+                The argument order varies from the other dijits in order to
+                keep compatibility with the standard <code class="methodname">form()</code> view
+                helper.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Form Elements</em></span>: these are designed to be
+                consumed with <code class="classname">Zend_Form</code>, but can be used
+                standalone within view scripts as well. Each dijit element view
+                helper expects the following arguments:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                    <p>
+                        <code class="varname">$id</code>: the element name or <acronym class="acronym">DOM</acronym> ID.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$value</code> (optional): the current value of the element.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$params</code> (optional): dijit-specific
+                        parameters. Basically, any non-HTML attribute that can
+                        be used to configure a dijit.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$attribs</code> (optional): any additional
+                        <acronym class="acronym">HTML</acronym> attributes that should be used to render the dijit.
+                        If the key 'id' is passed in this array, it will be used
+                        for the form element <acronym class="acronym">DOM</acronym> id, and <code class="varname">$id</code>
+                        will be used for its name.
+                    </p>
+                </li>
+</ul></div>
+
+            <p>
+                Some elements require more arguments; these will be noted with
+                the individual element helper descriptions.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        In order to utilize these view helpers, you need to register the path
+        to the dojo view helpers with your view object.
+    </p>
+
+    <div class="example">
+<a name="zend.dojo.view.dijit.prefixpath"></a><p class="title"><b>Example 354. Registering the Dojo View Helper Prefix Path</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+$view-&gt;addHelperPath('Zend/Dojo/View/Helper', 'Zend_Dojo_View_Helper');
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dijit.layout"></a>Dijit Layout Elements</h4></div></div></div>
+        
+
+        <p>
+            The <span class="command"><strong>dijit.layout</strong></span> family of elements are for creating custom,
+            predictable layouts for your site. For any questions on general
+            usage, <a class="ulink" href="http://dojotoolkit.org/reference-guide/dijit/layout.html" target="_top">read
+            more about them in the Dojo manual</a>.
+        </p>
+
+        <p>
+            All dijit layout elements have the signature <span class="command"><strong>string ($id = null, $content = '',
+                array $params = array(), array $attribs = array())</strong></span>.
+            In all caess, if you pass no arguments, the helper object itself will be returned. This
+            gives you access to the <code class="methodname">captureStart()</code> and
+            <code class="methodname">captureEnd()</code> methods, which allow you to capture
+            content instead of passing it to the layout container.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>AccordionContainer</em></span>:
+                    <span class="command"><strong>dijit.layout.AccordionContainer</strong></span>. Stack all panes together
+                    vertically; clicking on a pane titlebar will expand and
+                    display that particular pane.
+                </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;accordionContainer(
+    'foo',
+    $content,
+    array(
+        'duration' =&gt; 200,
+    ),
+    array(
+        'style' =&gt; 'width: 200px; height: 300px;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>AccordionPane</em></span>:
+                    <span class="command"><strong>dijit.layout.AccordionPane</strong></span>. For use within
+                    AccordionContainer.
+                </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;accordionPane(
+    'foo',
+    $content,
+    array(
+        'title' =&gt; 'Pane Title',
+    ),
+    array(
+        'style' =&gt; 'background-color: lightgray;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>BorderContainer</em></span>:
+                    <span class="command"><strong>dijit.layout.BorderContainer</strong></span>. Achieve layouts with
+                    optionally resizable panes such as you might see in a
+                    traditional application.
+                </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;borderContainer(
+    'foo',
+    $content,
+    array(
+        'design' =&gt; 'headline',
+    ),
+    array(
+        'style' =&gt; 'width: 100%; height: 100%',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>ContentPane</em></span>: <span class="command"><strong>dijit.layout.ContentPane</strong></span>.
+                    Use inside any container except AccordionContainer.
+                </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;contentPane(
+    'foo',
+    $content,
+    array(
+        'title'  =&gt; 'Pane Title',
+        'region' =&gt; 'left',
+    ),
+    array(
+        'style' =&gt; 'width: 120px; background-color: lightgray;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>SplitContainer</em></span>:
+                    <span class="command"><strong>dijit.layout.SplitContainer</strong></span>. Allows resizable content
+                    panes; deprecated in Dojo in favor of BorderContainer.
+                </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;splitContainer(
+    'foo',
+    $content,
+    array(
+        'orientation'  =&gt; 'horizontal',
+        'sizerWidth'   =&gt; 7,
+        'activeSizing' =&gt; true,
+    ),
+    array(
+        'style' =&gt; 'width: 400px; height: 500px;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>StackContainer</em></span>:
+                    <span class="command"><strong>dijit.layout.StackContainer</strong></span>. All panes within a
+                    StackContainer are placed in a stack; build buttons or
+                    functionality to reveal one at a time.
+                </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;stackContainer(
+    'foo',
+    $content,
+    array(),
+    array(
+        'style' =&gt; 'width: 400px; height: 500px; border: 1px;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>TabContainer</em></span>:
+                    <span class="command"><strong>dijit.layout.TabContainer</strong></span>. All panes within a
+                    TabContainer are placed in a stack, with tabs positioned on
+                    one side for switching between them.
+                </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;tabContainer(
+    'foo',
+    $content,
+    array(),
+    array(
+        'style' =&gt; 'width: 400px; height: 500px; border: 1px;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+</ul></div>
+
+        <p>
+            The following capture methods are available for all layout
+            containers:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="command"><strong>captureStart($id, array $params = array(), array $attribs =
+                        array());</strong></span>: begin capturing content to include in a container.
+                    <code class="varname">$params</code> refers to the dijit params to use with
+                    the container, while <code class="varname">$attribs</code> refer to any
+                    general <acronym class="acronym">HTML</acronym> attributes to use.
+                </p>
+
+                <p>
+                    Containers may be nested when capturing, <span class="emphasis"><em>so long
+                    as no ids are duplicated</em></span>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">captureEnd($id)</code>:
+                    finish capturing content to include in a container.
+                    <code class="varname">$id</code> should refer to an id previously used with
+                    a <code class="methodname">captureStart()</code> call. Returns a string
+                    representing the container and its contents, just as if
+                    you'd simply passed content to the helper itself.
+                </p>
+            </li>
+</ul></div>
+
+        <div class="example">
+<a name="zend.dojo.view.dijit.layout.borderexample"></a><p class="title"><b>Example 355. BorderContainer layout dijit example</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                BorderContainers, particularly when coupled with the ability to
+                capture content, are especially useful for achieving complex
+                layout effects.
+            </p>
+
+            <pre class="programlisting">
+$view-&gt;borderContainer()-&gt;captureStart('masterLayout',
+                                       array('design' =&gt; 'headline'));
+
+echo $view-&gt;contentPane(
+    'menuPane',
+    'This is the menu pane',
+    array('region' =&gt; 'top'),
+    array('style' =&gt; 'background-color: darkblue;')
+);
+
+echo  $view-&gt;contentPane(
+    'navPane',
+    'This is the navigation pane',
+    array('region' =&gt; 'left'),
+    array('style' =&gt; 'width: 200px; background-color: lightblue;')
+);
+
+echo $view-&gt;contentPane(
+    'mainPane',
+    'This is the main content pane area',
+    array('region' =&gt; 'center'),
+    array('style' =&gt; 'background-color: white;')
+);
+
+echo $view-&gt;contentPane(
+    'statusPane',
+    'Status area',
+    array('region' =&gt; 'bottom'),
+    array('style' =&gt; 'background-color: lightgray;')
+);
+
+echo $view-&gt;borderContainer()-&gt;captureEnd('masterLayout');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dijit.form"></a>Dijit Form Elements</h4></div></div></div>
+        
+
+        <p>
+            Dojo's form validation and input dijits are in the <span class="command"><strong>dijit.form</strong></span> tree.
+            For more information on general usage of these elements, as well as
+            accepted parameters, please <a class="ulink" href="http://dojotoolkit.org/reference-guide/dijit/form.html" target="_top">visit
+                the dijit.form documentation</a>.
+        </p>
+
+        <p>
+            The following dijit form elements are available in Zend Framework.
+            Except where noted, all have the signature <span class="command"><strong>string ($id,
+                $value = '', array $params = array(), array $attribs =
+                array())</strong></span>.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Button</em></span>: <span class="command"><strong>dijit.form.Button</strong></span>. Display a
+                    form button.
+                </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;button(
+    'foo',
+    'Show Me!',
+    array('iconClass' =&gt; 'myButtons'),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>CheckBox</em></span>:
+                    <span class="command"><strong>dijit.form.CheckBox</strong></span>. Display a checkbox. Accepts an
+                    optional fifth argument, the array
+                    <code class="varname">$checkedOptions</code>, which may contain either:
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            an indexed array with two values, a checked value
+                            and unchecked value, in that order; or
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            an associative array with the keys 'checkedValue'
+                            and 'unCheckedValue'.
+                        </p>
+                    </li>
+</ul></div>
+
+                <p>
+                    If <code class="varname">$checkedOptions</code> is not provided, 1 and 0
+                    are assumed.
+                </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;checkBox(
+    'foo',
+    'bar',
+    array(),
+    array(),
+    array('checkedValue' =&gt; 'foo', 'unCheckedValue' =&gt; 'bar')
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>ComboBox</em></span>:
+                    <span class="command"><strong>dijit.layout.ComboBox</strong></span>. ComboBoxes are a hybrid between a
+                    select and a text box with autocompletion. The key
+                    difference is that you may type an option that is not in
+                    the list of available options, and it will still consider
+                    it valid input. It accepts an optional fifth argument, an
+                    associative array <code class="varname">$options</code>; if provided,
+                    ComboBox will be rendered as a <span class="emphasis"><em>select</em></span>. Note
+                    also that the <span class="emphasis"><em>label values</em></span> of the
+                    <code class="varname">$options</code> array will be returned in the form --
+                    not the values themselves.
+                </p>
+
+                <p>
+                    Alternately, you may pass information regarding a <span class="command"><strong>dojo.data</strong></span>
+                    datastore to use with the element. If provided, the
+                    ComboBox will be rendered as a text <span class="emphasis"><em>input</em></span>, and
+                    will pull its options via that datastore.
+                </p>
+
+                <p>
+                    To specify a datastore, provide one of the following
+                    <code class="varname">$params</code> key combinations:
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            The key 'store', with an array value; the array
+                            should contain the keys:
+                        </p>
+
+                        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: square; ">
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>store</em></span>: the name of the
+                                    javascript variable representing the datastore
+                                    (this could be the name you would like for it
+                                    to use).
+                                </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>type</em></span>: the datastore type
+                                    to use; e.g., '<span class="command"><strong>dojo.data.ItemFileReadStore</strong></span>'.
+                                </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>params</em></span> (optional): an
+                                    associative array of key and value pairs to use to
+                                    configure the datastore. The 'url' param is a
+                                    typical example.
+                                </p>
+                            </li>
+</ul></div>
+                    </li>
+<li class="listitem">
+                        <p>
+                            The keys:
+                        </p>
+
+                        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: square; ">
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>store</em></span>: a string indicating
+                                    the datastore name to use.
+                                </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>storeType</em></span>: a string indicating
+                                    the datastore <span class="command"><strong>dojo.data</strong></span> type to use (e.g.,
+                                    '<span class="command"><strong>dojo.data.ItemFileReadStore</strong></span>').
+                                </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>storeParams</em></span>: an
+                                    associative array of key and value pairs with which
+                                    to configure the datastore.
+                                </p>
+                            </li>
+</ul></div>
+                    </li>
+</ul></div>
+
+                <pre class="programlisting">
+// As a select element:
+echo $view-&gt;comboBox(
+    'foo',
+    'bar',
+    array(
+        'autocomplete' =&gt; false,
+    ),
+    array(),
+    array(
+        'foo' =&gt; 'Foo',
+        'bar' =&gt; 'Bar',
+        'baz' =&gt; 'Baz',
+    )
+);
+
+// As a dojo.data-enabled element:
+echo $view-&gt;comboBox(
+    'foo',
+    'bar',
+    array(
+        'autocomplete' =&gt; false,
+        'store'        =&gt; 'stateStore',
+        'storeType'    =&gt; 'dojo.data.ItemFileReadStore',
+        'storeParams'  =&gt; array('url' =&gt; '/js/states.json'),
+    ),
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>CurrencyTextBox</em></span>:
+                    <span class="command"><strong>dijit.form.CurrencyTextBox</strong></span>. Inherits from
+                    ValidationTextBox, and provides client-side validation of
+                    currency. It expects that the dijit parameter 'currency'
+                    will be provided with an appropriate 3-character currency
+                    code. You may also specify any dijit parameters valid for
+                    ValidationTextBox and TextBox.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;currencyTextBox(
+    'foo',
+    '$25.00',
+    array('currency' =&gt; 'USD'),
+    array('maxlength' =&gt; 20)
+);
+</pre>
+
+                <div class="note"><table border="0" summary="Note: Issues with Builds">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Issues with Builds</th>
+</tr>
+<tr><td align="left" valign="top">
+                    
+
+                    <p>
+                        There are currently <a class="ulink" href="http://trac.dojotoolkit.org/ticket/7183" target="_top">known
+                        issues with using CurrencyTextBox with build
+                        layers</a>. A known work-around is to ensure that
+                        your document's Content-Type http-equiv meta tag sets the
+                        character set to utf-8, which you can do by calling:
+                    </p>
+
+                    <pre class="programlisting">
+$view-&gt;headMeta()-&gt;appendHttpEquiv('Content-Type',
+                                   'text/html; charset=utf-8');
+</pre>
+
+                    <p>
+                        This will mean, of course, that you will need to ensure
+                        that the <code class="methodname">headMeta()</code> placeholder is echoed
+                        in your layout script.
+                    </p>
+                </td></tr>
+</table></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>DateTextBox</em></span>:
+                    <span class="command"><strong>dijit.form.DateTextBox</strong></span>. Inherits from
+                    ValidationTextBox, and provides both client-side validation of
+                    dates, as well as a dropdown calendar from which to select a date.
+                    You may specify any dijit parameters available to
+                    ValidationTextBox or TextBox.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;dateTextBox(
+    'foo',
+    '2008-07-11',
+    array('required' =&gt; true)
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Editor</em></span>: <span class="command"><strong>dijit.Editor</strong></span>. Provides a
+                    <acronym class="acronym">WYSIWYG</acronym> editor via which users may create or edit content.
+                    <span class="command"><strong>dijit.Editor</strong></span> is a pluggable, extensible editor
+                    with a variety of parameters you can utilize for customization; see <a class="ulink" href="http://dojotoolkit.org/reference-guide/dijit/Editor.html" target="_top">the
+                        dijit.Editor documentation</a> for more details.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;editor('foo');
+</pre>
+
+                <div class="note"><table border="0" summary="Note: Editor Dijit uses div by default">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Editor Dijit uses div by default</th>
+</tr>
+<tr><td align="left" valign="top">
+                    
+
+                    <p>
+                        The Editor dijit uses an <acronym class="acronym">HTML</acronym> <acronym class="acronym">DIV</acronym> by
+                        default. The <span class="command"><strong>dijit._editor.RichText</strong></span> <a class="ulink" href="http://api.dojotoolkit.org/jsdoc/HEAD/dijit._editor.RichText" target="_top">documentation</a>
+                        indicates that having it built on an <acronym class="acronym">HTML</acronym>
+                        <acronym class="acronym">TEXTAREA</acronym> can potentially have security implications.
+                    </p>
+
+                    <p>
+                        In order to allow graceful degradation in environments where Javascript is
+                        unavailable, <code class="classname">Zend_Dojo_View_Helper_Editor</code> also wraps
+                        a <acronym class="acronym">TEXTAREA</acronym> within a <acronym class="acronym">NOSCRIPT</acronym> tag;
+                        the content of this <acronym class="acronym">TEXTAREA</acronym> will be properly escaped to
+                        avoid security vulnerability vectors.
+                    </p>
+                </td></tr>
+</table></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>FilteringSelect</em></span>:
+                    <span class="command"><strong>dijit.form.FilteringSelect</strong></span>. Similar to ComboBox, this is a
+                    select and text hybrid that can either render a provided list
+                    of options or those fetched via a <span class="command"><strong>dojo.data</strong></span> datastore.
+                    Unlike ComboBox, however, FilteringSelect does not allow
+                    typing in an option not in its list. Additionally, it
+                    operates like a standard select in that the option values,
+                    not the labels, are returned when the form is submitted.
+                </p>
+
+                <p>
+                    Please see the information above on ComboBox for examples
+                    and available options for defining datastores.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>HorizontalSlider</em></span> and
+                    <span class="emphasis"><em>VerticalSlider</em></span>:
+                    <span class="command"><strong>dijit.form.HorizontalSlider</strong></span> and
+                    <span class="command"><strong>dijit.form.VerticalSlider</strong></span>. Sliders allow are UI widgets for
+                    selecting numbers in a given range; these are horizontal and vertical variants.
+                </p>
+
+                <p>
+                    At their most basic, they require the dijit parameters
+                    'minimum', 'maximum', and 'discreteValues'. These define
+                    the range of values. Other common options are:
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            'intermediateChanges' can be set to indicate whether or not
+                            to fire onChange events while the handle is being dragged.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            'clickSelect' can be set to allow clicking a location
+                            on the slider to set the value.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            'pageIncrement' can specify the value by which to
+                            increase or decrease when pageUp and pageDown are used.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            'showButtons' can be set to allow displaying buttons on
+                            either end of the slider for manipulating the value.
+                        </p>
+                    </li>
+</ul></div>
+
+                <p>
+                    The implication from Zend Framework creates a hidden element
+                    to store the value of the slider.
+                </p>
+
+                <p>
+                    You may optionally desire to show a rule or labels for the
+                    slider. To do so, you will assign one or more of the dijit
+                    params 'topDecoration' and/or 'bottomDecoration'
+                    (HorizontalSlider) or 'leftDecoration' and/or
+                    'rightDecoration' (VerticalSlider). Each of these expects
+                    the following options:
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>container</em></span>: name of the container.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>labels</em></span> (optional): an array of
+                            labels to utilize. Use empty strings on either end to
+                            provide labels for inner values only. Required when
+                            specifying one of the 'Labels' dijit variants.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>dijit</em></span> (optional): one of
+                            HorizontalRule, HorizontalRuleLabels, VerticalRule, or
+                            VerticalRuleLabels, Defaults to one of the Rule dijits.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>params</em></span> (optional): dijit params
+                            for configuring the Rule dijit in use. Parameters
+                            specific to these dijits include:
+                        </p>
+
+                        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: square; ">
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>container</em></span> (optional):
+                                    array of parameters and attributes for the rule
+                                    container.
+                                </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>labels</em></span> (optional):
+                                    array of parameters and attributes for the
+                                    labels list container.
+                                </p>
+                            </li>
+</ul></div>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>attribs</em></span> (optional): <acronym class="acronym">HTML</acronym>
+                            attributes to use with the rules and labels. This should
+                            follow the <span class="property">params</span> option format and be an
+                            associative array with the keys 'container' and
+                            'labels'.
+                        </p>
+                    </li>
+</ul></div>
+
+                <pre class="programlisting">
+echo $view-&gt;horizontalSlider(
+    'foo',
+    1,
+    array(
+        'minimum'             =&gt; -10,
+        'maximum'             =&gt; 10,
+        'discreteValues'      =&gt; 11,
+        'intermediateChanges' =&gt; true,
+        'showButtons'         =&gt; true,
+        'topDecoration'       =&gt; array(
+            'container' =&gt; 'topContainer'
+            'dijit'     =&gt; 'HorizontalRuleLabels',
+            'labels'    =&gt; array(
+                ' ',
+                '20%',
+                '40%',
+                '60%',
+                '80%',
+                ' ',
+            ),
+            'params' =&gt; array(
+                'container' =&gt; array(
+                    'style' =&gt; 'height:1.2em; font-size=75%;color:gray;',
+                ),
+                'labels' =&gt; array(
+                    'style' =&gt; 'height:1em; font-size=75%;color:gray;',
+                ),
+            ),
+        ),
+        'bottomDecoration'    =&gt; array(
+            'container' =&gt; 'bottomContainer'
+            'labels'    =&gt; array(
+                '0%',
+                '50%',
+                '100%',
+            ),
+            'params' =&gt; array(
+                'container' =&gt; array(
+                    'style' =&gt; 'height:1.2em; font-size=75%;color:gray;',
+                ),
+                'labels' =&gt; array(
+                    'style' =&gt; 'height:1em; font-size=75%;color:gray;',
+                ),
+            ),
+        ),
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>NumberSpinner</em></span>:
+                    <span class="command"><strong>dijit.form.NumberSpinner</strong></span>. Text box for numeric entry, with
+                    buttons for incrementing and decrementing.
+                </p>
+
+                <p>
+                    Expects either an associative array for the dijit parameter
+                    'constraints', or simply the keys 'min', 'max', and
+                    'places' (these would be the expected entries of the
+                    constraints parameter as well). 'places' can be used to
+                    indicate how much the number spinner will increment and
+                    decrement.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;numberSpinner(
+    'foo',
+    5,
+    array(
+        'min'    =&gt; -10,
+        'max'    =&gt; 10,
+        'places' =&gt; 2,
+    ),
+    array(
+        'maxlenth' =&gt; 3,
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>NumberTextBox</em></span>:
+                    <span class="command"><strong>dijit.form.NumberTextBox</strong></span>. NumberTextBox provides the
+                    ability to format and display number entries in a localized
+                    fashion, as well as validate numerical entries, optionally
+                    against given constraints.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;numberTextBox(
+    'foo',
+    5,
+    array(
+        'places' =&gt; 4,
+        'type'   =&gt; 'percent',
+    ),
+    array(
+        'maxlength' =&gt; 20,
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>PasswordTextBox</em></span>:
+                    <span class="command"><strong>dijit.form.ValidationTextBox</strong></span> tied to a password input.
+                    PasswordTextBox provides the
+                    ability to create password input that adheres to the current
+                    dijit theme, as well as allow for client-side validation.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;passwordTextBox(
+    'foo',
+    '',
+    array(
+        'required' =&gt; true,
+    ),
+    array(
+        'maxlength' =&gt; 20,
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>RadioButton</em></span>: <span class="command"><strong>dijit.form.RadioButton</strong></span>. A
+                    set of options from which only one may be selected. This
+                    behaves in every way like a regular radio, but has a
+                    look-and-feel consistent with other dijits.
+                </p>
+
+                <p>
+                    RadioButton accepts an optional fifth argument,
+                    <code class="varname">$options</code>, an associative array of value and label
+                    pairs used as the radio options. You may also pass these as
+                    the <code class="varname">$attribs</code> key <span class="property">options</span>.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;radioButton(
+    'foo',
+    'bar',
+    array(),
+    array(),
+    array(
+        'foo' =&gt; 'Foo',
+        'bar' =&gt; 'Bar',
+        'baz' =&gt; 'Baz',
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>SimpleTextarea</em></span>:
+                    <span class="command"><strong>dijit.form.SimpleTextarea</strong></span>. These act like normal textareas,
+                    but are styled using the current dijit theme. You do not need to specify either
+                    the rows or columns attributes; use <span class="property">ems</span> or
+                    percentages for the width and height, instead.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;simpleTextarea(
+    'foo',
+    'Start writing here...',
+    array(),
+    array('style' =&gt; 'width: 90%; height: 5ems;')
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>SubmitButton</em></span>: a <span class="command"><strong>dijit.form.Button</strong></span> tied
+                    to a submit input element. See the Button view helper for
+                    more details; the key difference is that this button can
+                    submit a form.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Textarea</em></span>: <span class="command"><strong>dijit.form.Textarea</strong></span>. These
+                    act like normal textareas, except that instead of having a
+                    set number of rows, they expand as the user types. The
+                    width should be specified via a style setting.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;textarea(
+    'foo',
+    'Start writing here...',
+    array(),
+    array('style' =&gt; 'width: 300px;')
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>TextBox</em></span>: <span class="command"><strong>dijit.form.TextBox</strong></span>. This
+                    element is primarily present to provide a common
+                    look-and-feel between various dijit elements, and to
+                    provide base functionality for the other TextBox-derived
+                    classes (ValidationTextBox, NumberTextBox, CurrencyTextBox,
+                    DateTextBox, and TimeTextBox).
+                </p>
+
+                <p>
+                    Common dijit parameter flags include 'lowercase' (cast to
+                    lowercase), 'uppercase' (cast to <acronym class="acronym">UPPERCASE</acronym>), 'propercase'
+                    (cast to Proper Case), and trim (trim leading and trailing
+                    whitespace); all accept boolean values. Additionally, you
+                    may specifiy the parameters 'size' and 'maxLength'.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;textBox(
+    'foo',
+    'some text',
+    array(
+        'trim'       =&gt; true,
+        'propercase' =&gt; true,
+        'maxLength'  =&gt; 20,
+    ),
+    array(
+        'size' =&gt; 20,
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>TimeTextBox</em></span>: <span class="command"><strong>dijit.form.TimeTextBox</strong></span>.
+                    Also in the TextBox family, TimeTextBox provides a
+                    scrollable drop down selection of times from which a user
+                    may select. Dijit parameters allow you to specify the time
+                    increments available in the select as well as the visible
+                    range of times available.
+                </p>
+
+                <pre class="programlisting">
+echo $view-&gt;timeTextBox(
+    'foo',
+    '',
+    array(
+        'am.pm'            =&gt; true,
+        'visibleIncrement' =&gt; 'T00:05:00', // 5-minute increments
+        'visibleRange'     =&gt; 'T02:00:00', // show 2 hours of increments
+    ),
+    array(
+        'size' =&gt; 20,
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>ValidationTextBox</em></span>:
+                    <span class="command"><strong>dijit.form.ValidateTextBox</strong></span>. Provide client-side validations
+                    for a text element. Inherits from TextBox.
+                </p>
+
+                <p>
+                    Common dijit parameters include:
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>invalidMessage</em></span>: a message to
+                            display when an invalid entry is detected.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>promptMessage</em></span>: a tooltip help
+                            message to use.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>regExp</em></span>: a regular expression to
+                            use to validate the text. Regular expression does not
+                            require boundary markers.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>required</em></span>: whether or not the
+                            element is required. If so, and the element is embedded
+                            in a <span class="command"><strong>dijit.form.Form</strong></span>, it will be flagged as invalid
+                            and prevent submission.
+                        </p>
+                    </li>
+</ul></div>
+
+                <pre class="programlisting">
+echo $view-&gt;validationTextBox(
+    'foo',
+    '',
+    array(
+        'required' =&gt; true,
+        'regExp'   =&gt; '[\w]+',
+        'invalidMessage' =&gt; 'No spaces or non-word characters allowed',
+        'promptMessage'  =&gt; 'Single word consisting of alphanumeric ' .
+                            'characters and underscores only',
+    ),
+    array(
+        'maxlength' =&gt; 20,
+    )
+);
+</pre>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dijit.custom"></a>Custom Dijits</h4></div></div></div>
+        
+
+        <p>
+            If you delve into Dojo much at all, you'll find yourself writing
+            custom dijits, or using experimental dijits from Dojox. While Zend
+            Framework cannot support every dijit directly, it does provide some
+            rudimentary support for arbitrary dijit types via the
+            <code class="classname">CustomDijit</code> view helper.
+        </p>
+
+        <p>
+            The <code class="classname">CustomDijit</code> view helper's <acronym class="acronym">API</acronym> is exactly
+            that of any other dijit, with one major difference: the third "params"
+            argument <span class="emphasis"><em>must</em></span> contain the attribute "dojotype".
+            The value of this attribute should be the Dijit class you plan to
+            use.
+        </p>
+
+        <p>
+            <code class="classname">CustomDijit</code> extends the base
+            <code class="classname">DijitContainer</code> view helper, which also allows it to
+            capture content (using the
+            <code class="methodname">captureStart()</code>/<code class="methodname">captureEnd()</code> pair of
+            methods). <code class="methodname">captureStart()</code> also expects that you pass the
+            "dojoType" attribute to its "params" argument.
+        </p>
+
+        <div class="example">
+<a name="zend.dojo.view.dijit.custom.example"></a><p class="title"><b>Example 356. Using CustomDijit to render a dojox.layout.ContentPane</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                <span class="command"><strong>dojox.layout.ContentPane</strong></span> is a next-generation
+                iteration of <span class="command"><strong>dijit.layout.ContentPane</strong></span>, and provides
+                a superset of that class's capabilities. Until it's
+                functionality stabilizes, it will continue to live in Dojox.
+                However, if you want to use it in Zend Framework today, you can,
+                using the <code class="classname">CustomDijit</code> view helper.
+            </p>
+
+            <p>
+                At its most basic, you can do the following:
+            </p>
+
+            <pre class="programlisting">
+&lt;?php echo $this-&gt;customDijit(
+    'foo',
+    $content,
+    array(
+        'dojoType' =&gt; 'dojox.layout.ContentPane',
+        'title'    =&gt; 'Custom pane',
+        'region'   =&gt; 'center'
+    )
+); ?&gt;
+</pre>
+
+            <p>
+                If you wanted to capture content instead, simply use the
+                <code class="methodname">captureStart()</code> method, and pass the "dojoType" to
+                the "params" argument:
+            </p>
+
+            <pre class="programlisting">
+&lt;?php $this-&gt;customDijit()-&gt;captureStart(
+    'foo',
+    array(
+        'dojoType' =&gt; 'dojox.layout.ContentPane',
+        'title'    =&gt; 'Custom pane',
+        'region'   =&gt; 'center'
+    )
+); ?&gt;
+This is the content of the pane
+&lt;?php echo $this-&gt;customDijit()-&gt;captureEnd('foo'); ?&gt;
+</pre>
+
+            <p>
+                You can also extend <code class="classname">CustomDijit</code> easily to create
+                support for your own custom dijits. As an example, if you
+                extended <span class="command"><strong>dijit.layout.ContentPane</strong></span> to create your
+                own <span class="command"><strong>foo.ContentPane</strong></span> class, you could create the
+                following helper to support it:
+            </p>
+
+            <pre class="programlisting">
+class My_View_Helper_FooContentPane
+    extends Zend_Dojo_View_Helper_CustomDijit
+{
+    protected $_defaultDojoType = 'foo.ContentPane';
+
+    public function fooContentPane(
+        $id = null, $value = null,
+        array $params = array(), array $attribs = array()
+    ) {
+        return $this-&gt;customDijit($id, $value, $params, $attribs);
+    }
+}
+</pre>
+
+            <p>
+                As long as your custom dijit follows the same basic <acronym class="acronym">API</acronym> as
+                official dijits, using or extending <code class="classname">CustomDijit</code>
+                should work correctly.
+            </p>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.dojo.data.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.dojo.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.dojo.form.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Dojo_Data: dojo.data Envelopes </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Dojo Form Elements and Decorators</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

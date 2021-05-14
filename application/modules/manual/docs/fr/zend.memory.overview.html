@@ -1,0 +1,222 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Présentation</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.memory.html" title="Zend_Memory">
+<link rel="prev" href="zend.memory.html" title="Zend_Memory">
+<link rel="next" href="zend.memory.memory-manager.html" title="Manager de mémoire">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Présentation</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.memory.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Memory</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.memory.memory-manager.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.memory.overview"></a>Présentation</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.memory.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            Le composant <code class="classname">Zend_Memory</code> est destiné à gérer des données
+            dans un environnement où la mémoire est limitée.
+        </p>
+
+        <p>
+            Les objets mémoire (conteneurs de mémoire) sont produits par le manager de mémoire
+            sur demande et mis en cache/chargés d'une manière transparente quand c'est
+            nécessaire.
+        </p>
+
+        <p>
+            Par exemple, si la création ou le chargement d'un objet entraîne une utilisation
+            de mémoire totale excédant la limite que vous spécifiez, certains objets gérés sont
+            copiés en cache à l'extérieur de la mémoire. De cette façon, la mémoire totale utilisée
+            par les objets gérés n'excède pas la limite que vous devez mettre en application.
+        </p>
+
+        <p>
+            Le manager de mémoire utilise les <a class="link" href="zend.cache.backends.html" title="Les backends Zend_Cache">backends
+            Zend_Cache</a> comme fournisseurs de stockage.
+        </p>
+
+        <div class="example">
+<a name="zend.memory.introduction.example-1"></a><p class="title"><b>Exemple 599. Utiliser le composant Zend_Memory</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                <code class="methodname">Zend_Memory::factory()</code> instancie l'objet de management
+                de la mémoire avec les options spécifiques du backend.
+            </p>
+
+            <pre class="programlisting">
+$backendOptions = array(
+    'cache_dir' =&gt; './tmp/'
+    // Dossier où les blocks de mémoire peuvent être stockés
+);
+
+$memoryManager = Zend_Memory::factory('File', $backendOptions);
+
+$loadedFiles = array();
+
+for ($count = 0; $count &lt; 10000; $count++) {
+    $f = fopen($fileNames[$count], 'rb');
+    $data = fread($f, filesize($fileNames[$count]));
+    $fclose($f);
+
+    $loadedFiles[] = $memoryManager-&gt;create($data);
+}
+
+echo $loadedFiles[$index1]-&gt;value;
+
+$loadedFiles[$index2]-&gt;value = $newValue;
+
+$loadedFiles[$index3]-&gt;value[$charIndex] = '_';
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.memory.theory-of-operation"></a>Aspect théorique</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Memory</code> travaille avec les concepts suivants :
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                        <p>Manager de mémoire</p>
+                    </li>
+<li class="listitem">
+                        <p>Conteneur de mémoire</p>
+                    </li>
+<li class="listitem">
+                        <p>Objet de mémoire verrouillé</p>
+                    </li>
+<li class="listitem">
+                        <p>Objet de mémoire mobile</p>
+                    </li>
+</ul></div>
+<p>
+            </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.theory-of-operation.manager"></a>Manager de mémoire</h4></div></div></div>
+            
+
+            <p>
+                Le manager de mémoire produit des objets de mémoire (verrouillé ou mobile) sur
+                demande de l'utilisateur et les retourne encapsulé dans un objet conteneur de
+                mémoire.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.theory-of-operation.container"></a>Conteneur de mémoire</h4></div></div></div>
+            
+
+            <p>
+                Le conteneur de mémoire a un attribut <span class="property">value</span> virtuel ou réel de
+                type chaîne de caractères. Cet attribut contient la valeur de donnée indiquée au
+                moment de la création de l'objet mémoire.
+            </p>
+
+            <p>
+                Vous pouvez exploiter cet attribut <span class="property">value</span> comme une propriété
+                d'objet : </p>
+<pre class="programlisting">
+$memObject = $memoryManager-&gt;create($data);
+
+echo $memObject-&gt;value;
+
+$memObject-&gt;value = $newValue;
+
+$memObject-&gt;value[$index] = '_';
+
+echo ord($memObject-&gt;value[$index1]);
+
+$memObject-&gt;value = substr($memObject-&gt;value, $start, $length);
+</pre>
+
+                <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    Si vous utilisez une version de <acronym class="acronym">PHP</acronym> inférieure à 5.2, utilisez la méthode
+                    <a class="link" href="zend.memory.memory-objects.html#zend.memory.memory-objects.api.getRef" title="La méthode getRef()">getRef()</a> au lieu
+                    d'accéder directement à la valeur de la propriété.
+                </p>
+            </td></tr>
+</table></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.theory-of-operation.locked"></a>Objet de mémoire verrouillé</h4></div></div></div>
+            
+
+            <p>
+                Les objets de mémoire verrouillés sont toujours stockés dans la mémoire. Les
+                données stockées dans la mémoire verrouillée ne sont jamais mis en cache.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.theory-of-operation.movable"></a>Objet de mémoire mobile</h4></div></div></div>
+            
+
+            <p>
+                Les objets de mémoire mobiles sont mis en cache et chargés de manière
+                transparente de/vers le cache par <code class="classname">Zend_Memory</code> si c'est
+                nécessaire.
+            </p>
+
+            <p>
+                Le manager de mémoire ne met pas en cache des objets ayant une taille plus
+                petite que le minimum spécifié dans un soucis de performances. Voir
+                <a class="link" href="zend.memory.memory-manager.html#zend.memory.memory-manager.settings.min-size" title="MinSize (taille minimum)">cette section</a>
+                pour plus de détails.
+            </p>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.memory.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.memory.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.memory.memory-manager.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Memory </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Manager de mémoire</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

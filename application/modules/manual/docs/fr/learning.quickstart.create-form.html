@@ -1,0 +1,237 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Créer un formulaire</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.quickstart.html" title="Démarrez rapidement avec Zend Framework">
+<link rel="prev" href="learning.quickstart.create-model.html" title="Créer un modèle et une table en base de données">
+<link rel="next" href="learning.quickstart.conclusion.html" title="Félicitations !">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Créer un formulaire</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.quickstart.create-model.html">Précédent</a> </td>
+<th width="60%" align="center">Démarrez rapidement avec Zend Framework</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.quickstart.conclusion.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.quickstart.create-form"></a>Créer un formulaire</h2></div></div></div>
+    
+
+    <p>
+        Pour que notre livre d'or soit utile, nous allons avoir besoin d'un formulaire permettant de
+        le remplir.
+    </p>
+
+    <p>
+        Nous devons donc créer un formulaire. Pour créer un formulaire vierge, exécutez la
+        commande :
+    </p>
+
+    <pre class="programlisting">
+% zf create form Guestbook
+Creating a form at application/forms/Guestbook.php
+Updating project profile '.zfproject.xml'
+</pre>
+
+    <p>
+        Ceci créera le dossier <code class="filename">application/forms/</code> avec un fichier de classe
+        <code class="filename">Guestbook.php</code>. Ouvrez ce fichier et mettez le à jour comme suit :
+    </p>
+
+    <pre class="programlisting">
+// application/forms/Guestbook.php
+
+class Application_Form_Guestbook extends Zend_Form
+{
+    public function init()
+    {
+        // La méthode HTTP d'envoi du formulaire
+        $this-&gt;setMethod('post');
+
+        // Un élément Email
+        $this-&gt;addElement('text', 'email', array(
+            'label'      =&gt; 'Your email address:',
+            'required'   =&gt; true,
+            'filters'    =&gt; array('StringTrim'),
+            'validators' =&gt; array(
+                'EmailAddress',
+            )
+        ));
+
+        // Un élément pour le commentaire
+        $this-&gt;addElement('textarea', 'comment', array(
+            'label'      =&gt; 'Please Comment:',
+            'required'   =&gt; true,
+            'validators' =&gt; array(
+                array('validator' =&gt; 'StringLength', 'options' =&gt; array(0, 20))
+                )
+        ));
+
+        // Un captcha
+        $this-&gt;addElement('captcha', 'captcha', array(
+            'label'      =&gt; 'Please enter the 5 letters displayed below:',
+            'required'   =&gt; true,
+            'captcha'    =&gt; array(
+                'captcha' =&gt; 'Figlet',
+                'wordLen' =&gt; 5,
+                'timeout' =&gt; 300
+            )
+        ));
+
+        // Un bouton d'envoi
+        $this-&gt;addElement('submit', 'submit', array(
+            'ignore'   =&gt; true,
+            'label'    =&gt; 'Sign Guestbook',
+        ));
+
+        // Et une protection anti CSRF
+        $this-&gt;addElement('hash', 'csrf', array(
+            'ignore' =&gt; true,
+        ));
+    }
+}
+</pre>
+
+    <p>
+        Le formulaire ci-dessus définit cinq éléments : une adresse email, un champ
+        commentaire, un <acronym class="acronym">CAPTCHA</acronym> anti spam, un bouton d'envoi et une protection
+        anti <acronym class="acronym">CSRF</acronym>.
+    </p>
+
+    <p>
+        Maintenant nous allons ajouter une action <code class="methodname">signAction()</code> à notre
+        <code class="classname">GuestbookController</code> qui va s'occuper de la soumission du formulaire.
+        Pour créer cette action et son script de vue, éxécutez :
+    </p>
+
+    <pre class="programlisting">
+% zf create action sign Guestbook
+Creating an action named sign inside controller
+    at application/controllers/GuestbookController.php
+Updating project profile '.zfproject.xml'
+Creating a view script for the sign action method
+    at application/views/scripts/guestbook/sign.phtml
+Updating project profile '.zfproject.xml'
+</pre>
+
+    <p>
+        Comme vous le voyez d'après l'affichage, ceci va créer une méthode
+        <code class="methodname">signAction()</code> dans notre contrôleur, ainsi que le script de vue
+        approprié.
+    </p>
+
+    <p>
+        Ajoutons de la logique dans notre action. Nous devons d'abord vérifier le type de requête
+        HTTP <acronym class="acronym">POST</acronym> ou <acronym class="acronym">GET</acronym> ; dans ce dernier cas nous
+        affichons simplement le formulaire. Cependant, si nous recevons une requête
+        <acronym class="acronym">POST</acronym>, nous allons vouloir valider le formulaire par rapport aux données
+        postées, et s'il est valide, créer une nouvelle entrée et la sauvegarder. La logique
+        ressemble à ceci :
+    </p>
+
+    <pre class="programlisting">
+// application/controllers/GuestbookController.php
+
+class GuestbookController extends Zend_Controller_Action
+{
+    // indexAction() ici ...
+
+    public function signAction()
+    {
+        $request = $this-&gt;getRequest();
+        $form    = new Application_Form_Guestbook();
+
+        if ($this-&gt;getRequest()-&gt;isPost()) {
+            if ($form-&gt;isValid($request-&gt;getPost())) {
+                $comment = new Application_Model_Guestbook($form-&gt;getValues());
+                $mapper  = new Application_Model_GuestbookMapper();
+                $mapper-&gt;save($comment);
+                return $this-&gt;_helper-&gt;redirector('index');
+            }
+        }
+
+        $this-&gt;view-&gt;form = $form;
+    }
+}
+</pre>
+
+    <p>
+        Bien sur, nous devons aussi éditer le script de vue. Editez
+        <code class="filename">application/views/scripts/guestbook/sign.phtml</code> avec ceci :
+    </p>
+
+    <pre class="programlisting">
+&lt;!-- application/views/scripts/guestbook/sign.phtml --&gt;
+
+Utilisez le formulaire ci-après pour signer notre livre d'or!
+
+&lt;?php
+$this-&gt;form-&gt;setAction($this-&gt;url());
+echo $this-&gt;form;
+</pre>
+
+    <div class="note"><table border="0" summary="Note: Améliorer le rendu visuel du formulaire">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Améliorer le rendu visuel du formulaire</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Ce formulaire n'a pas un look terrible, peu importe : l'apparence d'un formulaire
+            est entièrement personnalisable ! Voyez la <a class="link" href="zend.form.decorators.html" title="Créer un visuel personnalisé en utilisant Zend_Form_Decorator">section sur les décorateurs dans le guide de
+                réference</a> pour plus de détails.
+        </p>
+
+        <p>
+            Aussi, vous pouvez être intéréssés par <a class="link" href="learning.form.decorators.intro.html" title="Introduction">notre tutoriel sur les décorateurs de
+                formulaires</a>.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="note"><table border="0" summary="Note: Checkpoint">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Checkpoint</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Naviguez maintenant sur "http://localhost/guestbook/sign". Vous devriez voir ceci dans
+            votre navigateur :
+        </p>
+
+        <p>
+            <img src="figures/learning.quickstart.create-form.png" align="middle">
+        </p>
+    </td></tr>
+</table></div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.quickstart.create-model.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.quickstart.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.quickstart.conclusion.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Créer un modèle et une table en base de données </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Félicitations !</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

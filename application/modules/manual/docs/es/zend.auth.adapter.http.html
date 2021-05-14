@@ -1,0 +1,455 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Adaptador de Autenticación HTTP</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.auth.html" title="Zend_Auth">
+<link rel="prev" href="zend.auth.adapter.digest.html" title='Autenticación "Digest"'>
+<link rel="next" href="zend.auth.adapter.ldap.html" title="LDAP Authentication">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Adaptador de Autenticación HTTP</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.auth.adapter.digest.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Auth</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.auth.adapter.ldap.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.auth.adapter.http"></a>Adaptador de Autenticación HTTP</h2></div></div></div>
+
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.http.introduction"></a>Introducción</h3></div></div></div>
+
+        
+
+        <p>
+            <code class="classname">Zend_Auth_Adapter_Http</code>
+            proporciona una
+            implementación compatible con
+            <a class="ulink" href="http://tools.ietf.org/html/rfc2617" target="_top">RFC-2617</a>
+            ,
+            <a class="ulink" href="http://en.wikipedia.org/wiki/Basic_authentication_scheme" target="_top">Basic</a>
+            y
+            <a class="ulink" href="http://en.wikipedia.org/wiki/Digest_access_authentication" target="_top">Digest</a>
+            Autenticación
+            <acronym class="acronym">HTTP</acronym>
+            . La
+            autenticación "Digest" es un método de autenticación
+            <acronym class="acronym">HTTP</acronym>
+            que mejora la autenticación básica
+            proporcionando una manera de autenticar sin tener que
+            transmitir la
+            contraseña de manera clara en un texto a través de la red.
+        </p>
+
+        <p>
+            <span class="strong"><strong>Características Principales:</strong></span>
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>Soporta tanto Autenticación "Digest" como Básica.</p>
+            </li>
+<li class="listitem">
+                <p>Establece retos en todos los proyectos soportados, por lo
+                    que el cliente puede
+                    responder con cualquier proyecto que
+                    soporte.</p>
+            </li>
+<li class="listitem">
+                <p>Soporta autenticación proxy.</p>
+            </li>
+<li class="listitem">
+                <p>Incluye soporte para la autenticación contra archivos de
+                    texto y proporciona
+                    una interfaz para autenticar contra
+                    otras fuentes, tales como bases de datos.</p>
+            </li>
+</ul></div>
+
+        <p>
+            Hay algunas características notables del
+            <acronym class="acronym">RFC-2617</acronym>
+            no implementadas todavía:
+        </p>
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>Seguimiento "nonce", que permitiría un gran apoyo, y un
+                    aumento de la
+                    protección de repetidos ataques.</p>
+            </li>
+<li class="listitem">
+                <p>Autenticación con comprobación de integridad, o
+                    "auth-int".</p>
+            </li>
+<li class="listitem">
+                <p>
+                    Cabecera de información de la autenticación
+                    <acronym class="acronym">HTTP</acronym>
+                    .
+                </p>
+            </li>
+</ul></div>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.design_overview"></a>Descripción del diseño</h3></div></div></div>
+
+        
+
+        <p>
+            Este adaptador consiste en dos sub-componentes, la propia clase
+            autenticación
+            <acronym class="acronym">HTTP</acronym>
+            , y el llamado "Resolvers". La
+            clase autenticación
+            <acronym class="acronym">HTTP</acronym>
+            encapsula la lógica para
+            llevar a cabo tanto la autenticación basica y la "Digest".
+            Utiliza
+            un Resolver para buscar la identidad de un cliente en los datos
+            almacenados (por
+            defecto, archivos de texto), y recuperar las
+            credenciales de los datos almacenados. Las
+            credenciales del
+            "Resolved" se comparan con los valores presentados por el cliente
+            para
+            determinar si la autenticación es satisfactoria.
+        </p>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.configuration_options"></a>Opciones de Configuración</h3></div></div></div>
+
+        
+
+        <p>
+            La clase
+            <code class="classname">Zend_Auth_Adapter_Http</code>
+            requiere
+            un array configurado que pasará a su constructor. Hay varias
+            opciones de
+            configuración disponibles, y algunas son obligatorias:
+        </p>
+        <div class="table">
+<a name="zend.auth.adapter.configuration_options.table"></a><p class="title"><b>Tabla 9. Opciones de Configuración</b></p>
+<div class="table-contents">
+            
+            <table class="table" summary="Opciones de Configuración" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Nombre de Opción</th>
+<th>Obligatoria</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+                            <span class="emphasis"><em>
+                                <span class="property">accept_schemes</span>
+                            </em></span>
+                        </td>
+<td>Si</td>
+<td>
+                            Determina que tareas de autenticación acepta el
+                            adaptador del cliente.
+                            Debe ser una lista separada
+                            por espacios que contengo
+                            <span class="emphasis"><em>'basic'</em></span>
+                            y/o
+                            <span class="emphasis"><em>'digest'</em></span>
+                            .
+                        </td>
+</tr>
+<tr>
+<td>
+                            <span class="emphasis"><em>
+                                <span class="property">realm</span>
+                            </em></span>
+                        </td>
+<td>Si</td>
+<td> Establece el realm de autenticación; usernames
+                            debe ser único dentro
+                            de un determinado realm.
+                        </td>
+</tr>
+<tr>
+<td>
+                            <span class="emphasis"><em>
+                                <span class="property">digest_domains</span>
+                            </em></span>
+                        </td>
+<td>
+                            Si, cuando
+                            <span class="property">accept_schemes</span>
+                            contiene
+                            <span class="emphasis"><em>'digest'</em></span>
+                        </td>
+<td>
+                            Lista de
+                            <acronym class="acronym">URI</acronym>
+                            s separadas por
+                            espacios para las cuales la misma información de
+                            autenticación es válida. No es necesario que todas
+                            las
+                            <acronym class="acronym">URI</acronym>
+                            s apunten al mismo
+                            oservidor.
+                        </td>
+</tr>
+<tr>
+<td>
+                            <span class="emphasis"><em>
+                                <span class="property">nonce_timeout</span>
+                            </em></span>
+                        </td>
+<td>
+                            Si, cuando
+                            <span class="property">accept_schemes</span>
+                            contiene
+                            <span class="emphasis"><em>'digest'</em></span>
+                        </td>
+<td> Establece el número de segundos para los cuales
+                            el "nonce" es válido.
+                            Ver notas de abajo. </td>
+</tr>
+<tr>
+<td>
+                            <span class="emphasis"><em>
+                                <span class="property">proxy_auth</span>
+                            </em></span>
+                        </td>
+<td>No</td>
+<td> Deshabilitado por defecto. Permite llevar a cabo
+                            la autenticación del
+                            Proxy, en lugar de la
+                            autenticación normal del servidor. </td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                La implementación actual del
+                <span class="property">nonce_timeout</span>
+                tiene algunos efectos
+                colaterales interesantes. Este ajuste es supuesto para
+                determinar la vida util válida para un determinado "nonce", o de
+                manera efectiva el
+                tiempo que una información de autenticación
+                del cliente es aceptada. Actualmente, si
+                se establece en 3600
+                (por ejemplo), hará que el adaptador indique al cliente las
+                nuevas credenciales cada hora, a la hora en punto.
+            </p>
+        </td></tr>
+</table></div>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.http.resolvers"></a>Resolvers</h3></div></div></div>
+
+        
+
+        <p>
+            El trabajo del "Resolver" es tener un username y un realm, y
+            devolver algún valor de tipo
+            credencial. La autenticación básica
+            espera recibir la versión codificada en Base64 de la
+            contraseña del
+            usuario. La autenticación "Digest" espera recibir un hash del
+            username del
+            usuario, un realm, y su contraseña (separados por
+            coma). Actualmente, sólo se admite el
+            algoritmo de hash
+            <acronym class="acronym">MD5</acronym>
+            .
+        </p>
+
+        <p>
+            <code class="classname">Zend_Auth_Adapter_Http</code>
+            se basa en la
+            implementación de objetos
+            <code class="classname">Zend_Auth_Adapter_Http_Resolver_Interface</code>
+            .
+            Un archivo de texto de la clase "Resolve" se incluye con este
+            adaptador, pero cualquier
+            otro tipo de "resolver" puede ser creado
+            simplemente implementando la interfaz del
+            "resolver".
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.auth.adapter.http.resolvers.file"></a>Archivo Resolver</h4></div></div></div>
+            
+            <p>
+                El archivo "resolver" es una clase muy simple. Tiene una
+                única propiedad que
+                especifique un nombre de archivo, que
+                también puede ser pasado al constructor. Su
+                método
+                <code class="methodname">resolve()</code>
+                recorre el archivo de
+                texto, buscando una linea con el correspondiente username y
+                realm. El formato del archivo de texto es similar a los archivos
+                htpasswd de Apache:
+            </p>
+            <pre class="programlisting">
+&lt;username&gt;:&lt;realm&gt;:&lt;credentials&gt;\n
+</pre>
+            <p>
+                Cada linea consta de tres campos -username, realm, y
+                credenciales - cada uno
+                separados por dos puntos. El campo
+                credenciales es opaco al archivo "resolver";
+                simplemente
+                devuelve el valor tal como és al llamador. Por lo tanto, este
+                formato de
+                archivo sirve tanto de autenticación básica como
+                "Digest". En la autenticación
+                básica, el campo credenciales debe
+                ser escrito en texto claro. En la autenticación
+                "Digest",
+                debería ser en hash
+                <acronym class="acronym">MD5</acronym>
+                descrito
+                anteriormente.
+            </p>
+
+            <p>Hay dos formas igualmente fácil de crear un archivo de
+                "resolver":</p>
+            <pre class="programlisting">
+$path     = 'files/passwd.txt';
+$resolver = new Zend_Auth_Adapter_Http_Resolver_File($path);
+</pre>
+            <p>o</p>
+            <pre class="programlisting">
+$path     = 'files/passwd.txt';
+$resolver = new Zend_Auth_Adapter_Http_Resolver_File();
+$resolver-&gt;setFile($path);
+</pre>
+            <p>Si la ruta está vacía o no se puede leer, se lanza una
+                excepción.</p>
+        </div>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.http.basic_usage"></a>Uso Básico</h3></div></div></div>
+
+        
+
+        <p>En primer lugar, establecemos un array con los valores de
+            configuración obligatorios:</p>
+        <pre class="programlisting">
+$config = array(
+    'accept_schemes' =&gt; 'basic digest',
+    'realm'          =&gt; 'My Web Site',
+    'digest_domains' =&gt; '/members_only /my_account',
+    'nonce_timeout'  =&gt; 3600,
+);
+</pre>
+        <p>
+            Este array hará que el adaptador acepte la autenticación básica o
+            "Digest", y requerirá
+            un acceso autenticado a todas las áreas del
+            sitio en
+            <code class="filename">/members_only</code>
+            y
+            <code class="filename">/my_account</code>
+            . El valor realm es normalmente
+            mostrado por el navegador en el cuadro de dialogo
+            contraseña. El
+            <span class="property">nonce_timeout</span>
+            , por supuesto, se comporta
+            como se ha descrito anteriormente.
+        </p>
+
+        <p>A continuación, creamos el objeto Zend_Auth_Adapter_Http:</p>
+        <pre class="programlisting">
+$adapter = new Zend_Auth_Adapter_Http($config);
+</pre>
+
+        <p>Ya que estamos soportando tanto la autenticación básica como la
+            "Digest", necesitamos
+            dos objetos diferentes resolver. Tenga en
+            cuenta que esto podría ser facilmente dos
+            clases diferentes:</p>
+        <pre class="programlisting">
+$basicResolver = new Zend_Auth_Adapter_Http_Resolver_File();
+$basicResolver-&gt;setFile('files/basicPasswd.txt');
+
+$digestResolver = new Zend_Auth_Adapter_Http_Resolver_File();
+$digestResolver-&gt;setFile('files/digestPasswd.txt');
+
+$adapter-&gt;setBasicResolver($basicResolver);
+$adapter-&gt;setDigestResolver($digestResolver);
+</pre>
+
+        <p>Por último, realizamos la autenticación. El adaptador necesita
+            una referencia a ambos
+            objetos solicitud y respuesta para hacer su
+            trabajo:</p>
+        <pre class="programlisting">
+assert($request instanceof Zend_Controller_Request_Http);
+assert($response instanceof Zend_Controller_Response_Http);
+
+$adapter-&gt;setRequest($request);
+$adapter-&gt;setResponse($response);
+
+$result = $adapter-&gt;authenticate();
+if (!$result-&gt;isValid()) {
+    // Bad userame/password, or canceled password prompt
+}
+</pre>
+
+    </div>
+
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.auth.adapter.digest.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.auth.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.auth.adapter.ldap.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Autenticación "Digest" </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> LDAP Authentication</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

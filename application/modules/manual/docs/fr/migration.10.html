@@ -1,0 +1,322 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend Framework 1.0</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="migration.html" title="Notes de migration de Zend Framework">
+<link rel="prev" href="migration.15.html" title="Zend Framework 1.5">
+<link rel="next" href="migration.09.html" title="Zend Framework 0.9">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend Framework 1.0</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="migration.15.html">Précédent</a> </td>
+<th width="60%" align="center">Notes de migration de Zend Framework</th>
+<td width="20%" align="right"> <a accesskey="n" href="migration.09.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="migration.10"></a>Zend Framework 1.0</h2></div></div></div>
+    
+
+    <p>
+        Lors de la migration d'un version précédente vers Zend Framework 0.8 ou plus récent
+        vous devriez prendre note de ce qui suit.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="migration.10.zend.controller"></a>Zend_Controller</h3></div></div></div>
+        
+
+        <p>
+            Les principaux changements introduits dans la version 1.0.0RC1 sont l'ajout et
+            l'activation par défaut du plugin
+            <a class="link" href="zend.controller.plugins.html#zend.controller.plugins.standard.errorhandler" title="Zend_Controller_Plugin_ErrorHandler">ErrorHandler</a>et de
+            l'aide d'action
+            <a class="link" href="zend.controller.actionhelpers.html#zend.controller.actionhelpers.viewrenderer" title="ViewRenderer">ViewRenderer</a>.
+            Veuillez lire la documentation de chacun des éléments directement pour apprendre leur
+            fonctionnement et quels effets, ils peuvent avoir sur vos applications.
+        </p>
+
+        <p>
+            Le plugin <code class="code">ErrorHandler</code> est exécuté pendant
+            <code class="methodname">postDispatch()</code> vérifiant la présence d'exceptions, et redirigeant vers le
+            contrôleur de gestion d'erreur spécifié. Vous pouvez le désactiver en réglant le
+            paramètre <code class="code">noErrorHandler</code> du contrôleur frontal :
+        </p>
+
+        <pre class="programlisting">
+$front-&gt;setParam('noErrorHandler', true);
+</pre>
+
+        <p>
+            L'aide d'action <code class="code">ViewRenderer</code> automatise l'injection de vues dans les
+            contrôleurs d'action en tant qu'autogénération des scripts de vues suivant l'action
+            courante. Le principal problème que vous pourriez rencontrer intervient quand vous avez
+            des actions qui ne rendent pas de scripts de vues ni ne font suivre ou redirige, alors
+            <code class="code">ViewRenderer</code> va tenter de rendre un script de vue basé sur le nom de
+            l'action.
+        </p>
+
+        <p>
+            Il existe plusieurs possibilités pour mettre à jour votre code. Dans un premier
+            temps, vous pouvez globalement désactiver <code class="code">ViewRenderer</code> dans votre fichier
+            d'amorçage du contrôleur frontal avant toute distribution :
+        </p>
+
+        <pre class="programlisting">
+// En considérant que $front est une instance de Zend_Controller_Front
+$front-&gt;setParam('noViewRenderer', true);
+</pre>
+
+        <p>
+            Cependant, ceci n'est pas une bonne stratégie à long terme, car il apparaît
+            aisément que vous devrez écrire plus de code.
+        </p>
+
+        <p>
+            Quand vous serez prêt à utiliser la fonctionnalité <code class="code">ViewRenderer</code>, il
+            y a plusieurs choses à vérifier dans votre code de contrôleur. Premièrement, regardez
+            vos méthodes d'actions (les méthodes se terminant par "Action"), et déterminez ce que
+            chacune d'elle réalise. Si rien de ce qui suit n'est réalisé, vous devrez réaliser des
+            changements :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>Appel de <code class="code">$this-&gt;render()</code></p>
+            </li>
+<li class="listitem">
+                <p>Appel de <code class="code">$this-&gt;_forward()</code></p>
+            </li>
+<li class="listitem">
+                <p>Appel de <code class="code">$this-&gt;_redirect()</code></p>
+            </li>
+<li class="listitem">
+                <p>Appel de l'aide d'action <code class="code">Redirector</code></p>
+            </li>
+</ul></div>
+
+        <p>
+            Le changement le plus simple est la désactivation de l'auto-rendu pour cette
+            méthode :
+        </p>
+
+        <pre class="programlisting">
+$this-&gt;_helper-&gt;viewRenderer-&gt;setNoRender();
+</pre>
+
+        <p>
+            Si vous trouvez qu'aucune de vos méthodes d'actions n'effectue de rendu, ne font
+            suivre, ou redirige, vous pouvez préférer mettre la ligne suivante dans la méthode
+            <code class="methodname">preDispatch()</code> ou <code class="methodname">init()</code> :
+        </p>
+
+        <pre class="programlisting">
+public function preDispatch()
+{
+    // désactive l'auto-rendu des scripts de vues
+    $this-&gt;_helper-&gt;viewRenderer-&gt;setNoRender()
+    // ... faire autre chose ...
+}
+</pre>
+
+        <p>
+            Si vous appelez <code class="methodname">render()</code>, et que vous utilisez la
+            <a class="link" href="zend.controller.modular.html" title="Utilisation de conventions de dossiers modulaires">structure de dossier modulaire
+            conventionnelle</a>, vous voudrez modifier votre code pour utiliser
+            l'auto-rendu :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Si vous rendez de multiples scripts de vues dans une seule action, vous
+                    n'avez rien à modifier.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Si vous appelez simplement <code class="methodname">render()</code> sans aucun argument,
+                    vous pouvez effacer ces lignes.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Si vous appelez <code class="methodname">render()</code> avec des arguments, et que vous ne
+                    réalisez pas ensuite d'exécution de code ou effectuez le rendu de scripts de
+                    vues multiples, vous pouvez changer ces appels par
+                    <code class="code">$this-&gt;_helper-&gt;viewRenderer()</code>.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Si vous n'utilisez pas la structure de dossier modulaire conventionnelle, il
+            existe une variété de méthodes pour paramétrer le chemin de base des vues et les
+            spécifications du chemin vers les scripts ainsi vous pourrez utiliser
+            <code class="code">ViewRenderer</code>. Veuillez lire la
+            <a class="link" href="zend.controller.actionhelpers.html#zend.controller.actionhelpers.viewrenderer" title="ViewRenderer">documentation de
+            ViewRenderer</a>pour plus d'informations sur ces méthodes.
+        </p>
+
+        <p>
+            Si vous utilisez un objet de vue issu du registre, ou que vous personnalisez
+            votre objet vue, ou que vous utilisez une implémentation de vue différente, vous pouvez
+            vouloir injecter <code class="code">ViewRenderer</code> dans cet objet. Ceci peut être réalisé
+            facilement à tout moment.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>Avant la distribution d'une instance de contrôleur frontal :</p>
+                <pre class="programlisting">
+// En considérant que $view a déjà été définie
+$viewRenderer = new Zend_Controller_Action_Helper_ViewRenderer($view);
+Zend_Controller_Action_HelperBroker::addHelper($viewRenderer);
+</pre>
+            </li>
+<li class="listitem">
+                <p>A tout moment durant le processus d'amorçage :</p>
+                <pre class="programlisting">
+$viewRenderer =
+    Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
+$viewRenderer-&gt;setView($view);
+</pre>
+            </li>
+</ul></div>
+
+        <p>
+            Il existe plusieurs manières de modifier <code class="code">ViewRenderer</code>, incluant le
+            réglage d'un script de vue différent à rendre, la spécification d'un remplaçant pour
+            tous les éléments remplaçables d'un chemin de script de vues (incluant le suffixe), le
+            choix d'un segment nommé de la réponse à utiliser, et plus encore. Si vous n'utilisez
+            pas la structure de dossier modulaire conventionnelle, vous pouvez tout de même
+            associer différentes spécifications de chemin à <code class="code">ViewRenderer</code>.
+        </p>
+
+        <p>
+            Nous vous encourageons à adapter votre code pour utiliser
+            <code class="code">ErrorHandler</code> et <code class="code">ViewRenderer</code> puisqu'il s'agit maintenant de
+            fonctionnalités natives.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="migration.10.zend.currency"></a>Zend_Currency</h3></div></div></div>
+        
+
+        <p>
+            Créer un objet <code class="classname">Zend_Currency</code> est devenu plus simple. Vous
+            n'avez plus besoin de passer un script ou de le mettre à <code class="constant">NULL</code>, le
+            paramètre script est optionnel et peut être spécifié par la méthode
+            <code class="methodname">setFormat()</code>.
+        </p>
+
+        <pre class="programlisting">
+$currency = new Zend_Currency($currency, $locale);
+</pre>
+
+        <p>
+            La méthode <code class="methodname">setFormat()</code> prend maintenant en paramètre un tableau
+            d'options. Ces options sont permanentes et écrasent les précédentes déjà présentes. La
+            nouvelle option "precision" a été intégrée :
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: opencircle; ">
+<li class="listitem" style="list-style-type: circle">
+                    <p>
+                        <span class="emphasis"><em>position</em></span> : Remplacement de l'ancien
+                        paramètre "rules"
+                    </p>
+                </li>
+<li class="listitem" style="list-style-type: circle">
+                    <p>
+                        <span class="emphasis"><em>script</em></span> : Remplacement de l'ancien
+                        paramètre "script"
+                    </p>
+
+                </li>
+<li class="listitem" style="list-style-type: circle">
+                    <p>
+                        <span class="emphasis"><em>format</em></span> : Remplacement de l'ancien
+                        paramètre "locale" qui n'affecte plus de nouvelle monnaie, mais seulement un
+                        format de nombre.
+                    </p>
+
+                </li>
+<li class="listitem" style="list-style-type: circle">
+                    <p>
+                        <span class="emphasis"><em>display</em></span> : Remplacement de l'ancien
+                        paramètre "rules"
+                    </p>
+                </li>
+<li class="listitem" style="list-style-type: circle">
+                    <p>
+                        <span class="emphasis"><em>precision</em></span> : Nouveau paramètre
+                    </p>
+                </li>
+<li class="listitem" style="list-style-type: circle">
+                    <p>
+                        <span class="emphasis"><em>name</em></span> : Remplacement de l'ancien
+                        paramètre "rules". Affecte le nom complet de la monnaie.
+                    </p>
+                </li>
+<li class="listitem" style="list-style-type: circle">
+                    <p>
+                        <span class="emphasis"><em>currency</em></span> : Nouveau paramètre
+                    </p>
+                </li>
+<li class="listitem" style="list-style-type: circle">
+                    <p><span class="emphasis"><em>symbol</em></span> : Nouveau paramètre</p>
+                </li>
+</ul></div>
+<p>
+        </p>
+
+        <pre class="programlisting">
+$currency-&gt;setFormat(array $options);
+</pre>
+
+        <p>
+            La méthode <code class="methodname">toCurrency()</code> ne supporte plus les paramètres optionnels
+            "script" et "locale". A la place, elle accepte un tableau d'options qui sera de la même
+            forme que celui utilisé par <code class="code">setFormat</code>.
+        </p>
+
+        <pre class="programlisting">
+$currency-&gt;toCurrency($value, array $options);
+</pre>
+
+        <p>
+            Les méthodes <code class="methodname">getSymbol()</code>, <code class="methodname">getShortName()</code>,
+            <code class="methodname">getName()</code>, <code class="methodname">getRegionList()</code> et <code class="methodname">getCurrencyList()</code>
+            ne sont plus statiques. Elles retournent les valeurs affectées dans l'objet, si on ne
+            leur passe pas de paramètre.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="migration.15.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="migration.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="migration.09.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend Framework 1.5 </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend Framework 0.9</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

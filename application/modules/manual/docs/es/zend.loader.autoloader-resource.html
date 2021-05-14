@@ -1,0 +1,247 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Resource Autoloaders</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.loader.html" title="Zend_Loader">
+<link rel="prev" href="zend.loader.autoloader.html" title="The Autoloader">
+<link rel="next" href="zend.loader.pluginloader.html" title="Loading Plugins">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Resource Autoloaders</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.loader.autoloader.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Loader</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.loader.pluginloader.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.loader.autoloader-resource"></a>Resource Autoloaders</h2></div></div></div>
+    
+
+    <p>
+        Resource autoloaders are intended to manage namespaced library code that
+        follow Zend Framework coding standard guidelines, but which do not have
+        a 1:1 mapping between the class name and the directory structure. Their
+        primary purpose is to facilitate autoloading application resource code,
+        such as application-specific models, forms, and <acronym class="acronym">ACL</acronym>s.
+    </p>
+
+    <p>
+        Resource autoloaders register with the <a class="link" href="zend.loader.autoloader.html" title="The Autoloader">autoloader</a> on instantiation,
+        with the namespace to which they are associated. This allows you to
+        easily namespace code in specific directories, and still reap the
+        benefits of autoloading.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.autoloader-resource.usage"></a>Resource autoloader usage</h3></div></div></div>
+        
+
+        <p>
+            Let's consider the following directory structure:
+        </p>
+
+        <pre class="programlisting">
+path/to/some/directory/
+    acls/
+        Site.php
+    forms/
+        Login.php
+    models/
+        User.php
+</pre>
+
+        <p>
+            Within this directory, all code is prefixed with the namespace
+            "My_". Within the "acls" subdirectory, the component prefix "Acl_"
+            is added, giving a final class name of "My_Acl_Site". Similarly, the
+            "forms" subdirectory maps to "Form_", giving "My_Form_Login". The
+            "models" subdirectory maps to "Model_", giving "My_Model_User".
+        </p>
+
+        <p>
+            You can use a resource autoloader to autoload these classes. To
+            instantiate the resource autoloader, you are required to pass at the
+            minimum the base path and namespace for the resources it will be
+            responsible for:
+        </p>
+
+        <pre class="programlisting">
+$resourceLoader = new Zend_Loader_Autoloader_Resource(array(
+    'basePath'  =&gt; 'path/to/some/directory',
+    'namespace' =&gt; 'My',
+));
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Base namespace">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Base namespace</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                In <code class="classname">Zend_Loader_Autoloader</code>, you are expected to
+                provide the trailing underscore ("_") in your namespace if your
+                autoloader will use it to match the namespace.
+                <code class="classname">Zend_Loader_Autoloader_Resource</code> makes the
+                assumption that all code you are autoloading will use an
+                underscore separator between namespaces, components, and
+                classes. As a result, you do not need to use the trailing
+                underscore when registering a resource autoloader.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Now that we have setup the base resource autoloader, we can add some
+            components to it to autoload. This is done using the
+            <code class="methodname">addResourceType()</code> method, which accepts three
+            arguments: a resource "type", used internally as a reference name;
+            the subdirectory path underneath the base path in which these
+            resources live; and the component namespace to append to the base
+            namespace. As an example, let's add each of our resource types.
+        </p>
+
+        <pre class="programlisting">
+$resourceLoader-&gt;addResourceType('acl', 'acls/', 'Acl')
+               -&gt;addResourceType('form', 'forms/', 'Form')
+               -&gt;addResourceType('model', 'models/', 'Model');
+</pre>
+
+        <p>
+            Alternately, you could pass these as an array to
+            <code class="methodname">addResourceTypes()</code>; the following is equivalent to the
+            above:
+        </p>
+
+        <pre class="programlisting">
+$resourceLoader-&gt;addResourceTypes(array(
+    'acl' =&gt; array(
+        'path'      =&gt; 'acls/',
+        'namespace' =&gt; 'Acl',
+    ),
+    'form' =&gt; array(
+        'path'      =&gt; 'forms/',
+        'namespace' =&gt; 'Form',
+    ),
+    'model' =&gt; array(
+        'path'      =&gt; 'models/',
+        'namespace' =&gt; 'Model',
+    ),
+));
+</pre>
+
+        <p>
+            Finally, you can specify all of this when instantiating the object,
+            by simply specifying a "resourceTypes" key in the options passed and
+            a structure like that above:
+        </p>
+
+        <pre class="programlisting">
+$resourceLoader = new Zend_Loader_Autoloader_Resource(array(
+    'basePath'      =&gt; 'path/to/some/directory',
+    'namespace'     =&gt; 'My',
+    'resourceTypes' =&gt; array(
+        'acl' =&gt; array(
+            'path'      =&gt; 'acls/',
+            'namespace' =&gt; 'Acl',
+        ),
+        'form' =&gt; array(
+            'path'      =&gt; 'forms/',
+            'namespace' =&gt; 'Form',
+        ),
+        'model' =&gt; array(
+            'path'      =&gt; 'models/',
+            'namespace' =&gt; 'Model',
+        ),
+    ),
+));
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.autoloader-resource.module"></a>The Module Resource Autoloader</h3></div></div></div>
+        
+
+        <p>
+            Zend Framework ships with a concrete implementation of
+            <code class="classname">Zend_Loader_Autoloader_Resource</code> that contains resource
+            type mappings that cover the default recommended directory structure
+            for Zend Framework <acronym class="acronym">MVC</acronym> applications. This loader,
+            <code class="classname">Zend_Application_Module_Autoloader</code>, comes with the
+            following mappings:
+        </p>
+
+        <pre class="programlisting">
+forms/       =&gt; Form
+models/      =&gt; Model
+    DbTable/ =&gt; Model_DbTable
+    mappers/ =&gt; Model_Mapper
+plugins/     =&gt; Plugin
+services/    =&gt; Service
+views/
+    helpers  =&gt; View_Helper
+    filters  =&gt; View_Filter
+</pre>
+
+        <p>
+            As an example, if you have a module with the prefix of "Blog_", and
+            attempted to instantiate the class "Blog_Form_Entry", it would look
+            in the resource directory's "forms/" subdirectory for a file named
+            "Entry.php".
+        </p>
+
+        <p>
+            When using module bootstraps with <code class="classname">Zend_Application</code>, an
+            instance of <code class="classname">Zend_Application_Module_Autoloader</code> will be
+            created by default for each discrete module, allowing you to
+            autoload module resources.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.autoloader-resource.factory"></a>Using Resource Autoloaders as Object Factories</h3></div></div></div>
+        
+        <p></p>
+        
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.autoloader-resource.reference"></a>Resource Autoloader Reference</h3></div></div></div>
+        
+        <p></p>
+        
+    </div>
+
+    
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.loader.autoloader.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.loader.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.loader.pluginloader.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">The Autoloader </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Loading Plugins</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,1776 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Routeur Standard</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.request.html" title="L'objet Requête">
+<link rel="next" href="zend.controller.dispatcher.html" title="Le distributeur">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Routeur Standard</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.request.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.dispatcher.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.router"></a>Routeur Standard</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.router.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Controller_Router_Rewrite</code> est le routeur par défaut
+            du framework. Le routage consiste à analyser l'URI définie (la partie après l'URL de
+            base) et la décomposer en valeurs déterminant quels module, contrôleur et action
+            doivent recevoir la requête. Ces valeurs sont encapsulées dans un objet de requête
+            <code class="classname">Zend_Controller_Request_Http</code> qui est alors injecté dans
+            <code class="classname">Zend_Controller_Dispatcher_Standard</code> pour y être traité Le
+            routage n'est effectué qu'une seule fois par requête : juste avant que le premier
+            contrôleur ne soit traité (distribué)
+        </p>
+
+        <p>
+            <code class="classname">Zend_Controller_Router_Rewrite</code> intervient pour fournir un
+            environnement de requête similaire à "mod_rewrite", tout en utilisant uniquement du
+            <acronym class="acronym">PHP</acronym>. Il est désigné sur les principes de Ruby on Rails et ne requière pas de
+            connaissances particulières en réécriture d'URL. Il est destiné à fonctionner avec une
+            seule règle de réécriture Apache, dont voici des exemples :
+        </p>
+
+        <pre class="programlisting">
+RewriteEngine on
+RewriteRule !\.(js|ico|gif|jpg|png|css|html)$ index.php
+</pre>
+
+        <p>ou (recommandé) :</p>
+
+        <pre class="programlisting">
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} -s [OR]
+RewriteCond %{REQUEST_FILENAME} -l [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^.*$ - [NC,L]
+RewriteRule ^.*$ index.php [NC,L]
+</pre>
+
+        <p>
+            Le routeur de réécriture peut aussi être utilisé avec un serveur Web <acronym class="acronym">IIS</acronym>
+            (versions &lt;= 7.0) si <a class="ulink" href="http://www.isapirewrite.com" target="_top">Isapi_Rewrite</a>
+            a été installée comme une extension Isap avec la règle suivante :
+        </p>
+
+        <pre class="programlisting">
+RewriteRule ^[\w/\%]*(?:\.(?!(?:js|ico|gif|jpg|png|css|html)$)[\w\%]*$)? /index.php [I]
+</pre>
+
+        <div class="note"><table border="0" summary="Note: IIS Isapi_Rewrite">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">IIS Isapi_Rewrite</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+            <p>
+                Lorsque <acronym class="acronym">IIS</acronym> est utilisé, <code class="varname">$_SERVER['REQUEST_URI']</code> n'existera pas
+                ou vaudra une chaîne vide. Dans ce cas,
+                <code class="classname">Zend_Controller_Request_Http</code> essaiera d'utiliser la valeur
+                de <code class="varname">$_SERVER['HTTP_X_REWRITE_URL']</code>, initialisée par l'extension
+                Isapi_Rewrite.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            <acronym class="acronym">IIS</acronym> 7.0 introduit un moodule de réécriture d'URL natif, et il peut être configuré
+            comme ceci :
+        </p>
+
+        <pre class="programlisting">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;configuration&gt;
+     &lt;system.webServer&gt;
+         &lt;rewrite&gt;
+             &lt;rules&gt;
+                 &lt;rule name="Imported Rule 1" stopProcessing="true"&gt;
+                     &lt;match url="^.*$" /&gt;
+                     &lt;conditions logicalGrouping="MatchAny"&gt;
+                         &lt;add input="{REQUEST_FILENAME}"
+                             matchType="IsFile" pattern=""
+                             ignoreCase="false" /&gt;
+                         &lt;add input="{REQUEST_FILENAME}"
+                             matchType="IsDirectory"
+                             pattern="" ignoreCase="false" /&gt;
+                     &lt;/conditions&gt;
+                     &lt;action type="None" /&gt;
+                 &lt;/rule&gt;
+                 &lt;rule name="Imported Rule 2" stopProcessing="true"&gt;
+                     &lt;match url="^.*$" /&gt;
+                     &lt;action type="Rewrite" url="index.php" /&gt;
+                 &lt;/rule&gt;
+             &lt;/rules&gt;
+         &lt;/rewrite&gt;
+     &lt;/system.webServer&gt;
+&lt;/configuration&gt;
+</pre>
+
+        <p>Si vous utilisez Lighttpd, la règle de réécriture suivante est valide :</p>
+
+        <pre class="programlisting">
+url.rewrite-once = (
+    ".*\?(.*)$" =&gt; "/index.php?$1",
+    ".*\.(js|ico|gif|jpg|png|css|html)$" =&gt; "$0",
+    "" =&gt; "/index.php"
+)
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.router.usage"></a>Utilisation d'un routeur</h3></div></div></div>
+        
+
+        <p>
+            Pour utiliser un routeur et le configurer, vous devez le récupérer et ajouter des
+            routes :
+        </p>
+
+        <pre class="programlisting">
+/* Créer un routeur */
+$router = $frontctrl-&gt;getRouter();
+// retourne un routeur de réécriture par défaut
+$router-&gt;addRoute(
+    'user',
+    new Zend_Controller_Router_Route('user/:username',
+                                     array('controller' =&gt; 'user',
+                                           'action' =&gt; 'info'))
+);
+</pre>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.router.basic"></a>Utilisation basique du routeur de réécriture</h3></div></div></div>
+
+        
+
+        <p>
+            Le coeur de ce routeur repose sur le concept de routes personnalisées. Les routes
+            sont ajoutées en appelant la méthode <code class="methodname">addRoute()</code> et en lui passant une
+            instance implémentant <code class="classname">Zend_Controller_Router_Route_Interface</code>.
+            Exemple :
+        </p>
+
+        <pre class="programlisting">
+$router-&gt;addRoute('user',
+                  new Zend_Controller_Router_Route('user/:username'));
+</pre>
+
+        <p>
+            Le routeur de réécriture est fourni avec six types de route, dont une
+            spéciale :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: opencircle; ">
+<li class="listitem" style="list-style-type: circle">
+                <p>
+                    <a class="link" href="zend.controller.router.html#zend.controller.router.routes.standard" title="Zend_Controller_Router_Route">Zend_Controller_Router_Route</a>
+                </p>
+            </li>
+<li class="listitem" style="list-style-type: circle">
+                <p>
+                    <a class="link" href="zend.controller.router.html#zend.controller.router.routes.static" title="Zend_Controller_Router_Route_Static">Zend_Controller_Router_Route_Static</a>
+                </p>
+            </li>
+<li class="listitem" style="list-style-type: circle">
+                <p>
+                    <a class="link" href="zend.controller.router.html#zend.controller.router.routes.regex" title="Zend_Controller_Router_Route_Regex">Zend_Controller_Router_Route_Regex</a>
+                </p>
+            </li>
+<li class="listitem" style="list-style-type: circle">
+                <p>
+                    <a class="link" href="zend.controller.router.html#zend.controller.router.routes.hostname" title="Zend_Controller_Router_Route_Hostname">Zend_Controller_Router_Route_Hostname</a>
+                </p>
+            </li>
+<li class="listitem" style="list-style-type: circle">
+                <p>
+                    <a class="link" href="zend.controller.router.html#zend.controller.router.routes.chain" title="Zend_Controller_Router_Route_Chain">Zend_Controller_Router_Route_Chain</a>
+                </p>
+            </li>
+<li class="listitem" style="list-style-type: circle">
+                <p>
+                    <a class="link" href="zend.controller.router.html#zend.controller.router.default-routes" title="Routes par défaut">Zend_Controller_Router_Rewrite</a> *
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Chaque route peut être utilisée plusieurs fois pour créer un chaîne de routes
+            représentant un schéma de routage personnalisé. La route du module, en revanche, ne
+            devrait être utilisée qu'une seule fois, elle est en générale la route la plus
+            générique (par défaut). Chaque route sera définie un peu plus tard.
+        </p>
+
+        <p>
+            Le premier paramètre de <code class="code">addRoute</code> est le nom de la route. Il sera
+            utilisé plus tard pour la sélectionner (par exemple pour générer un <acronym class="acronym">URL</acronym>. Le deuxième
+            paramètre étant l'objet route lui-même.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                L'utilisation la plus plausible du nom de la route est illustrée dans l'aide
+                vue "url" :
+            </p>
+            <pre class="programlisting">
+&lt;a href="&lt;?php echo $this-&gt;url(array('username' =&gt; 'martel'), 'user') ?&gt;"&gt;
+Martel
+&lt;/a&gt;
+</pre>
+            <p>Ce qui donnera un "href" : <code class="code">user/martel</code>.</p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Le routage consiste simplement à itérer toutes les routes reçues et à les faire
+            correspondre à l'URI de la requête courante. Dès qu'une correspondance est établie, les
+            variables sont injectées dans l'objet <code class="classname">Zend_Controller_Request</code>
+            utilisé après dans le distributeur et dans les contrôleurs. Si aucune correspondance
+            n'est trouvée, la route suivante dans la pile est analysée.
+        </p>
+
+        <p>
+            Si vous devez déterminer quelle route a été trouvée, vous pouvez utilisez la
+            méthode <code class="methodname">getCurrentRouteName()</code>, qui vous retournera l'identifiant utilisé
+            pour enregistrer la route dans le routeur. Si vous souhaitez récupérer l'objet de la
+            route actuelle, vous pouvez utiliser <code class="methodname">getCurrentRoute()</code>.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Pile LIFO">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Pile LIFO</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+            <p>
+                Les routes sont analysées dans l'ordre LIFO : dernière fournie, première
+                analysée. Veillez à définir les routes les génériques en premier donc.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="note"><table border="0" summary="Note: Paramètres de la requête">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Paramètres de la requête</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+            <p>
+                Les paramètres de la requête proviennent de l'utilisateur, ou des routes
+                définies. Ils seront plus tard accessibles via
+                <code class="methodname">Zend_Controller_Request::getParam()</code> ou la méthode
+                <code class="methodname">Zend_Controller_Action::_getParam()</code>.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Il y a trois valeurs spéciales qui peuvent être utilisées dans la définition de
+            vos routes : - "module", "controller" et "action" -. Ces valeurs sont utilisées par
+            <code class="classname">Zend_Controller_Dispatcher</code> pour trouver les contrôleurs et
+            action à distribuer.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Valeurs spéciales">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Valeurs spéciales</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+            <p>
+                Le nom de ces valeurs peut être changé dans
+                <code class="classname">Zend_Controller_Request_Http</code> avec les méthodes
+                <code class="code">setControllerKey</code> et <code class="code">setActionKey</code>.
+            </p>
+        </td></tr>
+</table></div>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.router.default-routes"></a>Routes par défaut</h3></div></div></div>
+
+        
+
+        <p>
+            Zend_Controller_Router_Rewrite possède des routes par défaut qui vont
+            correspondre pour des <acronym class="acronym">URI</acronym> du type <code class="code">controller/action</code>. De plus, un nom de
+            module peut être spécifié comme premier élément du chemin, autorisant ainsi des <acronym class="acronym">URI</acronym> du
+            type <code class="code">module/controller/action</code>. Enfin, chaque paramètres de la requête sera
+            trouvé à la fin de la requête, comme
+            <code class="code">controller/action/var1/value1/var2/value2</code>.
+        </p>
+
+        <p>Exemples avec ces routes :</p>
+
+        <pre class="programlisting">
+// Considérons :
+$ctrl-&gt;setControllerDirectory(
+    array(
+        'default' =&gt; '/path/to/default/controllers',
+        'news'    =&gt; '/path/to/news/controllers',
+        'blog'    =&gt; '/path/to/blog/controllers'
+    )
+);
+
+Module seulement:
+http://example/news
+    module == news
+
+Un module invalide dirige vers le contrôleur:
+http://example/foo
+    controller == foo
+
+Module + controller:
+http://example/blog/archive
+    module     == blog
+    controller == archive
+
+Module + controller + action:
+http://example/blog/archive/list
+    module     == blog
+    controller == archive
+    action     == list
+
+Module + controller + action + params:
+http://example/blog/archive/list/sort/alpha/date/desc
+    module     == blog
+    controller == archive
+    action     == list
+    sort       == alpha
+    date       == desc
+</pre>
+
+        <p>
+            La route par défaut est simplement un objet
+            <code class="classname">Zend_Controller_Router_Route_Module</code>, stocké sous le nom
+            "default" dans le routeur de réécriture(RewriteRouter). Il est conçu comme ceci :
+        </p>
+
+        <pre class="programlisting">
+$compat = new Zend_Controller_Router_Route_Module(array(),
+                                                  $dispatcher,
+                                                  $request);
+$this-&gt;addRoute('default', $compat);
+</pre>
+
+        <p>
+            Si vous ne souhaitez pas cette route par défaut, créez en une et stocker la avec
+            le nom "default" (écrasement), ou supprimez la route avec
+            <code class="methodname">removeDefaultRoutes()</code> :
+        </p>
+
+        <pre class="programlisting">
+// Supprime les routes par défaut
+$router-&gt;removeDefaultRoutes();
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.router.rewritebase"></a>Base URL et sous dossiers</h3></div></div></div>
+        
+
+        <p>
+            Le routeur de réécriture peut être utilisé dans des sous dossiers (comme
+            <code class="code">http://domain.com/~user/application-root/</code>), dans un tél cas, l'URL de base
+            de l'application (<code class="code">/~user/application-root</code>) devrait être automatiquement
+            détectée par <code class="classname">Zend_Controller_Request_Http</code> et utilisée
+            ensuite.
+        </p>
+
+        <p>
+            Si ça n'était pas le cas, vous pouvez spécifier votre propre base <acronym class="acronym">URL</acronym>
+            dans <code class="classname">Zend_Controller_Request_Http</code> en appelant
+            <code class="methodname">setBaseUrl()</code> (voyez <a class="link" href="zend.controller.request.html#zend.controller.request.http.baseurl" title="Base de l'URL et sous-dossiers">Base de l'URL et
+                sous-dossiers</a>) :
+        </p>
+
+        <pre class="programlisting">
+$request-&gt;setBaseUrl('/~user/application-root/');
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.router.global.parameters"></a>Paramètres globaux</h3></div></div></div>
+        
+
+        <p>
+            Vous pouvez régler des paramètres globaux dans un routeur, qui sont
+            automatiquement fournis à la route lors de son assemblage, grâce à la fonction
+            <code class="methodname">setGlobalParam()</code>. Si un paramètre global est réglé mais qu'il est aussi
+            fourni directement à la méthode d'assemblage, le paramètre utilisateur écrase le
+            paramètre global. Vous pouvez régler un paramètre global de cette manière :
+        </p>
+
+        <pre class="programlisting">
+$router-&gt;setGlobalParam('lang', 'en');
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.router.routes"></a>Types de route</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.router.routes.standard"></a>Zend_Controller_Router_Route</h4></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Controller_Router_Route</code> est la route par défaut intégrée
+        dans le routeur de réécriture (RewriteRouter). Ce routeur combine les deux avantages que
+        sont la simplicité d'utilisation et la flexibilité. Chaque route est définie par une
+        correspondance d'<acronym class="acronym">URL</acronym>, statique ou dynamique, et des valeurs par défaut
+        peuvent être fournies, de même que des valeurs obligatoires.
+    </p>
+
+    <p>
+        Imaginons une application ayant besoin de posséder une page en décrivant l'auteur.
+        Nous voulons que lorsque le navigateur pointe vers
+        <code class="filename">http://domaine.fr/auteur/martel</code>, la page d'informations en question
+        puisse apparaître, au sujet de "martel". La route pour une telle <acronym class="acronym">URL</acronym>
+        pourrait être :
+    </p>
+
+    <pre class="programlisting">
+$route = new Zend_Controller_Router_Route(
+    'auteur/:username',
+    array(
+        'controller' =&gt; 'profile',
+        'action'     =&gt; 'userinfo'
+    )
+);
+
+$router-&gt;addRoute('user', $route);
+</pre>
+
+    <p>
+        Le premier paramètre du constructeur de <code class="classname">Zend_Controller_Router_Route</code>
+        est la définition de la route à analyser avec l'<acronym class="acronym">URL</acronym>. Les définitions
+        des routes sont des parties statiques et dynamiques, séparées par des slashs ("/").
+        Les parties statiques sont juste du texte brut : <span class="emphasis"><em>auteur</em></span>. Les
+        dynamiques, appelées variables, sont repérées grâce à un caractère
+        deux-points (:) devant la variable : <span class="emphasis"><em>:username</em></span>.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Utilisation des caractères">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Utilisation des caractères</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+        <p>
+            Pour identifier une variable dans un schéma de routage (après le deux-points), en
+            théorie n'importe quel caractère fait l'affaire (sauf le slash "/"). Cependant il est
+            conseillé de n'utiliser que des caractères que <acronym class="acronym">PHP</acronym> comprend comme
+            étant des noms de variables valides. Les implémentations futures de ce comportement
+            peuvent changer, altérant ainsi votre code.
+        </p>
+    </td></tr>
+</table></div>
+
+    <p>
+        Cette route exemple devrait être utilisée lorsque le navigateur pointe vers
+        <code class="filename">http://domaine.fr/auteur/martel</code>, et dans un tel cas, tous les
+        paramètres de la requête seront injectés dans l'objet
+        <code class="classname">Zend_Controller_Request</code> et
+        seront accessibles à travers votre <code class="classname">ProfileController</code>. Les variables
+        retournées par cet exemple peuvent être représentées par le tableau suivant :
+    </p>
+
+    <pre class="programlisting">
+$values = array(
+    'username'   =&gt; 'martel',
+    'controller' =&gt; 'profile',
+    'action'     =&gt; 'userinfo'
+);
+</pre>
+
+    <p>
+        Plus tard, <code class="classname">Zend_Controller_Dispatcher_Standard</code> va distribuer
+        vers la méthode <code class="methodname">userinfoAction()</code> de
+        <code class="classname">ProfileController</code> (dans le module par défaut) selon ces valeurs.
+        A cet endroit, il sera possible d'accéder à toutes les variables de la requête grâce à
+        <code class="methodname">Zend_Controller_Action::_getParam()</code> ou
+        <code class="methodname">Zend_Controller_Request::getParam()</code> :
+    </p>
+
+    <pre class="programlisting">
+public function userinfoAction()
+{
+    $request = $this-&gt;getRequest();
+    $username = $request-&gt;getParam('username');
+
+    $username = $this-&gt;_getParam('username');
+}
+</pre>
+
+    <p>
+        La définition des routes peut contenir un ou plusieurs caractères spéciaux - des
+        jokers - représentés par le symbole '*'. Il est utilisé pour collecter des paramètres.
+        L'exemple suivant représente plus ou moins le comportement par défaut de la route
+        "Module" :
+    </p>
+
+    <pre class="programlisting">
+$route = new Zend_Controller_Router_Route(
+    ':module/:controller/:action/*',
+    array('module' =&gt; 'default')
+);
+$router-&gt;addRoute('default', $route);
+</pre>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.router.routes.standard.variable-defaults"></a>Variables par défaut</h5></div></div></div>
+
+        
+
+        <p>
+            Chaque variable dynamique dans la définition des routes peut avoir une valeur par
+            défaut. C'est à cela que sert le second paramètre du constructeur de
+            <code class="classname">Zend_Controller_Router_Route</code>. Il s'agit d'un tableau avec comme
+            clés les noms des variables, et comme valeurs, leurs valeurs par défaut :
+        </p>
+
+        <pre class="programlisting">
+$route = new Zend_Controller_Router_Route(
+    'archive/:annee',
+    array('annee' =&gt; 2006)
+);
+$router-&gt;addRoute('archive', $route);
+</pre>
+
+        <p>
+            L'exemple ci-dessus établira une correspondance avec les <acronym class="acronym">URL</acronym> comme
+            <code class="filename">http://domaine.fr/archive/2005</code> et
+            <code class="filename">http://exemple.fr/archive</code>. Dans ce dernier cas, la variable de
+            l'année (<span class="emphasis"><em>annee</em></span>) aura la valeur 2006.
+        </p>
+
+        <p>
+            L'exemple ci-dessus injecte ainsi un paramètre représentant une année
+            (<span class="emphasis"><em>annee</em></span>). Si aucune information de contrôleur ou d'actions n'est
+            présente, alors ceux par défaut seront utilisés (ils sont définis dans
+            <code class="classname">Zend_Controller_Dispatcher_Abstract</code>). Pour que l'exemple soit
+            plus intuitif, spécifions des paires contrôleur et action par défaut dans notre
+            route :
+        </p>
+
+        <pre class="programlisting">
+$route = new Zend_Controller_Router_Route(
+    'archive/:annee',
+    array(
+        'annee'       =&gt; 2006,
+        'controller' =&gt; 'archive',
+        'action'     =&gt; 'show'
+    )
+);
+$router-&gt;addRoute('archive', $route);
+</pre>
+
+        <p>
+            Cette route va alors donner une distribution vers la méthode
+            <code class="methodname">showAction()</code> de <code class="classname">ArchiveController</code>.
+        </p>
+
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.router.routes.standard.variable-requirements"></a>Obligations et contraintes des variables</h5></div></div></div>
+
+        
+
+        <p>
+            Vous pouvez ajouter un troisième paramètre au constructeur de
+            <code class="classname">Zend_Controller_Router_Route</code> pour spécifier une variable
+            obligatoire. Ceci s'effectue au moyen d'expressions régulières :
+        </p>
+
+        <pre class="programlisting">
+$route = new Zend_Controller_Router_Route(
+    'archive/:annee',
+    array(
+        'annee'       =&gt; 2006,
+        'controller' =&gt; 'archive',
+        'action'     =&gt; 'show'
+    ),
+    array('year' =&gt; '\d+')
+);
+$router-&gt;addRoute('archive', $route);
+</pre>
+
+        <p>
+            Avec une telle définition de route, comme ci-dessus, le routeur n'établira une
+            correspondance que si la variable "<span class="emphasis"><em>annee</em></span>" contient une donnée
+            numérique : <code class="filename">http://domaine.fr/archive/2345</code>. Une
+            <acronym class="acronym">URL</acronym> comme <code class="filename">http://exemple.annee/archive/test</code>
+            ne sera pas captée (matchée) par cette route, et le contrôle sera passé à la route
+            suivante, etc.
+        </p>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.router.routes.standard.translated-segments"></a>Translated segments</h5></div></div></div>
+        
+
+        <p>
+            The standard route supports translated segments. To use this
+            feature, you have to define at least a translator (an instance
+            of <code class="classname">Zend_Translate</code>) via one of the following ways:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Put it into the registry with the key <code class="classname">Zend_Translate</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Set it via the static method
+                    <code class="methodname">Zend_Controller_Router_Route::setDefaultTranslator()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Pass it as fourth parameter to the constructor.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            By default, the locale specified in the <code class="classname">Zend_Translate</code>
+            instance will be used. To override it, you set it
+            (an instance of <code class="classname">Zend_Locale</code> or a locale string) in one
+            of the following ways:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Put it into the registry with the key <code class="classname">Zend_Locale</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Set it via the static method
+                    <code class="methodname">Zend_Controller_Router_Route::setDefaultLocale()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Pass it as fifth parameter to the constructor.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Pass it as <span class="command"><strong>@locale</strong></span> parameter to the assemble
+                    method.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Translated segments are separated into two parts. Fixed segments
+            are prefixed by a single <span class="emphasis"><em>@</em></span>-sign, and will be
+            translated to the current locale when assembling and reverted
+            to the message ID when matching again. Dynamic segments
+            are prefixed by <span class="command"><strong>:@</strong></span>. When assembling, the given
+            parameter will be translated and inserted into the parameter
+            position. When matching, the translated parameter from the
+            <acronym class="acronym">URL</acronym> will be reverted to the message ID again.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Message IDs and separate language file">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Message IDs and separate language file</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Occasionally a message ID which you want to use in one
+                of your routes is already used in a view script or somewhere
+                else. To have full control over safe <acronym class="acronym">URL</acronym>s, you should use
+                a separate language file for the messages used in the route.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            The following is the simplest way to prepare the standard route for
+            translated segment usage:
+        </p>
+
+        <pre class="programlisting">
+// Prepare the translator
+$translator = new Zend_Translate(
+    array(
+        'adapter' =&gt; 'array',
+        'content' =&gt; array(),
+        'locale'  =&gt; 'en'
+    )
+);
+$translator-&gt;addTranslation(
+    array(
+        'content' =&gt;
+            array(
+                'archive' =&gt; 'archiv',
+                'year'    =&gt; 'jahr',
+                'month'   =&gt; 'monat',
+                'index'   =&gt; 'uebersicht'
+            ),
+        'locale'  =&gt; 'de'
+    )
+);
+
+// Set the current locale for the translator
+$translator-&gt;setLocale('en');
+
+// Set it as default translator for routes
+Zend_Controller_Router_Route::setDefaultTranslator($translator);
+</pre>
+
+        <p>
+            This example demonstrates the usage of static segments:
+        </p>
+
+        <pre class="programlisting">
+// Create the route
+$route = new Zend_Controller_Router_Route(
+    '@archive',
+    array(
+        'controller' =&gt; 'archive',
+        'action'     =&gt; 'index'
+    )
+);
+$router-&gt;addRoute('archive', $route);
+
+// Assemble the URL in default locale: archive
+$route-&gt;assemble(array());
+
+// Assemble the URL in german: archiv
+$route-&gt;assemble(array());
+</pre>
+
+        <p>
+            You can use the dynamic segments to create a module-route like
+            translated version:
+        </p>
+
+        <pre class="programlisting">
+// Create the route
+$route = new Zend_Controller_Router_Route(
+    ':@controller/:@action/*',
+    array(
+        'controller' =&gt; 'index',
+        'action'     =&gt; 'index'
+    )
+);
+$router-&gt;addRoute('archive', $route);
+
+// Assemble the URL in default locale: archive/index/foo/bar
+$route-&gt;assemble(array('controller' =&gt; 'archive', 'foo' =&gt; 'bar'));
+
+// Assemble the URL in german: archiv/uebersicht/foo/bar
+$route-&gt;assemble(array('controller' =&gt; 'archive', 'foo' =&gt; 'bar'));
+</pre>
+
+        <p>
+            You can also mix static and dynamic segments:
+        </p>
+
+        <pre class="programlisting">
+// Create the route
+$route = new Zend_Controller_Router_Route(
+    '@archive/:@mode/:value',
+    array(
+        'mode'       =&gt; 'year'
+        'value'      =&gt; 2005,
+        'controller' =&gt; 'archive',
+        'action'     =&gt; 'show'
+    ),
+    array('mode'  =&gt; '(month|year)'
+          'value' =&gt; '\d+')
+);
+$router-&gt;addRoute('archive', $route);
+
+// Assemble the URL in default locale: archive/month/5
+$route-&gt;assemble(array('mode' =&gt; 'month', 'value' =&gt; '5'));
+
+// Assemble the URL in german: archiv/monat/5
+$route-&gt;assemble(array('mode' =&gt; 'month', 'value' =&gt; '5', '@locale' =&gt; 'de'));
+</pre>
+    </div>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.router.routes.static"></a>Zend_Controller_Router_Route_Static</h4></div></div></div>
+
+    
+
+    <p>
+        Les exemples ci-dessus utilisent des routes dynamiques - routes qui contiennent des
+        motifs pour chercher des correspondances. Seulement, parfois, une route particulière est
+        marquée en dur, et mettre en marche le moteur d'expression régulière serait inutile. La
+        réponse à cette situation est l'utilisation de routes statiques :
+    </p>
+
+    <pre class="programlisting">
+$route = new Zend_Controller_Router_Route_Static(
+    'login',
+    array('controller' =&gt; 'auth', 'action' =&gt; 'login')
+);
+$router-&gt;addRoute('login', $route);
+</pre>
+
+    <p>
+        La route ci-dessus correspond à l'URL <code class="filename">http://domain.com/login</code>, et
+        distribue l'action <code class="methodname">AuthController::loginAction()</code>.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: 
+            ATTENTION : Les routes statiques doivent contenir des valeurs par défaut
+            saines
+        ">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">
+<a name="zend.controller.router.routes.static.warning"></a>
+            ATTENTION : Les routes statiques doivent contenir des valeurs par défaut
+            saines
+        </th>
+</tr>
+<tr><td align="left" valign="top">
+        
+        <p>
+            Puisqu'une route statique ne fournit aucune partie de l'URL à l'objet de requête
+            en tant que paramètres, vous <span class="emphasis"><em>devez</em></span> fournir par défaut pour la
+            route tous les paramètres nécessaires à la distribution de la requête. Oubliez les
+            valeurs par défaut de "controller" ou "action" entraînera des résultats non attendus,
+            et peut-être une requête non-distribuable.
+        </p>
+        <p>En général, fournissez toujours chacune des valeurs par défaut suivantes :</p>
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>controller</p>
+            </li>
+<li class="listitem">
+                <p>action</p>
+            </li>
+<li class="listitem">
+                <p>module (si différent de "default")</p>
+            </li>
+</ul></div>
+        <p>
+            Optionnellement, vous pouvez activer le paramètre "useDefaultControllerAlways" du
+            contrôleur frontal lors de l'amorçage :
+        </p>
+        <pre class="programlisting">
+$front-&gt;setParam('useDefaultControllerAlways', true);
+</pre>
+        <p>
+            Cependant, ceci est considéré comme un contournement ; il vaut toujours mieux
+            définir explicitement des valeurs par défaut saines.
+        </p>
+    </td></tr>
+</table></div>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.router.routes.regex"></a>Zend_Controller_Router_Route_Regex</h4></div></div></div>
+    
+
+    <p>
+        En plus des routes par défaut, et statique, les routes exprimées par expression
+        régulière sont acceptées. Ces routes sont plus puissantes que les autres, mais aussi plus
+        complexes à mettre en oeuvre et un peu plus lentes en matière d'analyse.
+    </p>
+
+    <p>
+        Comme les routes standards, cette route doit être initialisée avec une définition et
+        des valeurs par défaut. Créons par exemple avec une route "archive" en utilisant les routes
+        par expressions régulières :
+    </p>
+
+    <pre class="programlisting">
+$route = new Zend_Controller_Router_Route_Regex(
+    'archive/(\d+)',
+    array(
+        'controller' =&gt; 'archive',
+        'action'     =&gt; 'show'
+    )
+);
+$router-&gt;addRoute('archive', $route);
+</pre>
+
+    <p>
+        Chaque motif d'expression régulière sera injecté dans l'objet de requête. Avec
+        l'exemple ci-dessus, en utilisant <code class="code">http://domain.com/archive/2006</code>, la tableau
+        résultat devrait ressembler à :
+    </p>
+
+    <pre class="programlisting">
+$values = array(
+    1            =&gt; '2006',
+    'controller' =&gt; 'archive',
+    'action'     =&gt; 'show'
+);
+</pre>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            Les slashs de début et de fin sont supprimés de l'URL dans le routeur (avant
+            l'intervention de la route).Ainsi, pour faire correspondre l'URL
+            <code class="code">http://domain.com/foo/bar/</code>, il faudra une expression du style
+            <code class="code">foo/bar</code>, et non pas <code class="code">/foo/bar</code>.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            Les caractères de spécification de début et fin d'expression sont automatiquement
+            rajoutés au motif ('^' et '$', respectivement). De ce fait, vous ne devriez pas les
+            utiliser manuellement.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            Cette classe de route utilise le séparateur <code class="code">#</code> comme délimiteur de
+            motif. Vous devrez donc échapper ce caractère si vous l'utilisez, et non pas le slash
+            (par défaut pour un motif d'expression régulière). Le caractère "#" est cependant
+            rarement utilisé dans une <acronym class="acronym">URL</acronym>.
+        </p>
+    </td></tr>
+</table></div>
+
+    <p>Vous pouvez retourner le contenu des sous-masques :</p>
+
+    <pre class="programlisting">
+public function showAction()
+{
+    $request = $this-&gt;getRequest();
+    $year    = $request-&gt;getParam(1); // $year = '2006';
+}
+</pre>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>Attention, la clé est un entier (1), et non une chaîne ('1').</p>
+    </td></tr>
+</table></div>
+
+    <p>
+        Cette route ne fonctionnera pas encore tout à fait comme la route standard, car la
+        valeur par défaut pour "<code class="code">year</code>" n'est pas indiquée. Attention par contre, vous
+        risquez d'avoir un problème avec les slashs finaux même si nous déclarons une valeur par
+        défaut pour "<code class="code">year</code>" et que celui-ci est facultatif. La solution consiste à
+        traiter ce slash, mais sans le capturer :
+    </p>
+
+    <pre class="programlisting">
+$route = new Zend_Controller_Router_Route_Regex(
+    'archive(?:/(\d+))?',
+    array(
+        1            =&gt; '2006',
+        'controller' =&gt; 'archive',
+        'action'     =&gt; 'show'
+    )
+);
+$router-&gt;addRoute('archive', $route);
+</pre>
+
+    <p>
+        Nous voyons apparaître tout de même un problème : gérer des chiffres, comme clés pour
+        les paramètres n'est pas très intuitif. C'est là qu'entre en jeu le troisième paramètre du
+        constructeur de <code class="classname">Zend_Controller_Router_Route_Regex</code>. Il accepte un
+        tableau faisant correspondre les numéros des paramètres et leur nom respectif :
+    </p>
+
+    <pre class="programlisting">
+$route = new Zend_Controller_Router_Route_Regex(
+    'archive/(\d+)',
+    array(
+        'controller' =&gt; 'archive',
+        'action' =&gt; 'show'
+    ),
+    array(
+        1 =&gt; 'year'
+    )
+);
+$router-&gt;addRoute('archive', $route);
+</pre>
+
+    <p>Les valeurs suivantes seront injectées dans l'objet de requête :</p>
+
+    <pre class="programlisting">
+$values = array(
+    'year'       =&gt; '2006',
+    'controller' =&gt; 'archive',
+    'action'     =&gt; 'show'
+);
+</pre>
+
+    <p>Il est aussi possible d'inverser les clé et valeurs du tableau :</p>
+
+    <pre class="programlisting">
+$route = new Zend_Controller_Router_Route_Regex(
+    'archive/(\d+)',
+    array( ... ),
+    array(1 =&gt; 'year')
+);
+
+// OU
+
+$route = new Zend_Controller_Router_Route_Regex(
+    'archive/(\d+)',
+    array( ... ),
+    array('year' =&gt; 1)
+);
+</pre>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>Attention de toujours manipuler des entiers (1 et non "1")</p>
+    </td></tr>
+</table></div>
+
+    <p>
+        Si vous inversez comme dans le deuxième cas de l'exemple ci-dessus, la clé alors
+        reçue par l'objet de requête ne représente plus un chiffre, mais le nom du paramètre. Vous
+        pouvez évidemment mixer les comportements :
+    </p>
+
+    <pre class="programlisting">
+$route = new Zend_Controller_Router_Route_Regex(
+    'archive/(\d+)/page/(\d+)',
+    array( ... ),
+    array('year' =&gt; 1)
+);
+</pre>
+
+    <p>
+        Si nous appelons l'URL <code class="code">http://domain.com/archive/2006/page/10</code> avec la
+        route définie ci-dessus, les paramètres trouvés seront :
+    </p>
+
+    <pre class="programlisting">
+$values = array(
+    'year'       =&gt; '2006',
+    2            =&gt; 10,
+    'controller' =&gt; 'archive',
+    'action'     =&gt; 'show'
+);
+</pre>
+
+    <p>
+        Étant donné que les route par expression régulière ne sont pas facilement réversible,
+        vous devrez préparer le motif vous-même dans le but d'utiliser l'aide de vue "url". Ce
+        chemin inverse doit être défini comme une chaîne traitable par la fonction
+        <code class="methodname">sprintf()</code> de <acronym class="acronym">PHP</acronym>, et définie en quatrième paramètre du constructeur de la
+        route Regex :
+    </p>
+
+    <pre class="programlisting">
+$route = new Zend_Controller_Router_Route_Regex(
+    'archive/(\d+)',
+    array( ... ),
+    array('year' =&gt; 1),
+    'archive/%s'
+);
+</pre>
+
+    <p>
+        Quels sont donc les avantages des routes par expressions régulières (Regex) ? C'est
+        que vous pouvez décrire n'importe quelle <acronym class="acronym">URL</acronym> avec. Imaginez un blog, vous voulez créer des
+        <acronym class="acronym">URL</acronym>s du type <code class="code">http://domain.com/blog/archive/01-Using_the_Regex_Router.html</code>,
+        afin de décomposer la dernière partie de l'URL en un ID d'article, et un cours texte
+        descriptif (<code class="code">01-Using_the_Regex_Router.html</code>). Ceci n'est pas possible avec la
+        route standard. En revanche, avec la route Regex, vous pouvez écrire :
+    </p>
+
+    <pre class="programlisting">
+$route = new Zend_Controller_Router_Route_Regex(
+    'blog/archive/(\d+)-(.+)\.html',
+    array(
+        'controller' =&gt; 'blog',
+        'action'     =&gt; 'view'
+    ),
+    array(
+        1 =&gt; 'id',
+        2 =&gt; 'description'
+    ),
+    'blog/archive/%d-%s.html'
+);
+$router-&gt;addRoute('blogArchive', $route);
+</pre>
+
+    <p>
+        Comme vous le voyez, ce type de route ajoute une solution flexible concernant la
+        gestion des <acronym class="acronym">URL</acronym>s et leur routage.
+    </p>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.router.routes.hostname"></a>Zend_Controller_Router_Route_Hostname</h4></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Controller_Router_Route_Hostname</code> est la route par nom
+        d'hôte du framework. Elle fonctionne de la même manière que la route standard, mais elle
+        utilise le nom d'hôte de l'URL appelé au lieu du chemin.
+    </p>
+
+    <p>
+        Utilisons l'exemple d'une route standard et regardons ce que cela donnerais en
+        utilisant le nom d'hôte. Au lieu d'appeler l'utilisateur par le chemin, nous voulons être
+        capable d'appeler <code class="code">http://toto.users.example.com</code> pour voir les informations
+        concernant l'utilisateur "toto" 
+    </p>
+
+    <pre class="programlisting">
+$hostnameRoute = new Zend_Controller_Router_Route_Hostname(
+    ':username.users.example.com',
+    array(
+        'controller' =&gt; 'profile',
+        'action'     =&gt; 'userinfo'
+    )
+);
+
+$plainPathRoute = new Zend_Controller_Router_Route_Static('');
+
+$router-&gt;addRoute('user', $hostnameRoute-&gt;chain($plainPathRoute));
+</pre>
+
+    <p>
+        Le premier paramètre dans le constructeur
+        <code class="classname">Zend_Controller_Router_Route_Hostname</code> est la définition d'une route
+        qui correspondra à un nom d'hôte. Les définitions de route consistent en des parties
+        statiques et des parties dynamiques séparées par le caractère point ("<code class="code">.</code>"). Les
+        parties dynamiques, appelées variables, sont marquées en précédant le nom de variable par
+        le caractère deux-points ("<code class="code">:</code>") : <code class="code">:username</code>. Les parties
+        statiques sont de simples textes : <code class="code">user</code>.
+    </p>
+
+    <p>
+        Les routes par nom d'hôtes peuvent, mais ne devraient pas être utilisées comme ceci.
+        La raison à cela est que qu'une route par nom d'hôte seule ne correspondra à aucun chemin.
+        Donc vous devez donc chaîner le chemin d'une route à une route par nom d'hôte. Ceci est
+        réalisé comme dans l'exemple ci-dessous en appelant
+        <code class="code">$hostnameRoute-&gt;chain($pathRoute);</code>. En faisant ceci,
+        <code class="varname">$hostnameRoute</code> n'est pas modifié, mais une nouvelle route
+        (<code class="classname">Zend_Controller_Router_Route_Chain</code>) est retournée, qui peut ainsi
+        être fournie au routeur.
+    </p>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.router.routes.chain"></a>Zend_Controller_Router_Route_Chain</h4></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Controller_Router_Route_Chain</code> est une route permettant le chainage
+        d'autres routes. Ceci permet de chainer des routes hostnames à des routes de chemin, ou de multiples
+        routes de chemin entre elles, par exemple. Le chainage se configure via des méthodes ou un fichier
+        de configuration.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Priorité des paramètres">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Priorité des paramètres</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+        <p>
+            En chainant des routes entre elles, les paramètres de la route la plus externe
+            (la plus proche) ont une prioprité supérieure aux paramètres des routes les plus
+            internes (encapsulées). Définir un contrôleur dans la route externe, puis dans la route
+            interne, c'est celui de la route externe qui sera sélectionné.
+        </p>
+    </td></tr>
+</table></div>
+
+    <p>
+        En réalisant le chainage via les méthodes, il existe 2 manières de procéder. La première
+        est de créer un objet <code class="classname">Zend_Controller_Router_Route_Chain</code> puis
+        d'appeler la méthode <code class="methodname">chain()</code> plusieurs fois en lui passant les routes à chainer.
+        La deuxième méthode consiste à créer la première route, par exemple une route hostname, puis
+        d'appeler sa méthode <code class="methodname">chain()</code> en passant comme paramètre la route qui devrait
+        être ajoutée. Ceci ne modifiera pas la route hostname, mais retournera une instance de
+        <code class="classname">Zend_Controller_Router_Route_Chain</code> possédant les 2 routes chainées:
+    </p>
+
+    <pre class="programlisting">
+// Créer deux routes
+$hostnameRoute = new Zend_Controller_Router_Route_Hostname(...);
+$pathRoute     = new Zend_Controller_Router_Route(...);
+
+// Première méthode, utiliser l'objet de chainage
+$chainedRoute = new Zend_Controller_Router_Route_Chain();
+$chainedRoute-&gt;chain($hostnameRoute)
+             -&gt;chain($pathRoute);
+
+// Deuxième méthode, chainage direct
+$chainedRoute = $hostnameRoute-&gt;chain($pathRoute);
+</pre>
+
+    <p>
+        Le chainage utilise le slash comme séparateur par défaut entre les routes.
+        Pour utiliser un séparateur différent, procédez comme suite:
+    </p>
+
+    <pre class="programlisting">
+// Créer deux routes
+$firstRoute  = new Zend_Controller_Router_Route('foo');
+$secondRoute = new Zend_Controller_Router_Route('bar');
+
+// Chainer les routes avec un séparateur particulier
+$chainedRoute = $firstRoute-&gt;chain($secondRoute, '-');
+
+// Assemble la route: "foo-bar"
+echo $chainedRoute-&gt;assemble();
+</pre>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.router.routes.chain.config"></a>Chainer des routes via Zend_Config</h5></div></div></div>
+        
+
+        <p>
+            Pour chainer les route grâce à un fichier de configuration, il faut considérer des paramètres
+            additionnels. L'approche la plus simple consiste à utiliser les paramètres de la
+            section <code class="code">chains</code>. Il s'agit simplement d'une liste de routes qui seront chainées à
+            la route parente. Ce n'est ni le parent, ni un des enfants qui sera ajouté au routeur, mais bien
+            le résultat de la chaine générale. Le nom de cette chaine dans le routeur sera constitué du nom
+            de la route parente séparé du nom des enfants par un tiret (-) par défaut. Voici un exemple:
+        </p>
+
+        <pre class="programlisting">
+&lt;routes&gt;
+    &lt;www type="Zend_Controller_Router_Route_Hostname"&gt;
+        &lt;route&gt;www.example.com&lt;/route&gt;
+        &lt;chains&gt;
+            &lt;language type="Zend_Controller_Router_Route"&gt;
+                &lt;route&gt;:language&lt;/route&gt;
+                &lt;reqs language="[a-z]{2}"&gt;
+                &lt;chains&gt;
+                    &lt;index type="Zend_Controller_Router_Route_Static"&gt;
+                        &lt;route&gt;&lt;/route&gt;
+                        &lt;defaults module="default" controller="index" action="index" /&gt;
+                    &lt;/index&gt;
+                    &lt;imprint type="Zend_Controller_Router_Route_Static"&gt;
+                        &lt;route&gt;imprint&lt;/route&gt;
+                        &lt;defaults module="default" controller="index" action="index" /&gt;
+                    &lt;/imprint&gt;
+                &lt;/chains&gt;
+            &lt;/language&gt;
+        &lt;/chains&gt;
+    &lt;/www&gt;
+    &lt;users type="Zend_Controller_Router_Route_Hostname"&gt;
+        &lt;route&gt;users.example.com&lt;/route&gt;
+        &lt;chains&gt;
+            &lt;profile type="Zend_Controller_Router_Route"&gt;
+                &lt;route&gt;:username&lt;/route&gt;
+                &lt;defaults module="users" controller="profile" action="index" /&gt;
+            &lt;/profile&gt;
+        &lt;/chains&gt;
+    &lt;/users&gt;
+    &lt;misc type="Zend_Controller_Router_Route_Static"&gt;
+        &lt;route&gt;misc&lt;/route&gt;
+    &lt;/misc&gt;
+&lt;/routes&gt;
+</pre>
+
+        <p>
+            Le résultat sera 3 routes <code class="code">www-language-index</code>,
+            <code class="code">www-language-imprint</code> et
+            <code class="code">users-language-profile</code> qui seront utilisées en fonction du nom d'hote
+            et de la route <code class="code">misc</code>, qui elle sera utilisée pour tout nom d'hôte.
+        </p>
+
+        <p>
+            Autre manière de faire : utiliser les nom des routes directement. Cela ne peut se faire
+            que pour le niveau racine:
+        </p>
+
+        <pre class="programlisting">
+&lt;routes&gt;
+    &lt;www type="Zend_Controller_Router_Route_Chain"&gt;
+        &lt;route&gt;www.example.com&lt;/route&gt;
+    &lt;/www&gt;
+    &lt;language type="Zend_Controller_Router_Route"&gt;
+        &lt;route&gt;:language&lt;/route&gt;
+        &lt;reqs language="[a-z]{2}"&gt;
+    &lt;/language&gt;
+    &lt;index type="Zend_Controller_Router_Route_Static"&gt;
+        &lt;route&gt;&lt;/route&gt;
+        &lt;defaults module="default" controller="index" action="index" /&gt;
+    &lt;/index&gt;
+    &lt;imprint type="Zend_Controller_Router_Route_Static"&gt;
+        &lt;route&gt;imprint&lt;/route&gt;
+        &lt;defaults module="default" controller="index" action="index" /&gt;
+    &lt;/imprint&gt;
+
+    &lt;www-index type="Zend_Controller_Router_Route_Chain"&gt;
+        &lt;chain&gt;www, language, index&lt;/chain&gt;
+    &lt;/www-index&gt;
+    &lt;www-imprint type="Zend_Controller_Router_Route_Chain"&gt;
+        &lt;chain&gt;www, language, imprint&lt;/chain&gt;
+    &lt;/www-imprint&gt;
+&lt;/routes&gt;
+</pre>
+
+        <p>
+            On peut aussi passer un tableau à <code class="code">chain</code> plutôt que les noms de route séparés par des virgules:
+        </p>
+
+        <pre class="programlisting">
+&lt;routes&gt;
+    &lt;www-index type="Zend_Controller_Router_Route_Chain"&gt;
+        &lt;chain&gt;www&lt;/chain&gt;
+        &lt;chain&gt;language&lt;/chain&gt;
+        &lt;chain&gt;index&lt;/chain&gt;
+    &lt;/www-index&gt;
+    &lt;www-imprint type="Zend_Controller_Router_Route_Chain"&gt;
+        &lt;chain&gt;www&lt;/chain&gt;
+        &lt;chain&gt;language&lt;/chain&gt;
+        &lt;chain&gt;imprint&lt;/chain&gt;
+    &lt;/www-imprint&gt;
+&lt;/routes&gt;
+</pre>
+        <p>
+            Pour spécifier le séparateur de routes avec <code class="classname">Zend_Config</code>
+            , agissez comme suit:
+        </p>
+
+        <pre class="programlisting">
+$config = new Zend_Config(array(
+    'chainName' =&gt; array(
+        'type'   =&gt; 'Zend_Controller_Router_Route_Static',
+        'route'  =&gt; 'foo',
+        'chains' =&gt; array(
+            'subRouteName' =&gt; array(
+                'type'     =&gt; 'Zend_Controller_Router_Route_Static',
+                'route'    =&gt; 'bar',
+                'defaults' =&gt; array(
+                    'module'      =&gt; 'module',
+                     'controller' =&gt; 'controller',
+                     'action'     =&gt; 'action'
+                )
+            )
+        )
+    )
+));
+
+// Affecte un séparateur avant configuration
+$router-&gt;setChainNameSeparator('_separator_')
+
+// Ajoute la configuration
+$router-&gt;addConfig($config);
+
+// La nom de notre route est maintenant: chainName_separator_subRouteName
+echo $this-&gt;_router-&gt;assemble(array(), 'chainName_separator_subRouteName');
+
+// La preuve: cela affiche /foo/bar
+</pre>
+    </div>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.router.routes.rest"></a>Zend_Rest_Route</h4></div></div></div>
+    
+
+    <p>
+        Le composant <code class="classname">Zend_Rest</code> contient une route RESTful pour
+        <code class="classname">Zend_Controller_Router_Rewrite</code>. Cette route permet un
+        schéma de routage fonction de la méthode <acronym class="acronym">HTTP</acronym> et de
+        l'<acronym class="acronym">URI</acronym> afin d'y faire correspondre un module, contrôleur,
+        et action. Le tableau suivant vous donne un aperçu du schéma de routage en
+         fonction de l'<acronym class="acronym">URI</acronym>.
+    </p>
+
+    <div class="table">
+<a name="idm192799446576"></a><p class="title"><b>Tableau 42. Comportement de Zend_Rest_Route</b></p>
+<div class="table-contents">
+        
+
+        <table class="table" summary="Comportement de Zend_Rest_Route" border="1">
+<colgroup>
+<col align="left" class="method">
+<col align="left" class="URI">
+<col align="left" class="route">
+</colgroup>
+<thead><tr>
+<th align="left">Méthode</th>
+<th align="left"><acronym class="acronym">URI</acronym></th>
+<th align="left">Module_Controller::action</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left"><code class="constant">GET</code></td>
+<td align="left"><code class="filename">/product/ratings/</code></td>
+<td align="left"><code class="methodname">Product_RatingsController::indexAction()</code></td>
+</tr>
+<tr>
+<td align="left"><code class="constant">GET</code></td>
+<td align="left"><code class="filename">/product/ratings/:id</code></td>
+<td align="left"><code class="methodname">Product_RatingsController::getAction()</code></td>
+</tr>
+<tr>
+<td align="left"><code class="constant">POST</code></td>
+<td align="left"><code class="filename">/product/ratings</code></td>
+<td align="left"><code class="methodname">Product_RatingsController::postAction()</code></td>
+</tr>
+<tr>
+<td align="left"><code class="constant">PUT</code></td>
+<td align="left"><code class="filename">/product/ratings/:id</code></td>
+<td align="left"><code class="methodname">Product_RatingsController::putAction()</code></td>
+</tr>
+<tr>
+<td align="left"><code class="constant">DELETE</code></td>
+<td align="left"><code class="filename">/product/ratings/:id</code></td>
+<td align="left">
+                        <code class="methodname">Product_RatingsController::deleteAction()</code>
+                    </td>
+</tr>
+<tr>
+<td align="left"><code class="constant">POST</code></td>
+<td align="left"><code class="filename">/product/ratings/:id?_method=PUT</code></td>
+<td align="left"><code class="methodname">Product_RatingsController::putAction()</code></td>
+</tr>
+<tr>
+<td align="left"><code class="constant">POST</code></td>
+<td align="left"><code class="filename">/product/ratings/:id?_method=DELETE</code></td>
+<td align="left">
+                        <code class="methodname">Product_RatingsController::deleteAction()</code>
+                    </td>
+</tr>
+</tbody>
+</table>
+    </div>
+</div>
+<br class="table-break">
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.rest.route_usage"></a>Utilisation de Zend_Rest_Route</h5></div></div></div>
+        
+
+        <p>
+            Pour activer <code class="classname">Zend_Rest_Route</code> pour une application entière,
+            construisez en un objet sans paramètre spécifique et ajoutez le comme route par défaut dans
+            le contrôleur frontal:
+        </p>
+
+        <pre class="programlisting">
+$front     = Zend_Controller_Front::getInstance();
+$restRoute = new Zend_Rest_Route($front);
+$front-&gt;getRouter()-&gt;addRoute('default', $restRoute);
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Si <code class="classname">Zend_Rest_Route</code> ne trouve aucun module, contrôleur, action
+                valides, il retournera <code class="constant">FALSE</code> et la route suivante sera alors
+                analysée par le routeur.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Pour activer <code class="classname">Zend_Rest_Route</code> pour des modules spécifiques,
+            construisez l'objet avec comme troisième paramètre, un tableau de noms de modules :
+        </p>
+
+        <pre class="programlisting">
+$front     = Zend_Controller_Front::getInstance();
+$restRoute = new Zend_Rest_Route($front, array(), array('product'));
+$front-&gt;getRouter()-&gt;addRoute('rest', $restRoute);
+</pre>
+
+        <p>
+            Pour activer <code class="classname">Zend_Rest_Route</code> pour des contrôleurs spécifiques,
+            construisez l'objet avec comme troisième paramètre, un tableau de noms de contrôleurs
+            en correspondance avec des noms de modules.
+        </p>
+
+        <pre class="programlisting">
+$front     = Zend_Controller_Front::getInstance();
+$restRoute = new Zend_Rest_Route($front, array(), array(
+    'product' =&gt; array('ratings')
+));
+$front-&gt;getRouter()-&gt;addRoute('rest', $restRoute);
+</pre>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.rest.route_config"></a>Zend_Rest_Route avec Zend_Config_Ini</h5></div></div></div>
+        
+
+        <p>
+            To use Zend_Rest_Route from an INI config file, use a route type
+            parameter and set the config options:
+        </p>
+
+        <pre class="programlisting">
+routes.rest.type = Zend_Rest_Route
+routes.rest.defaults.controller = object
+routes.rest.mod = project,user
+</pre>
+
+        <p>
+            The 'type' option designates the RESTful routing config type.
+            The 'defaults' option is used to specify custom default
+            module, controller, and/or actions for the route. All other options
+            in the config group are treated as RESTful module names, and their
+            values are RESTful controller names. The example config defines
+            Mod_ProjectController and Mod_UserController as RESTful controllers.
+        </p>
+
+        <p>Then use the addConfig() method of the Rewrite router object:</p>
+
+        <pre class="programlisting">
+$config = new Zend_Config_Ini('path/to/routes.ini');
+$router = new Zend_Controller_Router_Rewrite();
+$router-&gt;addConfig($config, 'routes');
+</pre>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.rest.controller"></a>Zend_Rest_Controller</h5></div></div></div>
+        
+
+        <p>
+            Pour vous aidez à utiliser des contrôleurs avec
+            <code class="classname">Zend_Rest_Route</code>, faites les étendre
+            <code class="classname">Zend_Rest_Controller</code>.
+            <code class="classname">Zend_Rest_Controller</code> définit les 5 opérations RESTful les
+            plus connues sous forme de méthodes abstraites.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">indexAction()</code></em></span> -
+                    Devrait récupérer un index des ressources et le passer à la vue.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">getAction()</code></em></span> -
+                    Devrait récupérer des données d'une ressource définie par <acronym class="acronym">URI</acronym>
+                    et les passer à la vue.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">postAction()</code></em></span> -
+                    Devrait accepter une nouvelle ressource et la faire persister (la sauvegarder).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">putAction()</code></em></span> -
+                    Devrait accepter une ressource indentifiée par <acronym class="acronym">URI</acronym> et
+                    la faire persister (la sauvegarder).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><code class="methodname">deleteAction()</code></em></span> -
+                    Devrait supprimer la ressource identifiée par <acronym class="acronym">URI</acronym>.
+                </p>
+            </li>
+</ul></div>
+    </div>
+</div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.router.add-config"></a>Utiliser Zend_Config avec le RewriteRouter</h3></div></div></div>
+        
+
+        <p>
+            Il arrive qu'il soit plus commode d'éditer un fichier de configuration de routes,
+            plutôt que d'éditer un code source. Ceci est rendu possible par la méthode
+            <code class="methodname">addConfig()</code>. Vous créez un objet compatible Zend_Config et vous le passez
+            à cette méthode.
+        </p>
+
+        <p>Par exemple, voyons un fichier <acronym class="acronym">INI</acronym> :</p>
+
+        <pre class="programlisting">
+[production]
+routes.archive.route = "archive/:year/*"
+routes.archive.defaults.controller = archive
+routes.archive.defaults.action = show
+routes.archive.defaults.year = 2000
+routes.archive.reqs.year = "\d+"
+
+routes.news.type = "Zend_Controller_Router_Route_Static"
+routes.news.route = "news"
+routes.news.defaults.controller = "news"
+routes.news.defaults.action = "list"
+
+routes.archive.type = "Zend_Controller_Router_Route_Regex"
+routes.archive.route = "archive/(\d+)"
+routes.archive.defaults.controller = "archive"
+routes.archive.defaults.action = "show"
+routes.archive.map.1 = "year"
+; OU: routes.archive.map.year = 1
+</pre>
+
+        <p>
+            Ce fichier <acronym class="acronym">INI</acronym> peut être lu dans grâce à un objet <code class="classname">Zend_Config</code>
+            comme suit :
+        </p>
+
+        <pre class="programlisting">
+$config = new Zend_Config_Ini('/path/to/config.ini', 'production');
+$router = new Zend_Controller_Router_Rewrite();
+$router-&gt;addConfig($config, 'routes');
+</pre>
+
+        <p>
+            Nous indiquons au routeur d'utiliser la section "routes" du fichier <acronym class="acronym">INI</acronym>. Chaque
+            clé de premier niveau représente le nom de la route, ainsi nous avons dans l'exemple ci
+            dessus "archive" et "news". Chaque route attend alors au moins une entrée "route" avec
+            une ou plusieurs entrées "defaults" ; optionnellement nous pouvons rajouter des
+            paramètres obligatoires. Tout ceci correspond aux trois arguments fournis par l'objet
+            implémentant <code class="classname">Zend_Controller_Router_Route_Interface</code>. Une entrée
+            optionnelle "type" peut être utilisée pour indiquer le type de classe de routage à
+            utiliser, il s'agit par défaut de <code class="classname">Zend_Controller_Router_Route</code>.
+            Dans l'exemple au dessus, la route "news" va utiliser
+            <code class="classname">Zend_Controller_Router_Route_Static</code>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.router.subclassing"></a>Dérivation de l'objet Router</h3></div></div></div>
+        
+
+        <p>
+            Le routeur par défaut, dit de réécriture, devrait suffire dans la majorité des
+            projets. Tout ce qu'il peut être nécessaire de faire, est d'ajouter des routes
+            particulières selon vos besoins.
+        </p>
+
+        <p>
+            Cependant, si vous voulez utiliser votre propre logique de routage, une interface
+            est disponible. <code class="classname">Zend_Controller_Router_Interface</code> ne définit
+            qu'une seule méthode :
+        </p>
+
+        <pre class="programlisting">
+interface Zend_Controller_Router_Interface
+{
+  /**
+   * @param  Zend_Controller_Request_Abstract $request
+   * @throws Zend_Controller_Router_Exception
+   * @return Zend_Controller_Request_Abstract
+   */
+  public function route(Zend_Controller_Request_Abstract $request);
+}
+</pre>
+
+        <p>
+            Le processus de routage n'intervient qu'une fois : lorsque la requête est reçue
+            par le système. Le routeur doit alors déterminer un contrôleur, une action et de
+            paramètres optionnel et les spécifier dans un objet de requête, qui est ensuite passé
+            au distributeur. Si il n'est pas possible de router une requête, alors l'objet de
+            requête devrait être laissé tel-quel.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.request.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.dispatcher.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">L'objet Requête </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Le distributeur</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

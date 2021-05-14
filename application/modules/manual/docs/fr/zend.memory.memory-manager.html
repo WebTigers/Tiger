@@ -1,0 +1,250 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Manager de mémoire</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.memory.html" title="Zend_Memory">
+<link rel="prev" href="zend.memory.overview.html" title="Présentation">
+<link rel="next" href="zend.memory.memory-objects.html" title="Objet mémoire">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Manager de mémoire</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.memory.overview.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Memory</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.memory.memory-objects.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.memory.memory-manager"></a>Manager de mémoire</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.memory.memory-manager.creation"></a>Créer un manager de mémoire</h3></div></div></div>
+        
+
+        <p>
+            Vous pouvez créer un nouveau manager de mémoire (objet
+            <code class="classname">Zend_Memory_Manager</code>) en utilisant la méthode
+            <code class="methodname">Zend_Memory::factory($backendName [, $backendOprions])</code>.
+        </p>
+
+        <p>
+            Le premier argument <code class="varname">$backendName</code> est le nom d'un type de backend
+            supporté par <code class="classname">Zend_Cache</code>
+        </p>
+
+        <p>
+            Le second argument <code class="varname">$backendOptions</code> est un tableau optionnel indiquant
+            les options du backend.
+        </p>
+
+        <pre class="programlisting">
+$backendOptions = array(
+    'cache_dir' =&gt; './tmp/'
+    // Dossier où les blocks de mémoire peuvent être stockés
+);
+
+$memoryManager = Zend_Memory::factory('File', $backendOptions);
+</pre>
+
+        <p>
+            Zend_Memory utilise les <a class="link" href="zend.cache.backends.html" title="Les backends Zend_Cache">backends
+            Zend_Cache</a> comme fournisseurs de stockage.
+        </p>
+
+        <p>
+            Vous pouvez de plus utiliser le nom spécial "None" en tant que nom de
+            backend supplémentaire de <code class="classname">Zend_Cache</code>. </p>
+<pre class="programlisting">
+$memoryManager = Zend_Memory::factory('None');
+</pre>
+
+        <p>
+            Si vous utilisez "None", alors le manager de mémoire ne mettra pas en
+            cache les blocks de mémoire. Ceci est intéressant si vous savez que la mémoire n'est pas
+            limitée ou la taille complète des objets n'atteint jamais la limite de mémoire.
+        </p>
+
+        <p>Le backend "None" ne nécessite aucune option.</p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.memory.memory-manager.objects-management"></a>Manager les objets mémoire</h3></div></div></div>
+        
+
+        <p>
+            Cette section décrit la création et la destruction d'objet de mémoire, et les
+            réglages du manager de mémoire.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.memory-manager.objects-management.movable"></a>Créer des objets mobiles</h4></div></div></div>
+            
+
+            <p>
+                Créer des objets mobiles (objets qui peuvent être mis en cache) en utilisant
+                la méthode <code class="methodname">Zend_Memory_Manager::create([$data])</code> :
+                </p>
+<pre class="programlisting">
+$memObject = $memoryManager-&gt;create($data);
+</pre>
+
+            <p>
+                L'argument <code class="varname">$data</code> est optionnel et utilisé pour initialiser la
+                valeur de l'objet. Si l'argument <code class="varname">$data</code> est omis, la valeur est une
+                chaîne vide.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.memory-manager.objects-management.locked"></a>Créer des objets verrouillés</h4></div></div></div>
+            
+
+            <p>
+                Créer des objets verrouillés (objets qui ne doivent pas être mis en cache) en
+                utilisant la méthode
+                <code class="methodname">Zend_Memory_Manager::createLocked([$data])</code> : </p>
+<pre class="programlisting">
+$memObject = $memoryManager-&gt;createLocked($data);
+</pre>
+
+            <p>
+                L'argument <code class="varname">$data</code> est optionnel et utilisé pour initialiser la
+                valeur de l'objet. Si l'argument <code class="varname">$data</code> est omis, la valeur est une
+                chaîne vide.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.memory-manager.objects-management.destruction"></a>Détruire des objets</h4></div></div></div>
+            
+
+            <p>
+                Les objets mémoire sont automatiquement détruits et effacés de la mémoire
+                quand ils sont hors de portée : </p>
+<pre class="programlisting">
+function foo()
+{
+    global $memoryManager, $memList;
+
+    ...
+
+    $memObject1 = $memoryManager-&gt;create($data1);
+    $memObject2 = $memoryManager-&gt;create($data2);
+    $memObject3 = $memoryManager-&gt;create($data3);
+
+    ...
+
+    $memList[] = $memObject3;
+
+    ...
+
+    unset($memObject2); // $memObject2 est détruit ici
+
+    ...
+    // $memObject1 est détruit ici
+    // mais $memObject3 est toujours référencé par $memList
+    // et n'est pas détruit
+}
+</pre>
+
+                <p>Ceci s'applique aux objets mobiles et verrouillés.</p>
+            </div>
+        </div>
+
+        <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.memory.memory-manager.settings"></a>Régler le manager de mémoire</h3></div></div></div>
+            
+
+            <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.memory-manager.settings.memory-limit"></a>Mémoire limite</h4></div></div></div>
+                
+
+            <p>
+                La mémoire limite est le nombre d'octets autorisés à être utilisés par des
+                objets mobiles chargés.
+            </p>
+
+            <p>
+                Si le chargement ou la création d'un objet entraîne l'utilisation de mémoire
+                excédant cette limite, alors le manager met en cache un certain nombre
+                d'objet.
+            </p>
+
+            <p>
+                Vous pouvez récupérer et régler la mémoire limite en utilisant les méthodes
+                <code class="methodname">getMemoryLimit()</code> et <code class="methodname">setMemoryLimit($newLimit)</code> :
+                </p>
+<pre class="programlisting">
+$oldLimit = $memoryManager-&gt;getMemoryLimit();
+// Récupére la mémoire limite en octets
+$memoryManager-&gt;setMemoryLimit($newLimit);
+// Règle la mémoire limite en octets
+</pre>
+
+                <p>Une valeur négative pour limite de mémoire équivaut à "pas de limite".</p>
+
+            <p>
+                La valeur par défaut est deux-tiers de la valeur de
+                "memory_limit" dans le php.ini ou "no limit" (-1) si
+                "memory_limit" n'est pas réglé dans le php.ini.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.memory-manager.settings.min-size"></a>MinSize (taille minimum)</h4></div></div></div>
+            
+
+            <p>
+                <code class="code">MinSize</code> est la taille minimale des objets de mémoire, qui peuvent
+                être mis en cache par le manager de mémoire. Le manager ne met pas en cache des
+                objets plus petits que cette valeur. Ceci réduit le nombre d'opérations de mise de
+                cache/chargement
+            </p>
+
+            <p>
+                Vous pouvez récupérer et régler la taille minimale en utilisant les méthodes
+                <code class="methodname">getMinSize()</code> et <code class="methodname">setMinSize($newSize)</code> : </p>
+<pre class="programlisting">
+$oldMinSize = $memoryManager-&gt;getMinSize();
+// Récupère la taille minimale en octets
+$memoryManager-&gt;setMinSize($newSize);
+// Règle la taille minimale en octets
+</pre>
+
+                <p>La taille minimum par défaut est 16KB (16384 octets).</p>
+            </div>
+        </div>
+    </div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.memory.overview.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.memory.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.memory.memory-objects.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Présentation </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Objet mémoire</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

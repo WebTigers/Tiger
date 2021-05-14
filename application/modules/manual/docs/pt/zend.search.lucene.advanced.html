@@ -1,0 +1,237 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Avançado</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.search.lucene.html" title="Zend_Search_Lucene">
+<link rel="prev" href="zend.search.lucene.java-lucene.html" title="Interoperando com Java Lucene">
+<link rel="next" href="zend.search.lucene.best-practice.html" title="Best Practices">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Avançado</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.search.lucene.java-lucene.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.search.lucene.best-practice.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.search.lucene.advanced"></a>Avançado</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.advanced.format_migration"></a>A partir da versão 1.6, manipulando as transformações no formato de índice</h3></div></div></div>
+        
+
+        <p>
+            O componente <code class="classname">Zend_Search_Lucene</code> trabalha com os formatos de
+            índice Java Lucene 1.4-1.9, 2.1 e 2.3.
+        </p>
+
+        <p>
+            O formato de índice corrente pode ser solicitado através da chamada
+            <code class="code">$index-&gt;getFormatVersion()</code>. Ela retorna um dos seguintes valores:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Search_Lucene::FORMAT_PRE_2_1</code> para o formato de
+                        índice Java Lucene 1.4-1.9.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Search_Lucene::FORMAT_2_1</code> para o formato de índice
+                        Java Lucene 2.1 (também usado para Lucene 2.2).
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Search_Lucene::FORMAT_2_3</code> para o formato de índice
+                        Java Lucene 2.3.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+
+        <p>
+            As modificações no índice são realizadas <span class="emphasis"><em>apenas</em></span> se qualquer
+            atualização do índice for feita. Isso acontece se um novo documento for adicionado a um
+            índice ou uma otimização de índice for iniciada manualmente através da chamada
+            <code class="code">$index-&gt;optimize()</code>.
+        </p>
+
+        <p>
+            Nesse caso, <code class="classname">Zend_Search_Lucene</code> pode converter o índice para a
+            versão superior. Isso <span class="emphasis"><em>sempre</em></span> acontece para os índices no formato
+            <code class="constant">Zend_Search_Lucene::FORMAT_PRE_2_1</code>, que são automaticamente
+            convertidos para o formato 2.1.
+        </p>
+
+        <p>
+            Você pode gerenciar o processo de conversão e atribuir o formato de índice de destino
+            com <code class="code">$index-&gt;setFormatVersion()</code> que toma como parâmetro a constante
+            <code class="constant">Zend_Search_Lucene::FORMAT_2_1</code> ou
+            <code class="constant">Zend_Search_Lucene::FORMAT_2_3</code>:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Search_Lucene::FORMAT_2_1</code> na verdade não faz nada
+                        desde que os índices pré-2.1 são automaticamente convertidos para
+                        formato 2.1.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Search_Lucene::FORMAT_2_3</code> força a conversão para o
+                        formato 2.3.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+
+        <p>
+            Conversões para versões anteriores de formatos não são suportadas.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Importante!">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Importante!</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Uma vez que o índice é convertido para a versão superior não pode ser convertido de
+                volta. Por isso, faça um backup do seu índice quando você planejar a migração para a
+                versão superior, mas querendo ter a possibilidade de converter para uma versão
+                anterior.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.advanced.static"></a>Usando o índice como propriedade estática</h3></div></div></div>
+        
+
+        <p>
+            The <code class="classname">Zend_Search_Lucene</code> object uses the destructor method to
+            commit changes and clean up resources.
+        </p>
+
+        <p>
+            It stores added documents in memory and dumps new index segment to disk depending on
+            <code class="code">MaxBufferedDocs</code> parameter.
+        </p>
+
+        <p>
+            If <code class="code">MaxBufferedDocs</code> limit is not reached then there are some "unsaved"
+            documents which are saved as a new segment in the object's destructor method. The index
+            auto-optimization procedure is invoked if necessary depending on the values of the
+            <code class="code">MaxBufferedDocs</code>, <code class="code">MaxMergeDocs</code> and <code class="code">MergeFactor</code>
+            parameters.
+        </p>
+
+        <p>
+            Static object properties (see below) are destroyed <span class="emphasis"><em>after</em></span> the last
+            line of the executed script.
+        </p>
+
+        <pre class="programlisting">
+class Searcher {
+    private static $_index;
+
+    public static function initIndex() {
+        self::$_index = Zend_Search_Lucene::open('path/to/index');
+    }
+}
+
+Searcher::initIndex();
+</pre>
+
+        <p>
+            All the same, the destructor for static properties is correctly invoked at this point in
+            the program's execution.
+        </p>
+
+        <p>
+            One potential problem is exception handling. Exceptions thrown by destructors of static
+            objects don't have context, because the destructor is executed after the script has
+            already completed.
+        </p>
+
+        <p>
+            You might see a "Fatal error: Exception thrown without a stack frame in Unknown on line
+            0" error message instead of exception description in such cases.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Search_Lucene</code> provides a workaround to this problem with the
+            <code class="methodname">commit()</code> method. It saves all unsaved changes and frees memory
+            used for storing new segments. You are free to use the commit operation any time- or
+            even several times- during script execution. You can still use the
+            <code class="classname">Zend_Search_Lucene</code> object for searching, adding or deleting
+            document after the commit operation. But the <code class="methodname">commit()</code> call
+            guarantees that if there are no document added or deleted after the call to
+            <code class="methodname">commit()</code>, then the <code class="classname">Zend_Search_Lucene</code>
+            destructor has nothing to do and will not throw exception:
+        </p>
+
+        <pre class="programlisting">
+class Searcher {
+    private static $_index;
+
+    public static function initIndex() {
+        self::$_index = Zend_Search_Lucene::open('path/to/index');
+    }
+
+    ...
+
+    public static function commit() {
+        self::$_index-&gt;commit();
+    }
+}
+
+Searcher::initIndex();
+
+...
+
+// Rotina de desligamento do script
+...
+Searcher::commit();
+...
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.search.lucene.java-lucene.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.search.lucene.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.search.lucene.best-practice.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Interoperando com Java Lucene </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Best Practices</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Ejemplo de Uso del módulo Zend_Pdf</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.pdf.html" title="Zend_Pdf">
+<link rel="prev" href="zend.pdf.info.html" title="Información del Documento y Metadatos">
+<link rel="next" href="zend.progressbar.html" title="Zend_ProgressBar">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Ejemplo de Uso del módulo Zend_Pdf</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.pdf.info.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Pdf</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.progressbar.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.pdf.usage"></a>Ejemplo de Uso del módulo Zend_Pdf</h2></div></div></div>
+    
+    <p>Esta sección proporciona un ejemplo de uso del módulo.</p>
+
+    <p>
+        Este ejemplo se puede encontrar en el archivo
+        <code class="filename">demos/Zend/Pdf/demo.php</code>
+        .
+    </p>
+    <p>
+        También está el archivo
+        <code class="filename">test.pdf</code>
+        , que puede ser
+        usado con esta demo con fines de prueba.
+    </p>
+
+    <div class="example">
+<a name="zend.pdf.usage.example-1"></a><p class="title"><b>Ejemplo 651. Demo de uso del módulo Zend_Pdf</b></p>
+<div class="example-contents">
+        
+        <pre class="programlisting">
+/**
+ * @package Zend_Pdf
+ * @subpackage demo
+ */
+
+if (!isset($argv[1])) {
+    echo "USAGE: php demo.php &lt;pdf_file&gt; [&lt;output_pdf_file&gt;]\n";
+    exit;
+}
+
+try {
+    $pdf = Zend_Pdf::load($argv[1]);
+} catch (Zend_Pdf_Exception $e) {
+    if ($e-&gt;getMessage() == 'Can not open \'' . $argv[1] .
+                            '\' file for reading.') {
+        // Crear un nuevo archivo PDF si no existe
+        $pdf = new Zend_Pdf();
+
+        if (!isset($argv[2])) {
+            // forzar una reescritura completa del archivo (en vez de actualizar)
+            $argv[2] = $argv[1];
+        }
+    } else {
+        // Arrojar una excepción si no es la excepción "Can't open file"
+        throw $e;
+    }
+}
+
+//------------------------------------------------------------------------
+// Invertir el orden de las páginas
+$pdf-&gt;pages = array_reverse($pdf-&gt;pages);
+
+// Crear un estilo(Style) nuevo
+$style = new Zend_Pdf_Style();
+$style-&gt;setFillColor(new Zend_Pdf_Color_Rgb(0, 0, 0.9));
+$style-&gt;setLineColor(new Zend_Pdf_Color_GrayScale(0.2));
+$style-&gt;setLineWidth(3);
+$style-&gt;setLineDashingPattern(array(3, 2, 3, 4), 1.6);
+$fontH = Zend_Pdf_Font::fontWithName(Zend_Pdf_Font::FONT_HELVETICA_BOLD);
+$style-&gt;setFont($fontH, 32);
+
+try {
+    // Crear un nuevo objeto imagen
+    $imageFile = dirname(__FILE__) . '/stamp.jpg';
+    $stampImage = Zend_Pdf_Image::imageWithPath($imageFile);
+} catch (Zend_Pdf_Exception $e) {
+    // Ejemplo de operación con excepciones de carga de imágenes.
+    if ($e-&gt;getMessage() != 'Extensión de imagen no está instalada.' &amp;&amp;
+        $e-&gt;getMessage() != 'El soporte a JPG no está configurado correctamente.') {
+        throw $e;
+    }
+    $stampImage = null;
+}
+
+// Marcar la página como modificada
+foreach ($pdf-&gt;pages as $page){
+    $page-&gt;saveGS()
+         -&gt;setAlpha(0.25)
+         -&gt;setStyle($style)
+         -&gt;rotate(0, 0, M_PI_2/3);
+
+    $page-&gt;saveGS();
+    $page-&gt;clipCircle(550, -10, 50);
+    if ($stampImage != null) {
+        $page-&gt;drawImage($stampImage, 500, -60, 600, 40);
+    }
+    $page-&gt;restoreGS();
+
+    $page-&gt;drawText('Modificado por Zend Framework!', 150, 0)
+         -&gt;restoreGS();
+}
+
+// Agregar una nueva página generada por el objeto Zend_Pdf
+// (la página es agregada al documento especificado)
+$pdf-&gt;pages[] = ($page1 = $pdf-&gt;newPage('A4'));
+
+// Agregar una nueva página generada por el objeto Zend_Pdf_Page
+// (la página no es agregada al documento)
+$page2 = new Zend_Pdf_Page(Zend_Pdf_Page::SIZE_LETTER_LANDSCAPE);
+$pdf-&gt;pages[] = $page2;
+
+// Crear una fuente nueva
+$font = Zend_Pdf_Font::fontWithName(Zend_Pdf_Font::FONT_HELVETICA);
+
+// Aplicar la fuente y dibujar el texto
+$page1-&gt;setFont($font, 36)
+      -&gt;setFillColor(Zend_Pdf_Color_Html::color('#9999cc'))
+      -&gt;drawText('Helvetica 36 text string', 60, 500);
+
+// Usar el objeto fuente para otra página
+$page2-&gt;setFont($font, 24)
+      -&gt;drawText('Helvetica 24 text string', 60, 500);
+
+// Usar otra fuente
+$fontT = Zend_Pdf_Font::fontWithName(Zend_Pdf_Font::FONT_TIMES);
+$page2-&gt;setFont($fontT, 32)
+      -&gt;drawText('Times-Roman 32 text string', 60, 450);
+
+// Dibujar un rectángulo
+$page2-&gt;setFillColor(new Zend_Pdf_Color_GrayScale(0.8))
+      -&gt;setLineColor(new Zend_Pdf_Color_GrayScale(0.2))
+      -&gt;setLineDashingPattern(array(3, 2, 3, 4), 1.6)
+      -&gt;drawRectangle(60, 400, 400, 350);
+
+// Dibujar un círculo
+$page2-&gt;setLineDashingPattern(Zend_Pdf_Page::LINE_DASHING_SOLID)
+      -&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 0, 0))
+      -&gt;drawCircle(85, 375, 25);
+
+// Dibujar sectores
+$page2-&gt;drawCircle(200, 375, 25, 2*M_PI/3, -M_PI/6)
+      -&gt;setFillColor(new Zend_Pdf_Color_Cmyk(1, 0, 0, 0))
+      -&gt;drawCircle(200, 375, 25, M_PI/6, 2*M_PI/3)
+      -&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 1, 0))
+      -&gt;drawCircle(200, 375, 25, -M_PI/6, M_PI/6);
+
+// Dibujar una elipse
+$page2-&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 0, 0))
+      -&gt;drawEllipse(250, 400, 400, 350)
+      -&gt;setFillColor(new Zend_Pdf_Color_Cmyk(1, 0, 0, 0))
+      -&gt;drawEllipse(250, 400, 400, 350, M_PI/6, 2*M_PI/3)
+      -&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 1, 0))
+      -&gt;drawEllipse(250, 400, 400, 350, -M_PI/6, M_PI/6);
+
+// Dibujar y rellenar un polígono
+$page2-&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 0, 1));
+$x = array();
+$y = array();
+for ($count = 0; $count &lt; 8; $count++) {
+    $x[] = 140 + 25*cos(3*M_PI_4*$count);
+    $y[] = 375 + 25*sin(3*M_PI_4*$count);
+}
+$page2-&gt;drawPolygon($x, $y,
+                    Zend_Pdf_Page::SHAPE_DRAW_FILL_AND_STROKE,
+                    Zend_Pdf_Page::FILL_METHOD_EVEN_ODD);
+
+// ----------- Draw figures in modified coordination system --------------
+
+// Movimineto del sistema de coordenadas
+$page2-&gt;saveGS();
+$page2-&gt;translate(60, 250); // Despalazamiento del sistema de coordenadas
+
+// Dibujar un rectángulo
+$page2-&gt;setFillColor(new Zend_Pdf_Color_GrayScale(0.8))
+      -&gt;setLineColor(new Zend_Pdf_Color_GrayScale(0.2))
+      -&gt;setLineDashingPattern(array(3, 2, 3, 4), 1.6)
+      -&gt;drawRectangle(0, 50, 340, 0);
+
+// Dibujar un círculo
+$page2-&gt;setLineDashingPattern(Zend_Pdf_Page::LINE_DASHING_SOLID)
+      -&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 0, 0))
+      -&gt;drawCircle(25, 25, 25);
+
+// Dibujar sectores
+$page2-&gt;drawCircle(140, 25, 25, 2*M_PI/3, -M_PI/6)
+      -&gt;setFillColor(new Zend_Pdf_Color_Cmyk(1, 0, 0, 0))
+      -&gt;drawCircle(140, 25, 25, M_PI/6, 2*M_PI/3)
+      -&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 1, 0))
+      -&gt;drawCircle(140, 25, 25, -M_PI/6, M_PI/6);
+
+// Dibujar una elipse
+$page2-&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 0, 0))
+      -&gt;drawEllipse(190, 50, 340, 0)
+      -&gt;setFillColor(new Zend_Pdf_Color_Cmyk(1, 0, 0, 0))
+      -&gt;drawEllipse(190, 50, 340, 0, M_PI/6, 2*M_PI/3)
+      -&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 1, 0))
+      -&gt;drawEllipse(190, 50, 340, 0, -M_PI/6, M_PI/6);
+
+// Dibujar y rellenar un polígono
+$page2-&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 0, 1));
+$x = array();
+$y = array();
+for ($count = 0; $count &lt; 8; $count++) {
+    $x[] = 80 + 25*cos(3*M_PI_4*$count);
+    $y[] = 25 + 25*sin(3*M_PI_4*$count);
+}
+$page2-&gt;drawPolygon($x, $y,
+                    Zend_Pdf_Page::SHAPE_DRAW_FILL_AND_STROKE,
+                    Zend_Pdf_Page::FILL_METHOD_EVEN_ODD);
+
+// Dibujar una línea
+$page2-&gt;setLineWidth(0.5)
+      -&gt;drawLine(0, 25, 340, 25);
+
+$page2-&gt;restoreGS();
+
+// Movimineto del sistema de coordenadas, sesgado y escalado
+$page2-&gt;saveGS();
+$page2-&gt;translate(60, 150)     // Despalazamiento del sistema de coordenadas
+      -&gt;skew(0, 0, 0, -M_PI/9) // Sesgar el sistema de coordenadas
+      -&gt;scale(0.9, 0.9);       // Escalar el sistema de coordenadas
+
+// Dibujar un rectángulo
+$page2-&gt;setFillColor(new Zend_Pdf_Color_GrayScale(0.8))
+      -&gt;setLineColor(new Zend_Pdf_Color_GrayScale(0.2))
+      -&gt;setLineDashingPattern(array(3, 2, 3, 4), 1.6)
+      -&gt;drawRectangle(0, 50, 340, 0);
+
+// Dibujar un círculo
+$page2-&gt;setLineDashingPattern(Zend_Pdf_Page::LINE_DASHING_SOLID)
+      -&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 0, 0))
+      -&gt;drawCircle(25, 25, 25);
+
+// Dibujar sectores
+$page2-&gt;drawCircle(140, 25, 25, 2*M_PI/3, -M_PI/6)
+      -&gt;setFillColor(new Zend_Pdf_Color_Cmyk(1, 0, 0, 0))
+      -&gt;drawCircle(140, 25, 25, M_PI/6, 2*M_PI/3)
+      -&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 1, 0))
+      -&gt;drawCircle(140, 25, 25, -M_PI/6, M_PI/6);
+
+// Dibujar una elipse
+$page2-&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 0, 0))
+      -&gt;drawEllipse(190, 50, 340, 0)
+      -&gt;setFillColor(new Zend_Pdf_Color_Cmyk(1, 0, 0, 0))
+      -&gt;drawEllipse(190, 50, 340, 0, M_PI/6, 2*M_PI/3)
+      -&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 1, 0))
+      -&gt;drawEllipse(190, 50, 340, 0, -M_PI/6, M_PI/6);
+
+// Dibujar y rellenar un polígono
+$page2-&gt;setFillColor(new Zend_Pdf_Color_Rgb(1, 0, 1));
+$x = array();
+$y = array();
+for ($count = 0; $count &lt; 8; $count++) {
+    $x[] = 80 + 25*cos(3*M_PI_4*$count);
+    $y[] = 25 + 25*sin(3*M_PI_4*$count);
+}
+$page2-&gt;drawPolygon($x, $y,
+                    Zend_Pdf_Page::SHAPE_DRAW_FILL_AND_STROKE,
+                    Zend_Pdf_Page::FILL_METHOD_EVEN_ODD);
+
+// Dibujar una línea
+$page2-&gt;setLineWidth(0.5)
+      -&gt;drawLine(0, 25, 340, 25);
+
+$page2-&gt;restoreGS();
+
+//------------------------------------------------------------------------
+
+if (isset($argv[2])) {
+    $pdf-&gt;save($argv[2]);
+} else {
+    $pdf-&gt;save($argv[1], true /* update */);
+}
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.pdf.info.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.pdf.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.progressbar.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Información del Documento y Metadatos </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Zend_ProgressBar</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

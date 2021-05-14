@@ -1,0 +1,1811 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Ayudantes de Dojo View</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.dojo.html" title="Zend_Dojo">
+<link rel="prev" href="zend.dojo.data.html" title="Zend_Dojo_Data: Envolturas de dojo.data">
+<link rel="next" href="zend.dojo.form.html" title="Elementos y Decoradores de Dojo Form">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Ayudantes de Dojo View</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.dojo.data.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Dojo</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.dojo.form.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.dojo.view"></a>Ayudantes de Dojo View</h2></div></div></div>
+    
+
+    <p>Zend Framework provee los siguientes ayudantes específicos de Dojo:</p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+            <p>
+                <span class="emphasis"><em>dojo():</em></span>
+                configura el medio ambiente de Dojo para su página,
+                incluyendo valores de
+                configuración de Dojo, paths de módulos personalizados,
+                sentencias de requerimientos
+                de módulos, temas de hojas de estilo, uso de CDN, y
+                más.
+            </p>
+        </li></ul></div>
+
+    <div class="example">
+<a name="zend.dojo.view.setup"></a><p class="title"><b>Ejemplo 347. Usando los Ayudantes de Dojo View</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Para utilizar los ayudantes de vista de Dojo, necesitará decirle a un objeto vista
+            dónde
+            encontrarlos. Puede hacerlo llamando a
+            <code class="methodname">addHelperPath()</code>
+            :
+        </p>
+
+        <pre class="programlisting">
+$view-&gt;addHelperPath('Zend/Dojo/View/Helper/', 'Zend_Dojo_View_Helper');
+</pre>
+
+        <p>
+            Alternativamente, puede usar el método de
+            <code class="classname">Zend_Dojo</code>
+            <code class="methodname">enableView()</code>
+            para que haga el trabajo por usted:
+        </p>
+
+        <pre class="programlisting">
+Zend_Dojo::enableView($view);
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.dojo.view.dojo"></a>dojo() Ayudante de Vista</h3></div></div></div>
+    
+
+    <p> El ayudante de vista <code class="methodname">dojo()</code> está destinado a
+        simplificar el establecimiento del medio ambiente de Dojo, incluyendo
+        las siguientes responsabilidades: </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>Especificar bien un CDN o un path local para instalar
+                Dojo.</p>
+        </li>
+<li class="listitem">
+            <p>Especificando paths a módulos Dojo personalizados.</p>
+        </li>
+<li class="listitem">
+            <p>Especificando sentencias dojo.require.</p>
+        </li>
+<li class="listitem">
+            <p>Especificando hojas de estilo dijit a usar.</p>
+        </li>
+<li class="listitem">
+            <p>Especificando eventos dojo.addOnLoad().</p>
+        </li>
+</ul></div>
+
+    <p> La implementación del ayudante de vista
+            <code class="methodname">dojo()</code> es un ejemplo de implementación de
+        un marcador de posición. El conjunto de datos en él, persiste entre los
+        objetos vista y puede ser directamente activado con en "echo" de
+            <acronym class="acronym">PHP</acronym> desde su script. </p>
+
+    <div class="example">
+<a name="zend.dojo.view.dojo.usage"></a><p class="title"><b>Ejemplo 348. dojo() Ejemplo de Uso del Ayudante de Vista</b></p>
+<div class="example-contents">
+        
+
+        <p>En este ejemplo, asumamos que el desarrollador estará usando Dojo
+            desde un path local, se necesitarán varios dijits, y se utilizará el
+            tema de dijit Tundra.</p>
+
+        <p>En muchas páginas, el desarrollador no podrá utilizar Dojo para
+            nada. Así, vamos a centrarnos primero en un view script donde Dojo
+            es necesario y luego en el layout script, en donde vamos a
+            configurar algo del medio ambiente de Dojo y luego lo
+            mostraremos.</p>
+
+        <p>En primer lugar, tenemos que decir nuestro objeto vista que
+            utilice el path del ayudante de vista de Dojo. Esto puede hacerse en
+            el arranque o en un plugin de ejecución temprana; simplemente
+            apoderarse de su objeto vista y ejecutar lo siguiente:</p>
+
+        <pre class="programlisting">
+$view-&gt;addHelperPath('Zend/Dojo/View/Helper/', 'Zend_Dojo_View_Helper');
+</pre>
+
+        <p>El paso siguiente, el view script. En este caso, vamos a
+            especificar que vamos a estar utilizando un FilteringSelect -- que
+            consumirá un almacén personalizado basado en QueryReadStore, al que
+            llamamos 'PairedStore' y almacenado en nuestro módulo
+            'custom'.</p>
+
+        <pre class="programlisting">
+&lt;?php // establecer el data store para FilteringSelect ?&gt;
+&lt;div dojoType="custom.PairedStore" jsId="stateStore"
+    url="/data/autocomplete/type/state/format/ajax"
+    requestMethod="get"&gt;&lt;/div&gt;
+
+&lt;?php // Elemento de entrada: ?&gt;
+State: &lt;input id="state" dojoType="dijit.form.FilteringSelect"
+    store="stateStore" pageSize="5" /&gt;
+
+&lt;?php // establecer elementos requeridos por dojo:
+$this-&gt;dojo()-&gt;enable()
+             -&gt;setDjConfigOption('parseOnLoad', true)
+             -&gt;registerModulePath('custom', '../custom/')
+             -&gt;requireModule('dijit.form.FilteringSelect')
+             -&gt;requireModule('custom.PairedStore'); ?&gt;
+</pre>
+
+        <p>En nuestro script de esquema, vamos entonces a comprobar si Dojo
+            está habilitado, y si es así, haremos algunas configuraciones más
+            generales y lo ensamblaremos:</p>
+
+        <pre class="programlisting">
+&lt;?php echo $this-&gt;doctype() ?&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;?php echo $this-&gt;headTitle() ?&gt;
+    &lt;?php echo $this-&gt;headMeta() ?&gt;
+    &lt;?php echo $this-&gt;headLink() ?&gt;
+    &lt;?php echo $this-&gt;headStyle() ?&gt;
+&lt;?php if ($this-&gt;dojo()-&gt;isEnabled()){
+    $this-&gt;dojo()-&gt;setLocalPath('/js/dojo/dojo.js')
+                 -&gt;addStyleSheetModule('dijit.themes.tundra');
+    echo $this-&gt;dojo();
+   }
+?&gt;
+    &lt;?php echo $this-&gt;headScript() ?&gt;
+&lt;/head&gt;
+&lt;body class="tundra"&gt;
+    &lt;?php echo $this-&gt;layout()-&gt;content ?&gt;
+    &lt;?php echo $this-&gt;inlineScript() ?&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+        <p>En este punto, sólo necesita asegurarse de que sus archivos están
+            en el lugar correcto y que ha creado el punto final de acción para
+            su FilteringSelect!</p>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="note"><table border="0" summary="Note: UTF-8 encoding used by default">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">UTF-8 encoding used by default</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            By default, Zend Framework uses <acronym class="acronym">UTF-8</acronym> as its default encoding, and,
+            specific to this case, <code class="classname">Zend_View</code> does as well. Character encoding
+            can be set differently on the view object itself using the
+            <code class="methodname">setEncoding()</code> method (or the the <code class="varname">encoding</code>
+            instantiation parameter). However, since <code class="classname">Zend_View_Interface</code> does
+            not define accessors for encoding, it's possible that if you are using a custom view
+            implementation with the Dojo view helper, you will not have a
+            <code class="methodname">getEncoding()</code> method, which is what the view helper uses
+            internally for determining the character set in which to encode.
+        </p>
+
+        <p>
+            If you do not want to utilize <acronym class="acronym">UTF-8</acronym> in such a situation, you will
+            need to implement a <code class="methodname">getEncoding()</code> method in your custom view
+            implementation.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dojo.declarative"></a>Uso Programático y Declarativo de Dojo</h4></div></div></div>
+        
+
+        <p> Dojo permite usar a ambos <span class="emphasis"><em>declarative</em></span> y
+                <span class="emphasis"><em>programmatic</em></span> en muchas de sus
+            características. El uso de <span class="emphasis"><em>Declarative</em></span> utiliza
+            elementos <acronym class="acronym">HTML</acronym> con atributos no estándar que se
+            parsean cuando la página se está cargado. Mientras que ésta es una
+            sintaxis poderosa y simple de utilizar, para muchos desarrolladores
+            esto puede causar problemas con la validación de páginas. </p>
+
+        <p> El uso de <span class="emphasis"><em>Programmatic</em></span> permite al
+            desarrollador decorar los elementos existentes tirando de ellos por
+            ID o selectores <acronym class="acronym">CSS</acronym> y pasarlos a los
+            constructores apropiados de objetos en Dojo. Debido a que no se usan
+            atributos <acronym class="acronym">HTML</acronym> no standard, las páginas continúan
+            con la validación. </p>
+
+        <p> En la práctica, ambos casos de uso permiten una degradación
+            elegante cuando javascript está desactivado o los diversos recursos
+            de Dojo script están fuera de alcance. Para promover las normas y
+            validación de documentos, Zend Framework hace uso de los usos
+            programáticos por defecto; los diversos ayudantes de vista generarán
+            javascript y lo empujan al ayudante de vista
+                <code class="methodname">dojo()</code> para su inclusión cuando sean
+            presentados. </p>
+
+        <p>Utilizando esta técnica los desarrolladores pueden también desear
+            explorar la posibilidad de escribir sus propia decoración
+            programática de la página. Uno de los beneficios sería la
+            posibilidad de especificar handlers para eventos dijit.</p>
+
+        <p>Para permitir esto, así como la posibilidad de usar sintaxis
+            declarativa, hay disponibles una serie de métodos estáticos para
+            establecer globamente este comportamiento.</p>
+
+        <div class="example">
+<a name="zend.dojo.view.dojo.declarative.usage"></a><p class="title"><b>Ejemplo 349. Especificando el Uso Declarativo y Programático de
+                Dojo</b></p>
+<div class="example-contents">
+            
+
+            <p> Para especificar el uso declarativo, simplemente llame al
+                método estático <code class="methodname">setUseDeclarative()</code> : </p>
+
+            <pre class="programlisting">
+Zend_Dojo_View_Helper_Dojo::setUseDeclarative();
+</pre>
+
+            <p> Si decide más bien utilizar el uso programático, llame al
+                método estático <code class="methodname">setUseProgrammatic()</code> : </p>
+
+            <pre class="programlisting">
+Zend_Dojo_View_Helper_Dojo::setUseProgrammatic();
+</pre>
+
+            <p>Por último, si quiere crear sus propias normas programáticas,
+                debe especificar el uso programático, pero al pasarle el valor
+                '-1'; en esta situación, no se creará ningún javascript para
+                decorar cualquier dijit usado.</p>
+
+            <pre class="programlisting">
+Zend_Dojo_View_Helper_Dojo::setUseProgrammatic(-1);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dojo.themes"></a>Temas</h4></div></div></div>
+        
+
+        <p>Dojo permite la creación de los temas de su dijits (widgets).
+            Puede seleccionar uno pasándolo en un path de módulo:</p>
+
+        <pre class="programlisting">
+$view-&gt;dojo()-&gt;addStylesheetModule('dijit.themes.tundra');
+</pre>
+
+        <p> La ruta del módulo es descubierta por utilizar el carácter '.'
+            como separador de directorio y utilizando el último valor en la
+            lista como el nombre del archivo <acronym class="acronym">CSS</acronym> en ese
+            directorio del tema a usar; en el ejemplo de arriba, Dojo buscará el
+            tema en 'dijit/themes/tundra/tundra.css'. </p>
+
+        <p>Cuando se utiliza un tema, es importante recordar pasar la calse
+            del tema a, por lo menos un contenedor rodeando cualquier dijits que
+            se utilice; el caso de uso más común es pasárselo en el body:</p>
+
+        <pre class="programlisting">
+&lt;body class="tundra"&gt;
+</pre>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dojo.layers"></a>Usando Layers (Construcciones Personalizadas)</h4></div></div></div>
+        
+
+        <p>Por defecto, cuando utilice uns sentencia dojo.require, dojo hará
+            una solicitud de retorno al servidor para agarrar al archivo
+            javascript apropiado. Si hay muchos dijits en el lugar, esto se
+            traduce en muchas peticiones al servidor -- lo que no es
+            óptimo.</p>
+
+        <p> La respuesta de Dojo a esto es proporcionar la capacidad de crear
+                <span class="emphasis"><em>custom builds (construcciones
+                personalizadas</em></span> . Las contrucciones hacen varias
+            cosas: </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p> Grupos de archivos necesarios en
+                        <span class="emphasis"><em>layers</em></span> ; una capa (layer) agrupa a
+                    todos archivos necesarios en un único archivo JS. (De ahí el
+                    nombre de esta sección.) </p>
+            </li>
+<li class="listitem">
+                <p>"Interns" no son archivos javascript usados por dijits
+                    (típicamente, archivos de plantilla). También están
+                    agrupados en el mismo archivo JS como la capa. </p>
+            </li>
+<li class="listitem">
+                <p>Pasa el archivo a través de ShrinkSafe, que elimina
+                    espacios en blanco y comentarios, así como acorta nombres de
+                    variables.</p>
+            </li>
+</ul></div>
+
+        <p>Algunos archivos pueden no ser superpuestos, pero el proceso
+            creará una versión especial del directorio con la archivo capa y
+            todos los otros archivos. Esto le permite tener una distribución
+            reducida adaptada a su sitio o necesidades de aplicación.</p>
+
+        <p> Para usar una capa, el ayudante de vista
+                <code class="methodname">dojo()</code> tiene el método
+                <code class="methodname">addLayer()</code> para añadir paths de capas
+            requeridas: </p>
+
+        <pre class="programlisting">
+$view-&gt;dojo()-&gt;addLayer('/js/foo/foo.js');
+</pre>
+
+        <p> Para más información sobre la creación de construcciones
+            personalizadas, por favor <a class="ulink" href="http://dojotoolkit.org/book/dojo-book-0-9/part-4-meta-dojo/package-system-and-custom-builds" target="_top"> consulte la docuemntación de Build de Dojo</a> . </p>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dojo.methods"></a>Métodos Disponibles</h4></div></div></div>
+        
+
+        <p> El ayudante de vista <code class="methodname">dojo()</code> siempre
+            devuelve una instancia del contenedor del marcador de posición dojo.
+            Ese objeto contenedor dispone de los siguientes métodos: </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setView(Zend_View_Interface $view)</code>
+                    : establecer una instancia de vista en el contenedor.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">enable()</code> : habilitar explícitamente
+                    la integración de Dojo. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">disable()</code> : deshabilitar la
+                    integración de Dojo. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">isEnabled()</code> : determinar cuándo la
+                    integración de Dojo está habilitada o no. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">requireModule($module)</code> : establecer
+                    una sentencia <code class="methodname">dojo.require</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getModules()</code> : determinar qué
+                    módulos han sido requeridos. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">registerModulePath($module, $path)</code>
+                    : registrar un path de un módulo personalizado de Dojo.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getModulePaths()</code> : obtener la lista
+                    de los paths de módulos registrados. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addLayer($path)</code> : añadir una capa
+                    (construcción personalizada) del path a utilizar. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getLayers()</code> : conseguir una lista
+                    de todos los paths de capas registrados (construcción
+                    personalizada). </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removeLayer($path)</code> : eliminar la
+                    capa que concuerde con <code class="varname">$path</code> de la lista
+                    de capas registradas (construcción personalizada). </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setCdnBase($url)</code> : establecer la
+                    URL base para un CDN; típicamente, una de las
+                        <code class="constant">Zend_Dojo::CDN_BASE_AOL</code> o
+                        <code class="constant">Zend_Dojo::CDN_BASE_GOOGLE</code> , pero
+                    sólo necesita ser el string del URL antes del número de
+                    versión. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getCdnBase()</code> : recuperar el CDN de
+                    la url base a utilizar. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setCdnVersion($version = null)</code> :
+                    establecer cuál es la versión de Dojo a utilizar desde el
+                    CDN. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getCdnVersion()</code> : recuperar que
+                    versión de Dojo será utilizada desde el CDN. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setCdnDojoPath($path)</code> : establecer
+                    el path relativo a un archivo dojo.js o dojo.xd.js sobre un
+                    CDN; típicamente, uno de los
+                        <code class="constant">Zend_Dojo::CDN_DOJO_PATH_AOL</code> o
+                        <code class="constant">Zend_Dojo::CDN_DOJO_PATH_GOOGLE</code> ,
+                    pero sólo debe ser el string del path detrás del número de
+                    versión. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getCdnDojoPath()</code> : recuperar el
+                    último segmento del path del CDN de la url apuntando al
+                    archivo dojo.js. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">useCdn()</code> : decirle al contenedor
+                    que utilice el CDN; implícitamente permite integración.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setLocalPath($path)</code> : decirle al
+                    contenedor el path a una instalación local de Dojo (deberá
+                    ser una ruta relativa al servidor, y contener el propio
+                    archivo dojo.js); implícitamente permite integración.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getLocalPath()</code> : determinar qué
+                    ruta local a Dojo está siendo utilizada. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">useLocalPath()</code> : ¿la integración
+                    está utilizando un path local de Dojo? </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setDjConfig(array $config)</code> :
+                    conjunto de valores de configuración dojo/dijit (espera un
+                    array asociativo). </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setDjConfigOption($option, $value)</code>
+                    : establecer un único valor de configuración para
+                    dojo/dijit. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getDjConfig()</code> : obtener todos los
+                    valores de configuración de dojo/dijit. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getDjConfigOption($option, $default =
+                        null)</code> : conseguir un único valor de
+                    configuración de dojo/dijit. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addStylesheetModule($module)</code> :
+                    agregar una hoja de estilo sobre la base del tema de un
+                    módulo. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getStylesheetModules()</code> : obtener
+                    hojas de estilo registradas como temas de módulos. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addStylesheet($path)</code> : agregar una
+                    hoja de estilo local para su uso con Dojo. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getStylesheets()</code> : obtener hojas de
+                    estilo locales Dojo. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addOnLoad($spec, $function = null)</code>
+                    : agregar un lambda para dojo.onLoad para llamadas. Si se
+                    pasa un argumento, se supone que que puede ser tanto el
+                    nombre de una función o dar por terminado javascript. Si se
+                    pasan dos argumentos, el primero se supone que es el nombre
+                    de la variable de la instancia de un objeto y el segundo ya
+                    sea un nombre de método en ese objeto o un cierre a utilizar
+                    con ese objeto. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">prependOnLoad($spec, $function =
+                        null)</code> : exactamente como
+                        <code class="methodname">addOnLoad()</code> , excluyendo
+                    agregar al principio el comienzo de onLoad stack. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getOnLoadActions()</code> : recuperar
+                    todas las acciones dojo.onLoad registradas con el
+                    contenedor. Esto será un array de arrays. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">onLoadCaptureStart($obj = null)</code> :
+                    capturar los datos que se utilizarán como lambda para
+                    dojo.onLoad(). Si se provee $obj, los códigos JS capturados
+                    serán considerados un cierre a utilizar con ese objeto
+                    Javascript. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">onLoadCaptureEnd($obj = null)</code> :
+                    finalizar la captura de datos para su uso con dojo.onLoad().
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">javascriptCaptureStart()</code> : captura
+                    javascript arbitrario para ser incluido en Dojo JS (onLoad,
+                    require, etc. statements). </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">javascriptCaptureEnd()</code> : finalizar
+                    la captura de javascript. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">__toString()</code> : emitir el contenedor
+                    a un string; muestra todo el estilo <acronym class="acronym">HTML</acronym>
+                    y elementos del script. </p>
+            </li>
+</ul></div>
+    </div>
+</div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.dojo.view.dijit"></a>Ayudantes de Vistas Específicos de Dijit</h3></div></div></div>
+    
+
+    <p>Del manual de Dojo: "Dijit es un sistema de widgets estratificados
+        encima de dojo". Dijit incluye una variedad de diseños y forms de
+        widgets diseñados para proporcionar características de accesibilidad,
+        localización, y un look-and-feel estandarizado (y temable).</p>
+
+    <p>Zend Framework viene con una variedad de ayudantes de vista que le
+        permiten suministrar y utilizar dijits dentro de sus scripts de vista.
+        Hay tres tipos básicos:</p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Layout Containers</em></span> : estos están diseñados
+                para ser utilizados dentro de sus scripts de vista o consumidos
+                por los decoradores de forms, para forms, sub forms, y mostrar
+                grupos. Envuelven las distintas clases ofrecidas en
+                dijit.layout. Cada ayudante de vista dijit layout espera los
+                siguientes argumentos: </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                    <p>
+                        <code class="varname">$id</code> : el nombre del contenedor o el
+                        DOM ID. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$content</code> : el contenido a envolver en
+                        el contenedor esquematizado. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$params</code> (opcional): parámetros
+                        específicos de dijit. Básicamente, cualquier atributo no
+                            <acronym class="acronym">HTML</acronym> que pueda utilizarse para
+                        configurar el esquema del contenedor dijit. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$attribs</code> (optional): cualquier de los
+                        otros atributos <acronym class="acronym">HTML</acronym> que deberían
+                        utilizarse para mostrar el contenedor div. Si se pasa la
+                        clave 'id' en este array, será utilizada para el
+                        elemento DOM id del form, y <code class="varname">$id</code> será
+                        utilizado por su nombre. </p>
+                </li>
+</ul></div>
+
+            <p>Si no pasa argumentos a un ayudante de vista de esquemas
+                dijit, el ayudante mismo será devuelto. Esto le permite capturar
+                contenido, que a menudo es una manera más fácil para pasar
+                contenido al esquema del contenedor. Ejemplos de esta
+                funcionalidad se mostrarán más tarde en esta sección.</p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Form Dijit</em></span> : el dijit dijit.form.Form,
+                aunque no es completamente necesario para su uso con elementos
+                de dijit forms, se asegurará de que si hay un intento de enviar
+                un form que no valide contra las validaciones del lado del
+                cliente, se detendrá el envío y se emitirán mensajes de error de
+                validación. El ayudante de vista dijit espera los siguientes
+                argumentos: </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                    <p>
+                        <code class="varname">$id</code> : el nombre del contenedor o el
+                        DOM ID. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$attribs</code> (opcional): cualquier otro
+                        de los atributos <acronym class="acronym">HTML</acronym> que deberían
+                        ser utilizados para mostrar el div del contenedor.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$content</code> (opcional): el contenido a
+                        envolver en el form. Si no se pasa ninguno, se utilizará
+                        un string vacío. </p>
+                </li>
+</ul></div>
+
+            <p> El orden de los argumentos varía de los demás dijits a fin de
+                mantener la compatibilidad con el standard
+                    <code class="methodname">form()</code> del ayudante de vista.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Elementos del Form</em></span> : éstos están diseñados
+                para ser consumidos con <code class="classname">Zend_Form</code> , pero
+                pueden ser utilizados standalone también en sus scripts de
+                vista. Cada elemento de ayudante de vista dijit espera los
+                siguientes argumentos: </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                    <p>
+                        <code class="varname">$id</code> : el nombre del elemento o el DOM
+                        ID. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$value</code> (opcional): el valor actual de
+                        ese elemento. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$params</code> (opcional): parámetros
+                        específicos de dijit. Básicamente, cualquier atributo no
+                            <acronym class="acronym">HTML</acronym> que pueda utilizarse para
+                        configurar un dijit. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$attribs</code> (opcional): cualquiera de
+                        los otros atributos adicionales <acronym class="acronym">HTML</acronym>
+                        que deberían ser utilizados para mostrar el dijit. Si se
+                        pasa la clave 'id' en este array, será utilizado por el
+                        elemento DOM id del form, y <code class="varname">$id</code> será
+                        utilizado por su nombre. </p>
+                </li>
+</ul></div>
+
+            <p>Algunos de los elementos requieren más argumentos; esto se
+                observó con el elemento individual ayudante de descripciones.
+            </p>
+        </li>
+</ul></div>
+
+    <p>Con el fin de utilizar estos ayudantes de vista, necesita registrar el
+        path a los ayudantes de vista dojo con su objeto vista.</p>
+
+    <div class="example">
+<a name="zend.dojo.view.dijit.prefixpath"></a><p class="title"><b>Ejemplo 350. Registrando el Prefijo del Path al Ayudante de Vista de
+            Dojo</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+$view-&gt;addHelperPath('Zend/Dojo/View/Helper', 'Zend_Dojo_View_Helper');
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dijit.layout"></a>Elementos del Esquema Dijit</h4></div></div></div>
+        
+
+        <p> La familia de elementos dijit.layout son para crear esquemas
+            personalizados y previsibles para su sitio. Para cualquier pregunta
+            sobre el uso general, <a class="ulink" href="http://dojotoolkit.org/book/dojo-book-0-9/part-2-dijit/layout" target="_top"> lea más sobre ellos en el manual de Dojo</a> . </p>
+
+        <p> Todos los elementos de los esquemas dijit tienen la firma
+                <span class="command"><strong>string ($id = null, $content = '', array $params =
+                array(), array $attribs = array())</strong></span> . En todos los
+            casos, si no pasa argumentos, será devuelto el mismo objeto
+            ayudante. Esto le da acceso a los métodos
+                <code class="methodname">captureStart()</code> y
+                <code class="methodname">captureEnd()</code> , que permiten capturar
+            contenido en lugar de pasarlo al esquema del contenedor. </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>AccordionContainer</em></span> :
+                    dijit.layout.AccordionContainer. Apilará todos los cuadros
+                    juntos verticalmente; con un click en la barra del título de
+                    un cuadro, se expandirá y mostrará ese cuadro en particular. </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;accordionContainer(
+    'foo',
+    $content,
+    array(
+        'duration' =&gt; 200,
+    ),
+    array(
+        'style' =&gt; 'width: 200px; height: 300px;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>AccordionPane</em></span> :
+                    dijit.layout.AccordionPane. Para su uso en
+                    AccordionContainer. </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;accordionPane(
+    'foo',
+    $content,
+    array(
+        'title' =&gt; 'Pane Title',
+    ),
+    array(
+        'style' =&gt; 'background-color: lightgray;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>BorderContainer</em></span> :
+                    dijit.layout.BorderContainer. Logra diseños con cuadros
+                    opcionalmente redimensionables como se puede ver en una
+                    aplicación tradicional. </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;borderContainer(
+    'foo',
+    $content,
+    array(
+        'design' =&gt; 'headline',
+    ),
+    array(
+        'style' =&gt; 'width: 100%; height: 100%',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>ContentPane</em></span> : dijit.layout.ContentPane.
+                    Usarlo dentro de cualquier contenedor excepto
+                    AccordionContainer. </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;contentPane(
+    'foo',
+    $content,
+    array(
+        'title'  =&gt; 'Pane Title',
+        'region' =&gt; 'left',
+    ),
+    array(
+        'style' =&gt; 'width: 120px; background-color: lightgray;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>SplitContainer</em></span> :
+                    dijit.layout.SplitContainer. Permite cuadros de contenido
+                    redimensionables, discontinuado en Dojo en favor de
+                    BorderContainer. </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;splitContainer(
+    'foo',
+    $content,
+    array(
+        'orientation'  =&gt; 'horizontal',
+        'sizerWidth'   =&gt; 7,
+        'activeSizing' =&gt; true,
+    ),
+    array(
+        'style' =&gt; 'width: 400px; height: 500px;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>StackContainer</em></span> :
+                    dijit.layout.StackContainer. Todos los cuadros dentro de un
+                    StackContainer se colocan en una pila; crea botones o
+                    funcionalidades a ser revelados uno a uno. </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;stackContainer(
+    'foo',
+    $content,
+    array(),
+    array(
+        'style' =&gt; 'width: 400px; height: 500px; border: 1px;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>TabContainer</em></span> :
+                    dijit.layout.TabContainer. Todos los cuadros dentro de un
+                    TabContainer se colocan en una pila, con pestañas colocadas
+                    a un lado para cambiar entre ellos. </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;tabContainer(
+    'foo',
+    $content,
+    array(),
+    array(
+        'style' =&gt; 'width: 400px; height: 500px; border: 1px;',
+    ),
+); ?&gt;
+</pre>
+            </li>
+</ul></div>
+
+        <p>Los siguientes métodos de captura están disponibles para todos los
+            esquemas de contenedores:</p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="command"><strong>captureStart($id, array $params = array(), array
+                        $attribs = array())</strong></span> : inicia la captura del
+                    contenido a incluir en un contenedor.
+                        <code class="varname">$params</code> hace referencia a dijit
+                    params para utilizar con el contenedor, mientras que
+                        <code class="varname">$attribs</code> se refiere a cualquier
+                    atributo general <acronym class="acronym">HTML</acronym> a utilizar. </p>
+
+                <p> Los contenedores pueden estar anidados durante la
+                    captura, <span class="emphasis"><em>mientras no hayan IDs
+                        duplicados</em></span> . </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">captureEnd($id)</code> : finalizar la
+                    captura del contenido a incluir en un contenedor.
+                        <code class="varname">$id</code> debe referirse a un id
+                    anteriormente utilizado con la llamada
+                        <code class="methodname">captureStart()</code> . Regresa el
+                    string representando al contenedor y su contenido, como si
+                    simplemente pasara el contenido al ayudante mismo. </p>
+            </li>
+</ul></div>
+
+        <div class="example">
+<a name="zend.dojo.view.dijit.layout.borderexample"></a><p class="title"><b>Ejemplo 351. Ejemplo de esquema de BorderContainer dijit</b></p>
+<div class="example-contents">
+            
+
+            <p>Los BorderContainers, particularmente cuando junto a la
+                capacidad de capturar contenido, son útiles especialmente para
+                lograr efectos complejos de diseño.</p>
+
+            <pre class="programlisting">
+$view-&gt;borderContainer()-&gt;captureStart('masterLayout',
+                                       array('design' =&gt; 'headline'));
+
+echo $view-&gt;contentPane(
+    'menuPane',
+    'This is the menu pane',
+    array('region' =&gt; 'top'),
+    array('style' =&gt; 'background-color: darkblue;')
+);
+
+echo  $view-&gt;contentPane(
+    'navPane',
+    'This is the navigation pane',
+    array('region' =&gt; 'left'),
+    array('style' =&gt; 'width: 200px; background-color: lightblue;')
+);
+
+echo $view-&gt;contentPane(
+    'mainPane',
+    'This is the main content pane area',
+    array('region' =&gt; 'center'),
+    array('style' =&gt; 'background-color: white;')
+);
+
+echo $view-&gt;contentPane(
+    'statusPane',
+    'Status area',
+    array('region' =&gt; 'bottom'),
+    array('style' =&gt; 'background-color: lightgray;')
+);
+
+echo $view-&gt;borderContainer()-&gt;captureEnd('masterLayout');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dijit.form"></a>Elementos de Dijit Form</h4></div></div></div>
+        
+
+        <p> la validación de forms en Dojo y los dijits de entrada están en
+            dijit.form.tree. Para más información sobre la utilización de estos
+            elementos, así como los parámetros aceptados, por favor <a class="ulink" href="http://dojotoolkit.org/book/dojo-book-0-9/part-2-dijit/form-validation-specialized-input" target="_top">vea la docuemntación de dijit.form</a> . </p>
+
+        <p> Los siguientes elementos de dijit form están disponibles en Zend
+            Framework. Excepto cuando se señaló que todos tienen la firma
+                <code class="methodname">string ($id,$value = '', array $params = array(),
+                array $attribs = array())</code> . </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Button</em></span> : dijit.form.Button. Muestra un
+                    botón de form. </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;button(
+    'foo',
+    'Show Me!',
+    array('iconClass' =&gt; 'myButtons'),
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>CheckBox</em></span> : dijit.form.CheckBox. Muestra
+                    un checkbox. Acepta opcionalmente un quinto argumento, el
+                    array <code class="varname">$checkedOptions</code> , que puede
+                    contener: </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>un array indexado con dos valores, un valor
+                            verificado y otro no, en ese orden; o</p>
+                    </li>
+<li class="listitem">
+                        <p>un array asociativo con las claves 'checkedValue'
+                            y 'unCheckedValue'.</p>
+                    </li>
+</ul></div>
+
+                <p> Si <code class="varname">$checkedOptions</code> no fueron
+                    suministradas, se asume 1 y 0. </p>
+
+                <pre class="programlisting">
+&lt;?php echo $view-&gt;checkBox(
+    'foo',
+    'bar',
+    array(),
+    array(),
+    array('checkedValue' =&gt; 'foo', 'unCheckedValue' =&gt; 'bar')
+); ?&gt;
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>ComboBox</em></span> : dijit.layout.ComboBox. Los
+                    ComboBoxes son un híbrido entre un cuadro de selección y uno
+                    de texto con autocompletado. La diferencia fundamental es
+                    que puede escribir una opción que no está en la lista de las
+                    opciones disponibles, y que todavía considera válido el
+                    input. Opcionalmente acepta un quinto argumento, un array
+                    asociativo <code class="varname">$options</code> ; si lo hay, ComboBox
+                    será presentado como un <span class="emphasis"><em>select</em></span> . Note
+                    también que la <span class="emphasis"><em>label values</em></span> del array
+                        <code class="varname">$options</code> será devuelto al form -- y
+                    no los valores en si mismos. </p>
+
+                <p> Alternativamente, puede pasar información sobre un
+                    datastrore dojo.data para utilizar con el elemento. Si la
+                    hay, el ComboBox será presentado como un texto
+                        <span class="emphasis"><em>input</em></span> , y traerá sus opciones vía
+                    ese datastore. </p>
+
+                <p> Para especificar un datastore, proporcionar una de las
+                    siguientes <code class="varname">$params</code> combinaciones de
+                    claves: </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>La clave 'store', con un valor de array; el array
+                            debe contener las claves:</p>
+
+                        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: square; ">
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>store</em></span> : el nombre de la
+                                    variable javascript representando el
+                                    datastore (este podría ser el nombre que
+                                    desea para su uso). </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>type</em></span> : el tipo de
+                                    datastore a usar; e.g.,
+                                    'dojo.data.ItemFileReadStore'. </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>params</em></span> (opcional): un
+                                    array asociativo de pares clave/valor a
+                                    utilizar para configurar el datastore. El
+                                    'url' param es un ejemplo típico. </p>
+                            </li>
+</ul></div>
+                    </li>
+<li class="listitem">
+                        <p>Las claves:</p>
+
+                        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: square; ">
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>store</em></span> : un string
+                                    indicando el nombre del datastore a usar.
+                                </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>storeType</em></span> : un string
+                                    indicando el tipo de datastore dojo.data a
+                                    usar (e.g., 'dojo.data.ItemFileReadStore').
+                                </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>storeParams</em></span> : un array
+                                    asociativo de pares clave/valor con los
+                                    cuales configurar el datastore. </p>
+                            </li>
+</ul></div>
+                    </li>
+</ul></div>
+
+                <pre class="programlisting">
+// Como un elemento select:
+echo $view-&gt;comboBox(
+    'foo',
+    'bar',
+    array(
+        'autocomplete' =&gt; false,
+    ),
+    array(),
+    array(
+        'foo' =&gt; 'Foo',
+        'bar' =&gt; 'Bar',
+        'baz' =&gt; 'Baz',
+    )
+);
+
+// Como en elemento habilitado de dojo.data:
+echo $view-&gt;comboBox(
+    'foo',
+    'bar',
+    array(
+        'autocomplete' =&gt; false,
+        'store'        =&gt; 'stateStore',
+        'storeType'    =&gt; 'dojo.data.ItemFileReadStore',
+        'storeParams'  =&gt; array('url' =&gt; '/js/states.json'),
+    ),
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>CurrencyTextBox</em></span> :
+                    dijit.form.CurrencyTextBox. Se hereda de ValidationTextBox,
+                    y proporciona validación de moneda del lado del cliente. Se
+                    espera que el parámetro dijit 'currency' será siempre
+                    proporcionado con el código adecuado de 3 caracteres de la
+                    moneda. También puede especificar cualquiera de los
+                    parámetros dijit válidos para ValidationTextBox y TextBox. </p>
+
+                <pre class="programlisting">
+echo $view-&gt;currencyTextBox(
+    'foo',
+    '$25.00',
+    array('currency' =&gt; 'USD'),
+    array('maxlength' =&gt; 20)
+);
+</pre>
+
+                <div class="note"><table border="0" summary="Note: Cuestiones con la Construcción">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Cuestiones con la Construcción</th>
+</tr>
+<tr><td align="left" valign="top">
+                    
+
+                    <p> Actualmente hay <a class="ulink" href="http://trac.dojotoolkit.org/ticket/7183" target="_top">
+                            problemas conocidos con el uso de CurrencyTextBox en
+                            la construcción de capas</a> . Una conocida
+                        solución alternativa es garantizar que el meta tag
+                        Content-Type de http-equiv en su documento esté
+                        establecido al conjunto de caracteres utf-8, que puede
+                        hacerlo llamando a: </p>
+
+                    <pre class="programlisting">
+$view-&gt;headMeta()-&gt;appendHttpEquiv('Content-Type',
+                                   'text/html; charset=utf-8');
+</pre>
+
+                    <p> Por supuesto, esto significa que necesitará para
+                        garantizar que el marcador de posición
+                            <code class="methodname">headMeta()</code> esté dentro de
+                        una sentencia "echo" de <acronym class="acronym">PHP</acronym> en su
+                        script. </p>
+                </td></tr>
+</table></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>DateTextBox</em></span> : dijit.form.DateTextBox.
+                    Es heredada de ValidationTextBox, y ofrece tanto validación
+                    de fechas de lado del cliente, así como un calendario
+                    desplegable desde el cual elegir una fecha. Puede
+                    especificar cualquiera de los parámetros dijit disponibles
+                    para ValidationTextBox o TextBox. </p>
+
+                <pre class="programlisting">
+echo $view-&gt;dateTextBox(
+    'foo',
+    '2008-07-11',
+    array('required' =&gt; true)
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Editor</em></span> :
+                        <span class="command"><strong>dijit.Editor</strong></span>. Proporciona un editor
+                    WYSIWYG mediante el cual los usuarios pueden crear o editar
+                    el contenido. <span class="command"><strong>dijit.Editor</strong></span> es un editor
+                    pluggable y extensible, con una variedad de parámetros que
+                    puede utilizar para personalización; para más detalles vea
+                        <a class="ulink" href="http://dojotoolkit.org/book/dojo-book-0-9/part-2-dijit/advanced-editing-and-display/editor-rich-text" target="_top">la documentación de dijit.Editor</a> . </p>
+
+                <pre class="programlisting">
+echo $view-&gt;editor('foo');
+</pre>
+
+                <div class="note"><table border="0" summary="Note: Editor Dijit uses div by default">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Editor Dijit uses div by default</th>
+</tr>
+<tr><td align="left" valign="top">
+                    
+
+                    <p> The Editor dijit uses an <acronym class="acronym">HTML</acronym>
+                        <acronym class="acronym">DIV</acronym> by default. The
+                            <code class="classname">dijit._editor.RichText</code>
+                        <a class="ulink" href="http://api.dojotoolkit.org/jsdoc/HEAD/dijit._editor.RichText" target="_top">documentation</a> indicates that having it
+                        built on an <acronym class="acronym">HTML</acronym>
+                        <acronym class="acronym">TEXTAREA</acronym> can potentially have
+                        security implications. </p>
+
+                    <p> In order to allow graceful degradation in
+                        environments where Javascript is unavailable,
+                            <code class="classname">Zend_Dojo_View_Helper_Editor</code>
+                        also wraps a <acronym class="acronym">textarea</acronym> within a
+                            <acronym class="acronym">noscript</acronym> tag; the content of this
+                            <acronym class="acronym">textarea</acronym> will be properly escaped
+                        to avoid security vulnerability vectors. </p>
+                </td></tr>
+</table></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>FilteringSelect</em></span> :
+                    dijit.form.FilteringSelect. Similar a ComboBox, este es un
+                    híbrido de select/text que puede hacer una lista de opciones
+                    o aquellos retornados vía un dojo.data datastore. A
+                    diferencia de ComboBox, sin embargo, FilteringSelect no
+                    permite escribir una opción ni siquieraen en su lista.
+                    Además, opera como un select standard en que los valores de
+                    opción, no las etiquetas, son devueltos cuando el form se
+                    envía. </p>
+
+                <p>Por favor vea la información anterior sobre ComboBox para
+                    ejemplos y las opciones disponibles para definir datastores.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>HorizontalSlider</em></span> y
+                        <span class="emphasis"><em>VerticalSlider</em></span> :
+                    dijit.form.HorizontalSlider y dijit.form.VerticalSlider. Los
+                    sliders permiten a los widgets de UI seleccionar números en
+                    un rango dado; las variantes son horizontales y verticales. </p>
+
+                <p>En lo más elemental, exigen los parámetros dijit
+                    'minimum', 'maximum', y 'discreteValues'. Estos definen el
+                    rango de valores. Otras opciones comunes son las
+                    siguientes:</p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>'intermediateChanges' se puede ajustar para
+                            indicar cuando disparar o no eventos onChange
+                            mientras el handler está siendo arrastrado.</p>
+                    </li>
+<li class="listitem">
+                        <p>'clickSelect' se establece para permitir hacer
+                            click en un lugar del deslizador para ajustar el
+                            valor.</p>
+                    </li>
+<li class="listitem">
+                        <p>'pageIncrement' puede especificar el valor de
+                            aumento/decremento cuando se utilizan pageUp y
+                            pageDown.</p>
+                    </li>
+<li class="listitem">
+                        <p>'showButtons' se puede ajustar para permitir ver
+                            los botones de ambos extremos del deslizador para
+                            manipular el valor.</p>
+                    </li>
+</ul></div>
+
+                <p>La implementación de Zend Framework crea un elemento
+                    oculto para guardar el valor del deslizador.</p>
+
+                <p>Opcionalmente puede desear mostrar una regla o etiquetas
+                    para el deslizador. Para hacerlo, se asignará uno o más de
+                    los parámetros dijit 'topDecoration' y/o 'bottomDecoration'
+                    (HorizontalSlider) o 'leftDecoration' y/o 'rightDecoration'
+                    (VerticalSlider). Cada uno de éstos espera las siguientes
+                    opciones:</p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>container</em></span> : nombre del
+                            contenedor. </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>labels</em></span> (opcional): un array de
+                            etiquetas a utilizar. Use strings vacíos en
+                            cualquiera de los extremos para dotar de etiquetas
+                            solamente a los valores internos. Es necesario
+                            cuando se especifica uno de las variantes dijit
+                            'Labels'. </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>dijit</em></span> (opcional): uno de los
+                            siguientes será por defecto la dijits Rule (regla)
+                            HorizontalRule, HorizontalRuleLabels, VerticalRule,
+                            o VerticalRuleLabels. </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>params</em></span> (opcional): los dijit
+                            params son para configurar la Regla dijit en uso.
+                            Los parámetros específicos de estos dijits incluyen: </p>
+
+                        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: square; ">
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>container</em></span> (opcional):
+                                    array de parámetros y atributos para el
+                                    contenedor de la regla. </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <span class="emphasis"><em>labels</em></span> (opcional):
+                                    array de parámetros y atributos para el
+                                    contenedor de la lista de etiquetas. </p>
+                            </li>
+</ul></div>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>attribs</em></span> (opcional): atributos
+                            HTML para utilizar con las reglas/etiquetas. Esto
+                            debería seguir el formato de opción
+                                <code class="methodname">params</code> y ser un array
+                            asociativo con las claves 'container' y 'labels'.
+                        </p>
+                    </li>
+</ul></div>
+
+                <pre class="programlisting">
+echo $view-&gt;horizontalSlider(
+    'foo',
+    1,
+    array(
+        'minimum'             =&gt; -10,
+        'maximum'             =&gt; 10,
+        'discreteValues'      =&gt; 11,
+        'intermediateChanges' =&gt; true,
+        'showButtons'         =&gt; true,
+        'topDecoration'       =&gt; array(
+            'container' =&gt; 'topContainer'
+            'dijit'     =&gt; 'HorizontalRuleLabels',
+            'labels'    =&gt; array(
+                ' ',
+                '20%',
+                '40%',
+                '60%',
+                '80%',
+                ' ',
+            ),
+            'params' =&gt; array(
+                'container' =&gt; array(
+                    'style' =&gt; 'height:1.2em; font-size=75%;color:gray;',
+                ),
+                'labels' =&gt; array(
+                    'style' =&gt; 'height:1em; font-size=75%;color:gray;',
+                ),
+            ),
+        ),
+        'bottomDecoration'    =&gt; array(
+            'container' =&gt; 'bottomContainer'
+            'labels'    =&gt; array(
+                '0%',
+                '50%',
+                '100%',
+            ),
+            'params' =&gt; array(
+                'container' =&gt; array(
+                    'style' =&gt; 'height:1.2em; font-size=75%;color:gray;',
+                ),
+                'labels' =&gt; array(
+                    'style' =&gt; 'height:1em; font-size=75%;color:gray;',
+                ),
+            ),
+        ),
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>NumberSpinner</em></span> :
+                    dijit.form.NumberSpinner. Text box numérico para entrada,
+                    con botones para incremento y decremento. </p>
+
+                <p>Espera bien un array asociativo del parámetro dijit
+                    'constraints' o simplemente las claves 'min', 'max', y
+                    'places' (estas serían también las entradas esperadas del
+                    parámetro de restricciones). 'places' puede ser utilizada
+                    para indicar en cuánto se incrementará y decrementará el
+                    número giratorio.</p>
+
+                <pre class="programlisting">
+echo $view-&gt;numberSpinner(
+    'foo',
+    5,
+    array(
+        'min'    =&gt; -10,
+        'max'    =&gt; 10,
+        'places' =&gt; 2,
+    ),
+    array(
+        'maxlenth' =&gt; 3,
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>NumberTextBox</em></span> :
+                    dijit.form.NumberTextBox. NumberTextBox ofrece la capacidad
+                    de dar formato y mostrar entradas numéricas de una manera
+                    localizada, así como validar entradas numéricas,
+                    opcionalmente en contra de las restricciones dadas. </p>
+
+                <pre class="programlisting">
+echo $view-&gt;numberTextBox(
+    'foo',
+    5,
+    array(
+        'places' =&gt; 4,
+        'type'   =&gt; 'percent',
+    ),
+    array(
+        'maxlength' =&gt; 20,
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>PasswordTextBox</em></span> :
+                    dijit.form.ValidationTextBox está atada a una contraseña.
+                    PasswordTextBox ofrece la posibilidad de crear una entrada
+                    para contraseña que adhiere al actual tema dijit, así como
+                    permitir la validación del lado del cliente. </p>
+
+                <pre class="programlisting">
+echo $view-&gt;passwordTextBox(
+    'foo',
+    '',
+    array(
+        'required' =&gt; true,
+    ),
+    array(
+        'maxlength' =&gt; 20,
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>RadioButton</em></span> : dijit.form.RadioButton.
+                    Una serie de opciones entre las que sólo una puede ser
+                    seleccionada. Esta se comporta en todos los sentidos como
+                    una de radio normal, pero tiene un look-and-feel consistente
+                    con otros dijits. </p>
+
+                <p> RadioButton acepta un cuarto argumento como opción,
+                        <code class="varname">$options</code> , un array asociativo de
+                    pares valor/etiqueta utilizado como opciones de radio.
+                    También puede pasar estos como la clave
+                        <code class="methodname">options</code> de
+                        <code class="varname">$attribs</code> . </p>
+
+                <pre class="programlisting">
+echo $view-&gt;radioButton(
+    'foo',
+    'bar',
+    array(),
+    array(),
+    array(
+        'foo' =&gt; 'Foo',
+        'bar' =&gt; 'Bar',
+        'baz' =&gt; 'Baz',
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>SimpleTextarea</em></span> :
+                    dijit.form.SimpleTextarea. Estos actuarán como textareas
+                    normales, pero se estilizan usando el tema actual de dijit.
+                    No necesita especificar los atributos ya sea de las filas o
+                    de las columnas; use <code class="methodname">ems</code> o
+                    porcentajes del ancho y del alto en su lugar. </p>
+
+                <pre class="programlisting">
+echo $view-&gt;simpleTextarea(
+    'foo',
+    'Start writing here...',
+    array(),
+    array('style' =&gt; 'width: 90%; height: 5ems;')
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>SubmitButton</em></span> : un dijit.form.Button
+                    está atado a un elemento de entrada a enviar. Vea el
+                    ayudante de vista de Button para más detalles; la diferencia
+                    fundamental es que este botón puede enviar un form. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Textarea</em></span> : dijit.form.Textarea. Éstas
+                    actuarán como textareas normales, salvo que en lugar de un
+                    determinado número de filas, se expanden a medida que el
+                    usuario tipea. El ancho debe especificarse mediante una
+                    regla de estilo. </p>
+
+                <pre class="programlisting">
+echo $view-&gt;textarea(
+    'foo',
+    'Start writing here...',
+    array(),
+    array('style' =&gt; 'width: 300px;')
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>TextBox</em></span> : dijit.form.TextBox. Este
+                    elemento está presente principalmente para proporcionar un
+                    look-and-feel común entre los diversos elementos dijit, y a
+                    ofrecer funcionalidades de base para otras clases derivadas
+                    de TextBox (ValidationTextBox, NumberTextBox,
+                    CurrencyTextBox, DateTextBox, y TimeTextBox). </p>
+
+                <p>El parámetro común de dijit para los flags incluyen
+                    'lowercase' (emitido a minúsculas), 'uppercase' (emitido a
+                    mayúsculas), 'propercase' (emitido a Proper Case), y trim
+                    (elimina los espacios en blanco iniciales y finales); todos
+                    aceptan valores booleanos. Además, puede especificar los
+                    parámetros 'size' y 'maxLength'.</p>
+
+                <pre class="programlisting">
+echo $view-&gt;textBox(
+    'foo',
+    'some text',
+    array(
+        'trim'       =&gt; true,
+        'propercase' =&gt; true,
+        'maxLength'  =&gt; 20,
+    ),
+    array(
+        'size' =&gt; 20,
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>TimeTextBox</em></span> : dijit.form.TimeTextBox.
+                    También de la familia TextBox, TimeTextBox proporciona una
+                    selección desplazable drop down de la cantidad de veces que
+                    un usuario podrá seleccionar. Los parámetros Dijit le
+                    permiten especificar el tiempo disponible para incrementos
+                    en el select así como un rango visible de veces en
+                    disponibilidad. </p>
+
+                <pre class="programlisting">
+echo $view-&gt;timeTextBox(
+    'foo',
+    '',
+    array(
+        'am.pm'            =&gt; true,
+        'visibleIncrement' =&gt; 'T00:05:00', // 5-minute increments
+        'visibleRange'     =&gt; 'T02:00:00', // show 2 hours of increments
+    ),
+    array(
+        'size' =&gt; 20,
+    )
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>ValidationTextBox</em></span> :
+                    dijit.form.ValidateTextBox. Proporciona validaciones del
+                    lado del cliente para un elemento de texto. Se hereda desde
+                    TextBox. </p>
+
+                <p>Los parámetros comunes de dijit incluyen:</p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>invalidMessage</em></span> : un mensaje
+                            para mostrar cuando se ha detectado una entrada
+                            inválida. </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>promptMessage</em></span> : un mensaje
+                            tooltip de ayuda a utilizar. </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>regExp</em></span> : una expresión regular
+                            a utilizar para validar el texto. La Expresión
+                            Regular no requiere de marcadores de límites.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>required</em></span> : si el elemento es
+                            necesario o no. Si fuera necesario, y el elemento
+                            está incrustado en un dijit.form.Form, será marcado
+                            como inválido y no se enviará. </p>
+                    </li>
+</ul></div>
+
+                <pre class="programlisting">
+echo $view-&gt;validationTextBox(
+    'foo',
+    '',
+    array(
+        'required' =&gt; true,
+        'regExp'   =&gt; '[\w]+',
+        'invalidMessage' =&gt; 'No se permiten espacios o caracteres especiales',
+        'promptMessage'  =&gt; 'Una palabra consiste de caracteres  ' .
+                            'alfanuméricos y underscores solamente',
+    ),
+    array(
+        'maxlength' =&gt; 20,
+    )
+);
+</pre>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.view.dijit.custom"></a>Dijits Personalizados</h4></div></div></div>
+        
+
+        <p> Si ahonda mucho en Dojo, se encontrará escribiendo bastantes
+            dijits personalizados, o utilizando dijits experimentales de Dojox.
+            Si bien Zend Framework no puede apoyar a todos los dijit
+            directamente, si proporciona algún apoyo rudimentario para tipos
+            dijit arbitrarios vía el ayudante de vista <code class="code">CustomDijit</code>
+            . </p>
+
+        <p> La <acronym class="acronym">API</acronym> del ayudante de vista
+                <code class="methodname">CustomDijit</code> es exactamente lo que
+            cualquier otro dijit es, con una diferencia importante: el tercer
+            argumento de "params" <span class="emphasis"><em>debe</em></span> contener el atributo
+            "dojotype". El valor de este atributo debe ser la clase Dijit que
+            planea usar. </p>
+
+        <p>
+            <code class="code">CustomDijit</code> extiende la base del ayudante de vista
+                <code class="code">DijitContainer</code> , que también le permite capturar el
+            contenido (utilizando el par de métodos
+                <code class="methodname">captureStart()</code> /
+                <code class="methodname">captureEnd()</code> ).
+                <code class="methodname">captureStart()</code> también espera que pase
+            el atributo "dojoType" a su argumento "params". </p>
+
+        <div class="example">
+<a name="zend.dojo.view.dijit.custom.example"></a><p class="title"><b>Ejemplo 352. Usando CustomDijit para mostrar un
+                dojox.layout.ContentPane</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                <code class="methodname">dojox.layout.ContentPane</code> es la
+                siguiente generación de iteración de
+                    <code class="methodname">dijit.layout.ContentPane</code> , y
+                proporciona un superconjunto de capacidades de esa clase. Hasta
+                que la funcionalidad se estabilice, seguirá viviendo en Dojox.
+                Sin embargo, si quiere utilizarlo hoy en Zend Framework, puede
+                hacerlo, utilizando el ayudante de vista
+                    <code class="code">CustomDijit</code> . </p>
+
+            <p>Para lo más básico, puede hacer lo siguiente:</p>
+
+            <pre class="programlisting">
+&lt;?php echo $this-&gt;customDijit(
+    'foo',
+    $content,
+    array(
+        'dojoType' =&gt; 'dojox.layout.ContentPane',
+        'title'    =&gt; 'Custom pane',
+        'region'   =&gt; 'center'
+    )
+); ?&gt;
+</pre>
+
+            <p> Si quiere capturar el contenido en su lugar, simplemente use
+                el método <code class="methodname">captureStart()</code> , y pase el
+                "DojoType" al argumento de "params": </p>
+
+            <pre class="programlisting">
+&lt;?php $this-&gt;customDijit()-&gt;captureStart(
+    'foo',
+    array(
+        'dojoType' =&gt; 'dojox.layout.ContentPane',
+        'title'    =&gt; 'Custom pane',
+        'region'   =&gt; 'center'
+    )
+); ?&gt;
+This is the content of the pane
+&lt;?php echo $this-&gt;customDijit()-&gt;captureEnd('foo'); ?&gt;
+</pre>
+
+            <p> Fácilmente puede extender también
+                    <code class="methodname">CustomDijit</code> para crear apoyo para
+                sus propios dijits personalizados. Como ejemplo, si extiende
+                    <code class="methodname">dijit.layout.ContentPane</code> para crear
+                su propia clase <code class="methodname">foo.ContentPane</code> , puede
+                crear el siguiente ayudante de apoyo: </p>
+
+            <pre class="programlisting">
+class My_View_Helper_FooContentPane
+    extends Zend_Dojo_View_Helper_CustomDijit
+{
+    protected $_defaultDojoType = 'foo.ContentPane';
+
+    public function fooContentPane(
+        $id = null, $value = null,
+        array $params = array(), array $attribs = array()
+    ) {
+        return $this-&gt;customDijit($id, $value, $params, $attribs);
+    }
+}
+</pre>
+
+            <p> Mientras que su dijit personalizado siga la misma base
+                    <acronym class="acronym">API</acronym> que los dijits oficiales, utilizar o
+                extender <code class="code">CustomDijit</code> debería funcionar
+                correctamente. </p>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.dojo.data.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.dojo.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.dojo.form.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Dojo_Data: Envolturas de dojo.data </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Elementos y Decoradores de Dojo Form</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

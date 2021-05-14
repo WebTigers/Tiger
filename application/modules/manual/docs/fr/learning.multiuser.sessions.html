@@ -1,0 +1,166 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Gérer les sessions dans ZF</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.multiuser.html" title="Bien démarrer avec Zend_Session, Zend_Auth, et Zend_Acl">
+<link rel="prev" href="learning.multiuser.intro.html" title="Fabrique une application Multi-Utilisateurs avec Zend Framework">
+<link rel="next" href="learning.multiuser.authentication.html" title="Authentification d'utilisateurs dans Zend Framework">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Gérer les sessions dans ZF</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.multiuser.intro.html">Précédent</a> </td>
+<th width="60%" align="center">Bien démarrer avec Zend_Session, Zend_Auth, et Zend_Acl</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.multiuser.authentication.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.multiuser.sessions"></a>Gérer les sessions dans ZF</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.multiuser.sessions.intro"></a>Introduction aux sessions</h3></div></div></div>
+        
+
+        <p>
+            Le succès du web est en grande partie dûe aux protocoles qui le supportent: HTTP. HTTP sur
+            TCP est par nature sans état ce qui signifie que le web n'a pas "de mémoire". Ce fait
+            pose des problèmes pour les développeurs voulant traiter leur application comme un
+            service riche.
+        </p>
+
+        <p>
+            Interagir avec l'application web c'est en fait faire la somme de toutes les requêtes
+            que celle-ci reçoit. Et comme il y a beaucoup de clients, il y a beaucoup de requête,
+            et le moyen d'associer une requête à un client est appelé "session".
+        </p>
+
+        <p>
+            En PHP, le problème des sessions a été résolu au travers de l'extension session qui utilise
+            un système de persistance, typiquement basé sur des cookies et un stockage local des variables
+            dans $_SESSION. Dans Zend Framework, le composant Zend_Session ajoute de la valeur au système
+            de session de PHP notamment une manipulation objet.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.multiuser.sessions.basic-usage"></a>Utilisation classique de Zend_Session</h3></div></div></div>
+        
+
+        <p>
+            Le composant Zend_Session est un gestionnaire de session et une API pour stocker des données
+            dans la session de manière objet. L'API de la classe Zend_Session API permet de régler des options
+            et de démarrer/arrêter la session alors que Zend_Session_Namespace représente un objet
+            contenant des données à stocker en session.
+        </p>
+
+        <p>
+            C'est générallement une bonne pratique que de démarrer sa session en bootstrap, cependant
+            la première création d'un objet Zend_Session_Namespace démarrera la session par défaut.
+        </p>
+
+        <p>
+            Zend_Application peut permettre de configurer Zend_Session grâce aux parties
+            Zend_Application_Resource. Pour les utiliser, en supposant que votre projet utilise
+            Zend_Application, ajoutez le code suivant à application.ini:
+        </p>
+
+        <pre class="programlisting">
+resources.session.save_path = APPLICATION_PATH "/../data/session"
+resources.session.use_only_cookies = true
+resources.session.remember_me_seconds = 864000
+</pre>
+
+        <p>
+            Comme vous le remarquez, les options utilisées sont les mêmes que celles que reconnait
+            ext/session (l'extension session de PHP). Le chemin de stockage des session par exemple.
+            Les fichiers ini peuvent utiliser des constantes, nous réutilisons APPLICATION_PATH
+            pour calculer le chemin relatif vers un dossier arbitraire sensé stocker les sessions.
+        </p>
+
+        <p>
+            La plupart des composants de Zend Framework utilisant les sessions n'ont rien besoin de plus.
+            Dès lors, vous pouvez utiliser un composant faisant appel à la session, ou manipuler la session
+            vous-même au travers d'un ou plusieurs objets Zend_Session_Namespace.
+        </p>
+
+        <p>
+            Zend_Session_Namespace est une classe qui guide ses données vers $_SESSION. La classe s'appelle
+            Zend_Session_Namespace car elle crée des espaces de noms au sein de $_SESSION, autorisant
+            plusieurs composants ou objets à stocker des valeurs sans se marcher dessus. Nous allons voir
+            dans l'exemple qui suit comment créer un simple compteur de session qui commence à 1000
+            et se remet à zéro après 1999.
+        </p>
+
+        <pre class="programlisting">
+$mysession = new Zend_Session_Namespace('mysession');
+
+if (!isset($mysession-&gt;counter)) {
+    $mysession-&gt;counter = 1000;
+} else {
+    $mysession-&gt;counter++;
+}
+
+if ($mysession-&gt;counter &gt; 1999) {
+    unset($mysession-&gt;counter);
+}
+</pre>
+
+        <p>
+            Comme vous le remarquez, l'objet de session utilise les méthodes magiques __get, __set,
+            __isset, et __unset pour proposer une API intuitive. Les informations stockées dans
+            notre exemple le sont en réalité dans $_SESSION['mysession']['counter'].
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.multiuser.sessions.advanced-usage"></a>Utilisation avancée de Zend_Session</h3></div></div></div>
+        
+
+        <p>
+            Si vous voulez utiliser le gestionnaire de sauvegarde des sessions "DbTable", vous
+            pouvez simplement ajouter ces options à application.ini:
+        </p>
+
+        <pre class="programlisting">
+resources.session.saveHandler.class = "Zend_Session_SaveHandler_DbTable"
+resources.session.saveHandler.options.name = "session"
+resources.session.saveHandler.options.primary.session_id = "session_id"
+resources.session.saveHandler.options.primary.save_path = "save_path"
+resources.session.saveHandler.options.primary.name = "name"
+resources.session.saveHandler.options.primaryAssignment.sessionId = "sessionId"
+resources.session.saveHandler.options.primaryAssignment.sessionSavePath = "sessionSavePath"
+resources.session.saveHandler.options.primaryAssignment.sessionName = "sessionName"
+resources.session.saveHandler.options.modifiedColumn = "modified"
+resources.session.saveHandler.options.dataColumn = "session_data"
+resources.session.saveHandler.options.lifetimeColumn = "lifetime"
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.multiuser.intro.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.multiuser.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.multiuser.authentication.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Fabrique une application Multi-Utilisateurs avec Zend Framework </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Authentification d'utilisateurs dans Zend Framework</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

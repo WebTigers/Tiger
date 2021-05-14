@@ -1,0 +1,329 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Escribiendo Validadores</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.validate.html" title="Zend_Validate">
+<link rel="prev" href="zend.validate.validator_chains.html" title="Cadenas de Validadores">
+<link rel="next" href="zend.validate.messages.html" title="Validation Messages">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Escribiendo Validadores</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.validate.validator_chains.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Validate</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.validate.messages.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.validate.writing_validators"></a>Escribiendo Validadores</h2></div></div></div>
+
+    
+
+    <p>
+        <code class="classname">Zend_Validate</code> provee un conjunto de validadores
+        que suelen necesitarse, pero inevitablemente, los desarrolladores quiere
+        escribir sus propios validadores personalizados para sus necesidades
+        particulares. La tarea de escribir un validador personalizado se
+        describe en esta sección. </p>
+
+    <p>
+        <code class="classname">Zend_Validate_Interface</code> define tres métodos,
+        isValid(), getMessages(), y getErrors(), que pueden ser implementadas
+        por clases de usuario a fin de crear objetos de validación
+        personalizados. Un objeto que implementa una interfaz
+            <code class="classname">Zend_Validate_Interface</code> puede añadirse a una
+        cadena de validación con
+            <code class="methodname">Zend_Validate::addValidator()</code> . Tales
+        objetos también pueden ser usados con <a class="link" href="zend.filter.input.html" title="Zend_Filter_Input">
+            <code class="classname">Zend_Filter_Input</code>
+        </a> . </p>
+
+    <p> De la descripción anterior de
+            <code class="classname">Zend_Validate_Interface</code> , podrá inferir que
+        las clases de validación que proporciona Zend Framework devuelven un
+        valor booleano para cuando un valor se valida satisfactoriamente o no.
+        También proporcionan información sobre <span class="emphasis"><em>por qué</em></span> un
+        valor falló en la validación. La disponibilidad de las razones para los
+        fracasos de validación puede ser valiosa para una aplicación por
+        diversos motivos, tales como proporcionar estadísticas para análisis de
+        usabilidad. </p>
+
+    <p> La funcionalidad de los mensajes de validación básica de fallos están
+        implementados en <code class="classname">Zend_Validate_Abstract</code> . A fin
+        de incluir esta funcionalidad al crear una clase de validación,
+        simplemente extienda <code class="classname">Zend_Validate_Abstract</code> . En
+        la extensión de la clase deberá aplicar la lógica del método
+            <code class="methodname">isValid()</code> y definir las variables y
+        plantillas de mensajes que correspondan a los tipos de fallos de
+        validación que puedan suceder. Si falla un valor en su test de
+        validación, entonces <code class="methodname">isValid()</code> deberá devolver
+            <code class="constant">FALSE</code> . Si el valor pasa su test de validación,
+        entonces <code class="methodname">isValid()</code> deberá devolver
+            <code class="constant">TRUE</code> . </p>
+
+    <p> En general, el método <code class="methodname">isValid()</code> no debería
+        arrojar excepciones, salvo que sea imposible determinar si el valor de
+        entrada es válido o no. Algunos ejemplos de casos razonables para lanzar
+        una excepción podría ser si un archivo no puede abrirse, que un servidor
+            <acronym class="acronym">LDAP</acronym> no pudiera ser contactado, o una conexión a
+        una base de datos no estuviera disponible. Estos son casos en los que
+        puede ser necesario determinar el éxito o fracaso de la validación. </p>
+
+    <div class="example">
+<a name="zend.validate.writing_validators.example.simple"></a><p class="title"><b>Ejemplo 935. Crear una Clase de Validación sencilla</b></p>
+<div class="example-contents">
+
+        
+
+        <p> El siguiente ejemplo demuestra cómo podría escribirse un sencillo
+            validador personalizado. En este caso las reglas de validación son
+            simplemente que el valor de entrada debe ser de punto flotante. </p>
+<pre class="programlisting">
+class MyValid_Float extends Zend_Validate_Abstract
+{
+    const FLOAT = 'float';
+
+    protected $_messageTemplates = array(
+        self::FLOAT =&gt; "'%value%' no es un valor de punto flotante"
+    );
+
+    public function isValid($value)
+    {
+        $this-&gt;_setValue($value);
+
+        if (!is_float($value)) {
+            $this-&gt;_error();
+            return false;
+        }
+
+        return true;
+    }
+}
+</pre>
+<p> La clase define una plantilla para su único mensaje de
+            fallo de validación, que incluye el mágico parámetro
+                <span class="emphasis"><em>%value%</em></span> . La llamada a
+                <code class="methodname">_setValue()</code> prepara al objeto para
+            insertar automáticamente en el mensaje de fallo al valor probado, si
+            éste falla en la validación. La llamada a
+                <code class="methodname">_error()</code> sigue las pistas para
+            establecer una razón por el fracaso de la validación. Dado que esta
+            clase sólo define un mensaje de fallo, no es necesario darle a
+                <code class="methodname">_error()</code> el nombre de la plantilla del
+            mensaje de fallo. </p>
+
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="example">
+<a name="zend.validate.writing_validators.example.conditions.dependent"></a><p class="title"><b>Ejemplo 936. Escribiendo una Clase de Validación habiendo Condiciones
+            Dependientes </b></p>
+<div class="example-contents">
+
+        
+        <p> El siguiente ejemplo muestra un conjunto de reglas de validación
+            más complejo, donde es necesario que el valor de entrada ser
+            numérico y dentro del límite de un rango de valores mínimos y
+            máximos. Un valor de entrada podría fallar en la validación
+            exactamente por una de las siguientes razones: </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>El valor de entrada no es numérico.</p>
+            </li>
+<li class="listitem">
+                <p>El valor de entrada es menor que el valor mínimo
+                    permitido.</p>
+            </li>
+<li class="listitem">
+                <p>El valor de entrada es mayor que el valor máximo
+                    permitido.</p>
+            </li>
+</ul></div>
+
+        <p> Estas razones en el fallo de validación, son traducidas a las
+            definiciones en la clase: </p>
+
+        <pre class="programlisting">
+class MyValid_NumericBetween extends Zend_Validate_Abstract
+{
+    const MSG_NUMERIC = 'msgNumeric';
+    const MSG_MINIMUM = 'msgMinimum';
+    const MSG_MAXIMUM = 'msgMaximum';
+
+    public $minimum = 0;
+    public $maximum = 100;
+
+    protected $_messageVariables = array(
+        'min' =&gt; 'minimum',
+        'max' =&gt; 'maximum'
+    );
+
+    protected $_messageTemplates = array(
+        self::MSG_NUMERIC =&gt; "'%value%' no es numérico",
+        self::MSG_MINIMUM =&gt; "'%value%' debe ser al menos '%min%'",
+        self::MSG_MAXIMUM =&gt; "'%value%' debe ser no mayor a '%max%'"
+    );
+
+    public function isValid($value)
+    {
+        $this-&gt;_setValue($value);
+
+        if (!is_numeric($value)) {
+            $this-&gt;_error(self::MSG_NUMERIC);
+            return false;
+        }
+
+        if ($value &lt; $this-&gt;minimum) {
+            $this-&gt;_error(self::MSG_MINIMUM);
+            return false;
+        }
+
+        if ($value &gt; $this-&gt;maximum) {
+            $this-&gt;_error(self::MSG_MAXIMUM);
+            return false;
+        }
+
+        return true;
+    }
+}
+</pre>
+
+        <p> Las propiedades públicas <code class="varname">$minimum</code> y
+                <code class="varname">$maximum</code> se han establecido para proporcionar
+            los límites mínimo y máximo, respectivamente, de un valor a validar.
+            La clase también define dos variables de mensajes que corresponden a
+            las propiedades públicas y permiten usar <span class="property">min</span> y
+                <span class="property">max</span> en plantillas de mensajes como
+            parámetros mágicos, al igual que con <span class="property"> value </span> . </p>
+
+        <p> Tenga en cuenta que si cualquiera de las comprobaciones de
+            validación falla en <code class="methodname">isValid()</code> , ya está
+            preparado un mensaje apropiado, y el método inmediatamente devuelve
+                <code class="constant">FALSE</code> . Estas reglas de validación son por
+            lo tanto secuencialmente dependientes. Es decir, si uno de los tests
+            falla, no hay necesidad de poner a prueba las posteriores reglas de
+            validación. Sin embargo, esta necesidad no será el caso. El
+            siguiente ejemplo ilustra cómo escribir una clase con reglas de
+            validación independientes, donde el objeto validación puede devolver
+            múltiples razones por las cuales fracasó un intento de validación en
+            particular. </p>
+
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="example">
+<a name="zend.validate.writing_validators.example.conditions.independent"></a><p class="title"><b>Ejemplo 937. Validación con Condiciones Independientes, Múltiples Razones del
+            Fracaso</b></p>
+<div class="example-contents">
+
+        
+        <p> Considere escribir una clase de validación y control de
+            contraseñas - cuando es necesario que un usuario elija una
+            contraseña que cumple determinados criterios para ayudar a tener
+            cuentas de usuario seguras. Supongamos que la seguridad de la
+            contraseña aplica criterios que fuerzan a lo siguiente: </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>debe tener al menos una longitud de 8 caracteres,</p>
+            </li>
+<li class="listitem">
+                <p>contener al menos una letra en mayúscula,</p>
+            </li>
+<li class="listitem">
+                <p>contener al menos una letra en minúscula,</p>
+            </li>
+<li class="listitem">
+                <p>contener al menos un dígito.</p>
+            </li>
+</ul></div>
+
+        <p> La siguiente clase implementa estos criterios de validación: </p>
+<pre class="programlisting">
+class MyValid_PasswordStrength extends Zend_Validate_Abstract
+{
+    const LENGTH = 'length';
+    const UPPER  = 'upper';
+    const LOWER  = 'lower';
+    const DIGIT  = 'digit';
+
+    protected $_messageTemplates = array(
+        self::LENGTH =&gt; "'%value%' debe tener al menos una longitud de 8 caracteres",
+        self::UPPER  =&gt; "'%value%' debe contener al menos una letra en mayúscula",
+        self::LOWER  =&gt; "'%value%' debe contener al menos una letra en minúscula",
+        self::DIGIT  =&gt; "'%value%' debe contener al menos un dígito"
+    );
+
+    public function isValid($value)
+    {
+        $this-&gt;_setValue($value);
+
+        $isValid = true;
+
+        if (strlen($value) &lt; 8) {
+            $this-&gt;_error(self::LENGTH);
+            $isValid = false;
+        }
+
+        if (!preg_match('/[A-Z]/', $value)) {
+            $this-&gt;_error(self::UPPER);
+            $isValid = false;
+        }
+
+        if (!preg_match('/[a-z]/', $value)) {
+            $this-&gt;_error(self::LOWER);
+            $isValid = false;
+        }
+
+        if (!preg_match('/\d/', $value)) {
+            $this-&gt;_error(self::DIGIT);
+            $isValid = false;
+        }
+
+        return $isValid;
+    }
+}
+</pre>
+<p> Las cuatro pruebas de criterio en
+                <code class="methodname">isValid()</code> no devuelven inmediatamente
+                <code class="constant">FALSE</code> . Esto permite a la clase de
+            validación a proporcionar <span class="bold"><strong>todas</strong></span> las
+            razones por las que la contraseña de entrada no cumplió los
+            requisitos de validación. Si, por ejemplo, un usuario ingresara el
+            string " <code class="methodname">#$%</code> " como contraseña,
+                <code class="methodname">isValid()</code> causaría que los cuatro
+            mensajes de fracaso de validación sean devueltos por un llamado
+            posterior a <code class="methodname">getMessages()</code> . </p>
+
+    </div>
+</div>
+<br class="example-break">
+
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.validate.validator_chains.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.validate.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.validate.messages.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Cadenas de Validadores </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Validation Messages</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

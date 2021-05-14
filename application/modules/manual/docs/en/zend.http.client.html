@@ -1,0 +1,395 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Introduction</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.http.html" title="Zend_Http">
+<link rel="prev" href="zend.http.html" title="Zend_Http">
+<link rel="next" href="zend.http.client.advanced.html" title="Zend_Http_Client - Advanced Usage">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Introduction</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.http.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Http</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.http.client.advanced.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.http.client"></a>Introduction</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Http_Client</code> provides an easy interface for preforming Hyper-Text
+        Transfer Protocol (HTTP) requests. <code class="classname">Zend_Http_Client</code> supports most
+        simple features expected from an <acronym class="acronym">HTTP</acronym> client, as well as some more
+        complex features such as <acronym class="acronym">HTTP</acronym> authentication and file uploads. Successful
+        requests (and most unsuccessful ones too) return a <code class="classname">Zend_Http_Response</code>
+        object, which provides access to the response's headers and body (see
+        <a class="link" href="zend.http.response.html" title="Zend_Http_Response">this section</a>).
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.usage"></a>Using Zend_Http_Client</h3></div></div></div>
+        
+
+        <p>
+            The class constructor optionally accepts a URL as its first parameter
+            (can be either a string or a <code class="classname">Zend_Uri_Http</code> object), and an array
+            or <code class="classname">Zend_Config</code> object containing configuration options. Both can
+            be left out, and set later using the setUri() and setConfig() methods.
+
+            </p>
+<div class="example">
+<a name="zend.http.client.introduction.example-1"></a><p class="title"><b>Example 454. Instantiating a Zend_Http_Client Object</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$client = new Zend_Http_Client('http://example.org', array(
+    'maxredirects' =&gt; 0,
+    'timeout'      =&gt; 30));
+
+// This is actually exactly the same:
+$client = new Zend_Http_Client();
+$client-&gt;setUri('http://example.org');
+$client-&gt;setConfig(array(
+    'maxredirects' =&gt; 0,
+    'timeout'      =&gt; 30));
+
+// You can also use a Zend_Config object to set the client's configuration
+$config = new Zend_Config_Ini('httpclient.ini', 'secure');
+$client-&gt;setConfig($config);
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+
+            </p>
+<div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    <code class="classname">Zend_Http_Client</code> uses
+                    <code class="classname">Zend_Uri_Http</code> to validate URLs. This means
+                    that some special characters like the pipe symbol ('|') or the
+                    caret symbol ('^') will not be accepted in the URL by default.
+                    This can be modified by setting the 'allow_unwise' option of
+                    <code class="classname">Zend_Uri</code> to '<code class="constant">TRUE</code>'. See <a class="link" href="zend.uri.chapter.html#zend.uri.validation.allowunwise" title='Allowing "Unwise" characters in URIs'>this section</a> for more
+                    information.
+                </p>
+            </td></tr>
+</table></div>
+<p>
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.configuration"></a>Configuration Parameters</h3></div></div></div>
+        
+
+        <p>
+            The constructor and setConfig() method accept an associative array
+            of configuration parameters, or a <code class="classname">Zend_Config</code> object. Setting
+            these parameters is optional, as they all have default values.
+
+            </p>
+<div class="table">
+<a name="zend.http.client.configuration.table"></a><p class="title"><b>Table 76. Zend_Http_Client configuration parameters</b></p>
+<div class="table-contents">
+                
+
+                <table class="table" summary="Zend_Http_Client configuration parameters" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Expected Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>maxredirects</td>
+<td>Maximum number of redirections to follow (0 = none)</td>
+<td>integer</td>
+<td>5</td>
+</tr>
+<tr>
+<td>strict</td>
+<td>
+                                Whether perform validation on header names. When set to
+                                <code class="constant">FALSE</code>, validation functions will be skipped.
+                                Usually this should not be changed
+                            </td>
+<td>boolean</td>
+<td><code class="constant">TRUE</code></td>
+</tr>
+<tr>
+<td>strictredirects</td>
+<td>
+                                Whether to strictly follow the <acronym class="acronym">RFC</acronym> when
+                                redirecting (see <a class="link" href="zend.http.client.advanced.html#zend.http.client.redirections" title="HTTP Redirections">this section</a>)
+                            </td>
+<td>boolean</td>
+<td><code class="constant">FALSE</code></td>
+</tr>
+<tr>
+<td>useragent</td>
+<td>User agent identifier string (sent in request headers)</td>
+<td>string</td>
+<td>'Zend_Http_Client'</td>
+</tr>
+<tr>
+<td>timeout</td>
+<td>Connection timeout (seconds)</td>
+<td>integer</td>
+<td>10</td>
+</tr>
+<tr>
+<td>httpversion</td>
+<td>HTTP protocol version (usually '1.1' or '1.0')</td>
+<td>string</td>
+<td>'1.1'</td>
+</tr>
+<tr>
+<td>adapter</td>
+<td>
+                                Connection adapter class to use (see <a class="link" href="zend.http.client.adapters.html" title="Zend_Http_Client - Connection Adapters">this section</a>)
+                            </td>
+<td>mixed</td>
+<td>'Zend_Http_Client_Adapter_Socket'</td>
+</tr>
+<tr>
+<td>keepalive</td>
+<td>
+                                Whether to enable keep-alive connections with the server. Useful and
+                                might improve performance if several consecutive requests to the
+                                same server are performed.
+                            </td>
+<td>boolean</td>
+<td><code class="constant">FALSE</code></td>
+</tr>
+<tr>
+<td>storeresponse</td>
+<td>
+                                Whether to store last response for later retrieval with
+                                <code class="methodname">getLastResponse()</code>. If set to
+                                <code class="constant">FALSE</code>
+                                <code class="methodname">getLastResponse()</code> will return
+                                <code class="constant">NULL</code>.
+                            </td>
+<td>boolean</td>
+<td><code class="constant">TRUE</code></td>
+</tr>
+<tr>
+<td>encodecookies</td>
+<td>
+                                Whether to pass the cookie value through urlencode/urldecode.
+                                Enabling this breaks support with some web servers.
+                                Disabling this limits the range of values the cookies can contain.
+                            </td>
+<td>boolean</td>
+<td><code class="constant">TRUE</code></td>
+</tr>
+</tbody>
+</table>
+            </div>
+</div>
+<p><br class="table-break">
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.basic-requests"></a>Performing Basic HTTP Requests</h3></div></div></div>
+        
+
+        <p>
+            Performing simple <acronym class="acronym">HTTP</acronym> requests is very easily done using the
+            request() method, and rarely needs more than three lines of code:
+
+            </p>
+<div class="example">
+<a name="zend.http.client.basic-requests.example-1"></a><p class="title"><b>Example 455. Performing a Simple GET Request</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$client = new Zend_Http_Client('http://example.org');
+$response = $client-&gt;request();
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+
+            The request() method takes one optional parameter - the request method.
+            This can be either <span class="property">GET</span>, <span class="property">POST</span>,
+            <span class="property">PUT</span>, <span class="property">HEAD</span>, <span class="property">DELETE</span>,
+            <span class="property">TRACE</span>, <span class="property">OPTIONS</span> or <span class="property">CONNECT</span>
+            as defined by the <acronym class="acronym">HTTP</acronym> protocol
+
+            <a href="#ftn.idm482251633632" class="footnote" name="idm482251633632"><sup class="footnote">[6]</sup></a>.
+
+            For convenience, these are all defined as class constants:
+            Zend_Http_Client::GET, Zend_Http_Client::POST and so on.
+        </p>
+
+        <p>
+            If no method is specified, the method set by the last
+            <code class="methodname">setMethod()</code> call is used. If
+            <code class="methodname">setMethod()</code> was never called, the default request
+            method is <code class="constant">GET</code> (see the above example).
+
+            </p>
+<div class="example">
+<a name="zend.http.client.basic-requests.example-2"></a><p class="title"><b>Example 456. Using Request Methods Other Than GET</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+// Preforming a POST request
+$response = $client-&gt;request('POST');
+
+// Yet another way of preforming a POST request
+$client-&gt;setMethod(Zend_Http_Client::POST);
+$response = $client-&gt;request();
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.parameters"></a>Adding GET and POST parameters </h3></div></div></div>
+        
+
+        <p>
+            Adding <code class="constant">GET</code> parameters to an <acronym class="acronym">HTTP</acronym> request is
+            quite simple, and can be done either by specifying them as part of the URL, or by using
+            the setParameterGet() method.
+            This method takes the <code class="constant">GET</code> parameter's name as its first parameter,
+            and the <code class="constant">GET</code> parameter's value as its second parameter.
+            For convenience, the setParameterGet() method can also accept a
+            single associative array of name =&gt; value <code class="constant">GET</code> variables - which may
+            be more comfortable when several <code class="constant">GET</code> parameters need to be set.
+
+            </p>
+<div class="example">
+<a name="zend.http.client.parameters.example-1"></a><p class="title"><b>Example 457. Setting GET Parameters</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+// Setting a get parameter using the setParameterGet method
+$client-&gt;setParameterGet('knight', 'lancelot');
+
+// This is equivalent to setting such URL:
+$client-&gt;setUri('http://example.com/index.php?knight=lancelot');
+
+// Adding several parameters with one call
+$client-&gt;setParameterGet(array(
+    'first_name'  =&gt; 'Bender',
+    'middle_name' =&gt; 'Bending'
+    'made_in'     =&gt; 'Mexico',
+));
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+        </p>
+
+        <p>
+            While <code class="constant">GET</code> parameters can be sent with every request method, POST
+            parameters are only sent in the body of POST requests. Adding POST
+            parameters to a request is very similar to adding <code class="constant">GET</code> parameters,
+            and can be done with the setParameterPost() method, which is
+            similar to the setParameterGet() method in structure.
+
+            </p>
+<div class="example">
+<a name="zend.http.client.parameters.example-2"></a><p class="title"><b>Example 458. Setting POST Parameters</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+// Setting a POST parameter
+$client-&gt;setParameterPost('language', 'fr');
+
+// Setting several POST parameters, one of them with several values
+$client-&gt;setParameterPost(array(
+    'language'  =&gt; 'es',
+    'country'   =&gt; 'ar',
+    'selection' =&gt; array(45, 32, 80)
+));
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+
+            Note that when sending POST requests, you can set both <code class="constant">GET</code> and
+            POST parameters. On the other hand, while setting POST parameters
+            for a non-POST request will not trigger and error, it is useless.
+            Unless the request is a POST request, POST parameters are simply
+            ignored.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.accessing_last"></a>Accessing Last Request and Response</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Http_Client</code> provides methods of accessing the last request
+            sent and last response received by the client object.
+            <code class="classname">Zend_Http_Client-&gt;getLastRequest()</code> takes no parameters
+            and returns the last <acronym class="acronym">HTTP</acronym> request sent by the client as a string.
+            Similarly, <code class="classname">Zend_Http_Client-&gt;getLastResponse()</code> returns
+            the last <acronym class="acronym">HTTP</acronym> response received by the client as a
+            <a class="link" href="zend.http.response.html" title="Zend_Http_Response">Zend_Http_Response</a> object.
+        </p>
+    </div>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm482251633632" class="footnote">
+              <p><a href="#idm482251633632" class="para"><sup class="para">[6] </sup></a>
+                See RFC 2616 - <a class="ulink" href="http://www.w3.org/Protocols/rfc2616/rfc2616.html" target="_top">http://www.w3.org/Protocols/rfc2616/rfc2616.html</a>.
+              </p>
+            </div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.http.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.http.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.http.client.advanced.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Http </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend_Http_Client - Advanced Usage</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

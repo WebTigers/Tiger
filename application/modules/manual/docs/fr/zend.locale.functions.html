@@ -1,0 +1,1900 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Using Zend_Locale</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.locale.html" title="Zend_Locale">
+<link rel="prev" href="zend.locale.introduction.html" title="Introduction">
+<link rel="next" href="zend.locale.parsing.html" title="Normalization and Localization">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Using Zend_Locale</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.locale.introduction.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Locale</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.locale.parsing.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.locale.functions"></a>Using Zend_Locale</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Locale</code> also provides localized information about locales for
+        each locale, including localized names for other locales, days of the week, month names,
+        etc.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.copying"></a>Copying, Cloning, and Serializing Locale Objects</h3></div></div></div>
+        
+
+        <p>
+            Use <a class="ulink" href="http://php.net/language.oop5.cloning" target="_top">object cloning</a> to
+            duplicate a locale object exactly and efficiently. Most locale-aware methods also accept
+            string representations of locales, such as the result of
+            <span class="command"><strong>$locale-&gt;toString()</strong></span>.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.copying.example-1"></a><p class="title"><b>Exemple 526. clone</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('ar');
+
+// Save the $locale object as a serialization
+$serializedLocale = $locale-&gt;serialize();
+// re-create the original object
+$localeObject = unserialize($serializedLocale);
+
+// Obtain a string identification of the locale
+$stringLocale = $locale-&gt;toString();
+
+// Make a cloned copy of the $local object
+$copiedLocale = clone $locale;
+
+print "copied: ", $copiedLocale-&gt;toString();
+
+// PHP automatically calls toString() via __toString()
+print "copied: ", $copiedLocale;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.equals"></a>Equality</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Locale</code> also provides a convenience function to compare two
+            locales. All locale-aware classes should provide a similar equality check.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.equals.example-1"></a><p class="title"><b>Exemple 527. Check for equal locales</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale();
+$mylocale = new Zend_Locale('en_US');
+
+// Check if locales are equal
+if ($locale-&gt;equals($mylocale)) {
+    print "Locales are equal";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.getdefault"></a>Default locales</h3></div></div></div>
+        
+
+        <p>
+            The method <code class="methodname">getDefault()</code> returns an array of relevant locales
+            using information from the user's web browser (if available), information from the
+            environment of the host server, and Zend Framework settings. As with the constructor
+            for <code class="classname">Zend_Locale</code>, the first parameter selects a preference of
+            which information to consider <a class="link" href="zend.locale.introduction.html#zend.locale.selection" title="Selecting the Right Locale">(<code class="constant">BROWSER</code>,
+                <code class="constant">ENVIRONMENT</code>, or <code class="constant">FRAMEWORK</code></a> first.
+            The second parameter toggles between returning all matching locales or only the
+            first or best match. Locale-aware components normally use only the first locale. A
+            quality rating is included, when available.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.getdefault.example-1"></a><p class="title"><b>Exemple 528. Get default locales</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale();
+
+// Return all default locales
+$found = $locale-&gt;getDefault();
+print_r($found);
+
+// Return only browser locales
+$found2 = $locale-&gt;getDefault(Zend_Locale::BROWSER,TRUE);
+print_r($found2);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            To obtain only the default locales relevant to the <a class="link" href="zend.locale.introduction.html#zend.locale.selection" title="Selecting the Right Locale"><code class="constant">BROWSER</code>,
+                <code class="constant">ENVIRONMENT</code>, or <code class="constant">FRAMEWORK</code></a>, use
+            the corresponding method:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getEnvironment()</code>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getBrowser()</code>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getLocale()</code>
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.setlocale"></a>Set a new locale</h3></div></div></div>
+        
+
+        <p>
+            A new locale can be set with the function <code class="methodname">setLocale()</code>. This
+            function takes a locale string as parameter. If no locale is given, a locale is
+            <a class="link" href="zend.locale.introduction.html#zend.locale.selection" title="Selecting the Right Locale">automatically selected</a>.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.setlocale.example-1"></a><p class="title"><b>Exemple 529. setLocale</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale();
+
+// Actual locale
+print $locale-&gt;toString();
+
+// new locale
+$locale-&gt;setLocale('aa_DJ');
+print $locale-&gt;toString();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.getlocale"></a>Getting the language and region</h3></div></div></div>
+        
+
+        <p>
+            Use <code class="methodname">getLanguage()</code> to obtain a string containing the two
+            character language code from the string locale identifier. Use
+            <code class="methodname">getRegion()</code> to obtain a string containing the two character
+            region code from the string locale identifier.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.getlocale.example-1"></a><p class="title"><b>Exemple 530. getLanguage and getRegion</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale();
+
+// if locale is 'de_AT' then 'de' will be returned as language
+print $locale-&gt;getLanguage();
+
+// if locale is 'de_AT' then 'AT' will be returned as region
+print $locale-&gt;getRegion();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.getlocaletoterritory"></a>Get the locale by giving a territory</h3></div></div></div>
+        
+
+        <p>
+            When you only have the territory or country then it's also possible to get a locale
+            from that information. You can manually search if there is a locale for this territory
+            by using <code class="methodname">getLocaleToTerritory()</code>. This method returns a
+            locale for the given territory or <code class="constant">NULL</code> when there was has no locale
+            been found.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.getlocaletoterritory.example-1"></a><p class="title"><b>Exemple 531. getLocaleToTerritory</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = Zend_Locale::getLocaleToTerritory('US');
+// returns 'en_US'
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note: Uppercase territories">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Uppercase territories</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                When you know that you are using a territory, then you should uppercase it.
+                Otherwise you could get an in your eyes false locale in return when you use other
+                methods. For example: When you give "om" then
+                <code class="methodname">getLocaleToTerritory()</code> returns you "ar_OM" as it knows that
+                you mean a territory. But all other methods will return "om", as it's also a
+                language.
+            </p>
+
+            <p>
+                So when you know that the given string is a territory, eighter use
+                <code class="methodname">getLocaleToTerritory()</code> yourself before creating a locale,
+                or uppercase the input.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.getdata"></a>Obtaining localized strings</h3></div></div></div>
+        
+
+        <p>
+            <code class="methodname">getTranslationList()</code> gives you access to localized information
+            of several types. These information are useful if you want to display localized data to
+            a customer without the need of translating it. They are already available for your
+            usage.
+        </p>
+
+        <p>
+            The requested list of information is always returned as named array. If you want to give
+            more than one value to a explicit type where you wish to receive values from, you have
+            to give an array instead of multiple values.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.getdata.example-1"></a><p class="title"><b>Exemple 532. getTranslationList</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$list = Zend_Locale::getTranslationList('language', 'de_AT');
+
+print_r ($list);
+// example key -&gt; value pairs...
+// [de] -&gt; Deutsch
+// [en] -&gt; Englisch
+
+// use one of the returned key as value for the getTranslation() method
+// of another language
+print Zend_Locale::getTranslation('de', 'language', 'zh');
+// returns the translation for the language 'de' in chinese
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            You can receive this information for all languages. But not all information is
+            completely available for all languages. Some of these types are also available through
+            an own function for simplicity. See this list for detailed information.
+        </p>
+
+        <div class="table">
+<a name="zend.locale.getdata.table-1"></a><p class="title"><b>Tableau 102. 
+                Details for getTranslationList($type = null, $locale = null, $value = null)
+            </b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="
+                Details for getTranslationList($type = null, $locale = null, $value = null)
+            " border="1">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Type</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><span class="emphasis"><em>Language</em></span></td>
+<td>
+                            Returns a localized list of all languages. The language part of the
+                            locale is returned as key and the translation as value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Script</em></span></td>
+<td>
+                            Returns a localized list of all scripts. The script is returned as key
+                            and the translation as value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Territory</em></span></td>
+<td>
+                            Returns a localized list of all territories. This contains countries,
+                            continents and territories. To get only territories and continents use
+                            '1' as value. To get only countries use '2' as value. The country part
+                            of the locale is used as key where applicable. In the other case the
+                            official <acronym class="acronym">ISO</acronym> code for this territory is used. The
+                            translated territory is returned as value. When you omit the value you
+                            will get a list with both.
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Variant</em></span></td>
+<td>
+                            Returns a localized list of known variants of scripts. The variant is
+                            returned as key and the translation as value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Key</em></span></td>
+<td>
+                            Returns a localized list of known keys. This keys are generic values
+                            used in translation. These are normally calendar, collation and
+                            currency. The key is returned as array key and the translation as value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Type</em></span></td>
+<td>
+                            Returns a localized list of known types of keys. These are variants of
+                            types of calendar representations and types of collations. When you use
+                            'collation' as value you will get all types of collations returned. When
+                            you use 'calendar' as value you will get all types of calendars
+                            returned. When you omit the value you will get a list all both returned.
+                            The type is used as key and the translation as value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Layout</em></span></td>
+<td>
+                            Returns a list of rules which describes how to format special text parts
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Characters</em></span></td>
+<td>Returns a list of allowed characters within this locale</td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Delimiters</em></span></td>
+<td>Returns a list of allowed quoting characters for this locale</td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Measurement</em></span></td>
+<td>
+                            Returns a list of known measurement values. This list is depreciated
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Months</em></span></td>
+<td>
+                            Returns a list of all month representations within this locale. There
+                            are several different representations which are all returned as sub
+                            array. If you omit the value you will get a list of all months from the
+                            'gregorian' calendar returned. You can give any known calendar as value
+                            to get a list of months from this calendar returned. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Month</em></span></td>
+<td>
+                            Returns a localized list of all month names for this locale. If you omit
+                            the value you will get the normally used gregorian full name of the
+                            months where each month number is used as key and the translated month
+                            is returned as value. You can get the months for different calendars and
+                            formats if you give an array as value. The first array entry has to be
+                            the calendar, the second the used context and the third the width to
+                            return. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Days</em></span></td>
+<td>
+                            Returns a list of all day representations within this locale. There are
+                            several different representations which are all returned as sub array.
+                            If you omit the value you will get a list of all days from the
+                            'gregorian' calendar returned. You can give any known calendar as value
+                            to get a list of days from this calendar returned. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Day</em></span></td>
+<td>
+                            Returns a localized list of all day names for this locale. If you omit
+                            the value you will get the normally used gregorian full name of the days
+                            where the english day abbreviation is used as key and the translated day
+                            is returned as value. You can get the days for different calendars and
+                            formats if you give an array as value. The first array entry has to be
+                            the calendar, the second the used context and the third the width to
+                            return. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Week</em></span></td>
+<td>
+                            Returns a list of values used for proper week calculations within a
+                            locale. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Quarters</em></span></td>
+<td>
+                            Returns a list of all quarter representations within this locale. There
+                            are several different representations which are all returned as sub
+                            array. If you omit the value you will get a list of all quarters from
+                            the 'gregorian' calendar returned. You can give any known calendar as
+                            value to get a list of quarters from this calendar returned
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Quarter</em></span></td>
+<td>
+                            Returns a localized list of all quarter names for this locale. If you
+                            omit the value you will get the normally used gregorian full name of the
+                            quarters where each quarter number is used as key and the translated
+                            quarter is returned as value. You can get the quarters for different
+                            calendars and formats if you give an array as value. The first array
+                            entry has to be the calendar, the second the used context and the third
+                            the width to return
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Eras</em></span></td>
+<td>
+                            Returns a list of all era representations within this locale. If you
+                            omit the value you will get a list of all eras from the 'gregorian'
+                            calendar returned. You can give any known calendar as value to get a
+                            list of eras from this calendar returned
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Era</em></span></td>
+<td>
+                            Returns a localized list of all era names for this locale. If you omit
+                            the value you will get the normally used gregorian full name of the eras
+                            where each era number is used as key and the translated era is returned
+                            as value. You can get the eras for different calendars and formats if
+                            you give an array as value. The first array entry has to be the calendar
+                            and the second the width to return
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Date</em></span></td>
+<td>
+                            Returns a localized list of all date formats for this locale. The name
+                            of the dateformat is used as key and the format itself as value.If you
+                            omit the value you will get the date formats for the gregorian calendar
+                            returned. You can get the date formats for different calendars if you
+                            give the wished calendar as string. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Time</em></span></td>
+<td>
+                            Returns a localized list of all time formats for this locale. The name
+                            of the timeformat is used as key and the format itself as value. If you
+                            omit the value you will get the time formats for the gregorian calendar
+                            returned. You can get the time formats for different calendars if you
+                            give the wished calendar as string. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DateTime</em></span></td>
+<td>
+                            Returns a localized list of all known date-time formats for this locale.
+                            The name of the date-time format is used as key and the format itself as
+                            value. If you omit the value you will get the date-time formats for the
+                            gregorian calendar returned. You can get the date-time formats for
+                            different calendars if you give the wished calendar as string. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DateItem</em></span></td>
+<td>
+                            Returns a list of default formats for given date or time items
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DateInterval</em></span></td>
+<td>
+                            Returns a list of date or time formats which are used when you want to
+                            display intervals. The list is a multidimentional array where the first
+                            dimension is the interval format, and the second dimension is the token
+                            with the greatest difference.
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Field</em></span></td>
+<td>
+                            Returns a localized list of date fields which can be used to display
+                            calendars or date strings like 'month' or 'year' in a wished language.
+                            If you omit the value you will get this list for the gregorian calendar
+                            returned. You can get the list for different calendars if you give the
+                            wished calendar as string
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Relative</em></span></td>
+<td>
+                            Returns a localized list of relative dates which can be used to display
+                            textual relative dates like 'yesterday' or 'tomorrow' in a wished
+                            language. If you omit the value you will get this list for the gregorian
+                            calendar returned. You can get the list for different calendars if you
+                            give the wished calendar as string
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Symbols</em></span></td>
+<td>
+                            Returns a localized list of characters used for number representations
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>NameToCurrency</em></span></td>
+<td>
+                            Returns a localized list of names for currencies. The currency is used
+                            as key and the translated name as value. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencyToName</em></span></td>
+<td>
+                            Returns a list of currencies for localized names. The translated name is
+                            used as key and the currency as value. Use  <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencySymbol</em></span></td>
+<td>
+                            Returns a list of known localized currency symbols for currencies. The
+                            currency is used as key and the symbol as value. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Question</em></span></td>
+<td>
+                            Returns a list of localized strings for acceptance ('yes') and
+                            negation ('no'). Use <a class="link" href="zend.locale.functions.html#zend.locale.getquestion" title='Obtaining translations for "yes" and "no"'>Zend_Locale's getQuestion
+                                method</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencyFraction</em></span></td>
+<td>
+                            Returns a list of fractions for currency values. The currency is used as
+                            key and the fraction as integer value. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencyRounding</em></span></td>
+<td>
+                            Returns a list of how to round which currency. The currency is used as
+                            key and the rounding as integer value. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencyToRegion</em></span></td>
+<td>
+                            Returns a list of currencies which are known to be used within a region.
+                            The <code class="constant">ISO3166</code> value ('region') is used as array key
+                            and the <code class="constant">ISO4217</code> value ('currency') as array value.
+                            Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>RegionToCurrency</em></span></td>
+<td>
+                            Returns a list of regions where a currency is used . The
+                            <code class="constant">ISO4217</code> value ('currency') is used as array key and
+                            the <code class="constant">ISO3166</code> value ('region') as array value. When a
+                            currency is used in several regions these regions are separated with a
+                            whitespace. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>RegionToTerritory</em></span></td>
+<td>
+                            Returns a list of territories with the countries or sub territories
+                            which are included within that territory. The <acronym class="acronym">ISO</acronym>
+                            territory code ('territory') is used as array key and the
+                            <code class="constant">ISO3166</code> value ('region') as array value. When a
+                            territory contains several regions these regions are separated with a
+                            whitespace
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToRegion</em></span></td>
+<td>
+                            Returns a list of regions and the territories where these regions are
+                            located. The <code class="constant">ISO3166</code> code ('region') is used as
+                            array key and the <acronym class="acronym">ISO</acronym> territory code ('territory') as
+                            array value. When a region is located in several territories these
+                            territories are separated with a whitespace
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>ScriptToLanguage</em></span></td>
+<td>
+                            Returns a list of scripts which are used within a language. The language
+                            code is used as array key and the script code as array value. When a
+                            language contains several scripts these scripts are separated with a
+                            whitespace
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>LanguageToScript</em></span></td>
+<td>
+                            Returns a list of languages which are using a script. The script code
+                            is used as array key and the language code as array value. When a script
+                            is used in several languages these languages are separated with a
+                            whitespace
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToLanguage</em></span></td>
+<td>
+                            Returns a list of languages and the countries where they are spoken. The
+                            language is used as array key and the country code as array value. When
+                            a language is used in several countries these countries are separated
+                            with a whitespace
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>LanguageToTerritory</em></span></td>
+<td>
+                            Returns a list of countries and the languages which are spoken within
+                            them. The country code is used as array key and the language code
+                            as array value. When several languages are spoken within a territory
+                            then these languages are separated with a whitespace
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TimezoneToWindows</em></span></td>
+<td>
+                            Returns a list of windows timezones and the related
+                            <acronym class="acronym">ISO</acronym> timezone. The windows timezone is used as array
+                            key and the <acronym class="acronym">ISO</acronym> timezone as array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>WindowsToTimezone</em></span></td>
+<td>
+                            Returns a list of <acronym class="acronym">ISO</acronym> timezones and the related
+                            windows timezone. The <acronym class="acronym">ISO</acronym> timezone is used as array
+                            key and the windows timezone as array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToTimezone</em></span></td>
+<td>
+                            Returns a list of regions or territories and the related
+                            <acronym class="acronym">ISO</acronym> timezone. The <acronym class="acronym">ISO</acronym> timezone is
+                            used as array key and the territory code as array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TimezoneToTerritory</em></span></td>
+<td>
+                            Returns a list of timezones and the related region or territory code.
+                            The region or territory code is used as array key and the
+                            <acronym class="acronym">ISO</acronym> timezone as array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CityToTimezone</em></span></td>
+<td>
+                            Returns a localized list of cities which can be used as translation for
+                            a related timezone. Not for all timezones is a translation available,
+                            but for a user is the real city written in his languages more accurate
+                            than the <acronym class="acronym">ISO</acronym> name of this timezone. The
+                            <acronym class="acronym">ISO</acronym> timezone is used as array key and the translated
+                            city as array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TimezoneToCity</em></span></td>
+<td>
+                            Returns a list of timezones for localized city names. The localized city
+                            is used as array key and the <acronym class="acronym">ISO</acronym> timezone name as
+                            array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>PhoneToTerritory</em></span></td>
+<td>
+                            Returns a list of phone codes which are known to be used within a
+                            territory. The territory (region) is used as array key and the telephone
+                            code as array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToPhone</em></span></td>
+<td>
+                            Returns a list of territories where a phone is used . The phone code
+                            is used as array key and the territory (region) as array value. When a
+                            phone code is used in several territories these territories are
+                            separated with a whitespace
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>NumericToTerritory</em></span></td>
+<td>
+                            Returns a list of 3 digit number codes for territories.
+                            The territory (region) is used as array key and the 3 digit number code
+                            as array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToNumeric</em></span></td>
+<td>
+                            Returns a list of territories with their 3 digit number code. The 3
+                            digit number code is used as array key and the territory (region) as
+                            array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Alpha3ToTerritory</em></span></td>
+<td>
+                            Returns a list of 3 sign character codes for territories.
+                            The territory (region) is used as array key and the 3 sign character
+                            code as array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToAlpha3</em></span></td>
+<td>
+                            Returns a list of territories with their 3 sign character code. The 3
+                            sign character code is used as array key and the territory (region) as
+                            array value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>PostalToTerritory</em></span></td>
+<td>
+                            Returns a list of territories with a regex for postal codes which are
+                            included within that territory. The <acronym class="acronym">ISO</acronym> territory
+                            code ('territory') is used as array key and the regex as array value.
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>NumberingSystem</em></span></td>
+<td>
+                            Returns a list of scripts with the notation for digits used within the
+                            script
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>FallbackToChar</em></span></td>
+<td>
+                            Returns a list of replacement characters for often used unicode
+                            characters. This can be used to replace "©" with "(C)" for example
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CharToFallback</em></span></td>
+<td>
+                            Returns a list of unicode characters for often used replacement
+                            characters. This can be used to replace "(C)" with "©" for example
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>LocaleUpgrade</em></span></td>
+<td>
+                            Returns a list of locale dependencies which can be used to upgrade a
+                            language to a full qualified locale
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Unit</em></span></td>
+<td>
+                            Returns a list of localized calendar units. This can be used to
+                            translate the strings "day", "month" and so on automatically
+                        </td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <p>
+            If you are in need of a single translated value, you can use the
+            <code class="methodname">getTranslation()</code> method. It always returns a string but it
+            accepts some different types than the <code class="methodname">getTranslationList()</code>
+            method. Also value is the same as before with one difference. You have to give the
+            detail you want to get returned as additional value.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Because you have almost always give a value as detail this parameter has to be given
+                as first parameter. This differs from the
+                <code class="methodname">getTranslationList()</code> method.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            See the following table for detailed information:
+        </p>
+
+        <div class="table">
+<a name="zend.locale.getdata.table-2"></a><p class="title"><b>Tableau 103. Details for getTranslation($value = null, $type = null, $locale = null)</b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="Details for getTranslation($value = null, $type = null, $locale = null)" border="1">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Type</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><span class="emphasis"><em>Language</em></span></td>
+<td>
+                            Returns a translation for a language. To select the wished translation
+                            you must give the language code as value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Script</em></span></td>
+<td>
+                            Returns a translation for a script. To select the wished translation you
+                            must give the script code as value
+                        </td>
+</tr>
+<tr>
+<td>
+                            <span class="emphasis"><em>Territory</em></span> or <span class="emphasis"><em>Country</em></span>
+                        </td>
+<td>
+                            Returns a translation for a territory. This can be countries, continents
+                            and territories. To select the wished variant you must give the
+                            territory code as value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Variant</em></span></td>
+<td>
+                            Returns a translation for a script variant. To select the wished variant
+                            you must give the variant code as value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Key</em></span></td>
+<td>
+                            Returns translation for a known keys. This keys are generic values used
+                            in translation. These are normally calendar, collation and currency. To
+                            select the wished key you must give the key code as value
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DefaultCalendar</em></span></td>
+<td>
+                            Returns the default calendar for the given locale. For most locales this
+                            will be 'gregorian'. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>MonthContext</em></span></td>
+<td>
+                            Returns the default context for months which is used within the given
+                            calendar. If you omit the value the 'gregorian' calendar will be used.
+                            Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DefaultMonth</em></span></td>
+<td>
+                            Returns the default format for months which is used within the given
+                            calendar. If you omit the value the 'gregorian' calendar will be used.
+                            Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Month</em></span></td>
+<td>
+                            Returns a translation for a month. You have to give the number of the
+                            month as integer value. It has to be between 1 and 12. If you want to
+                            receive data for other calendars, contexts or formats, then you must
+                            give an array instead of an integer with the expected values. The array
+                            has to look like this: <span class="command"><strong>array( 'calendar', 'context', 'format',
+                                'month number')</strong></span>. If you give only an integer then the
+                            default values are the 'gregorian' calendar, the context 'format' and
+                            the format 'wide'. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DayContext</em></span></td>
+<td>
+                            Returns the default context for ´days which is used within the given
+                            calendar. If you omit the value the 'gregorian' calendar will be used.
+                            Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DefaultDay</em></span></td>
+<td>
+                            Returns the default format for days which is used within the given
+                            calendar. If you omit the value the 'gregorian' calendar will be used.
+                            Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Day</em></span></td>
+<td>
+                            Returns a translation for a day. You have to give the english
+                            abbreviation of the day as string value ('sun', 'mon', etc.). If you
+                            want to receive data for other calendars, contexts or format, then you
+                            must give an array instead of an integer with the expected values. The
+                            array has to look like this: <code class="methodname">array('calendar', 'context',
+                                'format', 'day abbreviation')</code>. If you give only an
+                            string then the default values are the 'gregorian' calendar, the context
+                            'format' and the format 'wide'. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Quarter</em></span></td>
+<td>
+                            Returns a translation for a quarter. You have to give the number of the
+                            quarter as integer and it has to be between 1 and 4. If you want to
+                            receive data for other calendars, contexts or formats, then you must
+                            give an array instead of an integer with the expected values. The array
+                            has to look like this: <code class="methodname">array('calendar', 'context',
+                                'format', 'quarter number')</code>. If you give only an
+                            string then the default values are the 'gregorian' calendar,
+                            the context 'format' and the format 'wide'
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Am</em></span></td>
+<td>
+                            Returns translation for 'AM' in the expected locale. If you want to
+                            receive data for other calendars provide a string with the expected
+                            calendar. If you omit the value then the 'gregorian' calendar will be
+                            used. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Pm</em></span></td>
+<td>
+                            Returns translation for 'PM' in the expected locale. If you want to
+                            receive data for other calendars provide a string with the expected
+                            calendar. If you omit the value then the 'gregorian' calendar will be
+                            used. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Era</em></span></td>
+<td>
+                            Returns a translation for an era within a locale. You have to give the
+                            era number as string or integer. If you want to receive data for other
+                            calendars or formats, then you must give an array instead of the era
+                            number with the expected values. The array has to look like this:
+                            <code class="methodname">array('calendar', 'format', 'era number')</code>. If
+                            you give only a string then the default values are the 'gregorian'
+                            calendar and the 'abbr' format
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DefaultDate</em></span></td>
+<td>
+                            Returns the default date format which is used within the given
+                            calendar. If you omit the value the 'gregorian' calendar will be used.
+                            Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Date</em></span></td>
+<td>
+                            Returns the date format for a given calendar or format within a locale.
+                            If you omit the value then the 'gregorian' calendar will be used with
+                            the 'medium' format. If you give a string then the 'gregorian' calendar
+                            will be used with the given format. Or you can also give an array which
+                            will have to look like this: <code class="methodname">array('calendar',
+                                'format')</code>. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DefaultTime</em></span></td>
+<td>
+                            Returns the default time format which is used within the given calendar.
+                            If you omit the value the 'gregorian' calendar will be used. Use
+                            <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Time</em></span></td>
+<td>
+                            Returns the time format for a given calendar or format within a locale.
+                            If you omit the value then the 'gregorian' calendar will be used with
+                            the 'medium' format. If you give a string then the 'gregorian' calendar
+                            will be used with the given format. Or you can also give an array which
+                            will have to look like this:
+                            <code class="methodname">array('calendar', 'format')</code>. Use <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DateTime</em></span></td>
+<td>
+                            Returns the datetime format for the given locale which indicates how to
+                            display date with times in the same string within the given calendar. If
+                            you omit the value the 'gregorian' calendar will be used. Use
+                            <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DateItem</em></span></td>
+<td>Returns the default format for a given date or time item</td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DateInterval</em></span></td>
+<td>
+                            Returns the interval format for a given date or time format. The first
+                            value is the calendar format, normally 'gregorian'. The second value is
+                            the interval format and the third value the token with the greatest
+                            difference. For example: array('gregorian', 'yMMMM', 'y') returns the
+                            interval format for the date format 'yMMMM' where 'y' has the greatest
+                            difference.
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Field</em></span></td>
+<td>
+                            Returns a translated date field which can be used to display calendars
+                            or date strings like 'month' or 'year' in a wished language. You must
+                            give the field which has to be returned as string. In this case the
+                            'gregorian' calendar will be used. You can get the field for other
+                            calendar formats if you give an array which has to look like this:
+                            <code class="methodname">array('calendar', 'date field')</code>
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Relative</em></span></td>
+<td>
+                            Returns a translated date which is relative to today which can include
+                            date strings like 'yesterday' or 'tomorrow' in a wished language. You
+                            have to give the number of days relative to tomorrow to receive the
+                            expected string. Yesterday would be '-1', tomorrow '1' and so on. This
+                            will use the 'gregorian' calendar. if you want to get relative dates for
+                            other calendars you will have to give an array which has to look like
+                            this: <code class="methodname">array('calendar', 'relative days')</code>. Use
+                            <a class="link" href="zend.date.introduction.html" title="Introduction">Zend_Date</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>DecimalNumber</em></span></td>
+<td>
+                            Returns the format for decimal numbers within a given locale. Use <a class="link" href="zend.locale.parsing.html" title="Normalization and Localization">Zend_Locale_Format</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>ScientificNumber</em></span></td>
+<td>
+                            Returns the format for scientific numbers within a given locale
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>PercentNumber</em></span></td>
+<td>
+                            Returns the format for percentage numbers within a given locale
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencyNumber</em></span></td>
+<td>
+                            Returns the format for displaying currency numbers within a given
+                            locale. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>NameToCurrency</em></span></td>
+<td>
+                            Returns the translated name for a given currency. The currency has to be
+                            given in <acronym class="acronym">ISO</acronym> format which is for example 'EUR' for
+                            the currency 'euro'. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencyToName</em></span></td>
+<td>
+                            Returns a currency for a given localized name. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencySymbol</em></span></td>
+<td>
+                            Returns the used symbol for a currency within a given locale. Not for
+                            all currencies exists a symbol. Use
+                            <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Question</em></span></td>
+<td>
+                            Returns a localized string for acceptance ('yes') and negation ('no').
+                            You have to give either 'yes' or 'no' as value to receive the expected
+                            string. Use <a class="link" href="zend.locale.functions.html#zend.locale.getquestion" title='Obtaining translations for "yes" and "no"'>Zend_Locale's
+                                getQuestion method</a> for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencyFraction</em></span></td>
+<td>
+                            Returns the fraction to use for a given currency. You must give the
+                            currency as <acronym class="acronym">ISO</acronym> value. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a>
+                            for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencyRounding</em></span></td>
+<td>
+                            Returns how to round a given currency. You must give the currency as
+                            <acronym class="acronym">ISO</acronym> value. If you omit the currency then the
+                            'DEFAULT' rounding will be returned. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a>
+                            for simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CurrencyToRegion</em></span></td>
+<td>
+                            Returns the currency for a given region. The region code has to be given
+                            as <code class="constant">ISO3166</code> string for example 'AT' for austria. Use
+                            <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>RegionToCurrency</em></span></td>
+<td>
+                            Returns the regions where a currency is used. The currency has to be
+                            given as <code class="constant">ISO4217</code> code for example 'EUR' for euro.
+                            When a currency is used in multiple regions, these regions are separated
+                            with a whitespace character. Use <a class="link" href="zend.currency.introduction.html" title="Introduction à Zend_Currency">Zend_Currency</a> for
+                            simplicity
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>RegionToTerritory</em></span></td>
+<td>
+                            Returns the regions for a given territory. The territory has to be given
+                            as <code class="constant">ISO4217</code> string for example '001' for world. The
+                            regions within this territory are separated with a whitespace character
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToRegion</em></span></td>
+<td>
+                            Returns the territories where a given region is located. The region has
+                            to be given in <code class="constant">ISO3166</code> string for example 'AT' for
+                            austria. When a region is located in multiple territories then these
+                            territories are separated with a whitespace character
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>ScriptToLanguage</em></span></td>
+<td>
+                            Returns the scripts which are used within a given language. The language
+                            has to be given as <acronym class="acronym">ISO</acronym> language code for example 'en'
+                            for english. When multiple scripts are used within a language then these
+                            scripts are separated with a whitespace character
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>LanguageToScript</em></span></td>
+<td>
+                            Returns the languages which are used within a given script. The script
+                            has to be given as <acronym class="acronym">ISO</acronym> script code for example 'Latn'
+                            for latin. When a script is used in multiple languages then these
+                            languages are separated with a whitespace character
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToLanguage</em></span></td>
+<td>
+                            Returns the territory where a given language is used. The language has
+                            to be given as <acronym class="acronym">ISO</acronym> language code for example 'en' for
+                            english. When the given language is spoken within multiple territories
+                            then these territories are separated with a whitespace character
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>LanguageToTerritory</em></span></td>
+<td>
+                            Returns the language which is spoken within a given territory. The
+                            territory has to be given as <code class="constant">ISO3166</code> code for
+                            example 'IT' for italia. When multiple languages are spoken within the
+                            given territory then these languages are separated with a whitespace
+                            character
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TimezoneToWindows</em></span></td>
+<td>
+                            Returns a <acronym class="acronym">ISO</acronym> timezone for a given windows timezone
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>WindowsToTimezone</em></span></td>
+<td>
+                            Returns a windows timezone for a given <acronym class="acronym">ISO</acronym> timezone
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToTimezone</em></span></td>
+<td>
+                            Returns the territory for a given <acronym class="acronym">ISO</acronym> timezone
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TimezoneToTerritory</em></span></td>
+<td>
+                            Returns the <acronym class="acronym">ISO</acronym> timezone for a given territory
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CityToTimezone</em></span></td>
+<td>
+                            Returns the localized city for a given <acronym class="acronym">ISO</acronym> timezone.
+                            Not for all timezones does a city translation exist
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TimezoneToCity</em></span></td>
+<td>
+                            Returns the <acronym class="acronym">ISO</acronym> timezone for a given localized city
+                            name. Not for all cities does a timezone exist
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>PhoneToTerritory</em></span></td>
+<td>
+                            Returns the telephone code for a given territory (region). The territory
+                            code has to be given as <code class="constant">ISO3166</code> string for example
+                            'AT' for austria
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToPhone</em></span></td>
+<td>
+                            Returns the territory (region) where a telephone code is used. The
+                            telephone code has to be given as plain integer code for example '43'
+                            for +43. When a telephone code is used in multiple territories
+                            (regions), these territories are separated with a whitespace character
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>NumericToTerritory</em></span></td>
+<td>
+                            Returns the 3 digit number code for a given territory (region). The
+                            territory code has to be given as <code class="constant">ISO3166</code> string
+                            for example 'AT' for austria
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToNumeric</em></span></td>
+<td>
+                            Returns the territory (region) for a 3 digit number code. The 3 digit
+                            number code has to be given as plain integer code for example '43'
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Alpha3ToTerritory</em></span></td>
+<td>
+                            Returns the 3 sign character code for a given territory (region). The
+                            territory code has to be given as <code class="constant">ISO3166</code> string
+                            for example 'AT' for austria
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>TerritoryToAlpha3</em></span></td>
+<td>Returns the territory (region) for a 3 sign character code</td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>PostalToTerritory</em></span></td>
+<td>
+                            Returns the a regex for postal codes for a given territory. The
+                            territory has to be given as <code class="constant">ISO4217</code> string for
+                            example '001' for world
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>NumberingSystem</em></span></td>
+<td>
+                            Returns a scripts with the notation for digits used within this script
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>FallbackToChar</em></span></td>
+<td>
+                            Returns a replacement character for a often used unicode character.
+                            This can be used to replace "©" with "(C)" for example
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>CharToFallback</em></span></td>
+<td>
+                            Returns a unicode character for a often used replacement character.
+                            This can be used to replace "(C)" with "©" for example
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>LocaleUpgrade</em></span></td>
+<td>
+                            Returns a locale dependencies for a given language which can be used to
+                            upgrade this language to a full qualified locale
+                        </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>Unit</em></span></td>
+<td>
+                            Returns a localized calendar unit. This can be used to translate
+                            the strings "day", "month" and so on automatically. The first parameter
+                            has to be the type, and the second parameter has to be the count
+                        </td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                With Zend Framework 1.5 several old types have been renamed. This has to be done
+                because of several new types, some misspelling and to increase the usability. See
+                this table for a list of old to new types:
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="table">
+<a name="zend.locale.getdata.table-3"></a><p class="title"><b>Tableau 104. Differences between Zend Framework 1.0 and 1.5</b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="Differences between Zend Framework 1.0 and 1.5" border="1">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Old type</th>
+<th>New type</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Country</td>
+<td>Territory (with value '2')</td>
+</tr>
+<tr>
+<td>Calendar</td>
+<td>Type (with value 'calendar')</td>
+</tr>
+<tr>
+<td>Month_Short</td>
+<td>Month (with array('gregorian', 'format', 'abbreviated')</td>
+</tr>
+<tr>
+<td>Month_Narrow</td>
+<td>Month (with array('gregorian', 'stand-alone', 'narrow')</td>
+</tr>
+<tr>
+<td>Month_Complete</td>
+<td>Months</td>
+</tr>
+<tr>
+<td>Day_Short</td>
+<td>Day (with array('gregorian', 'format', 'abbreviated')</td>
+</tr>
+<tr>
+<td>Day_Narrow</td>
+<td>Day (with array('gregorian', 'stand-alone', 'narrow')</td>
+</tr>
+<tr>
+<td>DateFormat</td>
+<td>Date</td>
+</tr>
+<tr>
+<td>TimeFormat</td>
+<td>Time</td>
+</tr>
+<tr>
+<td>Timezones</td>
+<td>CityToTimezone</td>
+</tr>
+<tr>
+<td>Currency</td>
+<td>NameToCurrency</td>
+</tr>
+<tr>
+<td>Currency_Sign</td>
+<td>CurrencySymbol</td>
+</tr>
+<tr>
+<td>Currency_Detail</td>
+<td>CurrencyToRegion</td>
+</tr>
+<tr>
+<td>Territory_Detail</td>
+<td>TerritoryToRegion</td>
+</tr>
+<tr>
+<td>Language_Detail</td>
+<td>LanguageToTerritory</td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <p>
+            The example below demonstrates how to obtain the names of things in different languages.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.getdata.example-3"></a><p class="title"><b>Exemple 533. getTranslationList</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// prints the names of all countries in German language
+print_r(Zend_Locale::getTranslationList('country', 'de'));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The next example shows how to find the name of a language in another language, when the
+            two letter iso country code is not known.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.getdata.example-4"></a><p class="title"><b>Exemple 534. Converting country name in one language to another</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$code2name = Zend_Locale::getLanguageTranslationList('en_US');
+$name2code = array_flip($code2name);
+$frenchCode = $name2code['French'];
+echo Zend_Locale::getLanguageTranslation($frenchCode, 'de_AT');
+// output is the German name of the French language
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            To generate a list of all languages known by <code class="classname">Zend_Locale</code>, with
+            each language name shown in its own language, try the example below in a web page.
+            Similarly, <code class="methodname">getCountryTranslationList()</code> and
+            <code class="methodname">getCountryTranslation()</code> could be used to create a table mapping
+            your native language names for regions to the names of the regions shown in another
+            language. Use a <span class="command"><strong>try .. catch</strong></span> block to handle exceptions that occur
+            when using a locale that does not exist. Not all languages are also locales. In the
+            example, below exceptions are ignored to prevent early termination.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.getdata.example-6"></a><p class="title"><b>Exemple 535. All Languages written in their native language</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$list = Zend_Locale::getLanguageTranslationList('auto');
+
+foreach($list as $language =&gt; $content) {
+    try {
+        $output = Zend_Locale::getLanguageTranslation($language, $language);
+        if (is_string($output)) {
+            print "\n&lt;br&gt;[".$language."] ".$output;
+        }
+    } catch (Exception $e) {
+        continue;
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.getquestion"></a>Obtaining translations for "yes" and "no"</h3></div></div></div>
+        
+
+        <p>
+            Frequently, programs need to solicit a "yes" or "no" response from the user. Use
+            <code class="methodname">getQuestion()</code> to obtain an array containing the correct word(s)
+            or regex strings to use for prompting the user in a particular $locale (defaults to the
+            current object's locale). The returned array will contain the following information :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+                <p>
+                    <span class="emphasis"><em>yes and no</em></span>: A generic string representation for yes and no
+                    responses. This will contain the first and most generic response from yesarray
+                    and noarray.
+                </p>
+
+                <p>
+                    <span class="emphasis"><em>yesarray and noarray</em></span>: An array with all known yes and
+                    no responses. Several languages have more than just two responses. In general
+                    this is the full string and its abbreviation.
+                </p>
+
+                <p>
+                    <span class="emphasis"><em>yesexpr and noexpr</em></span>: A generated regex which allows you
+                    to handle user response, and search for yes or no.
+                </p>
+            </li></ul></div>
+
+        <p>
+            All of this information are of course localized and depend on the set locale. See the
+            following example for the information you can receive:
+        </p>
+
+        <div class="example">
+<a name="zend.locale.getquestion.example-1"></a><p class="title"><b>Exemple 536. getQuestion()</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale();
+// Question strings
+print_r($locale-&gt;getQuestion('de'));
+
+- - - Output - - -
+
+Array
+(
+    [yes] =&gt; ja
+    [no] =&gt; nein
+    [yesarray] =&gt; Array
+        (
+            [0] =&gt; ja
+            [1] =&gt; j
+        )
+
+    [noarray] =&gt; Array
+        (
+            [0] =&gt; nein
+            [1] =&gt; n
+        )
+
+    [yesexpr] =&gt; ^([jJ][aA]?)|([jJ]?)
+    [noexpr] =&gt; ^([nN]([eE][iI][nN])?)|([nN]?)
+)
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Until 1.0.3 <span class="emphasis"><em>yesabbr</em></span> from the underlaying locale data was also
+                available. Since 1.5 this information is no longer standalone available, but you
+                will find the information from it within <span class="emphasis"><em>yesarray</em></span>.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.getlocalelist"></a>Get a list of all known locales</h3></div></div></div>
+        
+
+        <p>
+            Sometimes you will want to get a list of all known locales. This can be used for several
+            tasks like the creation of a selectbox. For this purpose you can use the static
+            <code class="methodname">getLocaleList()</code> method which will return a list of all known
+            locales.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.getlocalelist.example-1"></a><p class="title"><b>Exemple 537. getLocaleList()</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$localelist = Zend_Locale::getLocaleList();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Note that the locales are returned as key of the array you will receive. The value
+                is always a boolean <code class="constant">TRUE</code>.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.detection"></a>Detecting locales</h3></div></div></div>
+        
+
+        <p>
+            When you want to detect if a given input, regardless of its source, is a locale you
+            should use the static <code class="methodname">isLocale()</code> method. The first parameter of
+            this method is the string which you want to check.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.detection.example-1"></a><p class="title"><b>Exemple 538. Simple locale detection</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$input = 'to_RU';
+if (Zend_Locale::isLocale($input)) {
+    print "'{$input}' is a locale";
+} else {
+    print "Sorry... the given input is no locale";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            As you can see, the output of this method is always a boolean. There is only one reason
+            you could get an exception when calling this method. When your system does not provide
+            any locale and Zend Framework is not able to detect it automatically. Normally this
+            shows that there is a problem with your OS in combination with <acronym class="acronym">PHP</acronym>'s
+            <code class="methodname">setlocale()</code>.
+        </p>
+
+        <p>
+            You should also note that any given locale string will automatically be degraded if the
+            region part does not exist for this locale. In our previous example the language
+            '<span class="property">to</span>' does not exist in the region '<span class="property">RU</span>', but
+            you will still get <code class="constant">TRUE</code> returned as
+            <code class="classname">Zend_Locale</code> can work with the given input.
+        </p>
+
+        <p>
+            Still it's sometimes useful to prevent this automatic degrading, and this is where the
+            second parameter of <code class="methodname">isLocale()</code> comes in place. The
+            <span class="property">strict</span> parameter defaults to <code class="constant">FALSE</code> and can be
+            used to prevent degrading when set to <code class="constant">TRUE</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.detection.example-2"></a><p class="title"><b>Exemple 539. Strict locale detection</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$input = 'to_RU';
+if (Zend_Locale::isLocale($input, true)) {
+    print "'{$input}' is a locale";
+} else {
+    print "Sorry... the given input is no locale";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Now that you are able to detect if a given string is a locale you could add locale aware
+            behaviour to your own classes. But you will soon detect that this always leads to
+            the same 15 lines of code. Something like the following example:
+        </p>
+
+        <div class="example">
+<a name="zend.locale.detection.example-3"></a><p class="title"><b>Exemple 540. Implement locale aware behaviour</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+if ($locale === null) {
+    $locale = new Zend_Locale();
+}
+
+if (!Zend_Locale::isLocale($locale, true, false)) {
+    if (!Zend_Locale::isLocale($locale, false, false)) {
+        throw new Zend_Locale_Exception(
+            "The locale '$locale' is no known locale");
+    }
+
+    $locale = new Zend_Locale($locale);
+}
+
+if ($locale instanceof Zend_Locale) {
+    $locale = $locale-&gt;toString();
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            With Zend Framework 1.8 we added a static <code class="methodname">findLocale()</code> method
+            which returns a locale string which you can work with. It processes the following
+            tasks:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Detects if a given string is a locale
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Degrades the locale if it does not exist in the given region
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Upgrades the locale when it is detected as region without language
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Returns a previous set application wide locale if no input is given
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Detects the locale from browser when the previous detections failed
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Detects the locale from environment when the previous detections failed
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Detects the locale from framework when the previous detections failed
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Returns always a string which represents the found locale.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            The following example shows how these checks and the above code can be simplified with
+            one single call:
+        </p>
+
+        <div class="example">
+<a name="zend.locale.detection.example-4"></a><p class="title"><b>Exemple 541. Locale aware behaviour as with Zend Framework 1.8</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = Zend_Locale::findLocale($inputstring);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.locale.introduction.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.locale.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.locale.parsing.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Normalization and Localization</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

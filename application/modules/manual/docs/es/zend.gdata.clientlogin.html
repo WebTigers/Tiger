@@ -1,0 +1,159 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Authenticating with ClientLogin</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.gdata.html" title="Zend_Gdata">
+<link rel="prev" href="zend.gdata.books.html" title="Using the Book Search Data API">
+<link rel="next" href="zend.gdata.calendar.html" title="Using Google Calendar">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Authenticating with ClientLogin</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.gdata.books.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Gdata</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.gdata.calendar.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.gdata.clientlogin"></a>Authenticating with ClientLogin</h2></div></div></div>
+    
+
+    <p>
+        The ClientLogin mechanism enables you to write <acronym class="acronym">PHP</acronym> application
+        that acquire authenticated access to Google Services,
+        specifying a user's credentials in the <acronym class="acronym">HTTP</acronym> Client.
+    </p>
+
+    <p>
+        See <a class="ulink" href="http://code.google.com/apis/accounts/AuthForInstalledApps.html" target="_top">http://code.google.com/apis/accounts/AuthForInstalledApps.html</a>
+        for more information about Google Data ClientLogin authentication.
+    </p>
+
+    <p>
+        The Google documentation says the ClientLogin mechanism is appropriate
+        for "installed applications" whereas the AuthSub mechanism is
+        for "web applications." The difference is that AuthSub requires
+        interaction from the user, and a browser interface that can react
+        to redirection requests. The ClientLogin solution uses <acronym class="acronym">PHP</acronym> code to
+        supply the account credentials; the user is not required to enter her
+        credentials interactively.
+    </p>
+
+    <p>
+        The account credentials supplied via the ClientLogin mechanism must
+        be valid credentials for Google services, but they are not required
+        to be those of the user who is using the <acronym class="acronym">PHP</acronym> application.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.clientlogin.login"></a>Creating a ClientLogin authenticated Http Client</h3></div></div></div>
+        
+
+        <p>
+            The process of creating an authenticated <acronym class="acronym">HTTP</acronym> client using
+            the ClientLogin mechanism is to call the static function
+            <code class="methodname">Zend_Gdata_ClientLogin::getHttpClient()</code>
+            and pass the Google account credentials in plain text.
+            The return value of this function is an object of class
+            <code class="classname">Zend_Http_Client</code>.
+        </p>
+
+        <p>
+            The optional third parameter is the name of the Google Data
+            service. For instance, this can be 'cl' for Google Calendar.
+            The default is "xapi", which is recognized by Google Data
+            servers as a generic service name.
+        </p>
+
+        <p>
+            The optional fourth parameter is an instance of <code class="classname">Zend_Http_Client</code>.
+            This allows you to set options in the client, such as proxy
+            server settings. If you pass <code class="constant">NULL</code> for this
+            parameter, a generic <code class="classname">Zend_Http_Client</code> object is created.
+        </p>
+
+        <p>
+            The optional fifth parameter is a short string that Google Data
+            servers use to identify the client application for logging
+            purposes. By default this is string "Zend-ZendFramework";
+        </p>
+
+        <p>
+            The optional sixth parameter is a string ID for a
+            <span class="trademark">CAPTCHA</span>™ challenge that has been issued by
+            the server. It is only necessary when logging in after receiving
+            a <span class="trademark">CAPTCHA</span>™ challenge from a previous
+            login attempt.
+        </p>
+
+        <p>
+            The optional seventh parameter is a user's response to a
+            <span class="trademark">CAPTCHA</span>™ challenge that has been issued by
+            the server. It is only necessary when logging in after receiving
+            a <span class="trademark">CAPTCHA</span>™ challenge from a previous
+            login attempt.
+        </p>
+
+        <p>
+            Below is an example of <acronym class="acronym">PHP</acronym> code for a web application
+            to acquire authentication to use the Google Calendar service
+            and create a <code class="classname">Zend_Gdata</code> client object using that authenticated
+            <code class="classname">Zend_Http_Client</code>.
+        </p>
+
+        <pre class="programlisting">
+// Enter your Google account credentials
+$email = 'johndoe@gmail.com';
+$passwd = 'xxxxxxxx';
+try {
+   $client = Zend_Gdata_ClientLogin::getHttpClient($email, $passwd, 'cl');
+} catch (Zend_Gdata_App_CaptchaRequiredException $cre) {
+    echo 'URL of CAPTCHA image: ' . $cre-&gt;getCaptchaUrl() . "\n";
+    echo 'Token ID: ' . $cre-&gt;getCaptchaToken() . "\n";
+} catch (Zend_Gdata_App_AuthException $ae) {
+   echo 'Problem authenticating: ' . $ae-&gt;exception() . "\n";
+}
+
+$cal = new Zend_Gdata_Calendar($client);
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.clientlogin.terminating"></a>Terminating a ClientLogin authenticated Http Client</h3></div></div></div>
+        
+
+        <p>
+            There is no method to revoke ClientLogin authentication as there
+            is in the AuthSub token-based solution. The credentials used
+            in the ClientLogin authentication are the login and password
+            to a Google account, and therefore these can be used repeatedly
+            in the future.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.gdata.books.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.gdata.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.gdata.calendar.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Using the Book Search Data API </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Using Google Calendar</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

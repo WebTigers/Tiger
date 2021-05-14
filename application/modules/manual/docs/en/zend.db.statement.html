@@ -1,0 +1,431 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Db_Statement</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.db.html" title="Zend_Db">
+<link rel="prev" href="zend.db.adapter.html" title="Zend_Db_Adapter">
+<link rel="next" href="zend.db.profiler.html" title="Zend_Db_Profiler">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Db_Statement</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.db.adapter.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Db</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.db.profiler.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.db.statement"></a>Zend_Db_Statement</h2></div></div></div>
+    
+
+    <p>
+        In addition to convenient methods such as <code class="methodname">fetchAll()</code> and
+        <code class="methodname">insert()</code> documented in <a class="link" href="zend.db.adapter.html" title="Zend_Db_Adapter">Zend_Db_Adapter</a>, you can use a statement object to gain
+        more options for running queries and fetching result sets. This section describes how to get
+        an instance of a statement object, and how to use its methods.
+    </p>
+
+    <p>
+        <code class="classname">Zend_Db_Statement</code> is based on the PDOStatement object in the
+        <a class="ulink" href="http://www.php.net/pdo" target="_top">PHP Data Objects</a> extension.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.statement.creating"></a>Creating a Statement</h3></div></div></div>
+        
+
+        <p>
+            Typically, a statement object is returned by the
+            <code class="methodname">query()</code> method of the database Adapter class.
+            This method is a general way to prepare any <acronym class="acronym">SQL</acronym> statement.
+            The first argument is a string containing an <acronym class="acronym">SQL</acronym> statement.
+            The optional second argument is an array of values to bind
+            to parameter placeholders in the <acronym class="acronym">SQL</acronym> string.
+        </p>
+
+        <div class="example">
+<a name="zend.db.statement.creating.example1"></a><p class="title"><b>Example 221. Creating a SQL statement object with query()</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$stmt = $db-&gt;query(
+            'SELECT * FROM bugs WHERE reported_by = ? AND bug_status = ?',
+            array('goofy', 'FIXED')
+        );
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The statement object corresponds to a <acronym class="acronym">SQL</acronym> statement that has been
+            prepared, and executed once with the bind-values specified.
+            If the statement was a <acronym class="acronym">SELECT</acronym> query or other type of statement
+            that returns a result set, it is now ready to fetch results.
+        </p>
+
+        <p>
+            You can create a statement with its constructor, but this is less
+            typical usage. There is no factory method to create this object,
+            so you need to load the specific statement class and call its
+            constructor. Pass the Adapter object as the first argument, and
+            a string containing an <acronym class="acronym">SQL</acronym> statement as the second argument.
+            The statement is prepared, but not executed.
+        </p>
+
+        <div class="example">
+<a name="zend.db.statement.creating.example2"></a><p class="title"><b>Example 222. Using a SQL statement constructor</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$sql = 'SELECT * FROM bugs WHERE reported_by = ? AND bug_status = ?';
+
+$stmt = new Zend_Db_Statement_Mysqli($db, $sql);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.statement.executing"></a>Executing a Statement</h3></div></div></div>
+        
+
+        <p>
+            You need to execute a statement object if you create it using its
+            constructor, or if you want to execute the same statement multiple
+            times. Use the <code class="methodname">execute()</code> method of the statement
+            object. The single argument is an array of value to bind to
+            parameter placeholders in the statement.
+        </p>
+
+        <p>
+            If you use <span class="emphasis"><em>positional parameters</em></span>, or those
+            that are marked with a question mark symbol ('<span class="emphasis"><em>?</em></span>'), pass
+            the bind values in a plain array.
+        </p>
+
+        <div class="example">
+<a name="zend.db.statement.executing.example1"></a><p class="title"><b>Example 223. Executing a statement with positional parameters</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$sql = 'SELECT * FROM bugs WHERE reported_by = ? AND bug_status = ?';
+
+$stmt = new Zend_Db_Statement_Mysqli($db, $sql);
+
+$stmt-&gt;execute(array('goofy', 'FIXED'));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            If you use <span class="emphasis"><em>named parameters</em></span>, or those that are
+            indicated by a string identifier preceded by a colon character
+            ('<span class="emphasis"><em>:</em></span>'), pass the bind values in an associative array.
+            The keys of this array should match the parameter names.
+        </p>
+
+        <div class="example">
+<a name="zend.db.statement.executing.example2"></a><p class="title"><b>Example 224. Executing a statement with named parameters</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$sql = 'SELECT * FROM bugs WHERE ' .
+       'reported_by = :reporter AND bug_status = :status';
+
+$stmt = new Zend_Db_Statement_Mysqli($db, $sql);
+
+$stmt-&gt;execute(array(':reporter' =&gt; 'goofy', ':status' =&gt; 'FIXED'));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            <acronym class="acronym">PDO</acronym> statements support both positional parameters and named
+            parameters, but not both types in a single <acronym class="acronym">SQL</acronym> statement. Some of
+            the <code class="classname">Zend_Db_Statement</code> classes for non-PDO extensions may support
+            only one type of parameter or the other.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.statement.fetching"></a>Fetching Results from a SELECT Statement</h3></div></div></div>
+        
+
+        <p>
+            You can call methods on the statement object to retrieve rows from
+            <acronym class="acronym">SQL</acronym> statements that produce result set. <acronym class="acronym">SELECT</acronym>,
+            <acronym class="acronym">SHOW</acronym>, <acronym class="acronym">DESCRIBE</acronym> and <acronym class="acronym">EXPLAIN</acronym> are
+            examples of statements that produce a result set. <acronym class="acronym">INSERT</acronym>,
+            <acronym class="acronym">UPDATE</acronym>, and <acronym class="acronym">DELETE</acronym> are examples of statements that
+            don't produce a result set. You can execute the latter <acronym class="acronym">SQL</acronym> statements
+            using <code class="classname">Zend_Db_Statement</code>, but you cannot call methods to fetch
+            rows of results from them.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.statement.fetching.fetch"></a>Fetching a Single Row from a Result Set</h4></div></div></div>
+            
+
+            <p>
+                To retrieve one row from the result set, use the
+                <code class="methodname">fetch()</code> method of the statement object.
+                All three arguments of this method are optional:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>Fetch style</em></span> is the
+                        first argument. This controls the structure in which
+                        the row is returned.
+                        See <a class="link" href="zend.db.adapter.html#zend.db.adapter.select.fetch-mode" title="Changing the Fetch Mode">this chapter</a>
+                        for a description of the valid values and the
+                        corresponding data formats.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>Cursor orientation</em></span>
+                        is the second argument. The default is
+                        <code class="constant">Zend_Db::FETCH_ORI_NEXT</code>, which simply means that each
+                        call to <code class="methodname">fetch()</code> returns the next row in
+                        the result set, in the order returned by the <acronym class="acronym">RDBMS</acronym>.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>Offset</em></span> is the third
+                        argument.
+                        If the cursor orientation is <code class="constant">Zend_Db::FETCH_ORI_ABS</code>,
+                        then the offset number is the ordinal number of the row to return.
+                        If the cursor orientation is <code class="constant">Zend_Db::FETCH_ORI_REL</code>,
+                        then the offset number is relative to the cursor
+                        position before <code class="methodname">fetch()</code> was called.
+                    </p>
+                </li>
+</ul></div>
+
+            <p>
+                <code class="methodname">fetch()</code> returns <code class="constant">FALSE</code> if all rows of
+                the result set have been fetched.
+            </p>
+
+            <div class="example">
+<a name="zend.db.statement.fetching.fetch.example"></a><p class="title"><b>Example 225. Using fetch() in a loop</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$stmt = $db-&gt;query('SELECT * FROM bugs');
+
+while ($row = $stmt-&gt;fetch()) {
+    echo $row['bug_description'];
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                See also <a class="ulink" href="http://www.php.net/PDOStatement-fetch" target="_top">PDOStatement::fetch()</a>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.statement.fetching.fetchall"></a>Fetching a Complete Result Set</h4></div></div></div>
+            
+
+            <p>
+                To retrieve all the rows of the result set in one step, use the
+                <code class="methodname">fetchAll()</code> method. This is equivalent to calling
+                the <code class="methodname">fetch()</code> method in a loop and returning all
+                the rows in an array. The <code class="methodname">fetchAll()</code> method accepts
+                two arguments. The first is the fetch style, as described above,
+                and the second indicates the number of the column to return,
+                when the fetch style is <code class="constant">Zend_Db::FETCH_COLUMN</code>.
+            </p>
+
+            <div class="example">
+<a name="zend.db.statement.fetching.fetchall.example"></a><p class="title"><b>Example 226. Using fetchAll()</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$stmt = $db-&gt;query('SELECT * FROM bugs');
+
+$rows = $stmt-&gt;fetchAll();
+
+echo $rows[0]['bug_description'];
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                See also <a class="ulink" href="http://www.php.net/PDOStatement-fetchAll" target="_top">PDOStatement::fetchAll()</a>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.statement.fetching.fetch-mode"></a>Changing the Fetch Mode</h4></div></div></div>
+            
+
+            <p>
+                By default, the statement object returns rows of the result set
+                as associative arrays, mapping column names to column values.
+                You can specify a different format for the statement class to
+                return rows, just as you can in the Adapter class. You can use
+                the <code class="methodname">setFetchMode()</code> method of the statement object
+                to specify the fetch mode. Specify the fetch mode using
+                <code class="classname">Zend_Db</code> class constants <code class="constant">FETCH_ASSOC</code>,
+                <code class="constant">FETCH_NUM</code>, <code class="constant">FETCH_BOTH</code>,
+                <code class="constant">FETCH_COLUMN</code>, and <code class="constant">FETCH_OBJ</code>.
+                See <a class="link" href="zend.db.adapter.html#zend.db.adapter.select.fetch-mode" title="Changing the Fetch Mode">this chapter</a>
+                for more information on these modes. Subsequent calls to the statement methods
+                <code class="methodname">fetch()</code> or <code class="methodname">fetchAll()</code> use the
+                fetch mode that you specify.
+            </p>
+
+            <div class="example">
+<a name="zend.db.statement.fetching.fetch-mode.example"></a><p class="title"><b>Example 227. Setting the fetch mode</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$stmt = $db-&gt;query('SELECT * FROM bugs');
+
+$stmt-&gt;setFetchMode(Zend_Db::FETCH_NUM);
+
+$rows = $stmt-&gt;fetchAll();
+
+echo $rows[0][0];
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                See also <a class="ulink" href="http://www.php.net/PDOStatement-setFetchMode" target="_top">PDOStatement::setFetchMode()</a>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.statement.fetching.fetchcolumn"></a>Fetching a Single Column from a Result Set</h4></div></div></div>
+            
+
+            <p>
+                To return a single column from the next row of the result set,
+                use <code class="methodname">fetchColumn()</code>. The optional argument is the
+                integer index of the column, and it defaults to 0. This method
+                returns a scalar value, or <code class="constant">FALSE</code> if all rows of
+                the result set have been fetched.
+            </p>
+
+            <p>
+                Note this method operates differently than the
+                <code class="methodname">fetchCol()</code> method of the Adapter class.
+                The <code class="methodname">fetchColumn()</code> method of a statement returns a
+                single value from one row.
+                The <code class="methodname">fetchCol()</code> method of an adapter returns an
+                array of values, taken from the first column of all rows of the
+                result set.
+            </p>
+
+            <div class="example">
+<a name="zend.db.statement.fetching.fetchcolumn.example"></a><p class="title"><b>Example 228. Using fetchColumn()</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$stmt = $db-&gt;query('SELECT bug_id, bug_description, bug_status FROM bugs');
+
+$bug_status = $stmt-&gt;fetchColumn(2);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                See also <a class="ulink" href="http://www.php.net/PDOStatement-fetchColumn" target="_top">PDOStatement::fetchColumn()</a>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.statement.fetching.fetchobject"></a>Fetching a Row as an Object</h4></div></div></div>
+            
+
+            <p>
+                To retrieve a row from the result set structured as an object,
+                use the <code class="methodname">fetchObject()</code>. This method takes two
+                optional arguments. The first argument is a string that names
+                the class name of the object to return; the default is
+                'stdClass'. The second argument is an array of values that
+                will be passed to the constructor of that class.
+            </p>
+
+            <div class="example">
+<a name="zend.db.statement.fetching.fetchobject.example"></a><p class="title"><b>Example 229. Using fetchObject()</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$stmt = $db-&gt;query('SELECT bug_id, bug_description, bug_status FROM bugs');
+
+$obj = $stmt-&gt;fetchObject();
+
+echo $obj-&gt;bug_description;
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                See also <a class="ulink" href="http://www.php.net/PDOStatement-fetchObject" target="_top">PDOStatement::fetchObject()</a>.
+            </p>
+        </div>
+    </div>
+
+    
+
+    
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.db.adapter.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.db.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.db.profiler.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Db_Adapter </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend_Db_Profiler</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

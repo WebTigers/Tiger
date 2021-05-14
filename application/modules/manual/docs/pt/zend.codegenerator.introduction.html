@@ -1,0 +1,176 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Introduction</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.codegenerator.html" title="Zend_CodeGenerator">
+<link rel="prev" href="zend.codegenerator.html" title="Zend_CodeGenerator">
+<link rel="next" href="zend.codegenerator.examples.html" title="Zend_CodeGenerator Examples">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Introduction</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.codegenerator.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_CodeGenerator</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.codegenerator.examples.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.codegenerator.introduction"></a>Introduction</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_CodeGenerator</code> provides facilities to generate
+        arbitrary code using an object oriented interface, both to create new
+        code as well as to update existing code. While the current
+        implementation is limited to generating <acronym class="acronym">PHP</acronym> code, you can easily extend
+        the base class in order to provide code generation for other tasks:
+        JavaScript, configuration files, apache vhosts, etc.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.codegenerator.introduction.theory"></a>Theory of Operation</h3></div></div></div>
+        
+
+        <p>
+            In the most typical use case, you will simply instantiate a code
+            generator class and either pass it the appropriate configuration or
+            configure it after instantiation. To generate the code, you will
+            simply echo the object or call its <code class="methodname">generate()</code> method.
+        </p>
+
+        <pre class="programlisting">
+// Passing configuration to the constructor:
+$file = new Zend_CodeGenerator_Php_File(array(
+    'classes' =&gt; array(
+        new Zend_CodeGenerator_Php_Class(array(
+            'name'    =&gt; 'World',
+            'methods' =&gt; array(
+                new Zend_CodeGenerator_Php_Method(array(
+                    'name' =&gt; 'hello',
+                    'body' =&gt; 'echo \'Hello world!\';',
+                )),
+            ),
+        )),
+    )
+));
+
+// Configuring after instantiation
+$method = new Zend_CodeGenerator_Php_Method();
+$method-&gt;setName('hello')
+       -&gt;setBody('echo \'Hello world!\';');
+
+$class = new Zend_CodeGenerator_Php_Class();
+$class-&gt;setName('World')
+      -&gt;setMethod($method);
+
+$file = new Zend_CodeGenerator_Php_File();
+$file-&gt;setClass($class);
+
+// Render the generated file
+echo $file;
+
+// or write it to a file:
+file_put_contents('World.php', $file-&gt;generate());
+</pre>
+
+        <p>
+            Both of the above samples will render the same result:
+        </p>
+
+        <pre class="programlisting">
+&lt;?php
+
+class World
+{
+
+    public function hello()
+    {
+        echo 'Hello world!';
+    }
+
+}
+</pre>
+
+        <p>
+            Another common use case is to update existing code -- for instance,
+            to add a method to a class. In such a case, you must first inspect
+            the existing code using reflection, and then add your new method.
+            <code class="classname">Zend_CodeGenerator</code> makes this trivially simple, by
+            leveraging <a class="link" href="zend.reflection.html" title="Zend_Reflection">Zend_Reflection</a>.
+        </p>
+
+        <p>
+            As an example, let's say we've saved the above to the file
+            "<code class="filename">World.php</code>", and have already included it. We could then do the
+            following:
+        </p>
+
+        <pre class="programlisting">
+$class = Zend_CodeGenerator_Php_Class::fromReflection(
+    new Zend_Reflection_Class('World')
+);
+
+$method = new Zend_CodeGenerator_Php_Method();
+$method-&gt;setName('mrMcFeeley')
+       -&gt;setBody('echo \'Hello, Mr. McFeeley!\';');
+$class-&gt;setMethod($method);
+
+$file = new Zend_CodeGenerator_Php_File();
+$file-&gt;setClass($class);
+
+// Render the generated file
+echo $file;
+
+// Or, better yet, write it back to the original file:
+file_put_contents('World.php', $file-&gt;generate());
+</pre>
+
+        <p>
+            The resulting class file will now look like this:
+        </p>
+
+        <pre class="programlisting">
+&lt;?php
+
+class World
+{
+
+    public function hello()
+    {
+        echo 'Hello world!';
+    }
+
+    public function mrMcFeeley()
+    {
+        echo 'Hellow Mr. McFeeley!';
+    }
+
+}
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.codegenerator.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.codegenerator.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.codegenerator.examples.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_CodeGenerator </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_CodeGenerator Examples</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

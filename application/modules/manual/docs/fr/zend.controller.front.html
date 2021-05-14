@@ -1,0 +1,612 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Le contrôleur frontal (Front Controller)</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.basics.html" title="Fondations de Zend_Controller">
+<link rel="next" href="zend.controller.request.html" title="L'objet Requête">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Le contrôleur frontal (Front Controller)</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.basics.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.request.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.front"></a>Le contrôleur frontal (Front Controller)</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.front.overview"></a>Présentation générale</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Controller_Front</code> implémente un
+            <a class="ulink" href="http://www.martinfowler.com/eaaCatalog/frontController.html" target="_top">motif de
+            contrôleur frontal</a>utilisé dans les applications
+            <a class="ulink" href="http://fr.wikipedia.org/wiki/Mod%C3%A8le-Vue-Contr%C3%B4leur" target="_top">
+            Modèle-Vue-Contrôleur (MVC)</a>. Son but est d'initialiser l'environnement de
+            requête, d'acheminer la requête entrante et de distribuer ensuite n'importe quelles
+            actions découvertes ; il agrège n'importe quelles réponses et les retourne quand le
+            processus est complet.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Controller_Front</code> implémente aussi le
+            <a class="ulink" href="http://fr.wikipedia.org/wiki/Singleton_%28motif_de_conception%29" target="_top">motif
+            Singleton</a>, signifiant que seule une instance du contrôleur frontal peut être
+            disponible à n'importe quel moment. Cela lui permet aussi d'agir comme un
+            enregistrement dans lequel les autres objets du processus de distribution peuvent
+            écrire.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Controller_Front</code> enregistre un
+            <a class="link" href="zend.controller.plugins.html" title="Plugins">plugin broker</a>avec lui, permettant à des
+            événements divers qu'il déclenche d'être observés par plugins. Dans la plupart des cas,
+            cela donne au développeur l'occasion de construire le processus de distribution du site
+            sans avoir besoin d'étendre le contrôleur frontal pour ajouter une
+            fonctionnalité.
+        </p>
+
+        <p>
+            Le contrôleur frontal a besoin au minimum d'un ou plusieurs répertoires
+            contenants les
+            <a class="link" href="zend.controller.action.html" title="Contrôleurs d'action">contrôleurs d'action</a>pour faire son
+            travail. Une variété de méthodes peut aussi être invoquée pour plus tard construire
+            l'environnement de contrôleur frontal et celui de ses classes d'aide.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Comportement par défaut">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Comportement par défaut</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+            <p>
+                Par défaut, le contrôleur frontal charge le plugin
+                <a class="link" href="zend.controller.plugins.html#zend.controller.plugins.standard.errorhandler" title="Zend_Controller_Plugin_ErrorHandler">ErrorHandler</a>,
+                ainsi que le plugin d'aide d'action
+                <a class="link" href="zend.controller.actionhelpers.html#zend.controller.actionhelpers.viewrenderer" title="ViewRenderer">ViewRenderer</a>.
+                Ceci est fait respectivement pour simplifier la gestion d'erreur et le rendu des
+                vues dans vos contrôleurs.
+            </p>
+            <p>
+                Pour désactiver <code class="code">ErrorHandler</code>, exécutez l'action suivante à
+                n'importe quel point précédant l'appel à <code class="methodname">dispatch()</code> :
+            </p>
+            <pre class="programlisting">
+// Désactivez le plugin ErrorHandler :
+$front-&gt;setParam('noErrorHandler', true);
+</pre>
+            <p>
+                Pour désactiver <code class="code">ViewRenderer</code>, exécutez l'action suivante à
+                n'importe quel point précédant l'appel à <code class="methodname">dispatch()</code> :
+            </p>
+            <pre class="programlisting">
+// Désactivez l'aide ViewRenderer :
+$front-&gt;setParam('noViewRenderer', true);
+</pre>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.front.methods.primary"></a>Méthodes principales</h3></div></div></div>
+        
+
+        <p>
+            Le contrôleur frontal a plusieurs accesseurs pour construire son environnement.
+            Cependant, il y a trois méthodes principales clés dans la fonctionnalité de contrôleur
+            frontal :
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.front.methods.primary.getinstance"></a>getInstance()</h4></div></div></div>
+            
+
+            <p>
+                <code class="methodname">getInstance()</code> est utilisé pour récupérer une instance du
+                contrôleur frontal. Comme le contrôleur frontal implémente un motif de Singleton,
+                c'est aussi le seul moyen possible pour instancier un objet unique de contrôleur
+                frontal.
+            </p>
+
+            <pre class="programlisting">
+$front = Zend_Controller_Front::getInstance();
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.front.methods.primary.setcontrollerdirectory"></a>setControllerDirectory() et addControllerDirectory</h4></div></div></div>
+            
+
+            <p>
+                <code class="methodname">setControllerDirectory()</code> est utilisé pour informer
+                <a class="link" href="zend.controller.dispatcher.html" title="Le distributeur">le distributeur</a>où chercher les
+                fichiers de classes de
+                <a class="link" href="zend.controller.action.html" title="Contrôleurs d'action">contrôleurs d'action</a>. Ces méthodes
+                acceptent un chemin unique ou un tableau associatif de paires
+                modules/chemins.
+            </p>
+
+            <p>Quelques exemples :</p>
+
+            <pre class="programlisting">
+// Régler le dossier des contrôleurs par défaut :
+$front-&gt;setControllerDirectory('../application/controllers');
+
+// Régler plusieurs répertoires de modules d'un seul coup :
+$front-&gt;setControllerDirectory(array(
+    'default' =&gt; '../application/controllers',
+    'blog'    =&gt; '../modules/blog/controllers',
+    'news'    =&gt; '../modules/news/controllers',
+));
+
+// Ajouter le répertoire de module 'foo' :
+$front-&gt;addControllerDirectory('../modules/foo/controllers', 'foo');
+</pre>
+
+            <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    Si vous utilisez <code class="methodname">addControllerDirectory()</code> sans nom de
+                    module, cela réglera le répertoire pour le module <code class="code">default</code> - en
+                    surchargeant une valeur déjà existante.
+                </p>
+            </td></tr>
+</table></div>
+
+            <p>
+                Vous pouvez récupérer les réglages courants des répertoires du contrôleur en
+                utilisant <code class="methodname">getControllerDirectory()</code> ; ceci retournera un tableau
+                des paires modules/chemins.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.front.methods.primary.addmoduledirectory"></a>addModuleDirectory() et getModuleDirectory()</h4></div></div></div>
+            
+
+            <p>
+                Un des aspects du contrôleur frontal est que vous puissiez
+                <a class="link" href="zend.controller.modular.html" title="Utilisation de conventions de dossiers modulaires">définir une structure de dossiers
+                modulaire</a>pour créer des composants autonomes ; ceux-ci sont nommés
+                "modules".
+            </p>
+
+            <p>
+                Chaque module doit être dans son propre dossier, ce dossier étant un miroir
+                du dossier du module "default" en terme de structure - c'est-à-dire, qu'il doit
+                contenir un sous-dossier "controllers" au minimum, et typiquement un sous-dossier
+                "views" puis d'autres sous-dossiers.
+            </p>
+
+            <p>
+                <code class="methodname">addModuleDirectory()</code> vous permet de fournir le nom du dossier
+                contenant un ou plusieurs dossier de modules. Il scanne alors le dossier et les
+                ajoute au contrôleur frontal.
+            </p>
+
+            <p>
+                Ensuite, si vous souhaitez déterminer le chemin vers un module en particulier
+                ou vers le module courant, vous pouvez appeler <code class="methodname">getModuleDirectory()</code>,
+                en fournissant optionnellement le nom du module spécifique que vous
+                recherchez.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.front.methods.primary.dispatch"></a>dispatch()</h4></div></div></div>
+            
+
+            <p>
+                <code class="code">dispatch(Zend_Controller_Request_Abstract $request = null,
+                Zend_Controller_Response_Abstract $response = null)</code> fait le gros travail du
+                contrôleur frontal. Il peut facultativement prendre un
+                <a class="link" href="zend.controller.request.html" title="L'objet Requête">objet de requête</a>et/ou un
+                <a class="link" href="zend.controller.response.html" title="Objet de réponse">objet de réponse</a>, permettant ainsi
+                au développeur de fournir des objets personnalisés.
+            </p>
+
+            <p>
+                Si aucun objet de requête ou de réponse ne lui sont fournis,
+                <code class="methodname">dispatch()</code> vérifiera s'il existe des objets précédemment enregistrés
+                et utilisera ceux-là ou des objets par défaut pour les utiliser dans son processus
+                (dans les deux cas, le mode <acronym class="acronym">HTTP</acronym> sera utilisé par défaut).
+            </p>
+
+            <p>
+                De la même manière, <code class="methodname">dispatch()</code> vérifie s'il existe des objets
+                <a class="link" href="zend.controller.router.html" title="Routeur Standard">routeur</a>et
+                <a class="link" href="zend.controller.dispatcher.html" title="Le distributeur">distributeur</a>inscrits, et
+                instancie des versions par défaut si aucun n'est trouvé.
+            </p>
+
+            <p>Le processus de distribution possède trois évènements</p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>le routage</p>
+                </li>
+<li class="listitem">
+                    <p>la distribution</p>
+                </li>
+<li class="listitem">
+                    <p>la réponse</p>
+                </li>
+</ul></div>
+
+            <p>
+                Le routage a lieu exactement une fois, utilisant les valeurs de l'objet de
+                requête quand <code class="methodname">dispatch()</code> est appelé. La distribution a lieu dans une
+                boucle ; une demande peut soit indiquer des actions multiples à distribuer,
+                soit le contrôleur ou un plugin peuvent remettre à zéro l'objet de requête et ainsi
+                forcer la distribution d'actions supplémentaires. Quand tout est réalisé, le
+                contrôleur frontal retourne la réponse.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.front.methods.primary.run"></a>run()</h4></div></div></div>
+            
+
+            <p>
+                <code class="methodname">Zend_Controller_Front::run($path)</code> est une méthode
+                "raccourci", statique, prenant simplement un chemin vers un répertoire contenant
+                des contrôleurs. Elle récupère l'instance de contrôleur frontal (via
+                <a class="link" href="zend.controller.front.html#zend.controller.front.methods.primary.getinstance" title="getInstance()">
+                getInstance()</a>), enregistre le chemin fourni par l'intermédiaire de
+                <a class="link" href="zend.controller.front.html#zend.controller.front.methods.primary.setcontrollerdirectory" title="setControllerDirectory() et addControllerDirectory">
+                setControllerDirectory()</a>, et finalement réalise la
+                <a class="link" href="zend.controller.front.html#zend.controller.front.methods.primary.dispatch" title="dispatch()">
+                distribution</a>.
+            </p>
+
+            <p>
+                Fondamentalement, <code class="methodname">run()</code> est une méthode de convenance qui peut
+                être employée pour les installations de sites qui n'exigent pas la personnalisation
+                de l'environnement du contrôleur frontal.
+            </p>
+
+            <pre class="programlisting">
+// Instancie le contrôleur frontal, règle les dossiers de contrôleurs,
+// et distribue en une seule étape :
+Zend_Controller_Front::run('../application/controllers');
+</pre>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.front.methods.environment"></a>Méthodes d'accès à l'environnement</h3></div></div></div>
+        
+
+        <p>
+            En plus des méthodes énumérées ci-dessus, il y a un certain nombre de méthodes
+            d'accès qui peuvent être employées pour affecter l'environnement de contrôleur frontal
+            - et ainsi l'environnement des classes auxquelles le contrôleur frontal délégue.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">resetInstance()</code> peut être utilisé pour effacer tous les
+                    réglages courants. Son but principal est pour les tests, mais elle peut
+                    également être employée pour des instances où vous souhaitez enchaîner ensemble
+                    les contrôleurs frontaux multiples.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">(set|get)DefaultControllerName()</code> vous permet d'indiquer un
+                    nom différent pour l'utilisation du contrôleur par défaut ("index" est employé
+                    sinon) et de rechercher la valeur courante. Ils mandatent
+                    <a class="link" href="zend.controller.dispatcher.html" title="Le distributeur">le distributeur</a>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">(set|get)DefaultAction()</code> vous permet d'indiquer un nom
+                    différent pour l'utilisation de l'action par défaut ("index" est employé sinon)
+                    et de rechercher la valeur courante. Ils mandatent
+                    <a class="link" href="zend.controller.dispatcher.html" title="Le distributeur">le distributeur</a>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">(set|get)Request()</code> vous permet d'indiquer la classe ou
+                    l'objet de <a class="link" href="zend.controller.request.html" title="L'objet Requête">requête</a> à utiliser
+                    durant le processus de distribution et de rechercher la valeur courante. En
+                    réglant l'objet de requête, vous pouvez fournir le nom d'une classe de requête,
+                    dans ce cas la méthode chargera le fichier de classe et l'instanciera.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">(set|get)Router()</code> vous permet d'indiquer la classe ou
+                    l'objet de <a class="link" href="zend.controller.router.html" title="Routeur Standard">routage</a> à utiliser
+                    durant le processus de distribution et de rechercher la valeur courante. En
+                    réglant l'objet de routage, vous pouvez fournir le nom d'une classe de routage,
+                    dans ce cas la méthode chargera le fichier de classe et l'instanciera.
+                </p>
+                <p>
+                    Lors de la recherche d'un objet routeur, cela vérifie d'abord si un objet
+                    est présent, et sinon, instancie le routeur par défaut ("rewrite
+                    router").
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">(set|get)BaseUrl()</code> vous permet d'indiquer
+                    <a class="link" href="zend.controller.request.html#zend.controller.request.http.baseurl" title="Base de l'URL et sous-dossiers">l'URL de base</a> à
+                    écarter lors du routage des requêtes et de rechercher la valeur courante. La
+                    valeur est fournie à l'objet de requête juste avant le routage.
+                </p>
+                <div class="note"><table border="0" summary="Note: Fully-Qualified URL is not supported">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Fully-Qualified URL is not supported</th>
+</tr>
+<tr><td align="left" valign="top">
+                    
+                    <p>
+                        Passing a fully-qualified URL (ie: http://example.com/) to the
+                        <code class="methodname">setBaseUrl</code> method is not supported, and 
+                        will cause issues when using the URL view helper. See ticket 
+                        <a class="ulink" href="http://framework.zend.com/issues/browse/ZF-10923" target="_top">
+                            ZF-10923
+                        </a> for more details.
+                    </p>
+                </td></tr>
+</table></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">(set|get)Dispatcher()</code> vous permet d'indiquer la classe ou
+                    l'objet <a class="link" href="zend.controller.dispatcher.html" title="Le distributeur">distributeur</a> à
+                    utiliser durant le processus de distribution et de rechercher la valeur
+                    courante. En réglant l'objet de distribution, vous pouvez fournir le nom
+                    d'une classe de distribution, dans ce cas la méthode chargera le fichier de
+                    classe et l'instanciera.
+                </p>
+                <p>
+                    Lors de la recherche d'un objet distributeur, cela vérifie d'abord si un
+                    objet est présent, et sinon, instancie le distributeur par défaut.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">(set|get)Response()</code> vous permet d'indiquer la classe ou
+                    l'objet de
+                    <a class="link" href="zend.controller.response.html" title="Objet de réponse">réponse</a> à utiliser durant le
+                    processus de distribution et de rechercher la valeur courante. En réglant
+                    l'objet de réponse, vous pouvez fournir le nom d'une classe de réponse, dans ce
+                    cas la méthode chargera le fichier de classe et l'instanciera.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">registerPlugin(Zend_Controller_Plugin_Abstract $plugin, $stackIndex
+                    = null)</code> vous permet d'inscrire un
+                    <a class="link" href="zend.controller.plugins.html" title="Plugins">objet plugin</a>. En réglant le
+                    paramètre facultatif <code class="varname">$stackIndex</code>, vous pouvez contrôler l'ordre
+                    dans lequel les plugins seront exécutés.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">unregisterPlugin($plugin)</code> vous permet de désinscrire un
+                    <a class="link" href="zend.controller.plugins.html" title="Plugins">objet plugin</a>.
+                    <code class="varname">$plugin</code> peut être soit un objet plugin ou une chaîne représentant
+                    la classe du plugin à désinscrire.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">throwExceptions($flag)</code> est utilisée pour activer/désactiver
+                    la possibilité de lever des exceptions durant le processus de distribution. Par
+                    défaut, les exceptions sont récupérées et placées dans l'objet
+                    <a class="link" href="zend.controller.response.html" title="Objet de réponse">réponse</a> ; activer
+                    <code class="methodname">throwExceptions()</code> surchargera ce comportement et indiquera au
+                    contrôleur frontal de ne pas enregistrer le plugin de gestion des
+                    erreurs : <code class="code">ErrorHandler</code>.
+                </p>
+                <p>
+                    Pour plus d'informations, voir <a class="xref" href="zend.controller.exceptions.html" title="Exceptions avec MVC">la section intitulée « Exceptions avec MVC »</a>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">returnResponse($flag)</code> est utilisée pour informer le
+                    contrôleur frontal soit de récupérer la réponse (<code class="constant">TRUE</code>) issue de
+                    <code class="methodname">dispatch()</code>, ou si la réponse peut être automatiquement émise
+                    (<code class="constant">FALSE</code>). Par défaut la réponse est automatiquement émise (en
+                    appelant
+                    <code class="methodname">Zend_Controller_Response_Abstract::sendResponse()</code>) ;
+                    activer <code class="methodname">returnResponse()</code> surchargera ce comportement.
+                </p>
+                <p>
+                    Les raisons de la récupération de la réponse incluent le désir de
+                    vérifier l'existence d'exceptions avant d'émettre la réponse, la nécessité
+                    d'enregistrer certains aspects de la réponse (comme les en-têtes), etc.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.front.methods.params"></a>Paramètres du contrôleur frontal</h3></div></div></div>
+        
+
+        <p>
+            Dans l'introduction, nous avons indiqué que le contrôleur frontal agit également
+            en tant qu'enregistreur pour les divers composants du contrôleur. Il réalise ceci grâce
+            à une famille de méthodes "param". Ces méthodes vous permettent d'enregistrer des
+            données arbitraires - objets et variables - que le contrôleur frontal peut rechercher à
+            tout moment dans la chaîne de distribution. Ces valeurs sont transmises au routeur, au
+            distributeur, et aux contrôleurs d'action. Les méthodes incluent :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setParam($name, $value)</code> vous permet de régler un paramètre
+                    unique nommé <code class="varname">$name</code> avec la valeur <code class="varname">$value</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setParams(array $params)</code> vous permet de régler des
+                    paramètres multiples en une seule fois en utilisant un tableau
+                    associatif.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getParam($name)</code> vous permet de récupérer un unique
+                    paramètre, en utilisant <code class="varname">$name</code> comme identificateur.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getParams()</code> vous permet de récupérer la liste entière des
+                    paramètres.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearParams()</code> vous permet d'effacer un paramètre unique (en
+                    fournissant l'identificateur sous forme de chaîne), des paramètres multiples
+                    (en fournissant un tableau d'identificateurs sous forme de chaîne), ou tous les
+                    paramètres (en ne fournissant rien).
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Il y a plusieurs paramètres prédéfinis qui peuvent être réglés et qui ont des
+            utilisations spécifiques dans la chaîne d'expédition :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">useDefaultControllerAlways()</code> est utilisée pour informer
+                    <a class="link" href="zend.controller.dispatcher.html" title="Le distributeur">le distributeur</a> d'utiliser le
+                    contrôleur par défaut dans le module par défaut pour toute requête qui ne
+                    serait pas distribuable (par exemple si le module/contrôleur/action n'existe
+                    pas). Par défaut, cette fonctionnalité est désactivée.
+                </p>
+                <p>
+                    Voir <a class="xref" href="zend.controller.exceptions.html#zend.controller.exceptions.internal" title="Différents types d'exceptions que vous pouvez rencontrer">la section intitulée « Différents types d'exceptions que vous pouvez rencontrer »</a> pour plus
+                    d'informations concernant l'utilisation de ce réglage.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">disableOutputBuffering()</code> est utilisée pour informer
+                    <a class="link" href="zend.controller.dispatcher.html" title="Le distributeur">le distributeur</a> qu'il ne doit
+                    pas utiliser l'"output buffering" pour capturer le rendu généré par les
+                    contrôleurs d'action. Par défaut, le distributeur capture tout rendu et
+                    l'ajoute au contenu de l'objet réponse.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">noViewRenderer</code> est utilisée pour désactiver le
+                    <a class="link" href="zend.controller.actionhelpers.html#zend.controller.actionhelpers.viewrenderer" title="ViewRenderer">ViewRenderer</a>.
+                    Réglez ce paramètre à <code class="constant">TRUE</code> pour le désactiver.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">noErrorHandler</code> est utilisée pour désactiver le plugin
+                    <a class="link" href="zend.controller.plugins.html#zend.controller.plugins.standard.errorhandler" title="Zend_Controller_Plugin_ErrorHandler">ErrorHandler</a>.
+                    Réglez ce paramètre à <code class="constant">TRUE</code> pour le désactiver.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.front.subclassing"></a>Étendre le contrôleur frontal</h3></div></div></div>
+        
+
+        <p>
+            Pour étendre le contrôleur frontal, vous devez au minimum surcharger la méthode
+            <code class="methodname">getInstance()</code> :
+        </p>
+
+        <pre class="programlisting">
+class Mon_Controleur_Frontal extends Zend_Controller_Front
+{
+    public static function getInstance()
+    {
+        if (null === self::$_instance) {
+            self::$_instance = new self();
+        }
+
+        return self::$_instance;
+    }
+}
+</pre>
+
+        <p>
+            Surcharger la méthode <code class="methodname">getInstance()</code> assure que des appels suivants à
+            <code class="methodname">Zend_Controller_Front::getInstance()</code> retourneront une instance
+            de votre nouvelle sous-classe au lieu d'une instance de
+            <code class="classname">Zend_Controller_Front</code> - c'est particulièrement utile pour
+            certains des routeurs alternatifs et certaines aides de vue.
+        </p>
+
+        <p>
+            Typiquement, vous n'aurez pas besoin de sous-classer le contrôleur frontal à
+            moins que vous ne deviez ajouter une nouvelle fonctionnalité (par exemple, un plugin
+            d'autoloader, ou une manière d'indiquer des chemins d'aide d'action). Quelques exemples
+            où vous pouvez vouloir changer le comportement peuvent inclure modifier comment des
+            répertoires de contrôleur sont stockés, ou quel routeur ou distributeur par défaut sont
+            employés.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.basics.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.request.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Fondations de Zend_Controller </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> L'objet Requête</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

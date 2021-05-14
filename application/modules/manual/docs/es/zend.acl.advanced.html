@@ -1,0 +1,187 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Uso Avanzado</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.acl.html" title="Zend_Acl">
+<link rel="prev" href="zend.acl.refining.html" title="Perfeccionamiento de los controles de acceso">
+<link rel="next" href="zend.amf.html" title="Zend_Amf">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Uso Avanzado</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.acl.refining.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Acl</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.amf.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.acl.advanced"></a>Uso Avanzado</h2></div></div></div>
+
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.acl.advanced.storing"></a>Almacenamiento Permanente de los Datos ACL</h3></div></div></div>
+
+        
+
+        <p>
+            <code class="classname">Zend_Acl</code>
+            fue diseñado de tal manera que no requiere ninguna tecnología particular como bases de
+            datos o un servidor de cache para el almacenamiento de datos
+            <acronym class="acronym">ACL</acronym>
+            . Al poseer una implementación completamente construida en
+            <acronym class="acronym">PHP</acronym>
+            , es posible construir herramientas de administración personalizadas sobre
+            <code class="classname">Zend_Acl</code>
+            con relativa facilidad y
+            flexibilidad. En muchas situaciones se requiere alguna forma de
+            mantenimiento
+            interactivo de una
+            <acronym class="acronym">ACL</acronym>
+            , y
+            <code class="classname">Zend_Acl</code>
+            provee
+            métodos para configurar, y consultar, los controles de acceso de una aplicación.
+        </p>
+
+        <p>
+            El almacenamiento de los datos
+            <acronym class="acronym">ACL</acronym>
+            es una tarea que se delega al
+            desarrollador, puesto que la utilización variará
+            extensamente en distintas situaciones.
+            Dado que
+            <code class="classname">Zend_Acl</code>
+            es serializable, los objetos
+            <acronym class="acronym">ACL</acronym>
+            pueden serializarse con la función
+            <a class="ulink" href="http://php.net/serialize" target="_top">
+                <code class="methodname">serialize()</code>
+            </a>
+            de
+            <acronym class="acronym">PHP</acronym>
+            , y los resultados pueden ser almacenados donde sea
+            que el desarrollador lo desee, en un
+            archivo, base de datos, o mecanismo de cache
+        </p>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.acl.advanced.assertions"></a> Escribiendo reglas condicionales ACL con aserciones </h3></div></div></div>
+
+        
+
+        <p>
+            A veces, una regla para permitir o negar una función de acceso a un recurso no debería
+            ser absoluta sino que depende de varios criterios. Por ejemplo, supóngase que
+            debe
+            permitirse cierto
+            acceso, pero únicamente entre las 8:00am y 5:00pm. Otro ejemplo
+            sería
+            negar el acceso debido a una petición que proviene de una dirección IP que se ha
+            marcado
+            como una fuente de abusos.
+            <code class="classname">Zend_Acl</code>tiene soporte para la
+            aplicación de normas basadas en cualquier condición que el
+            desarrollador necesite.</p>
+
+        <p>
+            <code class="classname">Zend_Acl</code>
+            provee soporte para reglas condicionales con
+            <code class="classname">Zend_Acl_Assert_Interface</code>. Con el fin de utilizar la regla
+            de aserción de la interfaz, un desarrollador escribe
+            una clase que implemente el método<code class="methodname">assert()</code>
+            de la interfaz:
+        </p>
+
+        <pre class="programlisting">
+class CleanIPAssertion implements Zend_Acl_Assert_Interface
+{
+    public function assert(Zend_Acl $acl,
+                           Zend_Acl_Role_Interface $role = null,
+                           Zend_Acl_Resource_Interface $resource = null,
+                           $privilege = null)
+    {
+        return $this-&gt;_isCleanIP($_SERVER['REMOTE_ADDR']);
+    }
+
+    protected function _isCleanIP($ip)
+    {
+        // ...
+    }
+}
+</pre>
+
+        <p>
+            Una vez la clase de aserción esta disponible, el desarrollador puede suministrar una
+            instancia de la clase de aserción cuando asigna reglas condicionales. Una regla que es
+            creada con una
+            aserción sólo se aplica cuando el método de la aserción devuelve
+            <code class="constant">TRUE</code>
+            .
+        </p>
+
+        <pre class="programlisting">
+$acl = new Zend_Acl();
+$acl-&gt;allow(null, null, null, new CleanIPAssertion());
+</pre>
+
+        <p>El código anterior crea una regla condicional que permite el acceso a todos los
+            privilegios sobre todo, por todo el mundo, excepto cuando la IP de quien hace la
+            petición está en la "lista
+            negra". Si una petición viene desde una IP que no está
+            considerada "limpia", entonces la regla no se aplica. Dado que la regla se aplica a
+            todos los roles, todos los recursos, y todos los
+            privilegios, una IP "no limpia" daría
+            lugar a una negación de acceso. Éste es un caso especial, sin embargo, y debería ser
+            entendido que en todos los otros casos (por ejemplo, cuando un rol
+            específico, recurso, o
+            privilegio está especificado por la regla), una aserción fallida provoca que la regla
+            no
+            se aplique, y otras reglas deberían ser usadas para determinar si el acceso
+            está
+            permitido o denegado.</p>
+
+        <p>
+            El método
+            <code class="methodname">assert()</code>
+            de un objeto aserción es pasado a la
+            <acronym class="acronym">ACL</acronym>
+            , regla, recurso, y privilegio para el cual una consulta de
+            autorización (por ejemplo,
+            <code class="methodname">isAllowed()</code>
+            ) se aplica, con el fin de proporcionar un contexto para que la clase de aserción
+            determine sus condiciones
+            cuando fuera necesario.
+        </p>
+
+    </div>
+
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.acl.refining.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.acl.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.amf.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Perfeccionamiento de los controles de acceso </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Zend_Amf</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

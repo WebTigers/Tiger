@@ -1,0 +1,115 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Assembler le tout</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.paginator.html" title="Bien démarrer avec Zend_Paginator">
+<link rel="prev" href="learning.paginator.control.html" title="Contrôles de la pagination et styles de défilement">
+<link rel="next" href="reference.html" title="Guide de référence Zend Framework">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Assembler le tout</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.paginator.control.html">Précédent</a> </td>
+<th width="60%" align="center">Bien démarrer avec Zend_Paginator</th>
+<td width="20%" align="right"> <a accesskey="n" href="reference.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.paginator.together"></a>Assembler le tout</h2></div></div></div>
+    
+
+    <p>
+        Nous avons vu comment créer un objet Paginator, comment le rendre sur la page et aussi comment
+        rendre les éléments de navigation au travers des pages. Dans cette section nous allons voir
+        comment intégrer Paginator dans MVC.
+    </p>
+
+    <p>
+        Dans les exemples qui suivent, nous allons ignorer une bonne pratique qu'est d'utiliser une
+        couche de services (Service Layer) ceci dans le but de garder nos exemples concis et simples
+        à comprendre. Lorsque vous manipulerez bien les couches de services, vous devriez pouvoir
+        intégrer Paginator simplement et efficacement.
+    </p>
+
+    <p>
+        Partons du contrôleur. L'application d'exemple est simple, et nous allons tout loger dans
+        IndexController et IndexAction. Encore une fois ce choix est fait pour l'exemple, vous ne
+        devriez pas utiliser les contrôleurs de cette façon.
+    </p>
+
+    <pre class="programlisting">
+class IndexController extends Zend_Controller_Action
+{
+    public function indexAction()
+    {
+        // Configuration du script de navigation. Voyez le tutoriel sur le script
+        // des éléments de contrôle de la pagination pour plus d'informations
+        Zend_View_Helper_PaginationControl::setDefaultViewPartial('controls.phtml');
+
+        // Cherchons une connection à une base depuis le registre
+        $db = Zend_Registry::get('db');
+
+        // Créons un objet select qui récupère des billets et les range par date de création descendante
+        $select = $db-&gt;select()-&gt;from('posts')-&gt;sort('date_created DESC');
+
+        // Créons un paginateur pour cette requête
+        $paginator = Zend_Paginator::factory($select);
+
+        // Nous lisons le numéro de page depuis la requête. Si le paramètre n'est pas précisé
+        // la valeur 1 sera utilisée par défaut
+        $paginator-&gt;setCurrentPageNumber($this-&gt;_getParam('page', 1));
+
+        // Assignons enfin l'objet Paginator à notre vue
+        $this-&gt;view-&gt;paginator = $paginator;
+    }
+}
+</pre>
+
+    <p>
+        Le script qui suit est index.phtml, le script de vue pour IndexController/indexAction par
+        défaut. Gardons celui-ci simple : il utilisera le type de défilement par défaut.
+    </p>
+
+    <pre class="programlisting">
+&lt;ul&gt;
+&lt;?php
+// Affiche le titre de chaque billet pour la page en cours
+foreach ($this-&gt;paginator as $item) {
+    echo '&lt;li&gt;' . $item-&gt;title . '&lt;/li&gt;';
+}
+?&gt;
+&lt;/ul&gt;
+&lt;?php echo $this-&gt;paginator; ?&gt;
+</pre>
+
+    <p>
+        Naviguez maintenant dans votre projet pour voir Paginator en action. Nous n''avons vu
+        ici qu'une partie de l'utilisation et le manuel de référence vous en apprendra plus
+        sur les possibilités de Zend_Paginator.
+    </p>
+
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.paginator.control.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.paginator.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="reference.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Contrôles de la pagination et styles de défilement </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Guide de référence Zend Framework</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

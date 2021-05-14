@@ -1,0 +1,219 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Using Google Documents List Data API</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.gdata.html" title="Zend_Gdata">
+<link rel="prev" href="zend.gdata.calendar.html" title="Using Google Calendar">
+<link rel="next" href="zend.gdata.spreadsheets.html" title="Using Google Spreadsheets">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Using Google Documents List Data API</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.gdata.calendar.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Gdata</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.gdata.spreadsheets.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.gdata.docs"></a>Using Google Documents List Data API</h2></div></div></div>
+    
+
+    <p>
+        The Google Documents List Data <acronym class="acronym">API</acronym> allows client applications to
+        upload documents to Google Documents and list them in the form of
+        Google Data <acronym class="acronym">API</acronym> ("GData") feeds. Your client application can request
+        a list of a user's documents, and query the content in an existing
+        document.
+    </p>
+
+    <p>
+        See <a class="ulink" href="http://code.google.com/apis/documents/overview.html" target="_top">http://code.google.com/apis/documents/overview.html</a>
+        for more information about the Google Documents List <acronym class="acronym">API</acronym>.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.docs.listdocuments"></a>Get a List of Documents</h3></div></div></div>
+        
+
+        <p>
+            You can get a list of the Google Documents for a particular user by using
+            the <code class="methodname">getDocumentListFeed()</code> method of the docs
+            service. The service will return a
+            <code class="classname">Zend_Gdata_Docs_DocumentListFeed</code> object
+            containing a list of documents associated with the authenticated
+            user.
+        </p>
+
+        <pre class="programlisting">
+$service = Zend_Gdata_Docs::AUTH_SERVICE_NAME;
+$client = Zend_Gdata_ClientLogin::getHttpClient($user, $pass, $service);
+$docs = new Zend_Gdata_Docs($client);
+$feed = $docs-&gt;getDocumentListFeed();
+</pre>
+
+        <p>
+        The resulting <code class="classname">Zend_Gdata_Docs_DocumentListFeed</code> object
+        represents the response from the server. This feed contains a list of
+        <code class="classname">Zend_Gdata_Docs_DocumentListEntry</code> objects
+        (<span class="command"><strong>$feed-&gt;entries</strong></span>), each of which represents a single
+        Google Document.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.docs.creating"></a>Upload a Document</h3></div></div></div>
+        
+
+        <p>
+            You can create a new Google Document by uploading a word
+            processing document, spreadsheet, or presentation. This example
+            is from the interactive Docs.php sample which comes with the
+            library. It demonstrates uploading a file and printing
+            information about the result from the server.
+        </p>
+
+        <pre class="programlisting">
+/**
+ * Upload the specified document
+ *
+ * @param Zend_Gdata_Docs $docs The service object to use for communicating
+ *     with the Google Documents server.
+ * @param boolean $html True if output should be formatted for display in a
+ *     web browser.
+ * @param string $originalFileName The name of the file to be uploaded. The
+ *     MIME type of the file is determined from the extension on this file
+ *     name. For example, test.csv is uploaded as a comma separated volume
+ *     and converted into a spreadsheet.
+ * @param string $temporaryFileLocation (optional) The file in which the
+ *     data for the document is stored. This is used when the file has been
+ *     uploaded from the client's machine to the server and is stored in
+ *     a temporary file which does not have an extension. If this parameter
+ *     is null, the file is read from the originalFileName.
+ */
+function uploadDocument($docs, $html, $originalFileName,
+                        $temporaryFileLocation) {
+  $fileToUpload = $originalFileName;
+  if ($temporaryFileLocation) {
+    $fileToUpload = $temporaryFileLocation;
+  }
+
+  // Upload the file and convert it into a Google Document. The original
+  // file name is used as the title of the document and the MIME type
+  // is determined based on the extension on the original file name.
+  $newDocumentEntry = $docs-&gt;uploadFile($fileToUpload, $originalFileName,
+      null, Zend_Gdata_Docs::DOCUMENTS_LIST_FEED_URI);
+
+  echo "New Document Title: ";
+
+  if ($html) {
+      // Find the URL of the HTML view of this document.
+      $alternateLink = '';
+      foreach ($newDocumentEntry-&gt;link as $link) {
+          if ($link-&gt;getRel() === 'alternate') {
+              $alternateLink = $link-&gt;getHref();
+          }
+      }
+      // Make the title link to the document on docs.google.com.
+      echo "&lt;a href=\"$alternateLink\"&gt;\n";
+  }
+  echo $newDocumentEntry-&gt;title."\n";
+  if ($html) {echo "&lt;/a&gt;\n";}
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.docs.queries"></a>Searching the documents feed</h3></div></div></div>
+        
+
+        <p>
+            You can search the Document List using some of the <a class="ulink" href="http://code.google.com/apis/gdata/reference.html#Queries" target="_top">standard
+            Google Data <acronym class="acronym">API</acronym> query parameters</a>. Categories are used to
+            restrict the
+            type of document (word processor document, spreadsheet) returned.
+            The full-text query string is used to search the content of all
+            the documents. More detailed information on parameters specific
+            to the Documents List can be found in the <a class="ulink" href="http://code.google.com/apis/documents/reference.html#Parameters" target="_top">Documents List
+                Data <acronym class="acronym">API</acronym> Reference Guide</a>.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.docs.listwpdocuments"></a>Get a List of Word Processing Documents</h4></div></div></div>
+            
+
+            <p>
+                You can also request a feed containing all of your documents of a specific type. For
+                example, to see a list of your work processing documents, you would perform a
+                category query as follows.
+            </p>
+
+            <pre class="programlisting">
+$feed = $docs-&gt;getDocumentListFeed(
+    'http://docs.google.com/feeds/documents/private/full/-/document');
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.docs.listspreadsheets"></a>Get a List of Spreadsheets</h4></div></div></div>
+            
+
+            <p>
+                To request a list of your Google Spreadsheets, use the following category query:
+            </p>
+
+            <pre class="programlisting">
+$feed = $docs-&gt;getDocumentListFeed(
+    'http://docs.google.com/feeds/documents/private/full/-/spreadsheet');
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.docs.textquery"></a>Performing a text query</h4></div></div></div>
+            
+
+            <p>
+                You can search the content of documents by using a
+                <code class="classname">Zend_Gdata_Docs_Query</code> in your request. A Query object
+                can be used to construct the query <acronym class="acronym">URI</acronym>, with the search term
+                being passed in as a parameter. Here is an example method which queries
+                the documents list for documents which contain the search string:
+            </p>
+
+            <pre class="programlisting">
+$docsQuery = new Zend_Gdata_Docs_Query();
+$docsQuery-&gt;setQuery($query);
+$feed = $client-&gt;getDocumentListFeed($docsQuery);
+</pre>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.gdata.calendar.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.gdata.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.gdata.spreadsheets.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Using Google Calendar </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Using Google Spreadsheets</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

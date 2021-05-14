@@ -1,0 +1,1202 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Service_Twitter</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.service.html" title="Zend_Service">
+<link rel="prev" href="zend.service.strikeiron.advanced-uses.html" title="Zend_Service_StrikeIron: Advanced Uses">
+<link rel="next" href="zend.service.windowsazure.html" title="Zend_Service_WindowsAzure">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Service_Twitter</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.service.strikeiron.advanced-uses.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Service</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.service.windowsazure.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.service.twitter"></a>Zend_Service_Twitter</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Service_Twitter</code> provides a client for the
+            <a class="ulink" href="https://dev.twitter.com/docs/api/1.1" target="_top">Twitter <acronym class="acronym">API</acronym></a>.
+            <code class="classname">Zend_Service_Twitter</code> allows you to query the public timeline. If
+            you provide a username and OAuth details for Twitter, it will allow you to get and update
+            your status, reply to friends, direct message friends, mark tweets as favorite, and
+            much more.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Service_Twitter</code> wraps all web service
+            operations, including OAuth, and all methods return an instance of
+            <code class="classname">Zend_Service_Twitter_Response</code>.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Service_Twitter</code> is broken up into subsections so you can
+            easily identify which type of call is being requested.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="code">account</code> allows you to check that your account credentials are
+                    valid.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">application</code> allows you to check your <acronym class="acronym">API</acronym> rate
+                    limit.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">blocks</code> blocks and unblocks users from following you.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">directMessages</code> retrieves the authenticated user's received direct
+                    messages, deletes direct messages, and sends new direct messages.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">favorites</code> lists, creates, and removes favorite tweets.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">friendships</code> creates and removes friendships for the
+                    authenticated user.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">search</code> allows you to search statuses for specific criteria.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">statuses</code> retrieves the public and user timelines and
+                    shows, updates, destroys, and retrieves replies for the authenticated user.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">users</code> retrieves friends and followers for the authenticated user
+                    and returns extended information about a passed user.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.authentication"></a>Authentication</h3></div></div></div>
+        
+
+        <p>
+            With the exception of fetching the public timeline,
+            <code class="classname">Zend_Service_Twitter</code> requires authentication as a valid
+            user. This is achieved using the OAuth authentication protocol. OAuth is
+            the only supported authentication mode for Twitter as of August 2010. The OAuth
+            implementation used by <code class="classname">Zend_Service_Twitter</code> is
+            <code class="classname">Zend_Oauth</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.service.twitter.authentication.example"></a><p class="title"><b>Ejemplo 804. Creating the Twitter Class</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                <code class="classname">Zend_Service_Twitter</code> must authorize itself, on behalf of a user, before use with the
+                Twitter API (except for public timeline). This must be accomplished using OAuth since
+                Twitter has disabled it's basic HTTP authentication as of August 2010.
+            </p>
+
+            <p>
+                There are two options to establishing authorization. The first is to implement the
+                workflow of <code class="classname">Zend_Oauth</code> via <code class="classname">Zend_Service_Twitter</code>
+                which proxies to an internal <code class="classname">Zend_Oauth_Consumer</code> object. Please refer to
+                the <code class="classname">Zend_Oauth</code> documentation for a full example of this
+                workflow - you can call all documented <code class="classname">Zend_Oauth_Consumer</code> methods
+                on <code class="classname">Zend_Service_Twitter</code> including constructor options. You may also
+                use <code class="classname">Zend_Oauth</code> directly and only pass the resulting access
+                token into <code class="classname">Zend_Service_Twitter</code>. This is the normal workflow
+                once you have established a reusable access token for a particular Twitter user. The resulting OAuth
+                access token should be stored to a database for future use (otherwise you will need to
+                authorize for every new instance of <code class="classname">Zend_Service_Twitter</code>). Bear in mind
+                that authorization via OAuth results in your user being redirected to Twitter to give their
+                consent to the requested authorization (this is not repeated for stored access tokens). This will
+                require additional work (i.e. redirecting users and hosting a callback URL) over the previous
+                HTTP authentication mechanism where a user just
+                needed to allow applications to store their username and password.
+            </p>
+
+            <p>The following example demonstrates setting up <code class="classname">Zend_Service_Twitter</code>
+            which is given an already established OAuth access token. Please refer to the <code class="classname">Zend_Oauth</code>
+            documentation to understand the workflow involved. The access token is a serializable object, so you may
+            store the serialized object to a database, and unserialize it at retrieval time before passing the objects
+            into <code class="classname">Zend_Service_Twitter</code>. The <code class="classname">Zend_Oauth</code> documentation
+            demonstrates the workflow and objects involved.</p>
+
+            <pre class="programlisting">
+/**
+ * We assume $serializedToken is the serialized token retrieved from a database
+ * or even $_SESSION (if following the simple Zend_Oauth documented example)
+ */
+$token = unserialize($serializedToken);
+
+$twitter = new Zend_Service_Twitter(array(
+    'accessToken' =&gt; $token
+    'oauth_options' =&gt; array(
+        'username' =&gt; 'johndoe',
+    ),
+));
+
+// verify user's credentials with Twitter
+$response = $twitter-&gt;account-&gt;verifyCredentials();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                In order to authenticate with Twitter, ALL applications MUST be registered with
+                Twitter in order to receive a Consumer Key and Consumer Secret to be used when
+                authenticating with OAuth. This can not be reused across multiple applications -
+                you must register each new application separately. Twitter access tokens have
+                no expiry date, so storing them to a database is advised (they can, of course,
+                be refreshed simply be repeating the OAuth authorization process). This can only
+                be done while interacting with the user associated with that access token.
+            </p>
+
+            <p>
+                The previous pre-OAuth version of <code class="classname">Zend_Service_Twitter</code>
+                allowed passing in a username as the first parameter rather than within an array.
+                This is no longer supported.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            If you have registered an application with Twitter, you can also use the access token
+            and access token secret they provide you in order to setup the OAuth consumer. This can
+            be done as follows:
+        </p>
+
+        <pre class="programlisting">
+$twitter = new Zend_Service_Twitter(array(
+    'access_token' =&gt; array( // or use "accessToken" as the key; both work
+        'token' =&gt; 'your-access-token',
+        'secret' =&gt; 'your-access-token-secret',
+    ),
+    'oauth_options' =&gt; array( // or use "oauthOptions" as the key; both work
+        'consumerKey' =&gt; 'your-consumer-key',
+        'consumerSecret' =&gt; 'your-consumer-secret',
+    ),
+));
+</pre>
+
+        <p>
+            If desired, you can also specify a specific HTTP client instance to use, or provide
+            configuration for the HTTP client. To provide the HTTP client, use the
+            <code class="varname">http_client</code> or <code class="varname">httpClient</code> key, and provide an
+            instance. To provide HTTP client configuration for setting up an instance, use the key
+            <code class="varname">http_client_options</code> or <code class="varname">httpClientOptions</code>. As a
+            full example:
+        </p>
+
+        <pre class="programlisting">
+$twitter = new Zend_Service_Twitter(array(
+    'access_token' =&gt; array( // or use "accessToken" as the key; both work
+        'token' =&gt; 'your-access-token',
+        'secret' =&gt; 'your-access-token-secret',
+    ),
+    'oauth_options' =&gt; array( // or use "oauthOptions" as the key; both work
+        'consumerKey' =&gt; 'your-consumer-key',
+        'consumerSecret' =&gt; 'your-consumer-secret',
+    ),
+    'http_client_options' =&gt; array(
+        'adapter' =&gt; 'Zend_Http_Client_Adapter_Curl',
+    ),
+));
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.account"></a>Account Methods</h3></div></div></div>
+        
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+                <p>
+                    <code class="methodname">verifyCredentials()</code> tests if supplied user
+                    credentials are valid with minimal overhead.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.account.verifycredentails"></a><p class="title"><b>Ejemplo 805. Verifying credentials</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;account-&gt;verifyCredentials();
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li></ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.application"></a>Application Methods</h3></div></div></div>
+        
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+                <p>
+                    <code class="methodname">rateLimitStatus()</code> returns the remaining number of
+                    <acronym class="acronym">API</acronym> requests available to the authenticating user
+                    before the <acronym class="acronym">API</acronym> limit is reached for the current hour.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.application.ratelimitstatus"></a><p class="title"><b>Ejemplo 806. Rating limit status</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;application-&gt;rateLimitStatus();
+$userTimelineLimit = $response-&gt;resources-&gt;statuses-&gt;{'/statuses/user_timeline'}-&gt;remaining;
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li></ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.blocks"></a>Block Methods</h3></div></div></div>
+        
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">create()</code> blocks the user specified in the
+                    <code class="code">id</code> parameter as the authenticating user and destroys a friendship
+                    to the blocked user if one exists. Returns the blocked user when successful.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.blocks.create"></a><p class="title"><b>Ejemplo 807. Blocking a user</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;blocks-&gt;create('usertoblock');
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">destroy()</code> un-blocks the user specified in the
+                    <code class="code">id</code> parameter for the authenticating user. Returns the un-blocked
+                    user in the requested format when successful.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.blocks.destroy"></a><p class="title"><b>Ejemplo 808. Removing a block</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;blocks-&gt;destroy('blockeduser');
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">ids()</code> returns an array of user identifiers that the
+                    authenticating user is blocking.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.blocks.ids"></a><p class="title"><b>Ejemplo 809. Who are you blocking (identifiers only)</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;blocks-&gt;ids();
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">list()</code> returns an array of user objects that the
+                    authenticating user is blocking.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.blocks.list"></a><p class="title"><b>Ejemplo 810. Who are you blocking</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;blocks-&gt;list();
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.directmessages"></a>Direct Message Methods</h3></div></div></div>
+        
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">messages()</code> returns a list of the 20 most recent direct
+                    messages sent to the authenticating user.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.directmessages.messages"></a><p class="title"><b>Ejemplo 811. Retrieving recent direct messages received</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;directMessages-&gt;messages();
+</pre>
+                </div>
+</div>
+<br class="example-break">
+
+                <p>
+                    The <code class="methodname">messages()</code> method accepts an array of optional
+                    parameters to modify the query.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="code">since_id</code> narrows the returned results to just those
+                            statuses after the specified identifier (up to 24 hours old).
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">max_id</code> narrows the returned results to just those
+                            statuses earlier than the specified identifier.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">count</code> specifies the number of statuses to return, up to 200.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">skip_status</code>, when set to boolean true, "t", or 1 will skip
+                            including a user's most recent status in the results.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">include_entities</code> controls whether or not entities, which
+                            includes URLs, mentioned users, and hashtags, will be returned.
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">sent()</code> returns a list of the 20 most recent direct
+                    messages sent by the authenticating user.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.directmessages.sent"></a><p class="title"><b>Ejemplo 812. Retrieving recent direct messages sent</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;directMessages-&gt;sent();
+</pre>
+                </div>
+</div>
+<br class="example-break">
+
+                <p>
+                    The <code class="methodname">sent()</code> method accepts an array of optional
+                    parameters to modify the query.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="code">count</code> specifies the number of statuses to return, up to 20.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">page</code> specifies the page of results to return, based on the
+                            <code class="code">count</code> provided.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">since_id</code> narrows the returned results to just those
+                            statuses after the specified identifier (up to 24 hours old).
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">max_id</code> narrows the returned results to just those
+                            statuses earlier than the specified identifier.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">include_entities</code> controls whether or not entities, which
+                            includes URLs, mentioned users, and hashtags, will be returned.
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">new()</code> sends a new direct message to the specified user
+                    from the authenticating user. Requires both the user and text parameters below.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.directmessages.new"></a><p class="title"><b>Ejemplo 813. Sending a direct message</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;directMessages-&gt;new('myfriend', 'mymessage');
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">destroy()</code> destroys the direct message specified in the
+                    required <code class="code">id</code> parameter. The authenticating user must be the
+                    recipient of the specified direct message.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.directmessages.destroy"></a><p class="title"><b>Ejemplo 814. Deleting a direct message</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;directMessages-&gt;destroy(123548);
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.favorites"></a>Favorites Methods</h3></div></div></div>
+        
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">list()</code> returns the 20 most recent favorite
+                    statuses for the authenticating user or user specified by the
+                    <code class="code">user_id</code> or <code class="code">screen_name</code> parameter.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.favorites.list"></a><p class="title"><b>Ejemplo 815. Retrieving favorites</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;favorites-&gt;list();
+</pre>
+                </div>
+</div>
+<br class="example-break">
+
+                <p>
+                    The <code class="methodname">list()</code> method accepts an array of optional
+                    parameters to modify the query.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="code">user_id</code> specifies the ID of the user for whom to return the
+                            timeline.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">screen_name</code> specifies the screen name of the user for
+                            whom to return the timeline.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">since_id</code> narrows the returned results to just those
+                            statuses after the specified identifier (up to 24 hours old).
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">max_id</code> narrows the returned results to just those
+                            statuses earlier than the specified identifier.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">count</code> specifies the number of statuses to return, up to 200.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">include_entities</code> controls whether or not entities, which
+                            includes URLs, mentioned users, and hashtags, will be returned.
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">create()</code> favorites the status specified in the
+                    <code class="code">id</code> parameter as the authenticating user.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.favorites.create"></a><p class="title"><b>Ejemplo 816. Creating a favorite</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;favorites-&gt;create(12351);
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">destroy()</code> un-favorites the status specified in the
+                    <code class="code">id</code> parameter as the authenticating user.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.favorites.destroy"></a><p class="title"><b>Ejemplo 817. Deleting favorites</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;favorites-&gt;destroy(12351);
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.friendships"></a>Friendship Methods</h3></div></div></div>
+        
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">create()</code> befriends the user specified in the
+                    <code class="code">id</code> parameter with the authenticating user.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.friendships.create"></a><p class="title"><b>Ejemplo 818. Creating a friend</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;friendships-&gt;create('mynewfriend');
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">destroy()</code> discontinues friendship with the user
+                    specified in the <code class="code">id</code> parameter and the authenticating user.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.friendships.destroy"></a><p class="title"><b>Ejemplo 819. Deleting a friend</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;friendships-&gt;destroy('myoldfriend');
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.search"></a>Search Methods</h3></div></div></div>
+        
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+                <p>
+                    <code class="methodname">tweets()</code> returns a list of tweets matching the criteria
+                    specified in <code class="varname">$query</code>. By default, 15 will be returned, but
+                    this value may be changed using the <code class="varname">count</code> option.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.search.tweets"></a><p class="title"><b>Ejemplo 820. Searching for tweets</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;search-&gt;tweets('#zendframework');
+</pre>
+                </div>
+</div>
+<br class="example-break">
+
+                <p>
+                    The <code class="methodname">tweets()</code> method accepts an optional second
+                    argument, an array of optional parameters to modify the query.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="code">since_id</code> narrows the returned results to just those
+                            statuses after the specified identifier (up to 24 hours old).
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">max_id</code> narrows the returned results to just those
+                            statuses earlier than the specified identifier.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">count</code> specifies the number of statuses to return, up to 200.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">include_entities</code> controls whether or not entities, which
+                            includes URLs, mentioned users, and hashtags, will be returned.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">lang</code> indicates which two-letter language code to restrict
+                            results to.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">locale</code> indicates which two-letter language code is being
+                            used in the query.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">geocode</code> can be used to indicate the geographical radius in
+                            which tweets should originate; the string should be in the form
+                            "latitude,longitude,radius", with "radius" being a unit followed by one
+                            of "mi" or "km".
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">result_type</code> indicates what type of results to retrieve, and
+                            should be one of "mixed," "recent," or "popular."
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">until</code> can be used to specify a the latest date for which to
+                            return tweets.
+                        </p>
+                    </li>
+</ul></div>
+            </li></ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.statuses"></a>Status Methods</h3></div></div></div>
+        
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">sample()</code> returns the 20 most recent statuses
+                    from non-protected users with a custom user icon. The public timeline is cached
+                    by Twitter for 60 seconds.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.statuses.sample"></a><p class="title"><b>Ejemplo 821. Retrieving public timeline</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;statuses-&gt;sample();
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">homeTimeline()</code> returns the 20 most recent statuses
+                    posted by the authenticating user and that user's friends.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.statuses.hometimeline"></a><p class="title"><b>Ejemplo 822. Retrieving the home timeline</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+));
+$response = $twitter-&gt;statuses-&gt;homeTimeline();
+</pre>
+                </div>
+</div>
+<br class="example-break">
+
+                <p>
+                    The <code class="methodname">homeTimeline()</code> method accepts an array of
+                    optional parameters to modify the query.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="code">since_id</code> narrows the returned results to just those
+                            statuses after the specified identifier (up to 24 hours old).
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">max_id</code> narrows the returned results to just those
+                            statuses earlier than the specified identifier.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">count</code> specifies the number of statuses to return, up to 200.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">trim_user</code>, when set to boolean true, "t", or 1, will list
+                            the author identifier only in embedded user objects in the statuses
+                            returned.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">contributor_details</code>, when set to boolean true, will return
+                            the screen name of any contributors to a status (instead of only the
+                            contributor identifier).
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">include_entities</code> controls whether or not entities, which
+                            includes URLs, mentioned users, and hashtags, will be returned.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">exclude_replies</code> controls whether or not status updates that
+                            are in reply to other statuses will be returned.
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">userTimeline()</code> returns the 20 most recent statuses
+                    posted from the authenticating user.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.statuses.usertimeline"></a><p class="title"><b>Ejemplo 823. Retrieving user timeline</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;statuses-&gt;userTimeline();
+</pre>
+                </div>
+</div>
+<br class="example-break">
+
+                <p>
+                    The <code class="methodname">userTimeline()</code> method accepts an array of optional
+                    parameters to modify the query.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="code">user_id</code> specifies the ID of the user for whom to return the
+                            timeline.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">screen_name</code> specifies the screen name of the user for
+                            whom to return the timeline.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">since_id</code> narrows the returned results to just those
+                            statuses after the specified identifier (up to 24 hours old).
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">max_id</code> narrows the returned results to just those
+                            statuses earlier than the specified identifier.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">count</code> specifies the number of statuses to return, up to 200.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">trim_user</code>, when set to boolean true, "t", or 1, will list
+                            the author identifier only in embedded user objects in the statuses
+                            returned.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">contributor_details</code>, when set to boolean true, will return
+                            the screen name of any contributors to a status (instead of only the
+                            contributor identifier).
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">include_rts</code> controls whether or not to include native
+                            retweets in the returned list.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">exclude_replies</code> controls whether or not status updates that
+                            are in reply to other statuses will be returned.
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">show()</code> returns a single status, specified by the
+                    <code class="code">id</code> parameter below. The status' author will be returned inline.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.statuses.show"></a><p class="title"><b>Ejemplo 824. Showing user status</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;statuses-&gt;show(1234);
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">update()</code> updates the authenticating user's status.
+                    This method requires that you pass in the status update that you want to post
+                    to Twitter.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.statuses.update"></a><p class="title"><b>Ejemplo 825. Updating user status</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;statuses-&gt;update('My Great Tweet');
+</pre>
+                </div>
+</div>
+<br class="example-break">
+
+                <p>
+                    The <code class="methodname">update()</code> method accepts a second additional
+                    parameter.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem">
+                        <p>
+                            <code class="code">inReplyToStatusId</code> specifies the ID of an existing
+                            status that the status to be posted is in reply to.
+                        </p>
+                    </li></ul></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">mentionsTimeline()</code> returns the 20 most recent @replies
+                    (status updates prefixed with @username) for the authenticating user.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.statuses.mentionstimeline"></a><p class="title"><b>Ejemplo 826. Showing user replies</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;statuses-&gt;mentionsTimeline();
+</pre>
+                </div>
+</div>
+<br class="example-break">
+
+                <p>
+                    The <code class="methodname">mentionsTimeline()</code> method accepts an array of
+                    optional parameters to modify the query.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="code">since_id</code> narrows the returned results to just those
+                            statuses after the specified identifier (up to 24 hours old).
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">max_id</code> narrows the returned results to just those
+                            statuses earlier than the specified identifier.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">count</code> specifies the number of statuses to return, up to 200.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">trim_user</code>, when set to boolean true, "t", or 1, will list
+                            the author identifier only in embedded user objects in the statuses
+                            returned.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">contributor_details</code>, when set to boolean true, will return
+                            the screen name of any contributors to a status (instead of only the
+                            contributor identifier).
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">include_entities</code> controls whether or not entities, which
+                            includes URLs, mentioned users, and hashtags, will be returned.
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">destroy()</code> destroys the status specified by the
+                    required <code class="code">id</code> parameter.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.statuses.destroy"></a><p class="title"><b>Ejemplo 827. Deleting user status</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;statuses-&gt;destroy(12345);
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.service.twitter.users"></a>User Methods</h3></div></div></div>
+        
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">show()</code> returns extended information of a given user,
+                    specified by ID or screen name as per the required <code class="code">id</code>
+                    parameter below.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.users.show"></a><p class="title"><b>Ejemplo 828. Showing user informations</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;users-&gt;show('myfriend');
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">search()</code> will search for users matching the query
+                    provided.
+                </p>
+
+                <div class="example">
+<a name="zend.service.twitter.users.search"></a><p class="title"><b>Ejemplo 829. Searching for users</b></p>
+<div class="example-contents">
+                    
+
+                    <pre class="programlisting">
+$twitter  = new Zend_Service_Twitter($options);
+$response = $twitter-&gt;users-&gt;search('Zend');
+</pre>
+                </div>
+</div>
+<br class="example-break">
+
+                <p>
+                    The <code class="methodname">search()</code> method accepts an array of
+                    optional parameters to modify the query.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="code">count</code> specifies the number of statuses to return, up to 20.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">page</code> specifies the page of results to return, based on the
+                            <code class="code">count</code> provided.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="code">include_entities</code> controls whether or not entities, which
+                            includes URLs, mentioned users, and hashtags, will be returned.
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+</ul></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.service.strikeiron.advanced-uses.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.service.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.service.windowsazure.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Service_StrikeIron: Advanced Uses </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Zend_Service_WindowsAzure</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

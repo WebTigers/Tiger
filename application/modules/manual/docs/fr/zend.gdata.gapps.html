@@ -1,0 +1,1380 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Using Google Apps Provisioning</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.gdata.html" title="Zend_Gdata">
+<link rel="prev" href="zend.gdata.spreadsheets.html" title="Using Google Spreadsheets">
+<link rel="next" href="zend.gdata.photos.html" title="Utilisation des albums Web Picasa">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Using Google Apps Provisioning</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.gdata.spreadsheets.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Gdata</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.gdata.photos.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.gdata.gapps"></a>Using Google Apps Provisioning</h2></div></div></div>
+    
+
+    <p>
+        Google Apps is a service which allows domain administrators to offer
+        their users managed access to Google services such as Mail, Calendar,
+        and Docs &amp; Spreadsheets. The Provisioning <acronym class="acronym">API</acronym> offers a programmatic
+        interface to configure this service. Specifically, this <acronym class="acronym">API</acronym> allows
+        administrators the ability to create, retrieve, update, and delete
+        user accounts, nicknames, groups, and email lists.
+    </p>
+
+    <p>
+        This library implements version 2.0 of the Provisioning <acronym class="acronym">API</acronym>. Access to
+        your account via the Provisioning <acronym class="acronym">API</acronym> must be manually enabled for
+        each domain using the Google Apps control panel. Only certain
+        account types are able to enable this feature.
+    </p>
+
+    <p>
+        For more information on the Google Apps Provisioning <acronym class="acronym">API</acronym>, including
+        instructions for enabling <acronym class="acronym">API</acronym> access, refer to the <a class="ulink" href="http://code.google.com/apis/apps/gdata_provisioning_api_v2.0_reference.html" target="_top">Provisioning
+            <acronym class="acronym">API</acronym> V2.0 Reference</a>.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Authentication">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Authentication</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            The Provisioning <acronym class="acronym">API</acronym> does not support authentication via AuthSub
+            and anonymous access is not permitted. All <acronym class="acronym">HTTP</acronym> connections must
+            be authenticated using ClientAuth authentication.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.gapps.domain"></a>Setting the current domain</h3></div></div></div>
+        
+
+        <p>
+            In order to use the Provisioning <acronym class="acronym">API</acronym>, the domain being
+            administered needs to be specified in all request <acronym class="acronym">URI</acronym>s. In order
+            to ease development, this information is stored within both the
+            Gapps service and query classes to use when constructing
+            requests.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.domain.service"></a>Setting the domain for the service class</h4></div></div></div>
+            
+
+            <p>
+                To set the domain for requests made by the service class,
+                either call <code class="methodname">setDomain()</code> or specify the domain
+                when instantiating the service class. For example:
+            </p>
+
+            <pre class="programlisting">
+$domain = "example.com";
+$gdata = new Zend_Gdata_Gapps($client, $domain);
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.domain.query"></a>Setting the domain for query classes</h4></div></div></div>
+            
+
+            <p>
+                Setting the domain for requests made by query classes is
+                similar to setting it for the service class-either call
+                <code class="methodname">setDomain()</code> or specify the domain when creating
+                the query. For example:
+            </p>
+
+            <pre class="programlisting">
+$domain = "example.com";
+$query = new Zend_Gdata_Gapps_UserQuery($domain, $arg);
+</pre>
+
+            <p>
+                When using a service class factory method to create a query,
+                the service class will automatically set the query's domain to
+                match its own domain. As a result, it is not necessary to
+                specify the domain as part of the constructor arguments.
+            </p>
+
+            <pre class="programlisting">
+$domain = "example.com";
+$gdata = new Zend_Gdata_Gapps($client, $domain);
+$query = $gdata-&gt;newUserQuery($arg);
+</pre>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.gapps.users"></a>Interacting with users</h3></div></div></div>
+        
+
+        <p>
+            Each user account on a Google Apps hosted domain is represented as
+            an instance of <code class="classname">Zend_Gdata_Gapps_UserEntry</code>. This class provides
+            access to all account properties including name, username,
+            password, access rights, and current quota.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.users.creating"></a>Creating a user account</h4></div></div></div>
+            
+
+            <p>
+                User accounts can be created by calling the
+                <code class="methodname">createUser()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;createUser('foo', 'Random', 'User', '••••••••');
+</pre>
+
+            <p>
+                Users can also be created by instantiating UserEntry,
+                providing a username, given name, family name, and password,
+                then calling <code class="methodname">insertUser()</code> on a service object to
+                upload the entry to the server.
+            </p>
+
+            <pre class="programlisting">
+$user = $gdata-&gt;newUserEntry();
+$user-&gt;login = $gdata-&gt;newLogin();
+$user-&gt;login-&gt;username = 'foo';
+$user-&gt;login-&gt;password = '••••••••';
+$user-&gt;name = $gdata-&gt;newName();
+$user-&gt;name-&gt;givenName = 'Random';
+$user-&gt;name-&gt;familyName = 'User';
+$user = $gdata-&gt;insertUser($user);
+</pre>
+
+            <p>
+                The user's password should normally be provided as cleartext.
+                Optionally, the password can be provided as an <acronym class="acronym">SHA-1</acronym> digest if
+                <span class="command"><strong>login-&gt;passwordHashFunction</strong></span> is set to
+                '<span class="property">SHA-1</span>'.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.users.retrieving"></a>Retrieving a user account</h4></div></div></div>
+            
+
+            <p>
+                Individual user accounts can be retrieved by calling the
+                <code class="methodname">retrieveUser()</code> convenience method. If the user is
+                not found, <code class="constant">NULL</code> will be returned.
+            </p>
+
+            <pre class="programlisting">
+$user = $gdata-&gt;retrieveUser('foo');
+
+echo 'Username: ' . $user-&gt;login-&gt;userName . "\n";
+echo 'Given Name: ' . $user-&gt;name-&gt;givenName . "\n";
+echo 'Family Name: ' . $user-&gt;name-&gt;familyName . "\n";
+echo 'Suspended: ' . ($user-&gt;login-&gt;suspended ? 'Yes' : 'No') . "\n";
+echo 'Admin: ' . ($user-&gt;login-&gt;admin ? 'Yes' : 'No') . "\n"
+echo 'Must Change Password: ' .
+     ($user-&gt;login-&gt;changePasswordAtNextLogin ? 'Yes' : 'No') . "\n";
+echo 'Has Agreed To Terms: ' .
+     ($user-&gt;login-&gt;agreedToTerms ? 'Yes' : 'No') . "\n";
+</pre>
+
+            <p>
+                Users can also be retrieved by creating an
+                instance of <code class="classname">Zend_Gdata_Gapps_UserQuery</code>, setting its username
+                property to equal the username of the user that is to be
+                retrieved, and calling <code class="methodname">getUserEntry()</code> on a
+                service object with that query.
+            </p>
+
+            <pre class="programlisting">
+$query = $gdata-&gt;newUserQuery('foo');
+$user = $gdata-&gt;getUserEntry($query);
+
+echo 'Username: ' . $user-&gt;login-&gt;userName . "\n";
+echo 'Given Name: ' . $user-&gt;login-&gt;givenName . "\n";
+echo 'Family Name: ' . $user-&gt;login-&gt;familyName . "\n";
+echo 'Suspended: ' . ($user-&gt;login-&gt;suspended ? 'Yes' : 'No') . "\n";
+echo 'Admin: ' . ($user-&gt;login-&gt;admin ? 'Yes' : 'No') . "\n"
+echo 'Must Change Password: ' .
+     ($user-&gt;login-&gt;changePasswordAtNextLogin ? 'Yes' : 'No') . "\n";
+echo 'Has Agreed To Terms: ' .
+     ($user-&gt;login-&gt;agreedToTerms ? 'Yes' : 'No') . "\n";
+</pre>
+
+            <p>
+                If the specified user cannot be located a ServiceException
+                will be thrown with an error code of
+                <code class="constant">Zend_Gdata_Gapps_Error::ENTITY_DOES_NOT_EXIST</code>.
+                ServiceExceptions will be covered in <a class="link" href="zend.gdata.gapps.html#zend.gdata.gapps.exceptions" title="Handling errors">the exceptions chapter</a>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.users.retrievingAll"></a>Retrieving all users in a domain</h4></div></div></div>
+            
+
+            <p>
+                To retrieve all users in a domain, call the
+                <code class="methodname">retrieveAllUsers()</code> convenience method.
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;retrieveAllUsers();
+
+foreach ($feed as $user) {
+    echo "  * " . $user-&gt;login-&gt;username . ' (' . $user-&gt;name-&gt;givenName .
+        ' ' . $user-&gt;name-&gt;familyName . ")\n";
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_UserFeed</code> object which
+                holds each user on the domain.
+            </p>
+
+            <p>
+                Alternatively, call <code class="methodname">getUserFeed()</code> with no
+                options. Keep in mind that on larger
+                domains this feed may be paged by the server. For more
+                information on paging, see <a class="link" href="zend.gdata.introduction.html#zend.gdata.introduction.paging" title="Working with Multi-page Feeds">the paging chapter</a>.
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;getUserFeed();
+
+foreach ($feed as $user) {
+    echo "  * " . $user-&gt;login-&gt;username . ' (' . $user-&gt;name-&gt;givenName .
+        ' ' . $user-&gt;name-&gt;familyName . ")\n";
+}
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.users.updating"></a>Updating a user account</h4></div></div></div>
+            
+
+            <p>
+                The easiest way to update a user account is to retrieve the
+                user as described in the previous sections, make any desired
+                changes, then call <code class="methodname">save()</code> on that user. Any
+                changes made will be propagated to the server.
+            </p>
+
+            <pre class="programlisting">
+$user = $gdata-&gt;retrieveUser('foo');
+$user-&gt;name-&gt;givenName = 'Foo';
+$user-&gt;name-&gt;familyName = 'Bar';
+$user = $user-&gt;save();
+</pre>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.gapps.users.updating.resettingPassword"></a>Resetting a user's password</h5></div></div></div>
+                
+
+                <p>
+                    A user's password can be reset to a new value by updating
+                    the <span class="command"><strong>login-&gt;password</strong></span> property.
+                </p>
+
+                <pre class="programlisting">
+$user = $gdata-&gt;retrieveUser('foo');
+$user-&gt;login-&gt;password = '••••••••';
+$user = $user-&gt;save();
+</pre>
+
+                <p>
+                    Note that it is not possible to recover a password in this
+                    manner as stored passwords are not made available via the
+                    Provisioning <acronym class="acronym">API</acronym> for security reasons.
+                </p>
+            </div>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.gapps.users.updating.forcingPasswordChange"></a>Forcing a user to change their password</h5></div></div></div>
+                
+
+                <p>
+                    A user can be forced to change their password at their
+                    next login by setting the
+                    <span class="command"><strong>login-&gt;changePasswordAtNextLogin</strong></span> property to
+                    <code class="constant">TRUE</code>.
+                </p>
+
+                <pre class="programlisting">
+$user = $gdata-&gt;retrieveUser('foo');
+$user-&gt;login-&gt;changePasswordAtNextLogin = true;
+$user = $user-&gt;save();
+</pre>
+
+                <p>
+                    Similarly, this can be undone by setting the
+                    <span class="command"><strong>login-&gt;changePasswordAtNextLogin</strong></span> property to
+                    <code class="constant">FALSE</code>.
+                </p>
+            </div>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.gapps.users.updating.suspendingAccount"></a>Suspending a user account</h5></div></div></div>
+                
+
+                <p>
+                    Users can be restricted from logging in without deleting
+                    their user account by instead
+                    <span class="emphasis"><em>suspending</em></span> their user account.
+                    Accounts can be suspended or restored by using the
+                    <code class="methodname">suspendUser()</code> and
+                    <code class="methodname">restoreUser()</code> convenience methods:
+                </p>
+
+                <pre class="programlisting">
+$gdata-&gt;suspendUser('foo');
+$gdata-&gt;restoreUser('foo');
+</pre>
+
+                <p>
+                    Alternatively, you can set the UserEntry's
+                    <span class="command"><strong>login-&gt;suspended</strong></span> property to
+                    <code class="constant">TRUE</code>.
+                </p>
+
+                <pre class="programlisting">
+$user = $gdata-&gt;retrieveUser('foo');
+$user-&gt;login-&gt;suspended = true;
+$user = $user-&gt;save();
+</pre>
+
+                <p>
+                    To restore the user's access, set the
+                    <span class="command"><strong>login-&gt;suspended</strong></span> property to
+                    <code class="constant">FALSE</code>.
+                </p>
+            </div>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.gapps.users.updating.grantingAdminRights"></a>Granting administrative rights</h5></div></div></div>
+                
+
+                <p>
+                    Users can be granted the ability to administer your domain
+                    by setting their <span class="command"><strong>login-&gt;admin</strong></span> property to
+                    <code class="constant">TRUE</code>.
+                </p>
+
+                <pre class="programlisting">
+$user = $gdata-&gt;retrieveUser('foo');
+$user-&gt;login-&gt;admin = true;
+$user = $user-&gt;save();
+</pre>
+
+                <p>
+                    And as expected, setting a user's <span class="command"><strong>login-&gt;admin</strong></span>
+                    property to <code class="constant">FALSE</code> revokes their
+                    administrative rights.
+                </p>
+            </div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.users.deleting"></a>Deleting user accounts</h4></div></div></div>
+            
+
+            <p>
+                Deleting a user account to which you already hold a UserEntry
+                is a simple as calling <code class="methodname">delete()</code> on that
+                entry.
+            </p>
+
+            <pre class="programlisting">
+$user = $gdata-&gt;retrieveUser('foo');
+$user-&gt;delete();
+</pre>
+
+            <p>
+                If you do not have access to a UserEntry object for an
+                account, use the <code class="methodname">deleteUser()</code> convenience method.
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;deleteUser('foo');
+</pre>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.gapps.nicknames"></a>Interacting with nicknames</h3></div></div></div>
+        
+
+        <p>
+            Nicknames serve as email aliases for existing users. Each nickname
+            contains precisely two key properties: its name and its owner. Any
+            email addressed to a nickname is forwarded to the user who owns
+            that nickname.
+        </p>
+
+        <p>
+            Nicknames are represented as an instances of
+            <code class="classname">Zend_Gdata_Gapps_NicknameEntry</code>.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.nicknames.creating"></a>Creating a nickname</h4></div></div></div>
+            
+
+            <p>
+                Nicknames can be created by calling the
+                <code class="methodname">createNickname()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;createNickname('foo', 'bar');
+</pre>
+
+            <p>
+                Nicknames can also be created by instantiating NicknameEntry,
+                providing the nickname with a name and an owner, then calling
+                <code class="methodname">insertNickname()</code> on a service object to upload
+                the entry to the server.
+            </p>
+
+            <pre class="programlisting">
+$nickname = $gdata-&gt;newNicknameEntry();
+$nickname-&gt;login = $gdata-&gt;newLogin('foo');
+$nickname-&gt;nickname = $gdata-&gt;newNickname('bar');
+$nickname = $gdata-&gt;insertNickname($nickname);
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.nicknames.retrieving"></a>Retrieving a nickname</h4></div></div></div>
+            
+
+            <p>
+                Nicknames can be retrieved by calling the
+                <code class="methodname">retrieveNickname()</code> convenience method. This will
+                return <code class="constant">NULL</code> if a user is not found.
+            </p>
+
+            <pre class="programlisting">
+$nickname = $gdata-&gt;retrieveNickname('bar');
+
+echo 'Nickname: ' . $nickname-&gt;nickname-&gt;name . "\n";
+echo 'Owner: ' . $nickname-&gt;login-&gt;username . "\n";
+</pre>
+
+            <p>
+                Individual nicknames can also be retrieved by creating an
+                instance of <code class="classname">Zend_Gdata_Gapps_NicknameQuery</code>, setting its
+                nickname property to equal the nickname that is to be
+                retrieved, and calling <code class="methodname">getNicknameEntry()</code> on a
+                service object with that query.
+            </p>
+
+            <pre class="programlisting">
+$query = $gdata-&gt;newNicknameQuery('bar');
+$nickname = $gdata-&gt;getNicknameEntry($query);
+
+echo 'Nickname: ' . $nickname-&gt;nickname-&gt;name . "\n";
+echo 'Owner: ' . $nickname-&gt;login-&gt;username . "\n";
+</pre>
+
+            <p>
+                As with users, if no corresponding nickname is found a
+                ServiceException will be thrown with an error code of
+                <code class="constant">Zend_Gdata_Gapps_Error::ENTITY_DOES_NOT_EXIST</code>. Again, these
+                will be discussed in <a class="link" href="zend.gdata.gapps.html#zend.gdata.gapps.exceptions" title="Handling errors">the exceptions chapter</a>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.nicknames.retrievingUser"></a>Retrieving all nicknames for a user</h4></div></div></div>
+            
+
+            <p>
+                To retrieve all nicknames associated with a given user, call
+                the convenience method <code class="methodname">retrieveNicknames()</code>.
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;retrieveNicknames('foo');
+
+foreach ($feed as $nickname) {
+    echo '  * ' . $nickname-&gt;nickname-&gt;name . "\n";
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_NicknameFeed</code> object which
+                holds each nickname associated with the specified user.
+            </p>
+
+            <p>
+                Alternatively, create a new <code class="classname">Zend_Gdata_Gapps_NicknameQuery</code>,
+                set its username property to the desired user, and submit the
+                query by calling <code class="methodname">getNicknameFeed()</code> on a service
+                object.
+            </p>
+
+            <pre class="programlisting">
+$query = $gdata-&gt;newNicknameQuery();
+$query-&gt;setUsername('foo');
+$feed = $gdata-&gt;getNicknameFeed($query);
+
+foreach ($feed as $nickname) {
+    echo '  * ' . $nickname-&gt;nickname-&gt;name . "\n";
+}
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.nicknames.retrievingAll"></a>Retrieving all nicknames in a domain</h4></div></div></div>
+            
+
+            <p>
+                To retrieve all nicknames in a feed, simply call the
+                convenience method <code class="methodname">retrieveAllNicknames()</code>
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;retrieveAllNicknames();
+
+foreach ($feed as $nickname) {
+    echo '  * ' . $nickname-&gt;nickname-&gt;name . ' =&gt; ' .
+        $nickname-&gt;login-&gt;username . "\n";
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_NicknameFeed</code> object which
+                holds each nickname on the domain.
+            </p>
+
+            <p>
+                Alternatively, call <code class="methodname">getNicknameFeed()</code> on a
+                service object with no arguments.
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;getNicknameFeed();
+
+foreach ($feed as $nickname) {
+    echo '  * ' . $nickname-&gt;nickname-&gt;name . ' =&gt; ' .
+        $nickname-&gt;login-&gt;username . "\n";
+}
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.nicknames.deleting"></a>Deleting a nickname</h4></div></div></div>
+            
+
+            <p>
+                Deleting a nickname to which you already hold a NicknameEntry
+                for is a simple as calling <code class="methodname">delete()</code> on that
+                entry.
+            </p>
+
+            <pre class="programlisting">
+$nickname = $gdata-&gt;retrieveNickname('bar');
+$nickname-&gt;delete();
+</pre>
+
+            <p>
+                For nicknames which you do not hold a NicknameEntry for, use
+                the <code class="methodname">deleteNickname()</code> convenience method.
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;deleteNickname('bar');
+</pre>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.gapps.groups"></a>Interacting with groups</h3></div></div></div>
+        
+
+        <p>
+            Google Groups allows people to post messages like an email list. Google
+            is depreciating the Email List <acronym class="acronym">API</acronym>. Google Groups provides some neat
+            features like nested groups and group owners. If you want to start
+            a new email lst, it is advisable to use Google Groups instead.
+            Google's Email List is not compatible with Google Groups. So if you
+            create an email list, it will not show up as a group. The opposite is
+            true as well.
+        </p>
+
+        <p>
+            Each group on a domain is represented as an instance of
+            <code class="classname">Zend_Gdata_Gapps_GroupEntry</code>.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groups.creating"></a>Creating a group</h4></div></div></div>
+            
+
+            <p>
+                Groups can be created by calling the
+                <code class="methodname">createGroup()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;createGroup('friends', 'The Friends Group');
+</pre>
+
+            <p>
+                Groups can also be created by instantiating
+                GroupEntry, providing a group id and name for the group,
+                then calling <code class="methodname">insertGroup()</code> on a service
+                object to upload the entry to the server.
+            </p>
+
+            <pre class="programlisting">
+$group = $gdata-&gt;newGroupEntry();
+
+$properties[0] = $this-&gt;newProperty();
+$properties[0]-&gt;name = 'groupId';
+$properties[0]-&gt;value = 'friends';
+$properties[1] = $this-&gt;newProperty();
+$properties[1]-&gt;name = 'groupName';
+$properties[1]-&gt;value = 'The Friends Group';
+
+$group-&gt;property = $properties;
+
+$group = $gdata-&gt;insertGroup($group);
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groups.retrieveGroup"></a>Retrieving an individual group</h4></div></div></div>
+            
+
+            <p>
+                To retrieve an individual group, call the
+                <code class="methodname">retrieveGroup()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$entry = $gdata-&gt;retrieveGroup('friends');
+
+foreach ($entry-&gt;property as $p) {
+    echo "Property Name: " . $p-&gt;name;
+    echo "\nProperty Value: " . $p-&gt;value . "\n\n";
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_GroupEntry</code>
+                object which holds the properties about the group.
+            </p>
+
+            <p>
+                Alternatively, create a new <code class="classname">Zend_Gdata_Gapps_GroupQuery</code>,
+                set its groupId property to the desired group id, and
+                submit the query by calling <code class="methodname">getGroupEntry()</code>
+                on a service object.
+            </p>
+
+            <pre class="programlisting">
+$query = $gdata-&gt;newGroupQuery();
+$query-&gt;setGroupId('friends');
+$entry = $gdata-&gt;getGroupEntry($query);
+
+foreach ($entry-&gt;property as $p) {
+    echo "Property Name: " . $p-&gt;name;
+    echo "\nProperty Value: " . $p-&gt;value . "\n\n";
+}
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groups.retrievingAll"></a>Retrieving all groups in a domain</h4></div></div></div>
+            
+
+            <p>
+                To retrieve all groups in a domain, call the convenience
+                method <code class="methodname">retrieveAllGroups()</code>.
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;retrieveAllGroups();
+
+foreach ($feed-&gt;entry as $entry) {
+    foreach ($entry-&gt;property as $p) {
+        echo "Property Name: " . $p-&gt;name;
+        echo "\nProperty Value: " . $p-&gt;value . "\n\n";
+    }
+    echo "\n\n";
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_GroupFeed</code>
+                object which holds each group on the domain.
+            </p>
+
+            <p>
+                Alternatively, call <code class="methodname">getGroupFeed()</code> on a
+                service object with no arguments.
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;getGroupFeed();
+
+foreach ($feed-&gt;entry as $entry) {
+    foreach ($entry-&gt;property as $p) {
+        echo "Property Name: " . $p-&gt;name;
+        echo "\nProperty Value: " . $p-&gt;value . "\n\n";
+    }
+    echo "\n\n";
+}
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groups.deleting"></a>Deleting a group</h4></div></div></div>
+            
+
+            <p>
+                To delete a group, call the <code class="methodname">deleteGroup()</code> convenience
+                method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;deleteGroup('friends');
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groups.updating"></a>Updating a group</h4></div></div></div>
+            
+
+            <p>
+                Groups can be updated by calling the
+                <code class="methodname">updateGroup()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;updateGroup('group-id-here', 'Group Name Here');
+</pre>
+
+            <p>
+                The first parameter is required. The second, third and fourth parameter,
+                representing the group name, group descscription, and email permission,
+                respectively are optional. Setting any of these optional parameters
+                to null will not update that item.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groups.retrieve"></a>Retrieving all groups to which a person is a member</h4></div></div></div>
+            
+
+            <p>
+                To retrieve all groups to which a particular person is a
+                member, call the <code class="methodname">retrieveGroups()</code>
+                convenience method:
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;retrieveGroups('baz@somewhere.com');
+
+foreach ($feed-&gt;entry as $entry) {
+    foreach ($entry-&gt;property as $p) {
+        echo "Property Name: " . $p-&gt;name;
+        echo "\nProperty Value: " . $p-&gt;value . "\n\n";
+    }
+    echo "\n\n";
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_GroupFeed</code>
+                object which holds each group associated with the specified member.
+            </p>
+
+            <p>
+                Alternatively, create a new <code class="classname">Zend_Gdata_Gapps_GroupQuery</code>,
+                set its member property to the desired email address, and
+                submit the query by calling <code class="methodname">getGroupFeed()</code>
+                on a service object.
+            </p>
+
+            <pre class="programlisting">
+$query = $gdata-&gt;newGroupQuery();
+$query-&gt;setMember('baz@somewhere.com');
+$feed = $gdata-&gt;getGroupFeed($query);
+
+foreach ($feed-&gt;entry as $entry) {
+    foreach ($entry-&gt;property as $p) {
+        echo "Property Name: " . $p-&gt;name;
+        echo "\nProperty Value: " . $p-&gt;value . "\n\n";
+    }
+    echo "\n\n";
+}
+</pre>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.gapps.groupMembers"></a>Interacting with group members</h3></div></div></div>
+        
+
+        <p>
+            Each member subscribed to a group is represented by an
+            instance of <code class="classname">Zend_Gdata_Gapps_MemberEntry</code>.
+            Through this class, individual recipients can be added and removed
+            from groups.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groupMembers.adding"></a>Adding a member to a group</h4></div></div></div>
+            
+
+            <p>
+                To add a member to a group, simply call the
+                <code class="methodname">addMemberToGroup()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;addMemberToGroup('bar@somewhere.com', 'friends');
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groupMembers.check"></a>Check to see if member belongs to group</h4></div></div></div>
+            
+
+            <p>
+                To check to see if member belongs to group, simply call the
+                <code class="methodname">isMember()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$isMember = $gdata-&gt;isMember('bar@somewhere.com', 'friends');
+var_dump($isMember);
+</pre>
+
+            <p>
+                The method returns a boolean value. If the member belongs to the
+                group specified, the method returns true, else it returns false.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groupMembers.removing"></a>Removing a member from a group</h4></div></div></div>
+            
+
+            <p>
+                To remove a member from a group, call the
+                <code class="methodname">removeMemberFromGroup()</code> convenience
+                method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;removeMemberFromGroup('baz', 'friends');
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groupMembers.retrieving"></a>Retrieving the list of members to a group</h4></div></div></div>
+            
+
+            <p>
+                The convenience method <code class="methodname">retrieveAllMembers()</code>
+                can be used to retrieve the list of members of a group:
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;retrieveAllMembers('friends');
+
+foreach ($feed as $member) {
+    foreach ($member-&gt;property as $p) {
+        echo "Property Name: " . $p-&gt;name;
+        echo "\nProperty Value: " . $p-&gt;value . "\n\n";
+    }
+}
+</pre>
+
+            <p>
+                Alternatively, construct a new MemberQuery, set its groupId
+                property to match the desired group id, and call
+                <code class="methodname">getMemberFeed()</code> on a service object.
+            </p>
+
+            <pre class="programlisting">
+$query = $gdata-&gt;newMemberQuery();
+$query-&gt;setGroupId('friends');
+$feed = $gdata-&gt;getMemberFeed($query);
+
+foreach ($feed as $member) {
+    foreach ($member-&gt;property as $p) {
+        echo "Property Name: " . $p-&gt;name;
+        echo "\nProperty Value: " . $p-&gt;value . "\n\n";
+    }
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_MemberFeed</code>
+                object which holds each member for the selected group.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.gapps.groupOwners"></a>Interacting with group owners</h3></div></div></div>
+        
+
+        <p>
+            Each owner associated with a group is represented by an
+            instance of <code class="classname">Zend_Gdata_Gapps_OwnerEntry</code>.
+            Through this class, individual owners can be added and removed
+            from groups.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groupOwners.adding"></a>Adding an owner to a group</h4></div></div></div>
+            
+
+            <p>
+                To add an owner to a group, simply call the
+                <code class="methodname">addOwnerToGroup()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;addOwnerToGroup('bar@somewhere.com', 'friends');
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groupOwners.retrieving"></a>Retrieving the list of the owner of a group</h4></div></div></div>
+            
+
+            <p>
+                The convenience method <code class="methodname">retrieveGroupOwners()</code>
+                can be used to retrieve the list of the owners of a group:
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;retrieveGroupOwners('friends');
+
+foreach ($feed as $owner) {
+    foreach ($owner-&gt;property as $p) {
+        echo "Property Name: " . $p-&gt;name;
+        echo "\nProperty Value: " . $p-&gt;value . "\n\n";
+    }
+}
+</pre>
+
+            <p>
+                Alternatively, construct a new OwnerQuery, set its groupId
+                property to match the desired group id, and call
+                <code class="methodname">getOwnerFeed()</code> on a service object.
+            </p>
+
+            <pre class="programlisting">
+$query = $gdata-&gt;newOwnerQuery();
+$query-&gt;setGroupId('friends');
+$feed = $gdata-&gt;getOwnerFeed($query);
+
+foreach ($feed as $owner) {
+    foreach ($owner-&gt;property as $p) {
+        echo "Property Name: " . $p-&gt;name;
+        echo "\nProperty Value: " . $p-&gt;value . "\n\n";
+    }
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_OwnerFeed</code>
+                object which holds each member for the selected group.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groupOwners.check"></a>Check to see if an email is the owner of a group</h4></div></div></div>
+            
+
+            <p>
+                To check to see if an email is the owner of a group, simply call
+                the <code class="methodname">isOwner()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$isOwner = $gdata-&gt;isOwner('bar@somewhere.com', 'friends');
+var_dump($isOwner);
+</pre>
+
+            <p>
+                The method returns a boolean value. If the email is the owner of
+                the group specified, the method returns true, else it returns false.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.groupOwners.removing"></a>Removing an owner from a group</h4></div></div></div>
+            
+
+            <p>
+                To remove an owner from a group, call the
+                <code class="methodname">removeOwnerFromGroup()</code> convenience
+                method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;removeOwnerFromGroup('baz@somewhere.com', 'friends');
+</pre>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.gapps.emailLists"></a>Interacting with email lists</h3></div></div></div>
+        
+
+        <p>
+            Email lists allow several users to retrieve email addressed to a
+            single email address. Users do not need to be a
+            member of this domain in order to subscribe to an email list
+            provided their complete email address (including domain) is used.
+        </p>
+
+        <p>
+            Each email list on a domain is represented as an instance of
+            <code class="classname">Zend_Gdata_Gapps_EmailListEntry</code>.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.emailLists.creating"></a>Creating an email list</h4></div></div></div>
+            
+
+            <p>
+                Email lists can be created by calling the
+                <code class="methodname">createEmailList()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;createEmailList('friends');
+</pre>
+
+            <p>
+                Email lists can also be created by instantiating
+                EmailListEntry, providing a name for the list, then calling
+                <code class="methodname">insertEmailList()</code> on a service object to upload
+                the entry to the server.
+            </p>
+
+            <pre class="programlisting">
+$list = $gdata-&gt;newEmailListEntry();
+$list-&gt;emailList = $gdata-&gt;newEmailList('friends');
+$list = $gdata-&gt;insertEmailList($list);
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.emailList.retrieve"></a>Retrieving all email lists to which a recipient is subscribed</h4></div></div></div>
+            
+
+            <p>
+                To retrieve all email lists to which a particular recipient is
+                subscribed, call the <code class="methodname">retrieveEmailLists()</code>
+                convenience method:
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;retrieveEmailLists('baz@somewhere.com');
+
+foreach ($feed as $list) {
+    echo '  * ' . $list-&gt;emailList-&gt;name . "\n";
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_EmailListFeed</code> object
+                which holds each email list associated with the specified recipient.
+            </p>
+
+            <p>
+                Alternatively, create a new <code class="classname">Zend_Gdata_Gapps_EmailListQuery</code>,
+                set its recipient property to the desired email address, and
+                submit the query by calling <code class="methodname">getEmailListFeed()</code> on
+                a service object.
+            </p>
+
+            <pre class="programlisting">
+$query = $gdata-&gt;newEmailListQuery();
+$query-&gt;setRecipient('baz@somewhere.com');
+$feed = $gdata-&gt;getEmailListFeed($query);
+
+foreach ($feed as $list) {
+    echo '  * ' . $list-&gt;emailList-&gt;name . "\n";
+}
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.emailLists.retrievingAll"></a>Retrieving all email lists in a domain</h4></div></div></div>
+            
+
+            <p>
+                To retrieve all email lists in a domain, call the convenience
+                method <code class="methodname">retrieveAllEmailLists()</code>.
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;retrieveAllEmailLists();
+
+foreach ($feed as $list) {
+    echo '  * ' . $list-&gt;emailList-&gt;name . "\n";
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_EmailListFeed</code> object
+                which holds each email list on the domain.
+            </p>
+
+            <p>
+                Alternatively, call <code class="methodname">getEmailListFeed()</code> on a
+                service object with no arguments.
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;getEmailListFeed();
+
+foreach ($feed as $list) {
+    echo '  * ' . $list-&gt;emailList-&gt;name . "\n";
+}
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.emailList.deleting"></a>Deleting an email list</h4></div></div></div>
+            
+
+            <p>
+                To delete an email list, call the <code class="methodname">deleteEmailList()</code>
+                convenience method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;deleteEmailList('friends');
+</pre>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.gapps.emailListRecipients"></a>Interacting with email list recipients</h3></div></div></div>
+        
+
+        <p>
+            Each recipient subscribed to an email list is represented by an
+            instance of <code class="classname">Zend_Gdata_Gapps_EmailListRecipient</code>. Through this
+            class, individual recipients can be added and removed from email
+            lists.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.emailListRecipients.adding"></a>Adding a recipient to an email list</h4></div></div></div>
+            
+
+            <p>
+                To add a recipient to an email list, simply call the
+                <code class="methodname">addRecipientToEmailList()</code> convenience method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;addRecipientToEmailList('bar@somewhere.com', 'friends');
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.emailListRecipients.retrieving"></a>Retrieving the list of subscribers to an email list</h4></div></div></div>
+            
+
+            <p>
+                The convenience method <code class="methodname">retrieveAllRecipients()</code>
+                can be used to retrieve the list of subscribers to an email list:
+            </p>
+
+            <pre class="programlisting">
+$feed = $gdata-&gt;retrieveAllRecipients('friends');
+
+foreach ($feed as $recipient) {
+    echo '  * ' . $recipient-&gt;who-&gt;email . "\n";
+}
+</pre>
+
+            <p>
+                Alternatively, construct a new EmailListRecipientQuery, set
+                its emailListName property to match the desired email list,
+                and call <code class="methodname">getEmailListRecipientFeed()</code> on a service
+                object.
+            </p>
+
+            <pre class="programlisting">
+$query = $gdata-&gt;newEmailListRecipientQuery();
+$query-&gt;setEmailListName('friends');
+$feed = $gdata-&gt;getEmailListRecipientFeed($query);
+
+foreach ($feed as $recipient) {
+    echo '  * ' . $recipient-&gt;who-&gt;email . "\n";
+}
+</pre>
+
+            <p>
+                This will create a <code class="classname">Zend_Gdata_Gapps_EmailListRecipientFeed</code>
+                object which holds each recipient for the selected email list.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.gapps.emailListRecipients.removing"></a>Removing a recipient from an email list</h4></div></div></div>
+            
+
+            <p>
+                To remove a recipient from an email list, call the
+                <code class="methodname">removeRecipientFromEmailList()</code> convenience
+                method:
+            </p>
+
+            <pre class="programlisting">
+$gdata-&gt;removeRecipientFromEmailList('baz@somewhere.com', 'friends');
+</pre>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.gapps.exceptions"></a>Handling errors</h3></div></div></div>
+        
+
+        <p>
+            In addition to the standard suite of exceptions thrown by
+            <code class="classname">Zend_Gdata</code>, requests using the Provisioning
+            <acronym class="acronym">API</acronym> may also throw a
+            <code class="classname">Zend_Gdata_Gapps_ServiceException</code>. These exceptions
+            indicate that a <acronym class="acronym">API</acronym> specific error occurred which prevents the
+            request from completing.
+        </p>
+
+        <p>
+            Each ServiceException instance may hold one or more Error objects.
+            Each of these objects contains an error code, reason, and
+            (optionally) the input which triggered the exception. A complete
+            list of known error codes is provided in Zend Framework's <acronym class="acronym">API</acronym>
+            documentation under <code class="classname">Zend_Gdata_Gapps_Error</code>. Additionally, the
+            authoritative error list is available online at <a class="ulink" href="http://code.google.com/apis/apps/gdata_provisioning_api_v2.0_reference.html#appendix_d" target="_top">Google
+            Apps Provisioning <acronym class="acronym">API</acronym> V2.0 Reference: Appendix D</a>.
+        </p>
+
+        <p>
+            While the complete list of errors received is available within
+            ServiceException as an array by calling <code class="methodname">getErrors()</code>,
+            often it is convenient to know if one specific error occurred. For
+            these cases the presence of an error can be determined by calling
+            <code class="methodname">hasError()</code>.
+        </p>
+
+        <p>
+            The following example demonstrates how to detect if a requested
+            resource doesn't exist and handle the fault gracefully:
+        </p>
+
+        <pre class="programlisting">
+function retrieveUser ($username) {
+    $query = $gdata-&gt;newUserQuery($username);
+    try {
+        $user = $gdata-&gt;getUserEntry($query);
+    } catch (Zend_Gdata_Gapps_ServiceException $e) {
+        // Set the user to null if not found
+        if ($e-&gt;hasError(Zend_Gdata_Gapps_Error::ENTITY_DOES_NOT_EXIST)) {
+            $user = null;
+        } else {
+            throw $e;
+        }
+    }
+    return $user;
+}
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.gdata.spreadsheets.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.gdata.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.gdata.photos.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Using Google Spreadsheets </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Utilisation des albums Web Picasa</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

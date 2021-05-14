@@ -1,0 +1,169 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Internationalization (i18n) and Localization (l10n)</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="performance.html" title="Guía de Rendimiento de Zend Framework">
+<link rel="prev" href="performance.database.html" title="Zend_Db Performance">
+<link rel="next" href="performance.view.html" title="View Rendering">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Internationalization (i18n) and Localization (l10n)</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="performance.database.html">Anterior</a> </td>
+<th width="60%" align="center">Guía de Rendimiento de Zend Framework</th>
+<td width="20%" align="right"> <a accesskey="n" href="performance.view.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="performance.localization"></a>Internationalization (i18n) and Localization (l10n)</h2></div></div></div>
+    
+
+    <p>
+        Internationalizing and localizing a site are fantastic ways to expand
+        your audience and ensure that all visitors can get to the information
+        they need. However, it often comes with a performance penalty. Below
+        are some strategies you can employ to reduce the overhead of i18n and
+        l10n.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="performance.localization.translationadapter"></a>Which translation adapter should I use?</h3></div></div></div>
+        
+
+        <p>
+            Not all translation adapters are made equal. Some have more
+            features than others, and some perform better than others.
+            Additionally, you may have business requirements that force you to
+            use a particular adapter. However, if you have a choice, which
+            adapters are fastest?
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="performance.localization.translationadapter.fastest"></a>Use non-XML translation adapters for greatest speed</h4></div></div></div>
+            
+
+            <p>
+                Zend Framework ships with a variety of translation adapters.
+                Fully half of them utilize an <acronym class="acronym">XML</acronym> format, incurring memory and
+                performance overhead. Fortunately, there are several adapters
+                that utilize other formats that can be parsed much more
+                quickly. In order of speed, from fastest to slowest, they are:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>Array</em></span>: this is the fastest, as it is, by
+                        definition, parsed into a native <acronym class="acronym">PHP</acronym> format immediately
+                        on inclusion.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em><acronym class="acronym">CSV</acronym></em></span>: uses
+                        <code class="methodname">fgetcsv()</code> to parse a <acronym class="acronym">CSV</acronym> file
+                        and transform it into a native <acronym class="acronym">PHP</acronym> format.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em><acronym class="acronym">INI</acronym></em></span>: uses
+                        <code class="methodname">parse_ini_file()</code> to parse an <acronym class="acronym">INI</acronym>
+                        file and transform it into a native <acronym class="acronym">PHP</acronym> format. This and
+                        the <acronym class="acronym">CSV</acronym> adapter are roughly equivalent performance-wise.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>Gettext</em></span>: The gettext adapter from Zend Framework
+                        does <span class="emphasis"><em>not</em></span> use the gettext
+                        extension as it is not thread safe and does not allow
+                        specifying more than one locale per server. As a result, it
+                        is slower than using the gettext extension directly, but,
+                        because the gettext format is binary, it's faster to parse
+                        than <acronym class="acronym">XML</acronym>.
+                    </p>
+                </li>
+</ul></div>
+
+            <p>
+                If high performance is one of your concerns, we suggest
+                utilizing one of the above adapters.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="performance.localization.cache"></a>How can I make translation and localization even faster?</h3></div></div></div>
+        
+
+        <p>
+            Maybe, for business reasons, you're limited to an <acronym class="acronym">XML</acronym>-based
+            translation adapter. Or perhaps you'd like to speed things up even
+            more. Or perhaps you want to make l10n operations faster. How can
+            you do this?
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="performance.localization.cache.usage"></a>Use translation and localization caches</h4></div></div></div>
+            
+
+            <p>
+                Both <code class="classname">Zend_Translate</code> and <code class="classname">Zend_Locale</code>
+                implement caching functionality that can greatly affect
+                performance. In the case of each, the major bottleneck is
+                typically reading the files, not the actual lookups; using a
+                cache eliminates the need to read the translation and/or
+                localization files.
+            </p>
+
+            <p>
+                You can read about caching of translation and localization
+                strings in the following locations:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <a class="link" href="zend.translate.adapter.html#zend.translate.adapter.caching" title="Speedup all Adapters"><code class="classname">Zend_Translate</code>
+                            adapter caching</a>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <a class="link" href="zend.locale.introduction.html#zend.locale.cache" title="Speed up Zend_Locale and its subclasses"><code class="classname">Zend_Locale</code>
+                            caching</a>
+                    </p>
+                </li>
+</ul></div>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="performance.database.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="performance.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="performance.view.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Db Performance </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> View Rendering</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

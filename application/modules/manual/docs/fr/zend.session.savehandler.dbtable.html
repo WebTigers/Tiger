@@ -1,0 +1,171 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Session_SaveHandler_DbTable</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.session.html" title="Zend_Session">
+<link rel="prev" href="zend.session.global_session_management.html" title="Gestion générale de la session">
+<link rel="next" href="zend.soap.html" title="Zend_Soap">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Session_SaveHandler_DbTable</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.session.global_session_management.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Session</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.soap.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.session.savehandler.dbtable"></a>Zend_Session_SaveHandler_DbTable</h2></div></div></div>
+    
+
+    <p>
+        Le paramétrage basique pour <code class="classname">Zend_Session_SaveHandler_DbTable</code>
+        doit contenir au moins quatre colonnes, décrites dans une configuration de type
+        <code class="code">array</code> ou objet <code class="classname">Zend_Config</code> : "primary" qui est la clé
+        primaire et reçoit par défaut l'ID de session dont le format est par défaut une chaîne de 32
+        caractères ; "modifiedColumn" qui est le timestamp Unix de la date de dernière modification
+        ; "lifetimeColumn" qui est la durée de vie de la session ("modified" + "lifetime" doit être
+        supérieur à "time()") ; et "dataColumn" qui est la donnée sérialisée stockée en
+        session.
+    </p>
+
+    <div class="example">
+<a name="zend.session.savehandler.dbtable.basic"></a><p class="title"><b>Exemple 894. Paramétrage basique</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+CREATE TABLE `session` (
+  `id` char(32),
+  `modified` int,
+  `lifetime` int,
+  `data` text,
+  PRIMARY KEY (`id`)
+);
+</pre>
+
+        <pre class="programlisting">
+// Préparation de l'adaptateur de connexion à la base de données
+$db = Zend_Db::factory('Pdo_Mysql', array(
+    'host'        =&gt;'example.com',
+    'username'    =&gt; 'dbuser',
+    'password'    =&gt; '******',
+    'dbname'    =&gt; 'dbname'
+));
+
+// Vous pouvez soit passer l'adaptateur par défaut à Zend_Db_Table
+// ou l'objet $db dans votre tableau $config
+Zend_Db_Table_Abstract::setDefaultAdapter($db);
+$config = array(
+    'name'           =&gt; 'session',
+    'primary'        =&gt; 'id',
+    'modifiedColumn' =&gt; 'modified',
+    'dataColumn'     =&gt; 'data',
+    'lifetimeColumn' =&gt; 'lifetime'
+);
+
+// Création de votre Zend_Session_SaveHandler_DbTable
+// et paramétrage du gestionnaire de sauvegarde à Zend_Session
+Zend_Session::setSaveHandler(new Zend_Session_SaveHandler_DbTable($config));
+
+// Démarrage de la session
+Zend_Session::start();
+
+// Vous pouvez maintenant utiliser Zend_Session comme avant
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <p>
+        Vous pouvez aussi utiliser des colonnes multiples pour votre clé primaire de
+        <code class="classname">Zend_Session_SaveHandler_DbTable</code>.
+    </p>
+
+    <div class="example">
+<a name="zend.session.savehandler.dbtable.multi-column-key"></a><p class="title"><b>Exemple 895. Utilisation d'une clé primaire multi-colonnes</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+CREATE TABLE `session` (
+    `session_id` char(32) NOT NULL,
+    `save_path` varchar(32) NOT NULL,
+    `name` varchar(32) NOT NULL DEFAULT '',
+    `modified` int,
+    `lifetime` int,
+    `session_data` text,
+    PRIMARY KEY (`Session_ID`, `save_path`, `name`)
+);
+</pre>
+
+        <pre class="programlisting">
+// Préparation de l'adaptateur de connexion à la base de données comme ci-dessus
+// NOTE : cette configuration est fournie à Zend_Db_Table donc tout élément spécifique à la table peut y être ajouté
+$config = array(
+    'name'              =&gt; 'session',
+    // Nom de la table comme pour Zend_Db_Table
+    'primary'           =&gt; array(
+        'session_id',
+        // l'ID de session fourni par PHP
+        'save_path',
+        // session.save_path
+        'name',
+        // session name
+    ),
+    'primaryAssignment' =&gt; array(
+    // vous devez avertir le gestionnaire de sauvegarde quelles colonnes
+    // vous utilisez en tant que clé primaire. L'ORDRE EST IMPORTANT.
+        'sessionId',
+        // - la première colonne de la clé primaire est l'ID de session
+        'sessionSavePath',
+        // - la seconde colonne de la clé primaire est le "save path"
+        'sessionName',
+        // - la troisième colonne de la clé primaire est le "session name"
+    ),
+    'modifiedColumn'    =&gt; 'modified',
+    // date de la dernière modification
+    'dataColumn'        =&gt; 'session_data',
+    // donnée sérialisée
+    'lifetimeColumn'    =&gt; 'lifetime',
+    // durée de vie de l'enregistrement
+);
+
+// Informez Zend_Session d'utiliser votre gestionnaire de sauvegarde
+Zend_Session::setSaveHandler(
+    new Zend_Session_SaveHandler_DbTable($config)
+);
+
+// Démarrage de la session
+Zend_Session::start();
+
+// Utilisez Zend_Session normalement
+</pre>
+    </div>
+</div>
+<br class="example-break">
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.session.global_session_management.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.session.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.soap.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Gestion générale de la session </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_Soap</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

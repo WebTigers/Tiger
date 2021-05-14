@@ -1,0 +1,323 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Rendering Individual Decorators</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="learning.form.decorators.html" title="Comprensión y uso de Zend Form Decorators">
+<link rel="prev" href="learning.form.decorators.layering.html" title="Layering Decorators">
+<link rel="next" href="learning.form.decorators.composite.html" title="Creating and Rendering Composite Elements">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Rendering Individual Decorators</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.form.decorators.layering.html">Anterior</a> </td>
+<th width="60%" align="center">Comprensión y uso de Zend Form Decorators</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.form.decorators.composite.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.form.decorators.individual"></a>Rendering Individual Decorators</h2></div></div></div>
+    
+
+    <p>
+        In the <a class="link" href="learning.form.decorators.layering.html" title="Layering Decorators">previous section</a>, we
+        looked at how you can combine decorators to create complex output. We noted that while you
+        have a ton of flexibility with this approach, it also adds some complexity and overhead. In
+        this section, we will examine how to render decorators individually in order to create
+        custom markup for forms and/or individual elements.
+    </p>
+
+    <p>
+        Once you have registered your decorators, you can later retrieve them by name from the
+        element. Let's review the previous example:
+    </p>
+
+    <pre class="programlisting">
+$element = new Zend_Form_Element('foo', array(
+    'label'      =&gt; 'Foo',
+    'belongsTo'  =&gt; 'bar',
+    'value'      =&gt; 'test',
+    'prefixPath' =&gt; array('decorator' =&gt; array(
+        'My_Decorator' =&gt; 'path/to/decorators/',
+    )),
+    'decorators' =&gt; array(
+        'SimpleInput'
+        array('SimpleLabel', array('placement' =&gt; 'append')),
+    ),
+));
+</pre>
+
+    <p>
+        If we wanted to pull and render just the <code class="classname">SimpleInput</code> decorator, we
+        can do so using the <code class="methodname">getDecorator()</code> method:
+    </p>
+
+    <pre class="programlisting">
+$decorator = $element-&gt;getDecorator('SimpleInput');
+echo $decorator-&gt;render('');
+</pre>
+
+    <p>
+        This is pretty easy, but it can be made even easier; let's do it in a single line:
+    </p>
+
+    <pre class="programlisting">
+echo $element-&gt;getDecorator('SimpleInput')-&gt;render('');
+</pre>
+
+    <p>
+        Not too bad, but still a little complex. To make this easier, a shorthand notation was
+        introduced into <code class="classname">Zend_Form</code> in 1.7: you can render any registered
+        decorator by calling a method of the format <code class="methodname">renderDecoratorName()</code>.
+        This will effectively perform what you see above, but makes the <code class="varname">$content</code>
+        argument optional and simplifies the usage:
+    </p>
+
+    <pre class="programlisting">
+echo $element-&gt;renderSimpleInput();
+</pre>
+
+    <p>
+        This is a neat trick, but how and why would you use it?
+    </p>
+
+    <p>
+        Many developers and designers have very precise markup needs for their forms. They would
+        rather have full control over the output than rely on a more automated solution which may or
+        may not conform to their design. In other cases, the form layout may require a lot of
+        specialized markup -- grouping arbitrary elements, making some invisible unless a particular
+        link is selected, etc.
+    </p>
+
+    <p>
+        Let's utilize the ability to render individual decorators to create some specialized markup.
+    </p>
+
+    <p>
+        First, let's define a form. Our form will capture a user's demographic details. The markup
+        will be highly customized, and in some cases use view helpers directly instead of form
+        elements in order to achieve its goals. Here is the basic form definition:
+    </p>
+
+    <pre class="programlisting">
+class My_Form_UserDemographics extends Zend_Form
+{
+    public function init()
+    {
+        // Add a path for my own decorators
+        $this-&gt;addElementPrefixPaths(array(
+            'decorator' =&gt; array('My_Decorator' =&gt; 'My/Decorator'),
+        ));
+
+        $this-&gt;addElement('text', 'firstName', array(
+            'label' =&gt; 'First name: ',
+        ));
+        $this-&gt;addElement('text', 'lastName', array(
+            'label' =&gt; 'Last name: ',
+        ));
+        $this-&gt;addElement('text', 'title', array(
+            'label' =&gt; 'Title: ',
+        ));
+        $this-&gt;addElement('text', 'dateOfBirth', array(
+            'label' =&gt; 'Date of Birth (DD/MM/YYYY): ',
+        ));
+        $this-&gt;addElement('text', 'email', array(
+            'label' =&gt; 'Your email address: ',
+        ));
+        $this-&gt;addElement('password', 'password', array(
+            'label' =&gt; 'Password: ',
+        ));
+        $this-&gt;addElement('password', 'passwordConfirmation', array(
+            'label' =&gt; 'Confirm Password: ',
+        ));
+    }
+}
+</pre>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            We're not defining any validators or filters at this time, as they are not relevant to
+            the discussion of decoration. In a real-world scenario, you should define them.
+        </p>
+    </td></tr>
+</table></div>
+
+    <p>
+        With that out of the way, let's consider how we might want to display this form. One common
+        idiom with first/last names is to display them on a single line; when a title is provided,
+        that is often on the same line as well. Dates, when not using a JavaScript date chooser,
+        will often be separated into three fields displayed side by side.
+    </p>
+
+    <p>
+        Let's use the ability to render an element's decorators one by one to accomplish this.
+        First, let's note that no explicit decorators were defined for the given elements. As a
+        refresher, the default decorators for (most) elements are:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <code class="classname">ViewHelper</code>: utilize a view helper to render a form input
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Errors</code>: utilize the <code class="classname">FormErrors</code> view
+                helper to render validation errors
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Description</code>: utilize the <code class="classname">FormNote</code> view
+                helper to render the element description (if any)
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">HtmlTag</code>: wrap the above three items in a
+                <span class="emphasis"><em>&lt;dd&gt;</em></span> tag
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Label</code>: render the element label using the
+                <code class="classname">FormLabel</code> view helper (and wrap it in a
+                <span class="emphasis"><em>&lt;dt&gt;</em></span> tag)
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Also, as a refresher, you can access any element of a form as if it were a class property;
+        simply reference the element by the name you assigned it.
+    </p>
+
+    <p>
+        Our view script might then look like this:
+    </p>
+
+    <pre class="programlisting">
+&lt;?php
+$form = $this-&gt;form;
+// Remove &lt;dt&gt; from label generation
+foreach ($form-&gt;getElements() as $element) {
+    $element-&gt;getDecorator('label')-&gt;setOption('tag', null);
+}
+?&gt;
+&lt;?php echo $form-&gt;renderForm(false); ?&gt;
+    &lt;div class="element"&gt;
+        &lt;?php echo $form-&gt;title-&gt;renderLabel()
+              . $form-&gt;title-&gt;renderViewHelper() ?&gt;
+        &lt;?php echo $form-&gt;firstName-&gt;renderLabel()
+              . $form-&gt;firstName-&gt;renderViewHelper() ?&gt;
+        &lt;?php echo $form-&gt;lastName-&gt;renderLabel()
+              . $form-&gt;lastName-&gt;renderViewHelper() ?&gt;
+    &lt;/div&gt;
+    &lt;div class="element"&gt;
+        &lt;?php echo $form-&gt;dateOfBirth-&gt;renderLabel() ?&gt;
+        &lt;?php echo $this-&gt;formText('dateOfBirth[day]', '', array(
+            'size' =&gt; 2, 'maxlength' =&gt; 2)) ?&gt;
+        /
+        &lt;?php echo $this-&gt;formText('dateOfBirth[month]', '', array(
+            'size' =&gt; 2, 'maxlength' =&gt; 2)) ?&gt;
+        /
+        &lt;?php echo $this-&gt;formText('dateOfBirth[year]', '', array(
+            'size' =&gt; 4, 'maxlength' =&gt; 4)) ?&gt;
+    &lt;/div&gt;
+    &lt;div class="element"&gt;
+        &lt;?php echo $form-&gt;password-&gt;renderLabel()
+              . $form-&gt;password-&gt;renderViewHelper() ?&gt;
+    &lt;/div&gt;
+    &lt;div class="element"&gt;
+        &lt;?php echo $form-&gt;passwordConfirmation-&gt;renderLabel()
+              . $form-&gt;passwordConfirmation-&gt;renderViewHelper() ?&gt;
+    &lt;/div&gt;
+    &lt;?php echo $this-&gt;formSubmit('submit', 'Save') ?&gt;
+&lt;/form&gt;
+</pre>
+
+    <p>
+        If you use the above view script, you'll get approximately the following
+        <acronym class="acronym">HTML</acronym> (approximate, as the <acronym class="acronym">HTML</acronym> below is formatted):
+    </p>
+
+    <pre class="programlisting">
+&lt;form method="post" action=""&gt;
+    &lt;div class="element"&gt;
+        &lt;label for="title" tag="" class="optional"&gt;Title:&lt;/label&gt;
+        &lt;input type="text" name="title" id="title" value=""/&gt;
+
+        &lt;label for="firstName" tag="" class="optional"&gt;First name:&lt;/label&gt;
+        &lt;input type="text" name="firstName" id="firstName" value=""/&gt;
+
+        &lt;label for="lastName" tag="" class="optional"&gt;Last name:&lt;/label&gt;
+        &lt;input type="text" name="lastName" id="lastName" value=""/&gt;
+    &lt;/div&gt;
+
+    &lt;div class="element"&gt;
+        &lt;label for="dateOfBirth" tag="" class="optional"&gt;Date of Birth
+            (DD/MM/YYYY):&lt;/label&gt;
+        &lt;input type="text" name="dateOfBirth[day]" id="dateOfBirth-day"
+            value="" size="2" maxlength="2"/&gt;
+        /
+        &lt;input type="text" name="dateOfBirth[month]" id="dateOfBirth-month"
+            value="" size="2" maxlength="2"/&gt;
+        /
+        &lt;input type="text" name="dateOfBirth[year]" id="dateOfBirth-year"
+            value="" size="4" maxlength="4"/&gt;
+    &lt;/div&gt;
+
+    &lt;div class="element"&gt;
+        &lt;label for="password" tag="" class="optional"&gt;Password:&lt;/label&gt;
+        &lt;input type="password" name="password" id="password" value=""/&gt;
+    &lt;/div&gt;
+
+    &lt;div class="element"&gt;
+        &lt;label for="passwordConfirmation" tag="" class="" id="submit"
+            value="Save"/&gt;
+&lt;/form&gt;
+</pre>
+
+    <p>
+        It may not be truly pretty, but with some CSS, it could be made to look exactly how you
+        might want to see it. The main point, however, is that this form was generated using almost
+        entirely custom markup, while still leveraging decorators for the most common markup (and to
+        ensure things like escaping with htmlentities and value injection occur).
+    </p>
+
+    <p>
+        By this point in the tutorial, you should be getting fairly comfortable with the markup
+        possibilities using <code class="classname">Zend_Form</code>'s decorators. In the next section,
+        we'll revisit the date element from above, and demonstrate how to create a custom element
+        and decorator for composite elements.
+    </p>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.form.decorators.layering.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.form.decorators.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.form.decorators.composite.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Layering Decorators </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Creating and Rendering Composite Elements</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

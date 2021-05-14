@@ -1,0 +1,289 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Les bases des décorateurs</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.form.decorators.html" title="Bien comprendre et utiliser les décorateurs Zend Form">
+<link rel="prev" href="learning.form.decorators.intro.html" title="Introduction">
+<link rel="next" href="learning.form.decorators.layering.html" title="Chainer les décorateurs">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Les bases des décorateurs</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.form.decorators.intro.html">Précédent</a> </td>
+<th width="60%" align="center">Bien comprendre et utiliser les décorateurs Zend Form</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.form.decorators.layering.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.form.decorators.simplest"></a>Les bases des décorateurs</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.form.decorators.simplest.decorator-overview"></a>Aperçu du pattern décorateur</h3></div></div></div>
+        
+
+        <p>
+            Pour commencer, nous allons voir un peu de théorie sur <a class="ulink" href="http://en.wikipedia.org/wiki/Decorator_pattern" target="_top">le pattern décorateur
+                </a>. Une technique consiste à définir une interface commune que les
+            objets originaux et les décorateurs implémentent ; les décorateurs ayant comme
+            dépendance les objets originaux, ils vont alors pouvoir redéfinir ou proxier
+            les appels à leurs méthodes. Voyons un peu de code afin de mieux comprendre :
+        </p>
+
+        <pre class="programlisting">
+interface Window
+{
+    public function isOpen();
+    public function open();
+    public function close();
+}
+
+class StandardWindow implements Window
+{
+    protected $_open = false;
+
+    public function isOpen()
+    {
+        return $this-&gt;_open;
+    }
+
+    public function open()
+    {
+        if (!$this-&gt;_open) {
+            $this-&gt;_open = true;
+        }
+    }
+
+    public function close()
+    {
+        if ($this-&gt;_open) {
+            $this-&gt;_open = false;
+        }
+    }
+}
+
+class LockedWindow implements Window
+{
+    protected $_window;
+
+    public function __construct(Window $window)
+    {
+        $this-&gt;_window = $window;
+        $this-&gt;_window-&gt;close();
+    }
+
+    public function isOpen()
+    {
+        return false;
+    }
+
+    public function open()
+    {
+        throw new Exception('Cannot open locked windows');
+    }
+
+    public function close()
+    {
+        $this-&gt;_window-&gt;close();
+    }
+}
+</pre>
+
+        <p>
+            Nous créons un objet de type <code class="classname">StandardWindow</code>, le passons au
+            constructeur de <code class="classname">LockedWindow</code>, et le comportement de notre
+            fenêtre a maintenant changé. Le point fort ici est que nous n'avons pas besoin
+            d'implémenter une fonctionnalité de verrou ("lock") dans l'objet de base
+            (StandardWindow) -- le décorateur s'occupe de cela. En plus, vous pouvez utiliser
+            votre fenêtre décorée à la place de la fenêtre standard : elles implémentent
+            la même interface.
+        </p>
+
+        <p>
+            Une utilisation particulièrement pratique du pattern décorateur est pour tout ce qui
+            concerne la représentation des objets. Par exemple un objet "Personne" qui en lui-même
+            n'a aucune représentation textuelle. Grâce au pattern décorateur, vous pouvez créer un
+            objet qui va agir comme une Personne mais qui pourra aussi représenter textuellement
+            cette Personne.
+        </p>
+
+        <p>
+            Dans cet exemple particulier, nous allons utiliser le <a class="ulink" href="http://en.wikipedia.org/wiki/Duck_typing" target="_top">duck typing</a> plutôt qu'une
+            interface explicite. Ceci permet à notre implémentation d'être un peu plus fléxible
+            tout en gardant l'utilisation de la décoration intacte.
+        </p>
+
+        <pre class="programlisting">
+class Person
+{
+    public function setFirstName($name) {}
+    public function getFirstName() {}
+    public function setLastName($name) {}
+    public function getLastName() {}
+    public function setTitle($title) {}
+    public function getTitle() {}
+}
+
+class TextPerson
+{
+    protected $_person;
+
+    public function __construct(Person $person)
+    {
+        $this-&gt;_person = $person;
+    }
+
+    public function __call($method, $args)
+    {
+        if (!method_exists($this-&gt;_person, $method)) {
+            throw new Exception('Invalid method called on HtmlPerson: '
+                .  $method);
+        }
+        return call_user_func_array(array($this-&gt;_person, $method), $args);
+    }
+
+    public function __toString()
+    {
+        return $this-&gt;_person-&gt;getTitle() . ' '
+            . $this-&gt;_person-&gt;getFirstName() . ' '
+            . $this-&gt;_person-&gt;getLastName();
+    }
+}
+</pre>
+
+        <p>
+            Dans cet exemple, nous passons une instance <code class="classname">Person</code> au
+            constructeur de <code class="classname">TextPerson</code>. Grâce à la surcharge des méthodes,
+            nous pouvons continuer d'appeler les méthodes de <code class="classname">Person</code>
+            -- affecter un nom, un prénom, ... -- mais nous pouvons en plus récupérer une
+            représentation sous forme de chaîne grâce à <code class="methodname">__toString()</code>.
+        </p>
+
+        <p>
+            Cet exemple est proche du fonctionnement interne des décorateurs de
+            <code class="classname">Zend_Form</code>. La différence est qu'au lieu que le décorateur
+            n'encapsule l'objet initial, c'est l'objet élément qui possède en lui un ou plusieurs
+            decorateurs à qui il passe lui-même pour effectuer le rendu visuel. Les décorateurs
+            peuvent ainsi accéder à l'élément et en créer une représentation.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.form.decorators.simplest.first-decorator"></a>Créer votre premier décorateur</h3></div></div></div>
+        
+
+        <p>
+            Les décorateurs de <code class="classname">Zend_Form</code> implémentent tous,
+            <code class="classname">Zend_Form_Decorator_Interface</code>. Cette interface permet
+            de régler les options du décorateur, enregistrer en lui l'élément ainsi
+            qu'effectuer le rendu. Une classe de base,
+            <code class="classname">Zend_Form_Decorator_Abstract</code>, propose une implémentation
+            de cette logique de base dont vous aurez besoin, à l'exception du rendu que vous
+            devrez définir.
+        </p>
+
+        <p>
+            Imaginons une situation dans laquelle nous souhaitons simplement rendre un élément
+            comme un tag html text avec un libellé (label). Juste la base, nous verrons plus tard
+            la gestion des erreurs et les éventuels autres tags html. Un tel décorateur pourrait
+            ressembler à ça :
+        </p>
+
+        <pre class="programlisting">
+class My_Decorator_SimpleInput extends Zend_Form_Decorator_Abstract
+{
+    protected $_format = '&lt;label for="%s"&gt;%s&lt;/label&gt;'
+                       . '&lt;input id="%s" name="%s" type="text" value="%s"/&gt;';
+
+    public function render($content)
+    {
+        $element = $this-&gt;getElement();
+        $name    = htmlentities($element-&gt;getFullyQualifiedName());
+        $label   = htmlentities($element-&gt;getLabel());
+        $id      = htmlentities($element-&gt;getId());
+        $value   = htmlentities($element-&gt;getValue());
+
+        $markup  = sprintf($this-&gt;_format, $name, $label, $id, $name, $value);
+        return $markup;
+    }
+}
+</pre>
+
+        <p>
+            Créons un élément qui utilise ce décorateur :
+        </p>
+
+        <pre class="programlisting">
+$decorator = new My_Decorator_SimpleInput();
+$element   = new Zend_Form_Element('foo', array(
+    'label'      =&gt; 'Foo',
+    'belongsTo'  =&gt; 'bar',
+    'value'      =&gt; 'test',
+    'decorators' =&gt; array($decorator),
+));
+</pre>
+
+        <p>
+            Le visuel de cet élément donne :
+        </p>
+
+        <pre class="programlisting">
+&lt;label for="bar[foo]"&gt;Foo&lt;/label&gt;
+&lt;input id="bar-foo" name="bar[foo]" type="text" value="test"/&gt;
+</pre>
+
+        <p>
+            Nous pourrions aussi ranger cette classe dans un dossier de librairie, il
+            faut alors informer l'élément du chemin vers ce dossier, et ensuite faire
+            référence au décorateur comme "SimpleInput" :
+        </p>
+
+        <pre class="programlisting">
+$element = new Zend_Form_Element('foo', array(
+    'label'      =&gt; 'Foo',
+    'belongsTo'  =&gt; 'bar',
+    'value'      =&gt; 'test',
+    'prefixPath' =&gt; array('decorator' =&gt; array(
+        'My_Decorator' =&gt; 'path/to/decorators/',
+    )),
+    'decorators' =&gt; array('SimpleInput'),
+));
+</pre>
+
+        <p>
+            Ceci permet de partager du code entre projets et ouvre aussi la possibilité
+            d'étendre dans le futur les classes rangées.
+        </p>
+
+        <p>
+            Dans le chapitre suivant, nous allons voir comment combiner les décorateurs
+            afin de créer un affichage par morceaux (composite).
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.form.decorators.intro.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.form.decorators.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.form.decorators.layering.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Chainer les décorateurs</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

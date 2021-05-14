@@ -1,0 +1,467 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Introduction</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.acl.html" title="Zend_Acl">
+<link rel="prev" href="zend.acl.html" title="Zend_Acl">
+<link rel="next" href="zend.acl.refining.html" title="Affiner les Contrôles d'Accès">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Introduction</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.acl.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Acl</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.acl.refining.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.acl.introduction"></a>Introduction</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Acl</code> fournit une implémentation légère et flexible de
+        listes de contrôle d'accès (<acronym class="acronym">ACL</acronym>) pour la gestion de privilèges. En
+        général, une application peut utiliser ces <acronym class="acronym">ACL</acronym> pour contrôler l'accès à
+        certains objets par d'autres objets demandeurs.
+    </p>
+
+    <p>
+        Dans le cadre de cette documentation :
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                une <span class="emphasis"><em>ressource</em></span> est un objet dont l'accès est contrôlé,
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                un <span class="emphasis"><em>rôle</em></span> est un objet qui peut demander l'accès à une ressource.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Dit simplement, <span class="emphasis"><em> les rôles demandent l'accès à des
+        ressources</em></span>. Par exemple, si une personne demande l'accès à une voiture, alors la
+        personne est le rôle demandeur et la voiture est la ressource, puisque l'accès à la voiture
+        est soumis à un contrôle.
+    </p>
+
+    <p>
+        Grâce à la définition et à la mise en oeuvre d'une <acronym class="acronym">ACL</acronym>,
+        une application peut contrôler comment les objets demandeurs (rôles) reçoivent l'accès (ou
+        non) à des objets protégés (ressources).
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.acl.introduction.resources"></a>A propos des ressources</h3></div></div></div>
+        
+
+        <p>
+            Avec <code class="classname">Zend_Acl</code>, créer une ressource est très simple.
+            <code class="classname">Zend_Acl</code> fournit
+            <code class="classname">Zend_Acl_Resource_Interface</code> pour faciliter la tâche aux
+            développeurs. Une classe a simplement besoin d'implémenter cette interface, qui
+            consiste en une seule méthode, <code class="methodname">getResourceId()</code>, pour que
+            <code class="classname">Zend_Acl</code> reconnaît l'objet comme étant une ressource. Par
+            ailleurs, <code class="classname">Zend_Acl_Resource</code> est fourni par
+            <code class="classname">Zend_Acl</code> comme une implémentation basique de ressource que les
+            développeurs peuvent étendre si besoin.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Acl</code> fournit une structure en arbre à laquelle
+            plusieurs ressources (ou "zone sous contrôle d'accès") peuvent être ajoutées. Puisque
+            les ressources sont sauvées dans cet arbre, elles peuvent être organisées du général
+            (via la racine de l'arbre) jusqu'au particulier (via les feuilles de l'arbre). Les
+            requêtes envers une ressource spécifique vont automatiquement entraîner la recherche de
+            règles sur ses parents au sein de la structure hiérarchique des ressources, ce qui
+            permet un héritage simple des règles. Par exemple, si une règle par défaut doit être
+            appliquée à tous les bâtiments d'une ville, on pourra simplement assigner la règle à la
+            ville elle-même, au lieu de la répéter à tous les bâtiments. Mais certains bâtiments
+            peuvent nécessiter des règles spécifiques, et ceci peut se faire aisément avec
+            <code class="classname">Zend_Acl</code> en assignant les règles nécessaires à chaque bâtiment
+            de la ville qui nécessite une exception. Une ressource peut hériter d'un seul parent
+            ressource, qui hérite lui même de son propre parent, et ainsi de suite.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Acl</code> supporte aussi des privilèges pour chaque
+            ressource (par exemple : "créer", "lire", "modifier", "supprimer"), et le développeur
+            peut assigner des règles qui affectent tous les privilèges ou seuls certains privilèges
+            d'une ressource.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.acl.introduction.roles"></a>A propos des rôles</h3></div></div></div>
+        
+
+        <p>
+            Comme pour les ressources, créer un rôle est très simple. Tout rôle doit implémenter
+            <code class="classname">Zend_Acl_Role_Interface</code> qui consiste en une seule méthode
+            <code class="methodname">getRoleId()</code>. De plus, <code class="classname">Zend_Acl_Role</code> est
+            inclus dans <code class="classname">Zend_Acl</code> comme une implémentation basique de rôle que
+            les développeurs peuvent étendre si besoin.
+        </p>
+
+        <p>
+            Dans <code class="classname">Zend_Acl</code>, un rôle peut hériter de un ou plusieurs
+            rôles. Ceci permet de supporter l'héritage de règles à travers plusieurs rôles. Par
+            exemple, un rôle utilisateur, comme "Éric", peut appartenir à un ou plusieurs rôles
+            d'action, tels que "éditeur" ou "administrateur". Le développeur peut créer des règles
+            pour "éditeur" et "administrateur" séparément, et "Éric" va hériter des règles des deux
+            sans avoir à définir des règles directement pour "Éric".
+        </p>
+
+        <p>
+            Bien que la possibilité d'hériter de plusieurs rôles soit très utile, l'héritage
+            multiple introduit aussi un certain degré de complexité. L'exemple ci-dessous illustre
+            l'ambiguïté et la manière dont <code class="classname">Zend_Acl</code> la résout.
+        </p>
+
+        <div class="example">
+<a name="zend.acl.introduction.roles.example.multiple_inheritance"></a><p class="title"><b>Exemple 28. Héritages multiples entre rôles</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                Le code ci-dessous définit trois rôles de base - "guest", "member", et "admin" -
+                desquels d'autres rôles peuvent hériter. Ensuite, un rôle identifié par "someUser"
+                est créé et hérite des trois autres rôles. L'ordre selon lequel ces rôles
+                apparaissent dans le tableau <code class="varname">$parents</code> est important. Lorsque cela
+                est nécessaire <code class="classname">Zend_Acl</code> recherche les règles d'accès définies
+                non seulement pour le rôle demandé (ici "someUser"), mais aussi pour les autres
+                rôles desquels le rôle recherché hérite (ici "guest", "member", et "admin") :
+            </p>
+
+            <pre class="programlisting">
+$acl = new Zend_Acl();
+
+$acl-&gt;addRole(new Zend_Acl_Role('guest'))
+    -&gt;addRole(new Zend_Acl_Role('member'))
+    -&gt;addRole(new Zend_Acl_Role('admin'));
+
+$parents = array('guest', 'member', 'admin');
+$acl-&gt;addRole(new Zend_Acl_Role('someUser'), $parents);
+
+$acl-&gt;add(new Zend_Acl_Resource('someResource'));
+
+$acl-&gt;deny('invite', 'someResource');
+$acl-&gt;allow('membre', 'someResource');
+
+echo $acl-&gt;isAllowed('someUser', 'someResource') ? 'autorisé' : 'refusé';
+</pre>
+
+            <p>
+                Puisqu'il n'y a pas de règle spécifiquement définie pour le rôle
+                "someUser" et "someResource", <code class="classname">Zend_Acl</code> doit rechercher
+                des règles qui pourraient être définies pour des rôles dont "someUser" hérite.
+                Premièrement, le rôle "admin" est contrôlé, et il n'y a pas de règle d'accès
+                définie pour lui. Ensuite, le rôle "member" est visité, et
+                <code class="classname">Zend_Acl</code> trouve qu'il y a une règle qui spécifie que
+                "member" a un accès autorisé à "someResource".
+            </p>
+
+            <p>
+                Si <code class="classname">Zend_Acl</code> continuait à examiner toutes les règles de
+                tous les rôles parents, il trouverait que "someResource" est interdit d'accès à
+                "someResource". Ceci introduit une ambiguïté puisque maintenant "someUser" est
+                à la fois autorisé et interdit d'accès à "someResource", puisqu'il hérite de règles
+                opposées de ses différents parents.
+            </p>
+
+            <p>
+                <code class="classname">Zend_Acl</code> résout cette ambiguïté en arrêtant la
+                recherche de règles d'accès dès qu'une première règle est découverte. Dans notre
+                exemple, puisque le rôle "member" est examiné avant le rôle "guest", le résultat
+                devrait afficher "autorisé".
+            </p>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Lorsque vous spécifiez plusieurs parents pour un rôle, conservez à l'esprit
+                que le dernier parent listé est le premier dans lequel une règle utilisable sera
+                recherchée.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.acl.introduction.creating"></a>Créer la Liste de Contrôle d'Accès</h3></div></div></div>
+        
+
+        <p>
+            Une <acronym class="acronym">ACL</acronym> peut représenter n'importe quel ensemble d'objets physiques
+            ou virtuels que vous souhaitez. Pour les besoins de la démonstration, nous allons créer
+            un système basique d'<acronym class="acronym">ACL</acronym> pour une Gestion de Contenus
+            (<acronym class="acronym">CMS</acronym>) qui comporte plusieurs niveaux de groupes au sein d'une grande
+            variété de zones. Pour créer un nouvel objet <acronym class="acronym">ACL</acronym>, nous créons une
+            nouvelle instance d'<acronym class="acronym">ACL</acronym> sans paramètres :
+        </p>
+
+        <pre class="programlisting">
+$acl = new Zend_Acl();
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Jusqu'à ce que le développeur spécifie une règle "allow",
+                <code class="classname">Zend_Acl</code> refuse l'accès pour tous les privilèges sur chaque
+                ressource pour chaque rôle.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.acl.introduction.role_registry"></a>Registre des rôles</h3></div></div></div>
+        
+
+        <p>
+            Les systèmes de gestion de contenu (ou <acronym class="acronym">CMS</acronym>) vont pratiquement
+            toujours nécessiter une hiérarchie de permissions afin de déterminer les droits de
+            rédaction de ses utilisateurs. Il pourrait y avoir un groupe "Invités" qui donne accès
+            aux démonstrations, un groupe "Staff" pour la majorité des utilisateurs du
+            <acronym class="acronym">CMS</acronym> qui réalisent la plupart du travail quotidien, un groupe
+            "Éditeur" pour ceux qui sont responsables de la publication, l'archivage, la relecture
+            et la suppression, et enfin un groupe "Administrateur" dont les tâches incluent toutes
+            les tâches des autres groupes plus des tâches de maintenance, de gestion des
+            utilisateurs, configuration et backup ou export. Cet ensemble de permissions peut être
+            représenté dans un registre de rôles, permettant à chaque groupe d'hériter des
+            privilèges des groupes "parents". Les permissions peuvent être rendues de la manière
+            suivante :
+        </p>
+
+        <div class="table">
+<a name="zend.acl.introduction.role_registry.table.example_cms_access_controls"></a><p class="title"><b>Tableau 1. Contrôles d'Accès pour un exemple de CMS</b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="Contrôles d'Accès pour un exemple de CMS" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Nom</th>
+<th>Permissions</th>
+<th>Permissions héritées de</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Invité</td>
+<td>Voir</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Staff</td>
+<td>Modifier, Soumettre, Relire</td>
+<td>Invité</td>
+</tr>
+<tr>
+<td>Éditeur</td>
+<td>Publier, Archiver, Supprimer</td>
+<td>Staff</td>
+</tr>
+<tr>
+<td>Administrateur</td>
+<td>(Reçoit tous les accès)</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <p>
+            Pour cet exemple, <code class="classname">Zend_Acl_Role</code> est utilisé, mais
+            n'importe quel objet qui implémente <code class="classname">Zend_Acl_Role_Interface</code> est
+            acceptable. Ces groupes peuvent être ajoutés au registre des rôles comme suit :
+        </p>
+
+        <pre class="programlisting">
+$acl = new Zend_Acl();
+
+// Ajoute des groupes au registre des rôles en utilisant Zend_Acl_Role
+
+// Invité n'hérite d'aucun accès
+$roleinvite = new Zend_Acl_Role('invite');
+$acl-&gt;addRole($roleinvite);
+
+// Staff hérite de Invité
+$acl-&gt;addRole(new Zend_Acl_Role('staff'), $roleinvite);
+
+// Ce que précède pourrait aussi être écrit:
+// $acl-&gt;addRole(new Zend_Acl_Role('staff'), 'invite');
+
+// Editeur hérite de staff
+$acl-&gt;addRole(new Zend_Acl_Role('editeur'), 'staff');
+
+// Administrateur n'hérite pas d'accès
+$acl-&gt;addRole(new Zend_Acl_Role('administrateur'));
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.acl.introduction.defining"></a>Définir les Contrôles d'Accès</h3></div></div></div>
+        
+
+        <p>
+            Maintenant que l'<acronym class="acronym">ACL</acronym> contient les rôles nécessaires, on peut établir
+            des règles qui définissent comment les ressources accèdent aux rôles. Vous avez sans
+            doute noté que nous n'avons défini aucune ressource particulière pour cet exemple, ce
+            qui est plus simple pour illustrer comment les règles s'appliquent à toutes les
+            ressources. <code class="classname">Zend_Acl</code> fournit une implémentation dans laquelle les
+            règles doivent simplement être assignées du général au particulier, ce qui réduit le
+            nombre de règles spécifiques à ajouter. Ceci grâce à l'héritage.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Généralement <code class="classname">Zend_Acl</code> se conforme à une règle donnée
+                si et seulement si une règle plus spécifique ne s'applique pas.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            En conséquence, on peut définir un nombre assez complexe de règles avec un nombre
+            minimal de code. Pour définir les permissions comme définies ci-dessus :
+        </p>
+
+        <pre class="programlisting">
+$acl = new Zend_Acl();
+
+$roleinvite = new Zend_Acl_Role('invité');
+$acl-&gt;addRole($roleinvite);
+$acl-&gt;addRole(new Zend_Acl_Role('staff'), $roleinvite);
+$acl-&gt;addRole(new Zend_Acl_Role('editeur'), 'staff');
+$acl-&gt;addRole(new Zend_Acl_Role('administrateur'));
+
+// Invité peut uniquement voir le contenu
+$acl-&gt;allow($roleinvite, null, 'voir');
+
+/*
+ce qui précède peut aussi être écrit :
+$acl-&gt;allow('invité', null, 'voir');
+*/
+
+// Staff hérite des privilèges de Invité, mais a aussi ses propres
+// privilèges
+$acl-&gt;allow('staff', null, array('edit', 'submit', 'relire'));
+
+// Editeur hérite les privilèges voir, modifier, soumettre,
+// et relire de Staff, mais a aussi besoin de certains privilèges
+$acl-&gt;allow('editeur', null, array('publier', 'archiver', 'supprimer'));
+
+// Administrateur hérite de rien, mais reçoit tous les privilèges
+$acl-&gt;allow('administrateur');
+</pre>
+
+        <p>
+            Les valeurs <code class="constant">NULL</code> dans les appels <code class="methodname">allow()</code>
+            ci-dessus sont utilisées pour indiquer que les règles s'appliquent à toutes les
+            ressources.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.acl.introduction.querying"></a>Interroger les ACL</h3></div></div></div>
+        
+
+        <p>
+            Nous avons maintenant une <acronym class="acronym">ACL</acronym> flexible, qui peut être utilisée pour
+            déterminer si l'objet appelant a les permissions pour réaliser les fonctions au sein de
+            l'application Web. Interroger cette liste est assez simple en utilisant la méthode
+            <code class="methodname">isAllowed()</code> :
+        </p>
+
+        <pre class="programlisting">
+echo $acl-&gt;isAllowed('invité', null, 'voir') ?
+     "autorisé" : "refusé";
+// autorisé
+
+echo $acl-&gt;isAllowed('staff', null, 'publier') ?
+     "autorisé" : "refusé";
+// refusé
+
+echo $acl-&gt;isAllowed('staff', null, 'relire') ?
+     "autorisé" : "refusé";
+// autorisé
+
+echo $acl-&gt;isAllowed('editeur', null, 'voir') ?
+     "autorisé" : "refusé";
+// autorisé parce que hérité de Invité
+
+echo $acl-&gt;isAllowed('editeur', null, 'modifier') ?
+     "autorisé" : "refusé";
+// refusé parce qu'il n'y a pas de règle pour 'modifier'
+
+echo $acl-&gt;isAllowed('administrateur', null, 'voir') ?
+     "autorisé" : "refusé";
+// autorisé car administrateur est autorisé pour tout
+
+echo $acl-&gt;isAllowed('administrateur') ?
+     "autorisé" : "refusé";
+// autorisé car administrateur est autorisé pour tout
+
+echo $acl-&gt;isAllowed('administrateur', null, 'modifier') ?
+     "autorisé" : "refusé";
+// autorisé car administrateur est autorisé pour tout
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.acl.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.acl.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.acl.refining.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Acl </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Affiner les Contrôles d'Accès</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

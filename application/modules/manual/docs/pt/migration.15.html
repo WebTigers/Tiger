@@ -1,0 +1,174 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend Framework 1.5</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="migration.html" title="Notas de Migração do Zend Framework">
+<link rel="prev" href="migration.16.html" title="Zend Framework 1.6">
+<link rel="next" href="migration.10.html" title="Zend Framework 1.0">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend Framework 1.5</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="migration.16.html">Anterior</a> </td>
+<th width="60%" align="center">Notas de Migração do Zend Framework</th>
+<td width="20%" align="right"> <a accesskey="n" href="migration.10.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="migration.15"></a>Zend Framework 1.5</h2></div></div></div>
+    
+
+    <p>
+        When upgrading from a previous release to Zend Framework 1.5 or higher you
+        should note the following migration notes.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="migration.15.zend.controller"></a>Zend_Controller</h3></div></div></div>
+        
+
+        <p>
+            Though most basic functionality remains the same, and all documented
+            functionality remains the same, there is one particular
+            <span class="emphasis"><em>undocumented</em></span> "feature" that has changed.
+        </p>
+
+        <p>
+            When writing <acronym class="acronym">URL</acronym>s, the documented way to write camelCased action
+            names is to use a word separator; these are '.' or '-' by default,
+            but may be configured in the dispatcher. The dispatcher internally
+            lowercases the action name, and uses these word separators to
+            re-assemble the action method using camelCasing. However, because <acronym class="acronym">PHP</acronym>
+            functions are not case sensitive, you <span class="emphasis"><em>could</em></span>
+            still write <acronym class="acronym">URL</acronym>s using camelCasing, and the dispatcher would resolve
+            these to the same location. For example, 'camel-cased' would become
+            'camelCasedAction' by the dispatcher, whereas 'camelCased' would
+            become 'camelcasedAction'; however, due to the case insensitivity of
+            <acronym class="acronym">PHP</acronym>, both will execute the same method.
+        </p>
+
+        <p>
+            This causes issues with the ViewRenderer when resolving view
+            scripts. The canonical, documented way is that all word separators
+            are converted to dashes, and the words lowercased. This creates
+            a semantic tie between the actions and view scripts, and the
+            normalization ensures that the scripts can be found. However, if the
+            action 'camelCased' is called and actually resolves, the word
+            separator is no longer present, and the ViewRenderer attempts to
+            resolve to a different location -- <code class="filename">camelcased.phtml</code> instead of
+            <code class="filename">camel-cased.phtml</code>.
+        </p>
+
+        <p>
+            Some developers relied on this "feature", which was never intended.
+            Several changes in the 1.5.0 tree, however, made it so that the
+            ViewRenderer no longer resolves these paths; the semantic tie is now
+            enforced. First among these, the dispatcher now enforces case
+            sensitivity in action names. What this means is that referring to
+            your actions on the url using camelCasing will no longer resolve to
+            the same method as using word separators (i.e., 'camel-casing').
+            This leads to the ViewRenderer now only honoring the word-separated
+            actions when resolving view scripts.
+        </p>
+
+        <p>
+            If you find that you were relying on this "feature", you have several
+            options:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Best option: rename your view scripts. Pros: forward
+                    compatibility. Cons: if you have many view scripts that
+                    relied on the former, unintended behavior, you will have a
+                    lot of renaming to do.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Second best option: The ViewRenderer now delegates view
+                    script resolution to <code class="classname">Zend_Filter_Inflector</code>; you
+                    can modify the rules of the inflector to no longer separate
+                    the words of an action with a dash:
+                </p>
+
+                <pre class="programlisting">
+$viewRenderer =
+    Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
+$inflector = $viewRenderer-&gt;getInflector();
+$inflector-&gt;setFilterRule(':action', array(
+    new Zend_Filter_PregReplace(
+        '#[^a-z0-9' . preg_quote(DIRECTORY_SEPARATOR, '#') . ']+#i',
+        ''
+    ),
+    'StringToLower'
+));
+</pre>
+
+                <p>
+                    The above code will modify the inflector to no longer
+                    separate the words with dash; you may also want to remove
+                    the 'StringToLower' filter if you <span class="emphasis"><em>do</em></span>
+                    want the actual view script names camelCased as well.
+                </p>
+
+                <p>
+                    If renaming your view scripts would be too tedious or time
+                    consuming, this is your best option until you can find the
+                    time to do so.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Least desirable option: You can force the dispatcher to
+                    dispatch camelCased action names with a new front controller
+                    flag, <span class="property">useCaseSensitiveActions</span>:
+                </p>
+
+                <pre class="programlisting">
+$front-&gt;setParam('useCaseSensitiveActions', true);
+</pre>
+
+                <p>
+                    This will allow you to use camelCasing on the url and still
+                    have it resolve to the same action as when you use word
+                    separators. However, this will mean that the original issues
+                    will cascade on through; you will likely need to use the
+                    second option above in addition to this for things to work
+                    at all reliably.
+                </p>
+
+                <p>
+                    Note, also, that usage of this flag will raise a notice that
+                    this usage is deprecated.
+                </p>
+            </li>
+</ul></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="migration.16.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="migration.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="migration.10.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend Framework 1.6 </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend Framework 1.0</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

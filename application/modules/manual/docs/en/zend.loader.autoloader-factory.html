@@ -1,0 +1,171 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The AutoloaderFactory</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.loader.html" title="Zend_Loader">
+<link rel="prev" href="zend.loader.spl-autoloader.html" title="The SplAutoloader Interface">
+<link rel="next" href="zend.loader.autoloader-factory.methods.factory.html" title="factory">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">The AutoloaderFactory</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.loader.spl-autoloader.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Loader</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.loader.autoloader-factory.methods.factory.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.loader.autoloader-factory"></a>The AutoloaderFactory</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.autoloader-factory.intro"></a>Overview</h3></div></div></div>
+        
+
+        <p>
+            Starting with version 1.12.0, Zend Framework now offers multiple autoloader strategies.
+            Often, it will be useful to employ multiple autoloading strategies; as an example, you
+            may have a class map for your most used classes, but want to use a PSR-0 style
+            autoloader for 3rd party libraries.
+        </p>
+
+        <p>
+            While you could potentially manually configure these, it may be more useful to define
+            the autoloader configuration somewhere and cache it. For these cases, the
+            <code class="classname">AutoloaderFactory</code> will be useful.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.autoloader-factory.quick-start"></a>Quick Start</h3></div></div></div>
+        
+
+        <p>
+            Configuration may be stored as a PHP array, or in some form of configuration file. As an
+            example, consider the following PHP array:
+        </p>
+
+        <pre class="programlisting">
+$config = array(
+    'Zend_Loader_ClassMapAutoloader' =&gt; array(
+        'application' =&gt; APPLICATION_PATH . '/autoload_classmap.php',
+        'zf'          =&gt; APPLICATION_PATH . '/../library/Zend/autoload_classmap.php',
+    ),
+    'Zend_Loader_StandardAutoloader' =&gt; array(
+        'namespaces' =&gt; array(
+            'Phly\Mustache' =&gt; APPLICATION_PATH . '/../library/Phly/Mustache',
+            'Doctrine'      =&gt; APPLICATION_PATH . '/../library/Doctrine',
+        ),
+    ),
+);
+</pre>
+
+        <p>
+            An equivalent INI-style configuration might look like the following:
+        </p>
+
+        <pre class="programlisting">
+Zend_Loader_ClassMapAutoloader.application = APPLICATION_PATH "/autoload_classmap.php"
+Zend_Loader_ClassMapAutoloader.zf          = APPLICATION_PATH "/../library/Zend/autoload_classmap.php"
+Zend_Loader_StandardAutoloader.namespaces.Phly\Mustache = APPLICATION_PATH "/../library/Phly/Mustache"
+Zend_Loader_StandardAutoloader.namespaces.Doctrine       = APPLICATION_PATH "/../library/Doctrine"
+</pre>
+
+        <p>
+            Once you have your configuration in a PHP array, you simply pass it to the
+            <code class="classname">AutoloaderFactory</code>.
+        </p>
+
+        <pre class="programlisting">
+// This example assumes ZF is on your include_path.
+// You could also load the factory class from a path relative to the
+// current script, or via an absolute path.
+require_once 'Zend_Loader_AutoloaderFactory.php';
+Zend_Loader_AutoloaderFactory::factory($config);
+</pre>
+
+        <p>
+            The <code class="classname">AutoloaderFactory</code> will instantiate each autoloader with the
+            given options, and also call its <code class="methodname">register()</code> method to register
+            it with the SPL autoloader.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.autoloader-factory.options"></a>Configuration Options</h3></div></div></div>
+        
+
+        <div class="variablelist">
+<p class="title"><b>AutoloaderFactory Options</b></p>
+<dl class="variablelist">
+<dt><span class="term">$options</span></dt>
+<dd>
+                    <p>
+                        The <code class="classname">AutoloaderFactory</code> expects an associative array or
+                        <code class="interfacename">Traversable</code> object. Keys should be valid
+                        autoloader class names, and the values should be the options that should be
+                        passed to the class constructor.
+                    </p>
+
+                    <p>
+                        Internally, the <code class="classname">AutoloaderFactory</code> checks to see if
+                        the autoloader class referenced exists. If not, it will use the <a class="link" href="zend.loader.standard-autoloader.html" title="The StandardAutoloader">StandardAutoloader</a> to
+                        attempt to load the class via the <code class="varname">include_path</code> (or, in
+                        the case of "Zend"-namespaced classes, using the Zend Framework library
+                        path). If the class is not found, or does not implement the
+                        <a class="link" href="zend.loader.spl-autoloader.html" title="The SplAutoloader Interface">SplAutoloader</a> interface,
+                        an exception will be raised.
+                    </p>
+                </dd>
+</dl>
+</div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.autoloader-factory.methods"></a>Available Methods</h3></div></div></div>
+        
+
+        
+
+        
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.autoloader-factory.examples"></a>Examples</h3></div></div></div>
+        
+
+        <p>
+            Please see the <a class="link" href="zend.loader.autoloader-factory.html#zend.loader.autoloader-factory.quick-start" title="Quick Start">Quick
+                Start</a> for a detailed example.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.loader.spl-autoloader.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.loader.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.loader.autoloader-factory.methods.factory.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">The SplAutoloader Interface </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> factory</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Mobile_Push_Apns</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.mobile.push.html" title="Zend_Mobile_Push">
+<link rel="prev" href="zend.mobile.push.introduction.html" title="Zend_Mobile_Push Introduction">
+<link rel="next" href="zend.mobile.push.gcm.html" title="Zend_Mobile_Push_Gcm">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Mobile_Push_Apns</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.mobile.push.introduction.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Mobile_Push</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.mobile.push.gcm.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.mobile.push.apns"></a>Zend_Mobile_Push_Apns</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Mobile_Push_Apns</code> provides the ability to
+        send push notifications to <acronym class="acronym">APNS</acronym> generally in
+        conjunction with <code class="classname">Zend_Mobile_Push_Message_Apns</code>;
+        however there is a case when it would not be utilized is when getting
+        feedback from the APNS server.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mobile.push.apns.server"></a>Pushing Messages</h3></div></div></div>
+        
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>Prior to pushing messages; you must follow the
+                <a class="ulink" href="http://developer.apple.com/library/mac/#documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/ProvisioningDevelopment/ProvisioningDevelopment.html" target="_top">provisioning and deployment steps outlined by Apple</a>.</p>
+        </td></tr>
+</table></div>
+
+        <p>
+            When implementing APNS; you have a few components that
+            you will utilize.  <code class="classname">Zend_Mobile_Push_Apns</code>
+            which contains the server components and
+            <code class="classname">Zend_Mobile_Push_Message_Apns</code> which contains
+            the message that you would like to send.  Generally when sending
+            push notifications to Apple you should do so in a batch.
+        </p>
+
+        <p>
+            The actual implementation of the code is fairly minimal; however,
+            considerations to error handling must be taken.
+        </p>
+
+        <pre class="programlisting">
+$message = new Zend_Mobile_Push_Message_Apns();
+$message-&gt;setAlert('Zend Mobile Push Example');
+$message-&gt;setBadge(1);
+$message-&gt;setSound('default');
+$message-&gt;setId(time());
+$message-&gt;setToken('ABCDEF0123456789');
+
+$apns = new Zend_Mobile_Push_Apns();
+$apns-&gt;setCertificate('/path/to/provisioning-certificate.pem');
+// if you have a passphrase on your certificate:
+// $apns-&gt;setCertificatePassphrase('foobar');
+
+try {
+    $apns-&gt;connect(Zend_Mobile_Push_Apns::SERVER_SANDBOX_URI);
+} catch (Zend_Mobile_Push_Exception_ServerUnavailable $e) {
+    // you can either attempt to reconnect here or try again later
+    exit(1);
+} catch (Zend_Mobile_Push_Exception $e) {
+    echo 'APNS Connection Error:' . $e-&gt;getMessage();
+    exit(1);
+}
+
+try {
+    $apns-&gt;send($message);
+} catch (Zend_Mobile_Push_Exception_InvalidToken $e) {
+    // you would likely want to remove the token from being sent to again
+    echo $e-&gt;getMessage();
+} catch (Zend_Mobile_Push_Exception $e) {
+    // all other exceptions only require action to be sent
+    echo $e-&gt;getMessage();
+}
+$apns-&gt;close();
+</pre>
+
+        <div class="table">
+<a name="zend.mobile.push.apns.server.exceptions"></a><p class="title"><b>Tableau 120. Exceptions and Remediation Techniques</b></p>
+<div class="table-contents">
+            
+            <table class="table" summary="Exceptions and Remediation Techniques" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th align="left">Exception</th>
+<th align="left">Meaning</th>
+<th align="left">Handling</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left">Zend_Mobile_Push_Exception</td>
+<td align="left">These types of exceptions are more generic in nature
+                        and are thrown either from APNS or internally on input
+                        validation</td>
+<td align="left">Read the message and determine remediation steps.</td>
+</tr>
+<tr>
+<td align="left">Zend_Mobile_Push_Exception_InvalidPayload</td>
+<td align="left">Generally the payload will not throw an exception
+                        unless the size of the payload is too large or it is missing
+                        required content.</td>
+<td align="left">Check the size of the payload is within the
+                        requirements of APNS</td>
+</tr>
+<tr>
+<td align="left">Zend_Mobile_Push_Exception_InvalidToken</td>
+<td align="left">Any form of an invalid token will be if the token is
+                        no longer registered; you are missing a token or it is in an
+                        invalid format.</td>
+<td align="left">You should remove the token and not attempt to send
+                        to it again.</td>
+</tr>
+<tr>
+<td align="left">Zend_Mobile_Push_Exception_InvalidTopic</td>
+<td align="left">An invalid topic simply means that the message id was
+                        too long or not an integer.</td>
+<td align="left">Ensure that the message ID is an integer.</td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <div class="warning"><table border="0" summary="Warning">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Avertissement]" src="images/warning.png"></td>
+<th align="left">Avertissement</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                When sending in batches and you are sending a large amount of push
+                notifications out; you should ensure to usleep from time to time.  This
+                will ensure that your messages will be delivered and APNS will not simply
+                hang up on you.
+        </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mobile.push.apns.feedback"></a>Getting Feedback</h3></div></div></div>
+        
+        <p>
+            APNS has a feedback service that you <span class="emphasis"><em>must</em></span>
+            listen to.  Apple states that they monitor providers to ensure that they
+            are listening to this service.
+        </p>
+
+        <p>
+            The feedback service simply returns an array of device tokens and
+            the time.  You can use the time to ensure that the device has not
+            re-registered for push notifications since the last send.
+        </p>
+
+        <pre class="programlisting">
+$apns = new Zend_Mobile_Push_Apns();
+$apns-&gt;setCertificate('/path/to/provisioning-certificate.pem');
+
+try {
+    $apns-&gt;connect(Zend_Mobile_Push_Apns::SERVER_FEEDBACK_SANDBOX_URI);
+} catch (Zend_Mobile_Push_Exception_ServerUnavailable $e) {
+    // you can either attempt to reconnect here or try again later
+    exit(1);
+} catch (Zend_Mobile_Push_Exception $e) {
+    echo 'APNS Connection Error:' . $e-&gt;getMessage();
+    exit(1);
+}
+
+$tokens = $apns-&gt;feedback();
+foreach ($tokens as $token =&gt; $time) {
+    echo $time . "\t" . $token . PHP_EOL;
+}
+$apns-&gt;close();
+</pre>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mobile.push.apns.message"></a>Advanced Messages</h3></div></div></div>
+
+        
+
+        <p>
+            APNS provides the ability for sending more advanced messages; for
+            instance the examples above show the most basic implementation of a
+            message.  <code class="classname">Zend_Mobile_Push_Message_Apns</code>
+            allows you to do far more advanced messaging outlined below.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.mobile.push.apns.message.alerts"></a>Alerts</h4></div></div></div>
+
+            
+
+            <p>
+                Alerts can contain anything from a simple body message to having an
+                action key and a launch image (iOS 4).  You may only want to provide
+                an action key when only a confirmation is necessary OR you are
+                looking to localize the button with non-standard text (aka not
+                "View").
+            </p>
+
+            <p>
+                The following code example shows alerts from the <a class="ulink" href="http://developer.apple.com/library/mac/#documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/ApplePushService/ApplePushService.html" target="_top">APNS
+                payload examples</a>.
+            </p>
+
+            <pre class="programlisting">
+    $message = new Zend_Mobile_Push_Message_Apns();
+
+    // message with different button
+    $message-&gt;setAlert('Bob wants to play poker', 'PLAY');
+    // message using apps localized strings w/ string replacements
+    $message-&gt;setAlert(null, null, 'GAME_PLAY_REQUEST_FORMAT', array('Jenna', 'Frank'));
+    </pre>
+
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.mobile.push.apns.message.custom-data"></a>Custom Data</h4></div></div></div>
+
+            
+
+            <p>
+                You can send your app custom data which allows you to make decisions
+                based on the notifications; such as synchronizing data.
+            </p>
+
+            <pre class="programlisting">
+                $message = new Zend_Mobile_Push_Message_Apns();
+                $message-&gt;addCustomData('foo', 'bar');
+                $message-&gt;addCustomData('foo', array('bar' =&gt; 1));
+                $message-&gt;addCustomData('bar', 'foo');
+</pre>
+
+            <div class="warning"><table border="0" summary="Warning">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Avertissement]" src="images/warning.png"></td>
+<th align="left">Avertissement</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    You may not use a custom key of 'aps' as it is reserved by Apple and
+                    leveraged for the main push data.
+                </p>
+            </td></tr>
+</table></div>
+
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.mobile.push.introduction.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.mobile.push.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.mobile.push.gcm.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Mobile_Push Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_Mobile_Push_Gcm</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

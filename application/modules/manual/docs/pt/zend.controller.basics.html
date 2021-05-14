@@ -1,0 +1,227 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>O Básico de Zend_Controller</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.quickstart.html" title="Guia de Início Rápido do Zend_Controller">
+<link rel="next" href="zend.controller.front.html" title="The Front Controller">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">O Básico de Zend_Controller</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.quickstart.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.front.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.basics"></a>O Básico de Zend_Controller</h2></div></div></div>
+    
+
+    <p>
+        O sistema <code class="classname">Zend_Controller</code> é projetado para ser leve, modular, e
+        extensível. É um projeto minimalista para permitir uma flexibilidade e alguma liberdade
+        para usuários enquanto provê estrutura suficiente para os sistemas construídos envolta
+        do <code class="classname">Zend_Controller</code> compartilhar algumas convenções
+        comuns e layout de código.
+    </p>
+
+    <p>
+        O diagrama seguinte representa o processo, e a narrativa subseqüente descreve
+        detalhadamente as interações:
+    </p>
+
+    <p>
+        <img src="figures/zend.controller.basics.png" align="middle">
+    </p>
+
+    <p>
+        O processo do <code class="classname">Zend_Controller</code> é implementado por vários
+        componentes. Enquanto não é necessário entender completamente os por menores de todos
+        estes componentes do sistema, ter um conhecimento básico do processo é útil.
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Controller_Front</code> orquestra todo o processo do
+                sistema <code class="classname">Zend_Controller</code>. Ele é o interpretador do
+                padrão FrontController. <code class="classname">Zend_Controller_Front</code> processa
+                todas as requisições recebidas pelo servidor e é o responsável direto pela
+                delegação dos pedidos dos ActionControllers
+                (<code class="classname">Zend_Controller_Action</code>).
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Controller_Request_Abstract</code> (muitas vezes chamado
+                de <span class="emphasis"><em>Request Object</em></span>) representa o ambiente de pedido e
+                fornece métodos para colocação e recuperação do controlador e nomes de ações
+                e qualquer parâmetros passados. Adicionalmente ele guarda o registro de que a
+                ação foi despachada ou não pelo
+                <code class="classname">Zend_Controller_Dispatcher</code>. Extensões do objeto de
+                requisição abstrata podem ser usadas para encapsular todo o ambiente de
+                requisição, permitindo aos roteadores colocarem informações no ambiente de
+                requisição para estabelecer o controlador e nomes de ação.
+            </p>
+
+            <p>
+                Por padrão, <code class="classname">Zend_Controller_Request_Http</code> é usado, para
+                fornecer acesso a todo o ambiente de pedido de <acronym class="acronym">HTTP</acronym>.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Controller_Router_Interface</code> é usado para definir
+                os roteadores. Roteamento é o processo de examinação da requisição do ambiente
+                para determinar qual controlador e ação do controlador, devem receber a
+                requisição. Este controlador, ação e parâmetros opcionais são incluídos no
+                objeto de requisição para serem processados pelo
+                <code class="classname">Zend_Controller_Dispatcher_Standard</code>. O roteamento
+                ocorre somente uma vez: quando a requisição é inicialmente recebida e antes
+                do primeiro controlador ser despachado.
+            </p>
+
+            <p>
+                O roteador padrão, <code class="classname">Zend_Controller_Router_Rewrite</code>, pega
+                uma <acronym class="acronym">URI</acronym> no ponto especificado em
+                <code class="classname">Zend_Controller_Request_Http</code> e a decompõe em um
+                controlador, ação e parâmetros baseado na informação do caminho da
+                <acronym class="acronym">URL</acronym>. Por exemplo, a <acronym class="acronym">URL</acronym>
+                <code class="filename">http://localhost/foo/bar/key/value</code> pode ser decomposta
+                para usar o controlador <span class="emphasis"><em>foo</em></span>, a ação
+                <span class="emphasis"><em>bar</em></span>, e o parâmetro especificado <span class="emphasis"><em>key</em></span>
+                com o valor igual a <span class="emphasis"><em>value</em></span>.
+            </p>
+
+            <p>
+                <code class="classname">Zend_Controller_Router_Rewrite</code> também pode ser usado
+                para combinar caminhos arbitrários; veja a <a class="link" href="zend.controller.router.html" title="The Standard Router">documentação do roteador</a>
+                para mais informações.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Controller_Dispatcher_Interface</code> é usado para
+                definir despachantes. Despachar é o processo de pegar o controlador e a ação
+                do objeto de requisição e mapeá-lo para um arquivo de um controlador (ou
+                classe) e método de ação na classe do controlador. Se o controlador ou ação
+                não existir, ele determina o controlador e ação padrão para despachar.
+            </p>
+
+            <p>
+                O processo atual de despacho consiste em instanciar a classe do controlador e
+                chamar o método de ação nesta classe. Diferente do roteamento, que ocorre
+                somente uma vez, o despacho ocorre em um laço. Se o status do objeto de
+                requisição despachado é reiniciado em algum ponto, o laço irá se repetir,
+                chamando qualquer ação atualmente estabelecida no objeto de requisição. A
+                primeira vez que o laço do objeto de requisição terminar com o status ativado
+                (<span class="type">Boolean</span> <code class="constant">TRUE</code>), ele irá finalizar
+                o processo.
+            </p>
+
+            <p>
+                O despachador padrão é o
+                <code class="classname">Zend_Controller_Dispatcher_Standard</code>. Ele define os
+                controladores como MixedCasedClasses terminados com a palavra Controller, e os
+                métodos de ações como camelCasedMethods terminadas com a palavra Action:
+                <code class="methodname">FooController::barAction()</code>. Neste caso, o controlador
+                será chamado como <span class="emphasis"><em>foo</em></span> e a ação como
+                <span class="emphasis"><em>bar</em></span>.
+            </p>
+
+            <div class="note"><table border="0" summary="Note: Convenções de Nomenclatura para Maiúsculas e Minúsculas">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Convenções de Nomenclatura para Maiúsculas e Minúsculas</th>
+</tr>
+<tr><td align="left" valign="top">
+                
+
+                <p>
+                    Desde que os seres humanos são notoriamente incapazes de preservar
+                    maiúsculas e minúsculas ao digitar links, o Zend Framework atualmente
+                    normaliza as informações sobre o caminho para minúsculas. Isto,
+                    naturalmente, afetará a forma como você nomeia o seu controlador e suas
+                    ações... ou referir-se a eles em links.
+                </p>
+
+                <p>
+                    Se você deseja que o nome de seu controlador de classe ou do método de ação
+                    tenham múltiplas MixedCasedWords ou camelCasedWords, você precisará, para
+                    separar as palavras na url, um '-' ou '.' (embora você pode configurar o
+                    caractere utilizado).
+                </p>
+
+                <p>
+                    Por exemplo, se você estava indo para a ação em
+                    <code class="methodname">FooBarController::bazBatAction()</code>, você irá se
+                    referir a ela em uma url como <code class="filename">/foo-bar/baz-bat</code> ou
+                    <code class="filename">/foo.bar/baz.bat</code>.
+                </p>
+            </td></tr>
+</table></div>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Controller_Action</code> é o componente base do
+                controlador de ação. Cada controlador é uma classe única que extende a classe
+                <code class="classname">Zend_Controller_Action</code> e deve conter um ou
+                mais métodos de ação.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Controller_Response_Abstract</code> define a classe básica
+                de resposta usada para coletar e retornar repostas dos controladores de ação.
+                Ela coleta tanto cabeçalhos como conteúdos de corpo.
+            </p>
+
+            <p>
+                A classe de resposta padrão é
+                <code class="classname">Zend_Controller_Response_Http</code>, que é conveniente para
+                uso em um ambiente <acronym class="acronym">HTTP</acronym>.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        O processo do <code class="classname">Zend_Controller</code> é relativamente simples. Uma
+        requisição é recebida pelo <code class="classname">Zend_Controller_Front</code>, que por sua vez
+        chama <code class="classname">Zend_Controller_Router_Rewrite</code> para determinar qual
+        controlador (e ação deste controlador) será chamado.
+        <code class="classname">Zend_Controller_Router_Rewrite</code> decompõe o <acronym class="acronym">URI</acronym>
+        para poder determinar os nomes do controlador e da ação da requisição.
+        <code class="classname">Zend_Controller_Front</code> então entrar em um laço de despacho. Ele
+        chama <code class="classname">Zend_Controller_Dispatcher_Standard</code>, passando-lhe a
+        requisição, para ser despachada para o controlador e ação especificados na requisição (ou
+        usa os padrões). Depois que o controlador termina, o controle retorna para
+        <code class="classname">Zend_Controller_Front</code>. Se o controlador indicar outro controlador
+        para ser despachado através do reinicio do status de requisição, o laço continua e outro
+        despacho é executado. De outra maneira, o processo termina.
+    </p>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.quickstart.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.front.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Guia de Início Rápido do Zend_Controller </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> The Front Controller</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,1726 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Creating Form Elements Using Zend_Form_Element</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.form.html" title="Zend_Form">
+<link rel="prev" href="zend.form.quickstart.html" title="Zend_Form Quick Start">
+<link rel="next" href="zend.form.forms.html" title="Creating Forms Using Zend_Form">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Creating Form Elements Using Zend_Form_Element</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.form.quickstart.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Form</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.form.forms.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.form.elements"></a>Creating Form Elements Using Zend_Form_Element</h2></div></div></div>
+    
+
+    <p>
+        A form is made of elements that typically correspond to <acronym class="acronym">HTML</acronym> form
+        input. <code class="classname">Zend_Form_Element</code> encapsulates single form elements, with the
+        following areas of responsibility:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                validation (is submitted data valid?)
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p>capturing of validation error codes and messages</p></li></ul></div>
+        </li>
+<li class="listitem">
+            <p>
+                filtering (how is the element escaped or normalized prior to
+                validation and/or for output?)
+            </p>
+        </li>
+<li class="listitem">
+            <p>rendering (how is the element displayed?)</p>
+        </li>
+<li class="listitem">
+            <p>metadata and attributes (what information further qualifies the element?)</p>
+        </li>
+</ul></div>
+
+    <p>
+        The base class, <code class="classname">Zend_Form_Element</code>, has reasonable defaults
+        for many cases, but it is best to extend the class for commonly used
+        special purpose elements. Additionally, Zend Framework ships with a
+        number of standard <acronym class="acronym">XHTML</acronym> elements; you can read about them <a class="link" href="zend.form.standardElements.html" title="Standard Form Elements Shipped With Zend Framework">in the Standard Elements
+            chapter</a>.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.elements.loaders"></a>Plugin Loaders</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Form_Element</code> makes use of <a class="link" href="zend.loader.pluginloader.html" title="Loading Plugins">Zend_Loader_PluginLoader</a>
+            to allow developers to specify locations of alternate validators,
+            filters, and decorators. Each has its own plugin loader associated
+            with it, and general accessors are used to retrieve and modify
+            each.
+        </p>
+
+        <p>
+            The following loader types are used with the various plugin loader
+            methods: 'validate', 'filter', and 'decorator'. The type names are
+            case insensitive.
+        </p>
+
+        <p>
+            The methods used to interact with plugin loaders are as follows:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setPluginLoader($loader, $type)</code>:
+                    <code class="varname">$loader</code> is the plugin loader object itself, while
+                    <code class="varname">$type</code> is one of the types specified above. This
+                    sets the plugin loader for the given type to the newly
+                    specified loader object.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getPluginLoader($type)</code>: retrieves the plugin
+                    loader associated with <code class="varname">$type</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addPrefixPath($prefix, $path, $type = null)</code>: adds
+                    a prefix/path association to the loader specified by
+                    <code class="varname">$type</code>. If <code class="varname">$type</code> is
+                    <code class="constant">NULL</code>, it will attempt to add the path to all loaders, by
+                    appending the prefix with each of "_Validate", "_Filter", and "_Decorator"; and
+                    appending the path with "Validate/", "Filter/", and
+                    "Decorator/". If you have all your extra form element classes
+                    under a common hierarchy, this is a convenience method for
+                    setting the base prefix for them.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addPrefixPaths(array $spec)</code>: allows you to add
+                    many paths at once to one or more plugin loaders. It expects
+                    each array item to be an array with the keys 'path', 'prefix',
+                    and 'type'.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Custom validators, filters, and decorators are an easy way to share
+            functionality between forms and to encapsulate custom functionality.
+        </p>
+
+        <div class="example">
+<a name="zend.form.elements.loaders.customLabel"></a><p class="title"><b>Exemplo 441. Custom Label</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                One common use case for plugins is to provide replacements for
+                standard classes. For instance, if you want to provide a
+                different implementation of the 'Label' decorator -- for
+                instance, to always append a colon -- you could create your own
+                'Label' decorator with your own class prefix, and then add it to
+                your prefix path.
+            </p>
+
+            <p>
+                Let's start with a custom Label decorator. We'll give it the
+                class prefix "My_Decorator", and the class itself will be in the
+                file "My/Decorator/Label.php".
+            </p>
+
+            <pre class="programlisting">
+class My_Decorator_Label extends Zend_Form_Decorator_Abstract
+{
+    protected $_placement = 'PREPEND';
+
+    public function render($content)
+    {
+        if (null === ($element = $this-&gt;getElement())) {
+            return $content;
+        }
+        if (!method_exists($element, 'getLabel')) {
+            return $content;
+        }
+
+        $label = $element-&gt;getLabel() . ':';
+
+        if (null === ($view = $element-&gt;getView())) {
+            return $this-&gt;renderLabel($content, $label);
+        }
+
+        $label = $view-&gt;formLabel($element-&gt;getName(), $label);
+
+        return $this-&gt;renderLabel($content, $label);
+    }
+
+    public function renderLabel($content, $label)
+    {
+        $placement = $this-&gt;getPlacement();
+        $separator = $this-&gt;getSeparator();
+
+        switch ($placement) {
+            case 'APPEND':
+                return $content . $separator . $label;
+            case 'PREPEND':
+            default:
+                return $label . $separator . $content;
+        }
+    }
+}
+</pre>
+
+            <p>
+                Now we can tell the element to use this plugin path when looking
+                for decorators:
+            </p>
+
+            <pre class="programlisting">
+$element-&gt;addPrefixPath('My_Decorator', 'My/Decorator/', 'decorator');
+</pre>
+
+            <p>
+                Alternately, we can do that at the form level to ensure all
+                decorators use this path:
+            </p>
+
+            <pre class="programlisting">
+$form-&gt;addElementPrefixPath('My_Decorator', 'My/Decorator/', 'decorator');
+</pre>
+
+            <p>
+                After it added as in the example above, the 'My/Decorator/' path will be searched
+                first to see if the decorator exists there when you add a decorator. As a result,
+                'My_Decorator_Label' will now be used when the 'Label' decorator is requested.
+            </p>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.elements.filters"></a>Filters</h3></div></div></div>
+        
+
+        <p>
+            It's often useful and/or necessary to perform some normalization on
+            input prior to validation. For example, you may want to strip out
+            all <acronym class="acronym">HTML</acronym>, but run your validations on what remains to ensure the
+            submission is valid. Or you may want to trim empty space surrounding input so that a
+            StringLength validator will use the correct length of the input without counting leading
+            or trailing whitespace characters. These operations may be performed using
+            <code class="classname">Zend_Filter</code>. <code class="classname">Zend_Form_Element</code> has support
+            for filter chains, allowing you to specify multiple, sequential filters. Filtering
+            happens both during validation and when you retrieve the element value via
+            <code class="methodname">getValue()</code>:
+        </p>
+
+        <pre class="programlisting">
+$filtered = $element-&gt;getValue();
+</pre>
+
+        <p>
+            Filters may be added to the chain in two ways:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    passing in a concrete filter instance
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    providing a short filter name
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Let's see some examples:
+        </p>
+
+        <pre class="programlisting">
+// Concrete filter instance:
+$element-&gt;addFilter(new Zend_Filter_Alnum());
+
+// Short filter name:
+$element-&gt;addFilter('Alnum');
+$element-&gt;addFilter('alnum');
+</pre>
+
+        <p>
+            Short names are typically the filter name minus the prefix. In the
+            default case, this will mean minus the 'Zend_Filter_' prefix.
+            The first letter can be upper-cased or lower-cased.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Using Custom Filter Classes">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Using Custom Filter Classes</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                If you have your own set of filter classes, you can tell
+                <code class="classname">Zend_Form_Element</code> about these using
+                <code class="methodname">addPrefixPath()</code>. For instance, if you have
+                filters under the 'My_Filter' prefix, you can tell
+                <code class="classname">Zend_Form_Element</code> about this as follows:
+            </p>
+
+            <pre class="programlisting">
+$element-&gt;addPrefixPath('My_Filter', 'My/Filter/', 'filter');
+</pre>
+
+            <p>
+                (Recall that the third argument indicates which plugin loader
+                on which to perform the action.)
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            If at any time you need the unfiltered value, use the
+            <code class="methodname">getUnfilteredValue()</code> method:
+        </p>
+
+        <pre class="programlisting">
+$unfiltered = $element-&gt;getUnfilteredValue();
+</pre>
+
+        <p>
+            For more information on filters, see the <a class="link" href="zend.filter.introduction.html" title="Introduction">Zend_Filter
+                documentation</a>.
+        </p>
+
+        <p>
+            Methods associated with filters include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">addFilter($nameOfFilter, array $options = null)</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addFilters(array $filters)</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setFilters(array $filters)</code> (overwrites all filters)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getFilter($name)</code> (retrieve a filter object by name)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getFilters()</code> (retrieve all filters)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removeFilter($name)</code> (remove filter by name)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearFilters()</code> (remove all filters)
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.elements.validators"></a>Validators</h3></div></div></div>
+        
+
+        <p>
+            If you subscribe to the security mantra of "filter input, escape
+            output," you'll should use validator to filter input submitted with your form.
+            In <code class="classname">Zend_Form</code>, each element includes its own validator
+            chain, consisting of <code class="classname">Zend_Validate_*</code> validators.
+        </p>
+
+        <p>
+            Validators may be added to the chain in two ways:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    passing in a concrete validator instance
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    providing a short validator name
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Let's see some examples:
+        </p>
+
+        <pre class="programlisting">
+// Concrete validator instance:
+$element-&gt;addValidator(new Zend_Validate_Alnum());
+
+// Short validator name:
+$element-&gt;addValidator('Alnum');
+$element-&gt;addValidator('alnum');
+</pre>
+
+        <p>
+            Short names are typically the validator name minus the prefix. In
+            the default case, this will mean minus the 'Zend_Validate_' prefix.
+            As is the case with filters, the first letter can be upper-cased or lower-cased.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Using Custom Validator Classes">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Using Custom Validator Classes</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                If you have your own set of validator classes, you can tell
+                <code class="classname">Zend_Form_Element</code> about these using
+                <code class="methodname">addPrefixPath()</code>. For instance, if you have
+                validators under the 'My_Validator' prefix, you can tell
+                <code class="classname">Zend_Form_Element</code> about this as follows:
+            </p>
+
+            <pre class="programlisting">
+$element-&gt;addPrefixPath('My_Validator', 'My/Validator/', 'validate');
+</pre>
+
+            <p>
+                (Recall that the third argument indicates which plugin loader
+                on which to perform the action.)
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            If failing a particular validation should prevent later validators
+            from firing, pass boolean <code class="constant">TRUE</code> as the second parameter:
+        </p>
+
+        <pre class="programlisting">
+$element-&gt;addValidator('alnum', true);
+</pre>
+
+        <p>
+            If you are using a string name to add a validator, and the
+            validator class accepts arguments to the constructor, you may pass
+            these to the third parameter of <code class="methodname">addValidator()</code> as an
+            array:
+        </p>
+
+        <pre class="programlisting">
+$element-&gt;addValidator('StringLength', false, array(6, 20));
+</pre>
+
+        <p>
+            Arguments passed in this way should be in the order in which they
+            are defined in the constructor. The above example will instantiate
+            the <code class="classname">Zend_Validate_StringLenth</code> class with its
+            <code class="varname">$min</code> and <code class="varname">$max</code> parameters:
+        </p>
+
+        <pre class="programlisting">
+$validator = new Zend_Validate_StringLength(6, 20);
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Providing Custom Validator Error Messages">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Providing Custom Validator Error Messages</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Some developers may wish to provide custom error messages for a
+                validator. The <code class="varname">$options</code> argument of the
+                <code class="methodname">Zend_Form_Element::addValidator()</code> method allows you to do
+                so by providing the key 'messages' and mapping it to an array of key/value pairs
+                for setting the message templates. You will need to know the
+                error codes of the various validation error types for the
+                particular validator.
+            </p>
+
+            <p>
+                A better option is to use a <code class="classname">Zend_Translate_Adapter</code>
+                with your form. Error codes are automatically passed to the
+                adapter by the default Errors decorator; you can then specify
+                your own error message strings by setting up translations for
+                the various error codes of your validators.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            You can also set many validators at once, using
+            <code class="methodname">addValidators()</code>. The basic usage is to pass an array
+            of arrays, with each array containing 1 to 3 values, matching the
+            constructor of <code class="methodname">addValidator()</code>:
+        </p>
+
+        <pre class="programlisting">
+$element-&gt;addValidators(array(
+    array('NotEmpty', true),
+    array('alnum'),
+    array('stringLength', false, array(6, 20)),
+));
+</pre>
+
+        <p>
+            If you want to be more verbose or explicit, you can use the array
+            keys 'validator', 'breakChainOnFailure', and 'options':
+        </p>
+
+        <pre class="programlisting">
+$element-&gt;addValidators(array(
+    array(
+        'validator'           =&gt; 'NotEmpty',
+        'breakChainOnFailure' =&gt; true),
+    array('validator' =&gt; 'alnum'),
+    array(
+        'validator' =&gt; 'stringLength',
+        'options'   =&gt; array(6, 20)),
+));
+</pre>
+
+        <p>
+            This usage is good for illustrating how you could then configure
+            validators in a config file:
+        </p>
+
+        <pre class="programlisting">
+element.validators.notempty.validator = "NotEmpty"
+element.validators.notempty.breakChainOnFailure = true
+element.validators.alnum.validator = "Alnum"
+element.validators.strlen.validator = "StringLength"
+element.validators.strlen.options.min = 6
+element.validators.strlen.options.max = 20
+</pre>
+
+        <p>
+            Notice that every item has a key, whether or not it needs one; this
+            is a limitation of using configuration files -- but it also helps
+            make explicit what the arguments are for. Just remember that any
+            validator options must be specified in order.
+        </p>
+
+        <p>
+            To validate an element, pass the value to
+            <code class="methodname">isValid()</code>:
+        </p>
+
+        <pre class="programlisting">
+if ($element-&gt;isValid($value)) {
+    // valid
+} else {
+    // invalid
+}
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Validation Operates On Filtered Values">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Validation Operates On Filtered Values</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                <code class="methodname">Zend_Form_Element::isValid()</code> filters values through
+                the provided filter chain prior to validation. See <a class="link" href="zend.form.elements.html#zend.form.elements.filters" title="Filters">the Filters
+                    section</a> for more information.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="note"><table border="0" summary="Note: Validation Context">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Validation Context</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                <code class="methodname">Zend_Form_Element::isValid()</code> supports an
+                additional argument, <code class="varname">$context</code>.
+                <code class="methodname">Zend_Form::isValid()</code> passes the entire array of
+                data being processed to <code class="varname">$context</code> when validating a
+                form, and <code class="methodname">Zend_Form_Element::isValid()</code>, in turn,
+                passes it to each validator. This means you can write
+                validators that are aware of data passed to other form
+                elements. As an example, consider a standard registration form
+                that has fields for both password and a password confirmation;
+                one validation would be that the two fields match. Such a
+                validator might look like the following:
+            </p>
+
+            <pre class="programlisting">
+class My_Validate_PasswordConfirmation extends Zend_Validate_Abstract
+{
+    const NOT_MATCH = 'notMatch';
+
+    protected $_messageTemplates = array(
+        self::NOT_MATCH =&gt; 'Password confirmation does not match'
+    );
+
+    public function isValid($value, $context = null)
+    {
+        $value = (string) $value;
+        $this-&gt;_setValue($value);
+
+        if (is_array($context)) {
+            if (isset($context['password_confirm'])
+                &amp;&amp; ($value == $context['password_confirm']))
+            {
+                return true;
+            }
+        } elseif (is_string($context) &amp;&amp; ($value == $context)) {
+            return true;
+        }
+
+        $this-&gt;_error(self::NOT_MATCH);
+        return false;
+    }
+}
+</pre>
+        </td></tr>
+</table></div>
+
+        <p>
+            Validators are processed in order. Each validator is processed,
+            unless a validator created with a <code class="constant">TRUE</code>
+            <code class="varname">$breakChainOnFailure</code> value fails its validation. Be
+            sure to specify your validators in a reasonable order.
+        </p>
+
+        <p>
+            After a failed validation, you can retrieve the error codes and
+            messages from the validator chain:
+        </p>
+
+        <pre class="programlisting">
+$errors   = $element-&gt;getErrors();
+$messages = $element-&gt;getMessages();
+</pre>
+
+        <p>
+            (Note: error messages returned are an associative array of error
+            code / error message pairs.)
+        </p>
+
+        <p>
+            In addition to validators, you can specify that an element is
+            required, using <code class="methodname">setRequired($flag)</code>. By default, this
+            flag is <code class="constant">FALSE</code>. In combination with
+            <code class="methodname">setAllowEmpty($flag)</code> (<code class="constant">TRUE</code>
+            by default) and <code class="methodname">setAutoInsertNotEmptyValidator($flag)</code>
+            (<code class="constant">TRUE</code> by default), the behavior of your validator chain
+            can be modified in a number of ways:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Using the defaults, validating an Element without passing a value, or
+                    passing an empty string for it, skips all validators and validates to
+                    <code class="constant">TRUE</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setAllowEmpty(false)</code> leaving the two other
+                    mentioned flags untouched, will validate against the validator chain
+                    you defined for this Element, regardless of the value passed
+                    to <code class="methodname">isValid()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setRequired(true)</code> leaving the two other
+                    mentioned flags untouched, will add a 'NotEmpty' validator
+                    on top of the validator chain (if none was already set)), with the
+                    <code class="varname">$breakChainOnFailure</code> flag set. This behavior lends
+                    required flag semantic meaning: if no value is passed,
+                    we immediately invalidate the submission and notify the
+                    user, and prevent other validators from running on what we
+                    already know is invalid data.
+                </p>
+
+                <p>
+                    If you do not want this behavior, you can turn it off by
+                    passing a <code class="constant">FALSE</code> value to
+                    <code class="methodname">setAutoInsertNotEmptyValidator($flag)</code>; this
+                    will prevent <code class="methodname">isValid()</code> from placing the
+                    'NotEmpty' validator in the validator chain.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            For more information on validators, see the <a class="link" href="zend.validate.introduction.html" title="Introduction">Zend_Validate
+                documentation</a>.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Using Zend_Form_Elements as general-purpose validators">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Using Zend_Form_Elements as general-purpose validators</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                <code class="classname">Zend_Form_Element</code> implements
+                <code class="classname">Zend_Validate_Interface</code>, meaning an element may
+                also be used as a validator in other, non-form related
+                validation chains.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="note"><table border="0" summary="Note: When is an element detected as empty?">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">When is an element detected as empty?</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                As mentioned the 'NotEmpty' validator is used to detect if an element is empty
+                or not. But <code class="classname">Zend_Validate_NotEmpty</code> does, per default, not
+                work like <acronym class="acronym">PHP</acronym>'s method <code class="methodname">empty()</code>.
+            </p>
+
+            <p>
+                This means when an element contains an integer <span class="emphasis"><em>0</em></span> or an string
+                <span class="emphasis"><em>'0'</em></span> then the element will be seen as not empty. If you want to
+                have a different behaviour you must create your own instance of
+                <code class="classname">Zend_Validate_NotEmpty</code>. There you can define the behaviour of
+                this validator. See <a class="ulink" href="zend.validate.set.notempty" target="_top">Zend_Validate_NotEmpty</a> for details.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Methods associated with validation include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setRequired($flag)</code> and
+                    <code class="methodname">isRequired()</code> allow you to set and retrieve the
+                    status of the 'required' flag. When set to boolean <code class="constant">TRUE</code>,
+                    this flag requires that the element be in the data processed by
+                    <code class="classname">Zend_Form</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setAllowEmpty($flag)</code> and
+                    <code class="methodname">getAllowEmpty()</code> allow you to modify the
+                    behaviour of optional elements (i.e., elements where the
+                    required flag is <code class="constant">FALSE</code>). When the 'allow empty' flag is
+                    <code class="constant">TRUE</code>, empty values will not be passed to the validator
+                    chain.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setAutoInsertNotEmptyValidator($flag)</code> allows
+                    you to specify whether or not a 'NotEmpty' validator will be
+                    prepended to the validator chain when the element is
+                    required. By default, this flag is <code class="constant">TRUE</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addValidator($nameOrValidator, $breakChainOnFailure = false, array
+                        $options = null)</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addValidators(array $validators)</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setValidators(array $validators)</code> (overwrites all
+                    validators)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getValidator($name)</code> (retrieve a validator object by
+                    name)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getValidators()</code> (retrieve all validators)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removeValidator($name)</code> (remove validator by name)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearValidators()</code> (remove all validators)
+                </p>
+            </li>
+</ul></div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.form.elements.validators.errors"></a>Custom Error Messages</h4></div></div></div>
+            
+
+            <p>
+                At times, you may want to specify one or more specific error
+                messages to use instead of the error messages generated by the
+                validators attached to your element. Additionally, at times you
+                may want to mark the element invalid yourself. As of 1.6.0, this
+                functionality is possible via the following methods.
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">addErrorMessage($message)</code>: add an error message
+                        to display on form validation errors. You may call this more
+                        than once, and new messages are appended to the stack.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">addErrorMessages(array $messages)</code>: add multiple
+                        error messages to display on form validation errors.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">setErrorMessages(array $messages)</code>: add multiple
+                        error messages to display on form validation errors,
+                        overwriting all previously set error messages.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getErrorMessages()</code>: retrieve the list of
+                        custom error messages that have been defined.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">clearErrorMessages()</code>: remove all custom error
+                        messages that have been defined.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">markAsError()</code>: mark the element as having
+                        failed validation.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">hasErrors()</code>: determine whether the element has
+                        either failed validation or been marked as invalid.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">addError($message)</code>: add a message to the custom
+                        error messages stack and flag the element as invalid.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">addErrors(array $messages)</code>: add several
+                        messages to the custom error messages stack and flag the
+                        element as invalid.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">setErrors(array $messages)</code>: overwrite the
+                        custom error messages stack with the provided messages and
+                        flag the element as invalid.
+                    </p>
+                </li>
+</ul></div>
+
+            <p>
+                All errors set in this fashion may be translated. Additionally,
+                you may insert the placeholder "%value%" to represent the
+                element value; this current element value will be substituted
+                when the error messages are retrieved.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.elements.decorators"></a>Decorators</h3></div></div></div>
+        
+
+        <p>
+            One particular pain point for many web developers is the creation
+            of the <acronym class="acronym">XHTML</acronym> forms themselves. For each element, the developer
+            needs to create markup for the element itself (typically a label)
+            and special markup for displaying
+            validation error messages. The more elements on the page, the less
+            trivial this task becomes.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Form_Element</code> tries to solve this issue through
+            the use of "decorators". Decorators are simply classes that have
+            access to the element and a method for rendering content. For more
+            information on how decorators work, please see the section on <a class="link" href="zend.form.decorators.html" title="Creating Custom Form Markup Using Zend_Form_Decorator">Zend_Form_Decorator</a>.
+        </p>
+
+        <p>
+            The default decorators used by <code class="classname">Zend_Form_Element</code> are:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>ViewHelper</em></span>: specifies a view helper to use
+                    to render the element. The 'helper' element attribute can be
+                    used to specify which view helper to use. By default,
+                    <code class="classname">Zend_Form_Element</code> specifies the 'formText' view
+                    helper, but individual subclasses specify different helpers.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Errors</em></span>: appends error messages to the
+                    element using <code class="classname">Zend_View_Helper_FormErrors</code>. If none are
+                    present, nothing is appended.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Description</em></span>: appends the element
+                    description. If none is present, nothing is appended. By
+                    default, the description is rendered in a &lt;p&gt; tag with a
+                    class of 'description'.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>HtmlTag</em></span>: wraps the element and errors in
+                    an <acronym class="acronym">HTML</acronym> &lt;dd&gt; tag.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Label</em></span>: prepends a label to the element
+                    using <code class="classname">Zend_View_Helper_FormLabel</code>, and wraps it in a
+                    &lt;dt&gt; tag. If no label is provided, just the definition term tag is
+                    rendered.
+                </p>
+            </li>
+</ul></div>
+
+        <div class="note"><table border="0" summary="Note: Default Decorators Do Not Need to Be Loaded">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Default Decorators Do Not Need to Be Loaded</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                By default, the default decorators are loaded during object
+                initialization. You can disable this by passing the
+                'disableLoadDefaultDecorators' option to the constructor:
+            </p>
+
+            <pre class="programlisting">
+$element = new Zend_Form_Element('foo',
+                                 array('disableLoadDefaultDecorators' =&gt;
+                                      true)
+                                );
+</pre>
+
+            <p>
+                This option may be mixed with any other options you pass,
+                both as array options or in a <code class="classname">Zend_Config</code> object.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Since the order in which decorators are registered matters- the first
+            decorator registered is executed first- you will need to make
+            sure you register your decorators in an appropriate order, or
+            ensure that you set the placement options in a sane fashion. To
+            give an example, here is the code that registers the default
+            decorators:
+        </p>
+
+        <pre class="programlisting">
+$this-&gt;addDecorators(array(
+    array('ViewHelper'),
+    array('Errors'),
+    array('Description', array('tag' =&gt; 'p', 'class' =&gt; 'description')),
+    array('HtmlTag', array('tag' =&gt; 'dd')),
+    array('Label', array('tag' =&gt; 'dt')),
+));
+</pre>
+
+        <p>
+            The initial content is created by the 'ViewHelper' decorator, which
+            creates the form element itself. Next, the 'Errors' decorator
+            fetches error messages from the element, and, if any are present,
+            passes them to the 'FormErrors' view helper to render. If a
+            description is present, the 'Description' decorator will append a
+            paragraph of class 'description' containing the descriptive text to
+            the aggregated content. The next decorator, 'HtmlTag', wraps the
+            element, errors, and description in an <acronym class="acronym">HTML</acronym> &lt;dd&gt; tag.
+            Finally, the last decorator, 'label', retrieves the element's label
+            and passes it to the 'FormLabel' view helper, wrapping it in an <acronym class="acronym">HTML</acronym>
+            &lt;dt&gt; tag; the value is prepended to the content by default.
+            The resulting output looks basically like this:
+        </p>
+
+        <pre class="programlisting">
+&lt;dt&gt;&lt;label for="foo" class="optional"&gt;Foo&lt;/label&gt;&lt;/dt&gt;
+&lt;dd&gt;
+    &lt;input type="text" name="foo" id="foo" value="123" /&gt;
+    &lt;ul class="errors"&gt;
+        &lt;li&gt;"123" is not an alphanumeric value&lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;p class="description"&gt;
+        This is some descriptive text regarding the element.
+    &lt;/p&gt;
+&lt;/dd&gt;
+</pre>
+
+        <p>
+            For more information on decorators, read the <a class="link" href="zend.form.decorators.html" title="Creating Custom Form Markup Using Zend_Form_Decorator">Zend_Form_Decorator section</a>.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Using Multiple Decorators of the Same Type">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Using Multiple Decorators of the Same Type</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Internally, <code class="classname">Zend_Form_Element</code> uses a decorator's
+                class as the lookup mechanism when retrieving decorators. As a
+                result, you cannot register multiple decorators of the same
+                type; subsequent decorators will simply overwrite those that
+                existed before.
+            </p>
+
+            <p>
+                To get around this, you can use <span class="emphasis"><em>aliases</em></span>.
+                Instead of passing a decorator or decorator name as the first
+                argument to <code class="methodname">addDecorator()</code>, pass an array with a
+                single element, with the alias pointing to the decorator object
+                or name:
+            </p>
+
+            <pre class="programlisting">
+// Alias to 'FooBar':
+$element-&gt;addDecorator(array('FooBar' =&gt; 'HtmlTag'),
+                       array('tag' =&gt; 'div'));
+
+// And retrieve later:
+$decorator = $element-&gt;getDecorator('FooBar');
+</pre>
+
+            <p>
+                In the <code class="methodname">addDecorators()</code> and
+                <code class="methodname">setDecorators()</code> methods, you will need to pass
+                the 'decorator' option in the array representing the decorator:
+            </p>
+
+            <pre class="programlisting">
+// Add two 'HtmlTag' decorators, aliasing one to 'FooBar':
+$element-&gt;addDecorators(
+    array('HtmlTag', array('tag' =&gt; 'div')),
+    array(
+        'decorator' =&gt; array('FooBar' =&gt; 'HtmlTag'),
+        'options' =&gt; array('tag' =&gt; 'dd')
+    ),
+);
+
+// And retrieve later:
+$htmlTag = $element-&gt;getDecorator('HtmlTag');
+$fooBar  = $element-&gt;getDecorator('FooBar');
+</pre>
+        </td></tr>
+</table></div>
+
+        <p>
+            Methods associated with decorators include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">addDecorator($nameOrDecorator, array $options = null)</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addDecorators(array $decorators)</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setDecorators(array $decorators)</code> (overwrites all
+                    decorators)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getDecorator($name)</code> (retrieve a decorator object by
+                    name)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getDecorators()</code> (retrieve all decorators)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removeDecorator($name)</code> (remove decorator by name)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearDecorators()</code> (remove all decorators)
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            <code class="classname">Zend_Form_Element</code> also uses overloading to allow rendering
+            specific decorators. <code class="methodname">__call()</code> will intercept methods
+            that lead with the text 'render' and use the remainder of the method
+            name to lookup a decorator; if found, it will then render that
+            <span class="emphasis"><em>single</em></span> decorator. Any arguments passed to the
+            method call will be used as content to pass to the decorator's
+            <code class="methodname">render()</code> method. As an example:
+        </p>
+
+        <pre class="programlisting">
+// Render only the ViewHelper decorator:
+echo $element-&gt;renderViewHelper();
+
+// Render only the HtmlTag decorator, passing in content:
+echo $element-&gt;renderHtmlTag("This is the html tag content");
+</pre>
+
+        <p>
+            If the decorator does not exist, an exception is raised.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.elements.metadata"></a>Metadata and Attributes</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Form_Element</code> handles a variety of attributes and
+            element metadata. Basic attributes include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>name</em></span>: the element name. Uses the
+                    <code class="methodname">setName()</code> and <code class="methodname">getName()</code>
+                    accessors.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>label</em></span>: the element label. Uses the
+                    <code class="methodname">setLabel()</code> and <code class="methodname">getLabel()</code>
+                    accessors.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>order</em></span>: the index at which an element
+                    should appear in the form. Uses the <code class="methodname">setOrder()</code> and
+                    <code class="methodname">getOrder()</code> accessors.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>value</em></span>: the current element value. Uses the
+                    <code class="methodname">setValue()</code> and <code class="methodname">getValue()</code>
+                    accessors.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>description</em></span>: a description of the element;
+                    often used to provide tooltip or javascript contextual hinting
+                    describing the purpose of the element. Uses the
+                    <code class="methodname">setDescription()</code> and
+                    <code class="methodname">getDescription()</code> accessors.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>required</em></span>: flag indicating whether or not
+                    the element is required when performing form validation. Uses
+                    the <code class="methodname">setRequired()</code> and
+                    <code class="methodname">isRequired()</code> accessors. This flag is
+                    <code class="constant">FALSE</code> by default.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>allowEmpty</em></span>: flag indicating whether or not
+                    a non-required (optional) element should attempt to validate
+                    empty values. If it is set to <code class="constant">TRUE</code> and the required flag is
+                    <code class="constant">FALSE</code>, empty values are not passed to the validator chain
+                    and are presumed <code class="constant">TRUE</code>. Uses the
+                    <code class="methodname">setAllowEmpty()</code> and
+                    <code class="methodname">getAllowEmpty()</code> accessors. This flag is
+                    <code class="constant">TRUE</code> by default.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>autoInsertNotEmptyValidator</em></span>: flag
+                    indicating whether or not to insert a 'NotEmpty' validator when
+                    the element is required. By default, this flag is <code class="constant">TRUE</code>. Set
+                    the flag with <code class="methodname">setAutoInsertNotEmptyValidator($flag)</code> and
+                    determine the value with
+                    <code class="methodname">autoInsertNotEmptyValidator()</code>.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Form elements may require additional metadata. For <acronym class="acronym">XHTML</acronym> form
+            elements, for instance, you may want to specify attributes such as
+            the class or id. To facilitate this are a set of accessors:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>setAttrib($name, $value)</em></span>: add an attribute
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>setAttribs(array $attribs)</em></span>: like
+                    addAttribs(), but overwrites
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>getAttrib($name)</em></span>: retrieve a single
+                    attribute value
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>getAttribs()</em></span>: retrieve all attributes as
+                    key/value pairs
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Most of the time, however, you can simply access them as object
+            properties, as <code class="classname">Zend_Form_Element</code> utilizes overloading
+            to facilitate access to them:
+        </p>
+
+        <pre class="programlisting">
+// Equivalent to $element-&gt;setAttrib('class', 'text'):
+$element-&gt;class = 'text;
+</pre>
+
+        <p>
+            By default, all attributes are passed to the view helper used by
+            the element during rendering, and rendered as <acronym class="acronym">HTML</acronym> attributes of
+            the element tag.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.elements.standard"></a>Standard Elements</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Form</code> ships with a number of standard elements; please read
+            the <a class="link" href="zend.form.standardElements.html" title="Standard Form Elements Shipped With Zend Framework">Standard Elements</a>
+            chapter for full details.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.elements.methods"></a>Zend_Form_Element Methods</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Form_Element</code> has many, many methods. What follows
+            is a quick summary of their signatures, grouped by type:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>Configuration:</p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p><code class="methodname">setOptions(array $options)</code></p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">setConfig(Zend_Config $config)</code></p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>I18n:</p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="methodname">setTranslator(Zend_Translate_Adapter $translator
+                                = null)</code>
+                        </p>
+                    </li>
+<li class="listitem"><p><code class="methodname">getTranslator()</code></p></li>
+<li class="listitem">
+                        <p><code class="methodname">setDisableTranslator($flag)</code></p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">translatorIsDisabled()</code></p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>Properties:</p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem"><p><code class="methodname">setName($name)</code></p></li>
+<li class="listitem"><p><code class="methodname">getName()</code></p></li>
+<li class="listitem"><p><code class="methodname">setValue($value)</code></p></li>
+<li class="listitem"><p><code class="methodname">getValue()</code></p></li>
+<li class="listitem"><p><code class="methodname">getUnfilteredValue()</code></p></li>
+<li class="listitem"><p><code class="methodname">setLabel($label)</code></p></li>
+<li class="listitem"><p><code class="methodname">getLabel()</code></p></li>
+<li class="listitem">
+                        <p><code class="methodname">setDescription($description)</code></p>
+                    </li>
+<li class="listitem"><p><code class="methodname">getDescription()</code></p></li>
+<li class="listitem"><p><code class="methodname">setOrder($order)</code></p></li>
+<li class="listitem"><p><code class="methodname">getOrder()</code></p></li>
+<li class="listitem"><p><code class="methodname">setRequired($flag)</code></p></li>
+<li class="listitem"><p><code class="methodname">isRequired()</code></p></li>
+<li class="listitem"><p><code class="methodname">setAllowEmpty($flag)</code></p></li>
+<li class="listitem"><p><code class="methodname">getAllowEmpty()</code></p></li>
+<li class="listitem">
+                        <p><code class="methodname">setAutoInsertNotEmptyValidator($flag)</code></p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">autoInsertNotEmptyValidator()</code></p>
+                    </li>
+<li class="listitem"><p><code class="methodname">setIgnore($flag)</code></p></li>
+<li class="listitem"><p><code class="methodname">getIgnore()</code></p></li>
+<li class="listitem"><p><code class="methodname">getType()</code></p></li>
+<li class="listitem">
+                        <p><code class="methodname">setAttrib($name, $value)</code></p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">setAttribs(array $attribs)</code></p>
+                    </li>
+<li class="listitem"><p><code class="methodname">getAttrib($name)</code></p></li>
+<li class="listitem"><p><code class="methodname">getAttribs()</code></p></li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>Plugin loaders and paths:</p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="methodname">setPluginLoader(Zend_Loader_PluginLoader_Interface $loader,
+                                $type)</code>
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">getPluginLoader($type)</code></p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="methodname">addPrefixPath($prefix, $path, $type = null)</code>
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">addPrefixPaths(array $spec)</code></p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>Validation:</p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="methodname">addValidator($validator, $breakChainOnFailure = false,
+                                $options = array())</code>
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">addValidators(array $validators)</code></p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">setValidators(array $validators)</code></p>
+                    </li>
+<li class="listitem"><p><code class="methodname">getValidator($name)</code></p></li>
+<li class="listitem"><p><code class="methodname">getValidators()</code></p></li>
+<li class="listitem">
+                        <p><code class="methodname">removeValidator($name)</code></p>
+                    </li>
+<li class="listitem"><p><code class="methodname">clearValidators()</code></p></li>
+<li class="listitem">
+                        <p><code class="methodname">isValid($value, $context = null)</code></p>
+                    </li>
+<li class="listitem"><p><code class="methodname">getErrors()</code></p></li>
+<li class="listitem"><p><code class="methodname">getMessages()</code></p></li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>Filters:</p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p><code class="methodname">addFilter($filter, $options = array())</code></p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">addFilters(array $filters)</code></p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">setFilters(array $filters)</code></p>
+                    </li>
+<li class="listitem"><p><code class="methodname">getFilter($name)</code></p></li>
+<li class="listitem"><p><code class="methodname">getFilters()</code></p></li>
+<li class="listitem"><p><code class="methodname">removeFilter($name)</code></p></li>
+<li class="listitem"><p><code class="methodname">clearFilters()</code></p></li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>Rendering:</p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <code class="methodname">setView(Zend_View_Interface $view = null)</code>
+                        </p>
+                    </li>
+<li class="listitem"><p><code class="methodname">getView()</code></p></li>
+<li class="listitem">
+                        <p>
+                            <code class="methodname">addDecorator($decorator, $options = null)</code>
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">addDecorators(array $decorators)</code></p>
+                    </li>
+<li class="listitem">
+                        <p><code class="methodname">setDecorators(array $decorators)</code></p>
+                    </li>
+<li class="listitem"><p><code class="methodname">getDecorator($name)</code></p></li>
+<li class="listitem"><p><code class="methodname">getDecorators()</code></p></li>
+<li class="listitem">
+                        <p><code class="methodname">removeDecorator($name)</code></p>
+                    </li>
+<li class="listitem"><p><code class="methodname">clearDecorators()</code></p></li>
+<li class="listitem">
+                        <p>
+                            <code class="methodname">render(Zend_View_Interface $view = null)</code>
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.elements.config"></a>Configuration</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Form_Element</code>'s constructor accepts either an
+            array of options or a <code class="classname">Zend_Config</code> object containing
+            options, and it can also be configured using either
+            <code class="methodname">setOptions()</code> or <code class="methodname">setConfig()</code>. Generally
+            speaking, keys are named as follows:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    If 'set' + key refers to a <code class="classname">Zend_Form_Element</code>
+                    method, then the value provided will be passed to that method.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Otherwise, the value will be used to set an attribute.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Exceptions to the rule include the following:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="property">prefixPath</span> will be passed to
+                    <code class="methodname">addPrefixPaths()</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    The following setters cannot be set in this way:
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <span class="property">setAttrib</span> (though
+                            <span class="property">setAttribs</span> <span class="emphasis"><em>will</em></span> work)
+                        </p>
+                    </li>
+<li class="listitem"><p><span class="property">setConfig</span></p></li>
+<li class="listitem"><p><span class="property">setOptions</span></p></li>
+<li class="listitem"><p><span class="property">setPluginLoader</span></p></li>
+<li class="listitem"><p><span class="property">setTranslator</span></p></li>
+<li class="listitem"><p><span class="property">setView</span></p></li>
+</ul></div>
+            </li>
+</ul></div>
+
+        <p>
+            As an example, here is a config file that passes configuration for
+            every type of configurable data:
+        </p>
+
+        <pre class="programlisting">
+[element]
+name = "foo"
+value = "foobar"
+label = "Foo:"
+order = 10
+required = true
+allowEmpty = false
+autoInsertNotEmptyValidator = true
+description = "Foo elements are for examples"
+ignore = false
+attribs.id = "foo"
+attribs.class = "element"
+; For radio button elements
+escape = true
+listsep = "&lt;br /&gt;\n"
+; sets 'onclick' attribute
+onclick = "autoComplete(this, '/form/autocomplete/element')"
+prefixPaths.decorator.prefix = "My_Decorator"
+prefixPaths.decorator.path = "My/Decorator/"
+disableTranslator = 0
+validators.required.validator = "NotEmpty"
+validators.required.breakChainOnFailure = true
+validators.alpha.validator = "alpha"
+validators.regex.validator = "regex"
+validators.regex.options.pattern = "/^[A-F].*/$"
+filters.ucase.filter = "StringToUpper"
+decorators.element.decorator = "ViewHelper"
+decorators.element.options.helper = "FormText"
+decorators.label.decorator = "Label"
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.elements.custom"></a>Custom Elements</h3></div></div></div>
+        
+
+        <p>
+            You can create your own custom elements by simply extending the
+            <code class="classname">Zend_Form_Element</code> class. Common reasons to do so
+            include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Elements that share common validators and/or filters
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Elements that have custom decorator functionality
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            There are two methods typically used to extend an element:
+            <code class="methodname">init()</code>, which can be used to add custom initialization
+            logic to your element, and <code class="methodname">loadDefaultDecorators()</code>,
+            which can be used to set a list of default decorators used by your
+            element.
+        </p>
+
+        <p>
+            As an example, let's say that all text elements in a form you are
+            creating need to be filtered with <code class="classname">StringTrim</code>,
+            validated with a common regular expression, and that you want to
+            use a custom decorator you've created for displaying them,
+            'My_Decorator_TextItem'. In addition, you have a number of standard
+            attributes, including 'size', 'maxLength', and 'class' you wish to
+            specify. You could define an element to accomplish this as follows:
+        </p>
+
+        <pre class="programlisting">
+class My_Element_Text extends Zend_Form_Element
+{
+    public function init()
+    {
+        $this-&gt;addPrefixPath('My_Decorator', 'My/Decorator/', 'decorator')
+             -&gt;addFilters('StringTrim')
+             -&gt;addValidator('Regex', false, array('/^[a-z0-9]{6,}$/i'))
+             -&gt;addDecorator('TextItem')
+             -&gt;setAttrib('size', 30)
+             -&gt;setAttrib('maxLength', 45)
+             -&gt;setAttrib('class', 'text');
+    }
+}
+</pre>
+
+        <p>
+            You could then inform your form object about the prefix path for
+            such elements, and start creating elements:
+        </p>
+
+        <pre class="programlisting">
+$form-&gt;addPrefixPath('My_Element', 'My/Element/', 'element')
+     -&gt;addElement('text', 'foo');
+</pre>
+
+        <p>
+            The 'foo' element will now be of type <code class="classname">My_Element_Text</code>,
+            and exhibit the behaviour you've outlined.
+        </p>
+
+        <p>
+            Another method you may want to override when extending
+            <code class="classname">Zend_Form_Element</code> is the
+            <code class="methodname">loadDefaultDecorators()</code> method. This method
+            conditionally loads a set of default decorators for your element;
+            you may wish to substitute your own decorators in your extending
+            class:
+        </p>
+
+        <pre class="programlisting">
+class My_Element_Text extends Zend_Form_Element
+{
+    public function loadDefaultDecorators()
+    {
+        $this-&gt;addDecorator('ViewHelper')
+             -&gt;addDecorator('DisplayError')
+             -&gt;addDecorator('Label')
+             -&gt;addDecorator('HtmlTag',
+                            array('tag' =&gt; 'div', 'class' =&gt; 'element'));
+    }
+}
+</pre>
+
+        <p>
+            There are many ways to customize elements. Read the <acronym class="acronym">API</acronym>
+            documentation of <code class="classname">Zend_Form_Element</code> to learn about all of the
+            available methods.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.form.quickstart.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.form.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.form.forms.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Form Quick Start </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Creating Forms Using Zend_Form</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

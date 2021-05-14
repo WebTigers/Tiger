@@ -64,3 +64,6 @@ Zend_Registry::set( 'Zend_Locale', $locale );
 
 defined('LOCALE')
     || define('LOCALE', $locale->toString());
+
+defined('LANG')
+    || define('LANG', $locale->getLanguage());

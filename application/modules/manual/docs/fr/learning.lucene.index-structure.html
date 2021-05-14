@@ -1,0 +1,173 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Structure d'index Lucene</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.lucene.html" title="Bien démarrer avec Zend_Search_Lucene">
+<link rel="prev" href="learning.lucene.intro.html" title="Introduction à Zend_Search_Lucene">
+<link rel="next" href="learning.lucene.index-opening.html" title="Ouverture et création d'index">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Structure d'index Lucene</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.lucene.intro.html">Précédent</a> </td>
+<th width="60%" align="center">Bien démarrer avec Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.lucene.index-opening.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.lucene.index-structure"></a>Structure d'index Lucene</h2></div></div></div>
+    
+
+    <p>
+        Afin d'utiliser l'intégralité des fonctionnalités de
+        <code class="classname">Zend_Search_Lucene</code> avec un maximum de performances, il est
+        nécessaire que vous compreniez la structure interne d'un index.
+    </p>
+
+    <p>
+        Un <span class="emphasis"><em>index</em></span> est stocké dans un ensemble de fichier au sein d'un
+        seul répertoire.
+    </p>
+
+    <p>
+        Un <span class="emphasis"><em>index</em></span> est un ensemble indépendant de
+        <span class="emphasis"><em>segments</em></span> dans lesquels sont stockées des informations au sujet d'un
+        sous-ensemble de documents indexés. Chaque <span class="emphasis"><em>segment</em></span> a son propre
+        <span class="emphasis"><em>dictionnaire de terme</em></span>, son propre index de dictionnaire de terme, et
+        son propre stockage de document (valeur de champ stocké)
+        <a href="#ftn.idm192803686512" class="footnote" name="idm192803686512"><sup class="footnote">[3]</sup></a>.
+        Toutes les informations de segments sont stockées dans un fichier
+        <code class="filename">_xxxxx.cfs</code>, où <span class="emphasis"><em>xxxxx</em></span> est le nom d'un
+        segment.
+    </p>
+
+    <p>
+        Dès qu'un fichier de segment d'index est créé, il ne peut être mis à jour. De
+        nouveaux documents sont ajoutés à de nouveaux segments. Les documents supprimés sont
+        seulement marqués comme supprimés dans un fichier facultatif
+        <code class="filename">&lt;segmentname&gt;.del</code>.
+    </p>
+
+    <p>
+        La mise à jour de document est effectuée en tant qu'opérations distincts de
+        suppression et d'ajout, même si elle est effectuée en utilisant un appel à
+        l'<acronym class="acronym">API</acronym> <code class="methodname">update()</code>
+        <a href="#ftn.idm192803681360" class="footnote" name="idm192803681360"><sup class="footnote">[4]</sup></a>.
+        Ceci simplifie l'ajout de nouveaux documents, et permet de mettre à jour
+        simultanément à l'aide des opérations de recherche.
+    </p>
+
+    <p>
+        D'un autre coté, utiliser plusieurs segments (avoir un document par segment est un
+        cas exceptionnel) augmente le temps de recherche :
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                La récupération d'un terme depuis le dictionnaire est effectué pour chaque
+                segment ;
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Le dictionnaire de terme de l'index est préchargé pour chaque segment (ce
+                processus occupe la plupart du temps de recherche pour de simples requêtes et
+                nécessite aussi de la mémoire supplémentaire).
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Si les termes du dictionnaires de recherche atteignent un point de saturation, la
+        recherche à travers un segment est <span class="emphasis"><em>N</em></span> fois plus rapide que la recherche
+        à travers <span class="emphasis"><em>N</em></span> segments dans la plupart des cas.
+    </p>
+
+    <p>
+        <span class="emphasis"><em>L'optimisation d'index</em></span> fusionne deux segments ou plus en un
+        segment unique. Un nouveau segment est ajouté à la liste des segments de l'index, et les
+        anciens segments sont exclus.
+    </p>
+
+    <p>
+        La mise à jour de la liste de segments s'effectue de manière atomique. Ceci donne la
+        capacité d'ajouter de nouveaux documents simultanément, d'effectuer des optimisations
+        d'index, et de chercher à travers l'index.
+    </p>
+
+    <p>
+        L'auto-optimisation d'index s'effectue après chaque génération de segment. Elle
+        fusionne l'ensemble des plus petits segments en des segments plus grands, et les segments
+        plus grands en des segments encore plus grands, si nous avons suffisamment de segments à
+        fusionner.
+    </p>
+
+    <p>L'auto optimisation d'index est contrôlé par trois options :</p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>MaxBufferedDocs</em></span> (Le nombre minimal de documents requis
+                avant que les documents mis en mémoire tampon soit écrits dans un nouveau
+                segment) ;
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>MaxMergeDocs</em></span> (Le plus grand nombre de documents
+                fusionnés par une opération d'optimisation) ; et
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>MergeFactor</em></span> (qui détermine la fréquence à laquelle les
+                indices de segments sont fusionnés par les opérations d'auto-optimisation).
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Si nous ajoutons un documents par exécution de script,
+        <span class="emphasis"><em>MaxBufferedDocs</em></span> n'est finalement pas utilisé (seul un segment avec un
+        seul document est créé à la fin de l'exécution du script, moment auquel démarre le
+        processus d'auto-optimisation).
+    </p>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm192803686512" class="footnote">
+            <p><a href="#idm192803686512" class="para"><sup class="para">[3] </sup></a>Depuis Lucene 2.3, les fichiers de stockage de document peuvent être partagés
+            entre les segments; cependant, <code class="classname">Zend_Search_Lucene</code> n'utilise pas
+            cette possibilité</p>
+        </div>
+<div id="ftn.idm192803681360" class="footnote">
+            <p><a href="#idm192803681360" class="para"><sup class="para">[4] </sup></a>Cet appel est fourni uniquement par Java Lucene pour le moment, mais il est prévu
+            d'étendre l'<acronym class="acronym">API</acronym> <code class="classname">Zend_Search_Lucene</code> avec une
+            fonctionnalité similaire</p>
+        </div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.lucene.intro.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.lucene.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.lucene.index-opening.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction à Zend_Search_Lucene </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Ouverture et création d'index</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

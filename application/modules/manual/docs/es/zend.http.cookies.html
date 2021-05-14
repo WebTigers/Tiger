@@ -1,0 +1,677 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Http_Cookie and Zend_Http_CookieJar</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.http.html" title="Zend_Http">
+<link rel="prev" href="zend.http.client.adapters.html" title="Zend_Http_Client - Connection Adapters">
+<link rel="next" href="zend.http.response.html" title="Zend_Http_Response">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Http_Cookie and Zend_Http_CookieJar</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.http.client.adapters.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Http</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.http.response.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.http.cookies"></a>Zend_Http_Cookie and Zend_Http_CookieJar</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.cookies.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Http_Cookie</code>, as expected, is a class that represents an
+            <acronym class="acronym">HTTP</acronym> cookie. It provides methods for parsing <acronym class="acronym">HTTP</acronym>
+            response strings, collecting cookies, and easily accessing their properties. It also
+            allows checking if a cookie matches against a specific scenario, IE
+            a request <acronym class="acronym">URL</acronym>, expiration time, secure connection, etc.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Http_CookieJar</code> is an object usually used by
+            <code class="classname">Zend_Http_Client</code> to hold a set of
+            <code class="classname">Zend_Http_Cookie</code> objects. The idea is that if a
+            <code class="classname">Zend_Http_CookieJar</code> object is attached to a
+            <code class="classname">Zend_Http_Client</code> object, all cookies going from and into the
+            client through <acronym class="acronym">HTTP</acronym> requests and responses will be stored by the
+            CookieJar object. Then, when the client will send another request, it will first ask the
+            CookieJar object for all cookies matching the request. These will be added to the
+            request headers automatically. This is highly useful in cases where you need to
+            maintain a user session over consecutive <acronym class="acronym">HTTP</acronym> requests, automatically
+            sending the session ID cookies when required. Additionally, the
+            <code class="classname">Zend_Http_CookieJar</code> object can be serialized and stored in
+            $_SESSION when needed.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.cookies.cookie.instantiating"></a>Instantiating Zend_Http_Cookie Objects</h3></div></div></div>
+        
+
+        <p>
+            Instantiating a Cookie object can be done in two ways:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        Through the constructor, using the following syntax:
+                        <span class="command"><strong>new <code class="classname">Zend_Http_Cookie</code>(string $name, string
+                            $value, string $domain, [int $expires, [string $path, [boolean
+                            $secure]]]);</strong></span>
+                    </p>
+
+                    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                            <p>
+                                <code class="varname">$name</code>: The name of the cookie (eg. 'PHPSESSID')
+                                (required)
+                            </p>
+                        </li>
+<li class="listitem">
+                            <p>
+                                <code class="varname">$value</code>: The value of the cookie (required)
+                            </p>
+                        </li>
+<li class="listitem">
+                            <p>
+                                <code class="varname">$domain</code>: The cookie's domain (eg. '.example.com')
+                                (required)
+                            </p>
+                        </li>
+<li class="listitem">
+                            <p>
+                                <code class="varname">$expires</code>: Cookie expiration time, as UNIX time
+                                stamp (optional, defaults to <code class="constant">NULL</code>). If not set,
+                                cookie will be treated as a 'session cookie' with no expiration
+                                time.
+                            </p>
+                        </li>
+<li class="listitem">
+                            <p>
+                                <code class="varname">$path</code>: Cookie path, eg. '/foo/bar/' (optional,
+                                defaults to '/')
+                            </p>
+                        </li>
+<li class="listitem">
+                            <p>
+                                <code class="varname">$secure</code>: Boolean, Whether the cookie is to be
+                                sent over secure (HTTPS) connections only (optional, defaults to
+                                boolean <code class="constant">FALSE</code>)
+                            </p>
+                        </li>
+</ul></div>
+                </li>
+<li class="listitem">
+                    <p>
+                        By calling the fromString($cookieStr, [$refUri, [$encodeValue]]) static
+                        method, with a cookie string as represented in the 'Set-Cookie
+                       ' <acronym class="acronym">HTTP</acronym> response header or 'Cookie' <acronym class="acronym">HTTP</acronym>
+                       request header. In this case, the cookie value must already be encoded. When
+                       the cookie string does not contain a 'domain' part, you must provide a
+                       reference <acronym class="acronym">URI</acronym> according to which the cookie's domain and
+                       path will be set.
+                    </p>
+
+                    <p>
+                        The <code class="methodname">fromString()</code> method accepts the following
+                        parameters:
+                    </p>
+
+                    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                            <p>
+                                <code class="varname">$cookieStr</code>: a cookie string as represented in the
+                               'Set-Cookie' <acronym class="acronym">HTTP</acronym> response header or 'Cookie'
+                               <acronym class="acronym">HTTP</acronym> request header (required)
+                            </p>
+                        </li>
+<li class="listitem">
+                            <p>
+                                <code class="varname">$refUri</code>: a reference <acronym class="acronym">URI</acronym>
+                                according to which the cookie's domain and path will be set.
+                                (optional, defaults to parsing the value from the $cookieStr)
+                            </p>
+                        </li>
+<li class="listitem">
+                            <p>
+                                <code class="varname">$encodeValue</code>: If the value should be passed
+                                through urldecode. Also effects the cookie's behavior when being
+                                converted back to a cookie string. (optional, defaults to true)
+                            </p>
+                        </li>
+</ul></div>
+                </li>
+</ul></div>
+<p>
+
+            </p>
+<div class="example">
+<a name="zend.http.cookies.cookie.instantiating.example-1"></a><p class="title"><b>Ejemplo 474. Instantiating a Zend_Http_Cookie object</b></p>
+<div class="example-contents">
+               
+
+               <pre class="programlisting">
+// First, using the constructor. This cookie will expire in 2 hours
+$cookie = new Zend_Http_Cookie('foo',
+                               'bar',
+                               '.example.com',
+                               time() + 7200,
+                               '/path');
+
+// You can also take the HTTP response Set-Cookie header and use it.
+// This cookie is similar to the previous one, only it will not expire, and
+// will only be sent over secure connections
+$cookie = Zend_Http_Cookie::fromString('foo=bar; domain=.example.com; ' .
+                                       'path=/path; secure');
+
+// If the cookie's domain is not set, you have to manually specify it
+$cookie = Zend_Http_Cookie::fromString('foo=bar; secure;',
+                                       'http://www.example.com/path');
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+
+            </p>
+<div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    When instantiating a cookie object using the
+                    <code class="classname">Zend_Http_Cookie</code>::fromString() method, the cookie value
+                    is expected to be <acronym class="acronym">URL</acronym> encoded, as cookie strings should be.
+                    However, when using the constructor, the cookie value string is expected to be
+                    the real, decoded value.
+                </p>
+            </td></tr>
+</table></div>
+<p>
+        </p>
+
+        <p>
+            A cookie object can be transferred back into a string, using the __toString() magic
+            method. This method will produce a <acronym class="acronym">HTTP</acronym> request "Cookie" header
+            string, showing the cookie's name and value, and terminated by a semicolon (';').
+            The value will be URL encoded, as expected in a Cookie header:
+            </p>
+<div class="example">
+<a name="zend.http.cookies.cookie.instantiating.example-2"></a><p class="title"><b>Ejemplo 475. Stringifying a Zend_Http_Cookie object</b></p>
+<div class="example-contents">
+               
+
+               <pre class="programlisting">
+// Create a new cookie
+$cookie = new Zend_Http_Cookie('foo',
+                               'two words',
+                               '.example.com',
+                               time() + 7200,
+                               '/path');
+
+// Will print out 'foo=two+words;' :
+echo $cookie-&gt;__toString();
+
+// This is actually the same:
+echo (string) $cookie;
+
+// In PHP 5.2 and higher, this also works:
+echo $cookie;
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.cookies.cookie.accessors"></a>Zend_Http_Cookie getter methods</h3></div></div></div>
+        
+
+        <p>
+            Once a <code class="classname">Zend_Http_Cookie</code> object is instantiated, it provides
+            several getter methods to get the different properties of the <acronym class="acronym">HTTP</acronym>
+            cookie:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getName()</code>: Get the name of the cookie
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getValue()</code>: Get the real, decoded value of the
+                        cookie
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getDomain()</code>: Get the cookie's domain
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getPath()</code>: Get the cookie's path, which defaults
+                        to '/'
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getExpiryTime()</code>: Get the cookie's expiration time,
+                        as UNIX time stamp. If the cookie has no expiration time set, will return
+                        <code class="constant">NULL</code>.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+
+        <p>
+            Additionally, several boolean tester methods are provided:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">isSecure()</code>: Check whether the cookie is set to be
+                        sent over secure connections only. Generally speaking, if
+                        <code class="constant">TRUE</code> the cookie should only be sent over
+                        <acronym class="acronym">HTTPS</acronym>.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">isExpired(int $time = null)</code>: Check whether the cookie
+                        is expired or not. If the cookie has no expiration time, will always return
+                        <code class="constant">TRUE</code>. If $time is provided, it will override the
+                        current time stamp as the time to check the cookie against.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">isSessionCookie()</code>: Check whether the cookie is a
+                        "session cookie" - that is a cookie with no expiration time, which is meant
+                        to expire when the session ends.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+
+        <p>
+            </p>
+<div class="example">
+<a name="zend.http.cookies.cookie.accessors.example-1"></a><p class="title"><b>Ejemplo 476. Using getter methods with Zend_Http_Cookie</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+// First, create the cookie
+$cookie =
+    Zend_Http_Cookie::fromString('foo=two+words; ' +
+                                 'domain=.example.com; ' +
+                                 'path=/somedir; ' +
+                                 'secure; ' +
+                                 'expires=Wednesday, 28-Feb-05 20:41:22 UTC');
+
+echo $cookie-&gt;getName();   // Will echo 'foo'
+echo $cookie-&gt;getValue();  // will echo 'two words'
+echo $cookie-&gt;getDomain(); // Will echo '.example.com'
+echo $cookie-&gt;getPath();   // Will echo '/'
+
+echo date('Y-m-d', $cookie-&gt;getExpiryTime());
+// Will echo '2005-02-28'
+
+echo ($cookie-&gt;isExpired() ? 'Yes' : 'No');
+// Will echo 'Yes'
+
+echo ($cookie-&gt;isExpired(strtotime('2005-01-01') ? 'Yes' : 'No');
+// Will echo 'No'
+
+echo ($cookie-&gt;isSessionCookie() ? 'Yes' : 'No');
+// Will echo 'No'
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.cookies.cookie.matching"></a>Zend_Http_Cookie: Matching against a scenario</h3></div></div></div>
+        
+
+        <p>
+            The only real logic contained in a <code class="classname">Zend_Http_Cookie</code> object, is in
+            the match() method. This method is used to test a cookie against a given
+            <acronym class="acronym">HTTP</acronym> request scenario, in order to tell whether the cookie should be
+            sent in this request or not. The method has the following syntax and parameters:
+            <span class="command"><strong>Zend_Http_Cookie-&gt;match(mixed $uri, [boolean $matchSessionCookies, [int
+                $now]]);</strong></span>
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="varname">$uri</code>: A <code class="classname">Zend_Uri_Http</code> object
+                        with a domain name and path to be checked. Optionally, a string representing
+                        a valid <acronym class="acronym">HTTP</acronym> <acronym class="acronym">URL</acronym> can be passed
+                        instead. The cookie will match if the <acronym class="acronym">URL</acronym>'s scheme (HTTP
+                        or <acronym class="acronym">HTTPS</acronym>), domain and path all match.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$matchSessionCookies</code>: Whether session cookies should be
+                        matched or not. Defaults to <code class="constant">TRUE</code>. If set to
+                        <code class="constant">FALSE</code>, cookies with no expiration time will never
+                        match.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="varname">$now</code>: Time (represented as UNIX time stamp) to check a
+                        cookie against for expiration. If not specified, will default to the current
+                        time.
+                    </p>
+                </li>
+</ul></div>
+<p>
+
+            </p>
+<div class="example">
+<a name="zend.http.cookies.cookie.matching.example-1"></a><p class="title"><b>Ejemplo 477. Matching cookies</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+// Create the cookie object - first, a secure session cookie
+$cookie = Zend_Http_Cookie::fromString('foo=two+words; ' +
+                                       'domain=.example.com; ' +
+                                       'path=/somedir; ' +
+                                       'secure;');
+
+$cookie-&gt;match('https://www.example.com/somedir/foo.php');
+// Will return true
+
+$cookie-&gt;match('http://www.example.com/somedir/foo.php');
+// Will return false, because the connection is not secure
+
+$cookie-&gt;match('https://otherexample.com/somedir/foo.php');
+// Will return false, because the domain is wrong
+
+$cookie-&gt;match('https://example.com/foo.php');
+// Will return false, because the path is wrong
+
+$cookie-&gt;match('https://www.example.com/somedir/foo.php', false);
+// Will return false, because session cookies are not matched
+
+$cookie-&gt;match('https://sub.domain.example.com/somedir/otherdir/foo.php');
+// Will return true
+
+// Create another cookie object - now, not secure, with expiration time
+// in two hours
+$cookie = Zend_Http_Cookie::fromString('foo=two+words; ' +
+                                       'domain=www.example.com; ' +
+                                       'expires='
+                                       . date(DATE_COOKIE, time() + 7200));
+
+$cookie-&gt;match('http://www.example.com/');
+// Will return true
+
+$cookie-&gt;match('https://www.example.com/');
+// Will return true - non secure cookies can go over secure connections
+// as well!
+
+$cookie-&gt;match('http://subdomain.example.com/');
+// Will return false, because the domain is wrong
+
+$cookie-&gt;match('http://www.example.com/', true, time() + (3 * 3600));
+// Will return false, because we added a time offset of +3 hours to
+// current time
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.cookies.cookiejar"></a>The Zend_Http_CookieJar Class: Instantiation</h3></div></div></div>
+        
+
+        <p>
+            In most cases, there is no need to directly instantiate a
+            <code class="classname">Zend_Http_CookieJar</code> object. If you want to attach a new cookie
+            jar to your <code class="classname">Zend_Http_Client</code> object, just call the
+            Zend_Http_Client-&gt;setCookieJar() method, and a new, empty cookie jar
+            will be attached to your client. You could later get this cookie jar
+            using Zend_Http_Client-&gt;getCookieJar().
+        </p>
+
+        <p>
+            If you still wish to manually instantiate a CookieJar object, you
+            can do so by calling "new Zend_Http_CookieJar()" directly - the
+            constructor method does not take any parameters. Another way to
+            instantiate a CookieJar object is to use the static Zend_Http_CookieJar::fromResponse()
+            method. This method takes two parameters: a <code class="classname">Zend_Http_Response</code>
+            object, and a reference <acronym class="acronym">URI</acronym>, as either a string or a
+            <code class="classname">Zend_Uri_Http</code> object. This method will return a new
+            <code class="classname">Zend_Http_CookieJar</code> object, already containing the cookies set by
+            the passed <acronym class="acronym">HTTP</acronym> response. The reference <acronym class="acronym">URI</acronym> will
+            be used to set the cookie's domain and path, if they are not defined in the Set-Cookie
+            headers.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.cookies.cookiejar.adding_cookies"></a>Adding Cookies to a Zend_Http_CookieJar object</h3></div></div></div>
+        
+
+        <p>
+            Usually, the <code class="classname">Zend_Http_Client</code> object you attached your CookieJar
+            object to will automatically add cookies set by <acronym class="acronym">HTTP</acronym> responses to
+            your jar. if you wish to manually add cookies to your jar, this can be done by using
+            two methods:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="classname">Zend_Http_CookieJar-&gt;addCookie($cookie[, $ref_uri])</code>:
+                        Add a single cookie to the jar. $cookie can be either a
+                        <code class="classname">Zend_Http_Cookie</code> object or a string, which will be
+                        converted automatically into a Cookie object. If a string is provided, you
+                        should also provide $ref_uri - which is a reference <acronym class="acronym">URI</acronym>
+                        either as a string or <code class="classname">Zend_Uri_Http</code> object, to use as
+                        the cookie's default domain and path.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="classname">Zend_Http_CookieJar-&gt;addCookiesFromResponse($response,
+                            $ref_uri)</code>: Add all cookies set in a single
+                        <acronym class="acronym">HTTP</acronym> response to the jar. $response is expected to be a
+                        <code class="classname">Zend_Http_Response</code> object with Set-Cookie headers.
+                        $ref_uri is the request <acronym class="acronym">URI</acronym>, either as a string or a
+                        <code class="classname">Zend_Uri_Http</code> object, according to which the cookies'
+                        default domain and path will be set.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.cookies.cookiejar.getting_cookies"></a>Retrieving Cookies From a Zend_Http_CookieJar object</h3></div></div></div>
+        
+
+        <p>
+            Just like with adding cookies, there is usually no need to manually
+            fetch cookies from a CookieJar object. Your <code class="classname">Zend_Http_Client</code>
+            object will automatically fetch the cookies required for an <acronym class="acronym">HTTP</acronym>
+            request for you. However, you can still use 3 provided methods to fetch
+            cookies from the jar object: <code class="methodname">getCookie()</code>,
+            <code class="methodname">getAllCookies()</code>, and
+            <code class="methodname">getMatchingCookies()</code>. Additionnaly, iterating over the
+            CookieJar will let you retrieve all the <code class="classname">Zend_Http_Cookie</code> objects
+            from it.
+        </p>
+
+        <p>
+            It is important to note that each one of these methods takes a
+            special parameter, which sets the return type of the method. This
+            parameter can have 3 values:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Http_CookieJar::COOKIE_OBJECT</code>: Return
+                        a <code class="classname">Zend_Http_Cookie</code> object. If the method returns more
+                        than one cookie, an array of objects will be returned.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Http_CookieJar::COOKIE_STRING_ARRAY</code>: Return
+                        cookies as strings, in a "foo=bar" format, suitable for sending
+                        in a <acronym class="acronym">HTTP</acronym> request "Cookie" header. If more than one
+                        cookie is returned, an array of strings is returned.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Http_CookieJar::COOKIE_STRING_CONCAT</code>: Similar to
+                        COOKIE_STRING_ARRAY, but if more than one cookie is returned, this
+                        method will concatenate all cookies into a single, long string
+                        separated by semicolons (;), and return it. This is especially useful
+                        if you want to directly send all matching cookies in a single
+                        <acronym class="acronym">HTTP</acronym> request "Cookie" header.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Http_CookieJar::COOKIE_STRING_CONCAT_STRICT</code>: Similar to
+                        COOKIE_STRING_CONCAT, but follows a strict implementation of RFC6265.  In this mode,
+                        a single space character always follows the semicolon separator between cookies, and 
+                        the semicolon separator is stripped from the end of the cookie string.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+
+        <p>
+            The structure of the different cookie-fetching methods is described below:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="classname">Zend_Http_CookieJar-&gt;getCookie($uri, $cookie_name[,
+                            $ret_as])</code>: Get a single cookie from the jar, according to
+                        its <acronym class="acronym">URI</acronym> (domain and path) and name. $uri is either a
+                        string or a <code class="classname">Zend_Uri_Http</code> object representing the
+                        <acronym class="acronym">URI</acronym>. $cookie_name is a string identifying the cookie
+                        name. $ret_as specifies the return type as described above. $ret_type is
+                        optional, and defaults to COOKIE_OBJECT.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="classname">Zend_Http_CookieJar-&gt;getAllCookies($ret_as)</code>: Get all
+                        cookies from the jar. $ret_as specifies the return type as described
+                        above. If not specified, $ret_type defaults to COOKIE_OBJECT.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="classname">Zend_Http_CookieJar-&gt;getMatchingCookies($uri[,
+                            $matchSessionCookies[, $ret_as[, $now]]])</code>: Get all cookies
+                        from the jar that match a specified scenario, that is a
+                        <acronym class="acronym">URI</acronym> and expiration time.
+
+                        </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                                <p>
+                                    <code class="varname">$uri</code> is either a
+                                    <code class="classname">Zend_Uri_Http</code> object or a string
+                                    specifying the connection type (secure or non-secure), domain
+                                    and path to match against.
+                                </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <code class="varname">$matchSessionCookies</code> is a boolean telling
+                                    whether to match session cookies or not. Session cookies are
+                                    cookies that have no specified expiration time. Defaults to
+                                    <code class="constant">TRUE</code>.
+                                </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <code class="varname">$ret_as</code> specifies the return type as
+                                    described above. If not specified, defaults to COOKIE_OBJECT.
+                                </p>
+                            </li>
+<li class="listitem">
+                                <p>
+                                    <code class="varname">$now</code> is an integer representing the UNIX time
+                                    stamp to consider as "now" - that is any cookies who are set to
+                                    expire before this time will not be matched. If not specified,
+                                    defaults to the current time.
+                                </p>
+                            </li>
+</ul></div>
+<p>
+
+                        You can read more about cookie matching in
+                        <a class="link" href="zend.http.cookies.html#zend.http.cookies.cookie.matching" title="Zend_Http_Cookie: Matching against a scenario">this section</a>.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.http.client.adapters.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.http.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.http.response.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Http_Client - Connection Adapters </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Zend_Http_Response</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

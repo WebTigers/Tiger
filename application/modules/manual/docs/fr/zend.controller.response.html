@@ -1,0 +1,495 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Objet de réponse</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.actionhelpers.html" title="Aides d'action (Helper)">
+<link rel="next" href="zend.controller.plugins.html" title="Plugins">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Objet de réponse</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.actionhelpers.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.plugins.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.response"></a>Objet de réponse</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.response.usage"></a>Utilisation</h3></div></div></div>
+        
+
+        <p>
+            L'objet de réponse équilibre la balance du modèle <acronym class="acronym">MVC</acronym> avec
+            <a class="link" href="zend.controller.request.html" title="L'objet Requête">l'objet de requête</a>. Son but est de
+            collecter du contenu et des en-têtes, afin d'être rendue. De plus, le contrôleur
+            frontal passe les exceptions qu'il a rencontré à l'objet de réponse, vous offrant une
+            possibilité élégante de les gérer. Ce comportement peut être changé avec
+            <code class="methodname">Zend_Controller_Front::throwExceptions(true)</code> :
+        </p>
+
+        <pre class="programlisting">
+$front-&gt;throwExceptions(true);
+</pre>
+
+        <p>
+            Pour rendre toute la réponse : corps et en-têtes, utilisez
+            <code class="methodname">sendResponse()</code>.
+        </p>
+
+        <pre class="programlisting">
+$response-&gt;sendResponse();
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Par défaut le contrôleur frontal appelle <code class="methodname">sendResponse()</code> lorsque
+                la distribution est terminée. Vous pouvez changer ce comportement avec
+                <code class="methodname">Zend_Controller_Front::returnResponse(true)</code> :
+            </p>
+
+            <pre class="programlisting">
+$front-&gt;returnResponse(true);
+$response = $front-&gt;dispatch();
+
+// opérations, comme une historisation...
+// et rendu de la réponse:
+$response-&gt;sendResponse();
+</pre>
+        </td></tr>
+</table></div>
+
+        <p>
+            Vous ne devriez pas afficher du contenu directement dans un contrôleur. Empiler
+            plutôt les affichages dans l'objet de réponse :
+        </p>
+
+        <pre class="programlisting">
+// Dans une action d'un contrôleur:
+$this-&gt;getResponse()
+    -&gt;setHeader('Content-Type', 'text/html')
+    -&gt;appendBody($content);
+</pre>
+
+        <p>
+            Grâce à cela, tous les en-têtes sont envoyés d'un coup, juste avant l'affichage
+            du contenu.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Si vous utilisez
+                <a class="link" href="zend.controller.action.html#zend.controller.action.viewintegration" title="Intégration des Vues">des vues dans vos
+                action</a>, vous n'avez pas besoin d'ajouter le rendu de la vue dans la réponse,
+                car <code class="methodname">Zend_Controller_Action::render()</code> le fait par
+                défaut.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Si une exception est ajoutée par le contrôleur frontal à la réponse, utilisez
+            <code class="methodname">isException()</code> pour vérifier ceci, et récupérez les exceptions avec
+            <code class="methodname">getException()</code>. Vous pourriez par exemple créer un objet de réponse
+            d'erreur, comme un 404, et journaliser l'exception, etc.
+        </p>
+
+        <p>
+            Pour prendre la main sur l'objet de réponse, demandez le au contrôleur frontal
+            via un accesseur, ou commandez lui de vous retourner la celle-ci lors après la
+            distribution.
+        </p>
+
+        <pre class="programlisting">
+// récupère la réponse après distribution et affichage:
+$front-&gt;dispatch();
+$response = $front-&gt;getResponse();
+if ($response-&gt;isException()) {
+    // log, mail, etc...
+}
+
+// Demande au contrôleur frontal de ne pas afficher, mais retourner :
+$front-&gt;returnResponse(true);
+$response = $front-&gt;dispatch();
+
+// du code ici
+
+// enfin, affichage:
+$response-&gt;sendResponse();
+</pre>
+
+        <p>
+            Par défaut, les messages d'exceptions ne sont pas affichés. Utilisez
+            <code class="methodname">renderExceptions()</code> si vous le voulez. Aussi, vous pouvez activer leur
+            rendu grâce à Zend_Controller_Front::throwExceptions() :
+        </p>
+
+        <pre class="programlisting">
+$response-&gt;renderExceptions(true);
+$front-&gt;dispatch($request, $response);
+
+// ou:
+$front-&gt;returnResponse(true);
+$response = $front-&gt;dispatch();
+$response-&gt;renderExceptions();
+$response-&gt;sendResponse();
+
+// ou:
+$front-&gt;throwExceptions(true);
+$front-&gt;dispatch();
+</pre>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.response.headers"></a>Manipulation des en-têtes</h3></div></div></div>
+        
+
+        <p>
+            Comme nous l'avons vu, un des rôles de l'objet de réponse est de gérer les
+            en-têtes <acronym class="acronym">HTTP</acronym>. Une variété de méthodes permet de contrôler cette gestion :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">canSendHeaders($throw = false)</code> est utilisée pour déterminer
+                    si les en-têtes n'ont pas déjà été envoyés. Si le paramètre optionnel
+                    <code class="varname">$throw</code> est à <code class="constant">TRUE</code>, alors une exception sera envoyée
+                    si c'est le cas. L'attribut <code class="code">headersSentThrowsException</code> permet
+                    aussi de gérer ce comportement.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setHeader($name, $value, $replace = false)</code> est utilisée pour
+                    affecter un en-tête unique. Par défaut, il n'écrase un éventuel précédent du
+                    même nom, sauf si <code class="varname">$replace</code> est mis à <code class="constant">TRUE</code>.
+                </p>
+                <p>
+                    Avant d'affecter un en-tête, cette méthode utilise
+                    <code class="methodname">canSendHeaders()</code> pour voir si à ce point l'en-tête peut être
+                    envoyé.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setRedirect($url, $code = 302)</code> envoie un en-tête <acronym class="acronym">HTTP</acronym>
+                    Location indiquant une redirection. Si un code de statut est passé, il sera
+                    utilisé.
+                </p>
+                <p>
+                    En interne, cette méthode appelle <code class="methodname">setHeader()</code> avec
+                    <code class="varname">$replace</code> à <code class="constant">TRUE</code>, pour s'assurer de l'unicité de cet
+                    en-tête.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getHeaders()</code> retourne un tableau contenant tous les
+                    en-têtes. Chaque élément est un tableau "nom" 'valeur.
+                </p>
+            </li>
+<li class="listitem">
+                <p><code class="methodname">clearHeaders()</code> efface tous les en-têtes enregistrés.</p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setRawHeader()</code> s'utilise pour affecter un en-tête brut,
+                    n'utilisant pas la syntaxe clé/valeur, comme un statut.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getRawHeaders()</code> retourne tous les en-têtes bruts
+                    enregistrés.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearRawHeaders()</code> efface tous les en-têtes bruts
+                    enregistrés.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearAllHeaders()</code> efface tous les en-têtes bruts et
+                    réguliers enregistrés.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            De plus, des accesseurs spéciaux sont disponibles pour manipuler le code de
+            réponse <acronym class="acronym">HTTP</acronym> : <code class="methodname">setHttpResponseCode()</code> et
+            <code class="methodname">getHttpResponseCode()</code>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.response.namedsegments"></a>Segments nommés</h3></div></div></div>
+        
+
+        <p>
+            L'objet de réponse propose une fragmentation par segments. Ceci permet de séparer
+            le corps de la réponse dans plusieurs segments réceptacles, que vous pouvez afficher
+            dans un ordre précis. En interne, il s'agit d'un tableau namespacé qui dispose de
+            méthodes de manipulation.
+        </p>
+
+        <p>
+            Par exemple, vous pourriez utiliser l'évènement <code class="methodname">preDispatch()</code> pour
+            rajouter un bandeau de header au corps de la réponse, et l'évènement
+            <code class="methodname">postDispatch()</code> pour en ajouter un bandeau de footer :
+        </p>
+
+        <pre class="programlisting">
+// Considérons ce plugin comme étant enregistré
+// auprès du contrôleur frontal
+class MyPlugin extends Zend_Controller_Plugin_Abstract
+{
+    public function preDispatch(Zend_Controller_Request_Abstract $request)
+    {
+        $response = $this-&gt;getResponse();
+        $view = new Zend_View();
+        $view-&gt;setBasePath('../views/scripts');
+
+        $response-&gt;prepend('header', $view-&gt;render('header.phtml'));
+    }
+
+    public function postDispatch(Zend_Controller_Request_Abstract $request)
+    {
+        $response = $this-&gt;getResponse();
+        $view = new Zend_View();
+        $view-&gt;setBasePath('../views/scripts');
+
+        $response-&gt;append('footer', $view-&gt;render('footer.phtml'));
+    }
+}
+
+// un contrôleur d'action
+class MyController extends Zend_Controller_Action
+{
+    public function fooAction()
+    {
+        $this-&gt;render();
+    }
+}
+</pre>
+
+        <p>
+            Un appel à <code class="code">/my/foo</code> dans ce cas là, générera un objet de réponse
+            ressemblant à ceci :
+        </p>
+
+        <pre class="programlisting">
+array(
+    'header'  =&gt; ..., // contenu du segment header
+    'default' =&gt; ..., // corps, contenu de MyController::fooAction()
+    'footer'  =&gt; ...  // contenu du segment footer
+);
+</pre>
+
+        <p>
+            Lorsque ceci est rendu, ça l'est dans l'ordre dans lequel les segments sont
+            rangés dans la réponse.
+        </p>
+
+        <p>
+            Voici quelques méthodes permettant de manipuler les segments de la
+            réponse :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setBody()</code> et <code class="methodname">appendBody()</code> effacent et écrivent,
+                    ou rajoutent un contenu à un segment qu'on leur indique en deuxième paramètre
+                    (<code class="varname">$name</code>). Si celui-ci n'existe pas, il sera crée en fin de pile. Si
+                    le paramètre segment n'est pas défini, alors le segment "default"est
+                    utilisé.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">prepend($name, $content)</code> va créer un segment appelé
+                    <code class="varname">$name</code> et le placé au début du tableau. Si le segment existe, il
+                    sera écrasé.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">append($name, $content)</code> va créer un segment appelé
+                    <code class="varname">$name</code> et le placer à la fin du tableau. Si le segment existe, il
+                    sera écrasé.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">insert($name, $content, $parent = null, $before = false)</code> va
+                    créer un segment appelé <code class="varname">$name</code>. Si <code class="varname">$parent</code> est
+                    renseigné, le nouveau segment sera placé avant ou après le segment
+                    <code class="varname">$parent</code>, ceci dépendant de la valeur de <code class="varname">$before</code>. Si
+                    le segment existe, il sera écrasé.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearBody($name = null)</code> va vider le contenu du segment qui
+                    lui est passé en paramètre via <code class="varname">$name</code>. Par défaut, il vide tout le
+                    tableau (détruit tous les segments).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getBody($spec = false)</code> retourne le contenu du segment
+                    <code class="varname">$spec</code>. Si <code class="varname">$spec</code> vaut <code class="constant">FALSE</code>, il retourne
+                    le contenu de tous les segments. Si <code class="constant">TRUE</code>, c'est le tableau de
+                    segments qui est retourné.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.response.exceptions"></a>Manipulation des exceptions dans l'objet de réponse</h3></div></div></div>
+        
+
+        <p>
+            Comme déjà mentionné, par défaut, les exceptions rencontrées durant le processus
+            <acronym class="acronym">MVC</acronym> de distribution, sont ajoutées à l'objet de réponse. Elles le sont dans une pile,
+            ce qui vous permet de toutes les garder -- les exceptions d'application, les exceptions
+            de distribution, les exceptions de plugin -- etc... Si vous voulez manipuler finement
+            celles-ci, voyez plutôt les méthodes ci-après :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p><code class="methodname">setException(Exception $e)</code> enregistre une exception.</p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">isException()</code> est utilisée pour déterminer si il existe au
+                    moins une exception.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getException()</code> retourne toutes les exceptions sous forme de
+                    tableau.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">hasExceptionOfType($type)</code> sert à déterminer si des
+                    exceptions d'une classe spécifique existent.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">hasExceptionOfMessage($message)</code> sert à déterminer si des
+                    exceptions ayant un message spécifique existent.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">hasExceptionOfCode($code)</code> sert à déterminer si des
+                    exceptions ayant un code spécifique existent.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getExceptionByType($type)</code> retourne toutes les exceptions
+                    d'une classe spécifique. Un tableau est retourné, ou <code class="constant">FALSE</code> si
+                    aucun exception ne correspond
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getExceptionByMessage($message)</code> retourne toutes les
+                    exceptions ayant un message spécifique. Un tableau est retourné, ou
+                    <code class="constant">FALSE</code> si aucun exception ne correspond
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getExceptionByCode($code)</code> retourne toutes les exceptions
+                    ayant un code spécifique. Un tableau est retourné, ou <code class="constant">FALSE</code> si
+                    aucun exception ne correspond.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">renderExceptions($flag)</code> vous permet de définir si les
+                    exceptions doivent être envoyées lorsque la réponse est rendue.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.response.subclassing"></a>Dériver l'objet de réponse</h3></div></div></div>
+        
+
+        <p>
+            L'objet de réponse sert à collecter les en-têtes <acronym class="acronym">HTTP</acronym> de la réponse, ainsi que
+            son contenu, depuis le système <acronym class="acronym">MVC</acronym> mais aussi de l'afficher au client. De plus, l'objet
+            collecte les exceptions et permet de les gérer, de les retourner, ou de les garder sous
+            silence.
+        </p>
+
+        <p>
+            La classe de base est <code class="classname">Zend_Controller_Response_Abstract</code>,
+            et toute dérivation devra en hériter directement ou indirectement. Les méthodes qu'elle
+            propose ont été vues dans les sections précédentes.
+        </p>
+
+        <p>
+            Vous pouvez dériver l'objet de réponse pour plusieurs raisons, incluant la
+            volonté de modifier le retour de la sortie, pour ne pas envoyer d'en-têtes dans un
+            environnement de requête CLI ou <acronym class="acronym">PHP</acronym>-GTK, la gestion de templates, etc.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.actionhelpers.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.plugins.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Aides d'action (Helper) </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Plugins</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

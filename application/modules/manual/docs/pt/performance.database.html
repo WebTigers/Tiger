@@ -1,0 +1,156 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Db Performance</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="performance.html" title="Guia de Desempenho do Zend Framework">
+<link rel="prev" href="performance.classloading.html" title="Class Loading">
+<link rel="next" href="performance.localization.html" title="Internationalization (i18n) and Localization (l10n)">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Db Performance</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="performance.classloading.html">Anterior</a> </td>
+<th width="60%" align="center">Guia de Desempenho do Zend Framework</th>
+<td width="20%" align="right"> <a accesskey="n" href="performance.localization.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="performance.database"></a>Zend_Db Performance</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Db</code> is a database abstraction layer, and is intended to
+        provide a common <acronym class="acronym">API</acronym> for <acronym class="acronym">SQL</acronym> operations.
+        <code class="classname">Zend_Db_Table</code> is a
+        Table Data Gateway, intended to abstract common table-level database
+        operations. Due to their abstract nature and the "magic" they do under
+        the hood to perform their operations, they can sometimes introduce
+        performance overhead.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="performance.database.tableMetadata"></a>How can I reduce overhead introduced by Zend_Db_Table for
+            retrieving table metadata?</h3></div></div></div>
+        
+
+        <p>
+            In order to keep usage as simple as possible, and also to support
+            constantly changing schemas during development,
+            <code class="classname">Zend_Db_Table</code> does some magic under the hood: on
+            first use, it fetches the table schema and stores it within object
+            members. This operation is typically expensive, regardless of the
+            database -- which can contribute to bottlenecks in production.
+        </p>
+
+        <p>
+            Fortunately, there are techniques for improving the situation.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="performance.database.tableMetadata.cache"></a>Use the metadata cache</h4></div></div></div>
+            
+
+            <p>
+                <code class="classname">Zend_Db_Table</code> can optionally utilize
+                <code class="classname">Zend_Cache</code> to cache table metadata. This is
+                typically faster to access and less expensive than fetching the
+                metadata from the database itself.
+            </p>
+
+            <p>
+                The <a class="link" href="zend.db.table.html#zend.db.table.metadata.caching" title="Caching Table Metadata"><code class="classname">Zend_Db_Table
+                </code> documentation includes information on metadata caching</a>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="performance.database.tableMetadata.hardcoding"></a>Hardcode your metadata in the table definition</h4></div></div></div>
+            
+
+            <p>
+                As of 1.7.0, <code class="classname">Zend_Db_Table</code> also provides <a class="link" href="zend.db.table.html#zend.db.table.metadata.caching.hardcoding" title="Hardcoding Table Metadata">support
+                for hardcoding metadata in the table definition</a>. This is
+                an advanced use case, and should only be used when you know the
+                table schema is unlikely to change, or that you're able to keep
+                the definitions up-to-date.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="performance.database.select"></a>
+            SQL generated with Zend_Db_Select s not hitting my indexes; how can I make it better?
+        </h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Db_Select</code> is relatively good at its job. However,
+            if you are performing complex queries requiring joins or
+            sub-selects, it can often be fairly naive.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="performance.database.select.writeyourown"></a>Write your own tuned SQL</h4></div></div></div>
+            
+
+            <p>
+                The only real answer is to write your own <acronym class="acronym">SQL</acronym>;
+                <code class="classname">Zend_Db</code> does not require the usage of
+                <code class="classname">Zend_Db_Select</code>, so providing your own, tuned
+                <acronym class="acronym">SQL</acronym> select statements is a perfectly legitimate approach,
+            </p>
+
+            <p>
+                Run <code class="constant">EXPLAIN</code> on your queries, and test a variety of
+                approaches until you can reliably hit your indices in the most
+                performant way -- and then hardcode the <acronym class="acronym">SQL</acronym> as a class property
+                or constant.
+            </p>
+
+            <p>
+                If the <acronym class="acronym">SQL</acronym> requires variable arguments, provide placeholders in
+                the <acronym class="acronym">SQL</acronym>, and utilize a combination of
+                <code class="methodname">vsprintf()</code> and <code class="methodname">array_map()</code> to
+                inject the values into the <acronym class="acronym">SQL</acronym>:
+            </p>
+
+            <pre class="programlisting">
+// $adapter is the DB adapter. In Zend_Db_Table, retrieve
+// it using $this-&gt;getAdapter().
+$sql = vsprintf(
+    self::SELECT_FOO,
+    array_map(array($adapter, 'quoteInto'), $values)
+);
+</pre>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="performance.classloading.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="performance.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="performance.localization.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Class Loading </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Internationalization (i18n) and Localization (l10n)</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

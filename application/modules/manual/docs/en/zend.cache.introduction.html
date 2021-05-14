@@ -1,0 +1,223 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Introduction</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.cache.html" title="Zend_Cache">
+<link rel="prev" href="zend.cache.html" title="Zend_Cache">
+<link rel="next" href="zend.cache.theory.html" title="The Theory of Caching">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Introduction</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.cache.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Cache</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.cache.theory.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.cache.introduction"></a>Introduction</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Cache</code> provides a generic way to cache any data.
+    </p>
+
+    <p>
+      Caching in Zend Framework is operated by frontends while cache records are stored through
+      backend adapters (<span class="emphasis"><em>File</em></span>, <span class="emphasis"><em>Sqlite</em></span>,
+      <span class="emphasis"><em>Memcache</em></span>...) through a flexible system of IDs and tags. Using those, it
+      is easy to delete specific types of records afterwards (for example: "delete all cache records
+      marked with a given tag").
+    </p>
+
+    <p>
+        The core of the module (<code class="classname">Zend_Cache_Core</code>) is generic, flexible and
+        configurable. Yet, for your specific needs there are cache frontends that extend
+        <code class="classname">Zend_Cache_Core</code> for convenience: <span class="emphasis"><em>Output</em></span>,
+        <span class="emphasis"><em>File</em></span>, <span class="emphasis"><em>Function</em></span> and <span class="emphasis"><em>Class</em></span>.
+    </p>
+
+    <div class="example">
+<a name="zend.cache.introduction.example-1"></a><p class="title"><b>Example 67. Getting a Frontend with Zend_Cache::factory()</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            <code class="methodname">Zend_Cache::factory()</code> instantiates correct objects and ties
+            them together. In this first example, we will use <span class="emphasis"><em>Core</em></span> frontend
+            together with <span class="emphasis"><em>File</em></span> backend.
+        </p>
+
+        <pre class="programlisting">
+$frontendOptions = array(
+   'lifetime' =&gt; 7200, // cache lifetime of 2 hours
+   'automatic_serialization' =&gt; true
+);
+
+$backendOptions = array(
+    'cache_dir' =&gt; './tmp/' // Directory where to put the cache files
+);
+
+// getting a Zend_Cache_Core object
+$cache = Zend_Cache::factory('Core',
+                             'File',
+                             $frontendOptions,
+                             $backendOptions);
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="note"><table border="0" summary="Note: Frontends and Backends Consisting of Multiple Words">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Frontends and Backends Consisting of Multiple Words</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Some frontends and backends are named using multiple words, such
+            as 'ZendPlatform'. When specifying them to the factory, separate
+            them using a word separator, such as a space (' '), hyphen
+            ('-'), or period ('.').
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="example">
+<a name="zend.cache.introduction.example-2"></a><p class="title"><b>Example 68. Caching a Database Query Result</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Now that we have a frontend, we can cache any type of data (we turned on serialization).
+            for example, we can cache a result from a very expensive database query. After it is
+            cached, there is no need to even connect to the database; records are fetched from cache
+            and unserialized.
+        </p>
+
+        <pre class="programlisting">
+// $cache initialized in previous example
+
+// see if a cache already exists:
+if( ($result = $cache-&gt;load('myresult')) === false ) {
+
+    // cache miss; connect to the database
+
+    $db = Zend_Db::factory( [...] );
+
+    $result = $db-&gt;fetchAll('SELECT * FROM huge_table');
+
+    $cache-&gt;save($result, 'myresult');
+
+} else {
+
+    // cache hit! shout so that we know
+    echo "This one is from cache!\n\n";
+
+}
+
+print_r($result);
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="example">
+<a name="zend.cache.introduction.example-3"></a><p class="title"><b>Example 69. Caching Output with Zend_Cache Output Frontend</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            We 'mark up' sections in which we want to cache output by adding some conditional logic,
+            encapsulating the section within <code class="methodname">start()</code> and
+            <code class="methodname">end()</code> methods (this resembles the first example and is the core
+            strategy for caching).
+        </p>
+
+        <p>
+            Inside, output your data as usual - all output will be cached when execution hits the
+            <code class="methodname">end()</code> method. On the next run, the whole section will be
+            skipped in favor of fetching data from cache (as long as the cache record is valid).
+        </p>
+
+        <pre class="programlisting">
+$frontendOptions = array(
+   'lifetime' =&gt; 30,                   // cache lifetime of 30 seconds
+   'automatic_serialization' =&gt; false  // this is the default anyways
+);
+
+$backendOptions = array('cache_dir' =&gt; './tmp/');
+
+$cache = Zend_Cache::factory('Output',
+                             'File',
+                             $frontendOptions,
+                             $backendOptions);
+
+// we pass a unique identifier to the start() method
+if(!$cache-&gt;start('mypage')) {
+    // output as usual:
+
+    echo 'Hello world! ';
+    echo 'This is cached ('.time().') ';
+
+    $cache-&gt;end(); // the output is saved and sent to the browser
+}
+
+echo 'This is never cached ('.time().').';
+</pre>
+
+        <p>
+            Notice that we output the result of <code class="methodname">time()</code> twice; this is
+            something dynamic for demonstration purposes. Try running this and then refreshing
+            several times; you will notice that the first number doesn't change while second changes
+            as time passes. That is because the first number was output in the cached section and is
+            saved among other output. After half a minute (we've set lifetime to 30 seconds) the
+            numbers should match again because the cache record expired -- only to be cached again.
+            You should try this in your browser or console.
+        </p>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            When using <code class="classname">Zend_Cache</code>, pay attention to the important cache
+            identifier (passed to <code class="methodname">save()</code> and
+            <code class="methodname">start()</code>). It must be unique for every resource you cache,
+            otherwise unrelated cache records may wipe each other or, even worse, be displayed in
+            place of the other.
+        </p>
+    </td></tr>
+</table></div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.cache.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.cache.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.cache.theory.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Cache </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> The Theory of Caching</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

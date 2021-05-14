@@ -1,0 +1,140 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Classes personnalisées pour les flux et entrées</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.feed.html" title="Zend_Feed">
+<link rel="prev" href="zend.feed.modifying-feed.html" title="Modifier la structure du flux ou des entrées">
+<link rel="next" href="zend.feed.reader.html" title="Zend_Feed_Reader">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Classes personnalisées pour les flux et entrées</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.feed.modifying-feed.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Feed</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.feed.reader.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.feed.custom-feed"></a>Classes personnalisées pour les flux et entrées</h2></div></div></div>
+    
+
+    <p>
+        Pour finir, vous pouvez étendre les classes de <code class="classname">Zend_Feed</code> si
+        vous souhaitez créer votre propre format ou implémenter des améliorations comme par exemple
+        la gestion automatique des éléments situés dans un espace de noms personnalisé.
+    </p>
+
+    <p>
+        Voici un exemple d'entrée Atom personnalisée qui gère son propre espace de noms
+        <code class="code">monen</code>. Notez aussi que la classe se charge d'appeler la méthode
+        <code class="methodname">registerNamespace()</code> pour que l'utilisateur n'ait au final pas du tout à se
+        soucier des espaces de noms.
+    </p>
+
+    <div class="example">
+<a name="zend.feed.custom-feed.example.extending"></a><p class="title"><b>Exemple 395. 
+            Étendre la classe représentant les entrées Atom pour ajouter la gestion d'un
+            espace de noms personnalisé
+        </b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+/**
+ * La classe personnalisée connaît automatiquement l'URI du flux
+ * (qui est optionnelle) et elle peut ajouter automatiquement
+ * des espaces de noms supplémentaires.
+ */
+class MonEntree extends Zend_Feed_Entry_Atom
+{
+
+    public function __construct($uri = 'http://www.exemple.com/monflux/',
+                                $xml = null)
+    {
+        parent::__construct($uri, $xml);
+        Zend_Feed::registerNamespace('monen',
+                                     'http://www.exemple.com/monen/1.0');
+    }
+
+    public function __get($var)
+    {
+        switch ($var) {
+            case 'maMiseAJour':
+                // On traduit maMiseAJour en monen:maj
+                return parent::__get('monen:maj');
+
+            default:
+                return parent::__get($var);
+            }
+    }
+
+    public function __set($var, $valeur)
+    {
+        switch ($var) {
+            case 'maMiseAJour':
+                // On traduit maMiseAJour en monen:maj
+                parent::__set('monen:maj', $valeur);
+                break;
+
+            default:
+                parent::__set($var, $valeur);
+        }
+    }
+
+    public function __call($var, $unused)
+    {
+        switch ($var) {
+            case 'maMiseAJour':
+                // On traduit maMiseAJour en monen:maMiseAJour.
+                return parent::__call('monen:maMiseAJour', $unused);
+
+            default:
+                return parent::__call($var, $unused);
+        }
+    }
+}
+</pre>
+
+        <p>
+            Puis pour utiliser cette classe, instanciez-la directement et définissez la
+            propriété <code class="code">maMiseAJour</code> :
+        </p>
+
+        <pre class="programlisting">
+$entree = new MonEntree();
+$entree-&gt;maMiseAJour = '2005-04-19T15:30';
+
+// appel de type méthode géré par __call
+$entree-&gt;maMiseAJour();
+
+// appel de type propriété géré par __get
+$entree-&gt;maMiseAJour;
+</pre>
+    </div>
+</div>
+<br class="example-break">
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.feed.modifying-feed.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.feed.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.feed.reader.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Modifier la structure du flux ou des entrées </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_Feed_Reader</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

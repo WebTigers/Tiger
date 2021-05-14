@@ -1,0 +1,668 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Queue Service Introduction</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.cloud.html" title="SimpleCloud API: Zend_Cloud">
+<link rel="prev" href="zend.cloud.documentservice.html" title="Document Service Introduction">
+<link rel="next" href="zend.cloud.storageservice.html" title="StorageService Introduction">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Queue Service Introduction</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.cloud.documentservice.html">Anterior</a> </td>
+<th width="60%" align="center">SimpleCloud API: Zend_Cloud</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.cloud.storageservice.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.cloud.queueservice"></a>Queue Service Introduction</h2></div></div></div>
+    
+
+    <p>
+        The QueueService implements access to message queues available as local or remote services.
+        The simple queues that QueueService supports implement a messaging pattern that enables
+        different processes to exchange messages in a reliable and scalable way. One common use case
+        for such message queues is job dispatching, in which a frontend web server adds a complex
+        job to a queue for a backend worker to do the expensive processing. The frontend web server
+        can then return the page without waiting for the work to be completed.
+    </p>
+
+    <p>
+        The interface <code class="classname">Zend_Cloud_QueueService_Adapter</code> defines the methods
+        which concrete queue service adapters must implement. The following adapters are shipped
+        with the Simple Cloud API:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <a class="ulink" href="http://aws.amazon.com/sqs/" target="_top"><code class="classname">Zend_Cloud_QueueService_Adapter_Sqs</code></a>
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <a class="ulink" href="http://msdn.microsoft.com/en-us/library/dd179363.aspx" target="_top"><code class="classname">Zend_Cloud_QueueService_Adapter_WindowsAzure</code></a>
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <a class="ulink" href="http://aws.amazon.com/sqs/" target="_top"><code class="classname">Zend_Cloud_QueueService_Adapter_ZendQueue</code></a>
+            </p>
+        </li>
+</ul></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.adapters"></a>Instantiating and Configuring QueueService Adapters</h3></div></div></div>
+        
+
+        <p>
+            To instantiate a QueueService adapter, use the static method
+            <code class="methodname">Zend_Cloud_QueueService_Factory::getAdapter()</code>, which accepts
+            either an array or a <code class="classname">Zend_Config</code> object. Three parameters apply
+            to all adapters, while the remaining
+            parameters are adapter-specific properties; these adapter-specific properties often
+            contain access details.
+        </p>
+
+        <p>
+            The general parameters are as follows:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p><code class="varname">queue_adapter</code> specifies the concrete adapter class;</p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="varname">message_class</code> specifies the class to use to
+                    represent queue messages; defaults to
+                    <code class="classname">Zend_Cloud_QueueService_Message</code>; and
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="varname">messageset_class</code> specifies the class to use
+                    to represent collections of queue messages; defaults to
+                    <code class="classname">Zend_Cloud_QueueService_MesageSet</code>.
+                </p>
+            </li>
+</ul></div>
+
+        <div class="example">
+<a name="zend.cloud.queueservice.factory.example"></a><p class="title"><b>Ejemplo 82. Instantiating an Amazon SQS adapter via the factory</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$queues = Zend_Cloud_QueueService_Factory::getAdapter(array(
+    Zend_Cloud_QueueService_Factory::QUEUE_ADAPTER_KEY  =&gt; 'Zend_Cloud_QueueService_Adapter_Sqs',
+    Zend_Cloud_QueueService_Adapter_Sqs::AWS_ACCESS_KEY =&gt; $amazonKey,
+    Zend_Cloud_QueueService_Adapter_Sqs::AWS_SECRET_KEY =&gt; $amazonSecret,
+));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.cloud.queueservice.adapters.options"></a>Service-Specific Options</h4></div></div></div>
+            
+
+            <div class="table">
+<a name="zend.cloud.queueservice.adapters.options.sqs"></a><p class="title"><b>Tabla 35. Zend_Cloud_QueueService_Adapter_Sqs Options</b></p>
+<div class="table-contents">
+                
+
+                <table class="table" summary="Zend_Cloud_QueueService_Adapter_Sqs Options" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Option key</th>
+<th>Description</th>
+<th>Used in</th>
+<th>Required</th>
+<th>Default</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>aws_accesskey</td>
+<td>Your Amazon AWS access key</td>
+<td>Constructor</td>
+<td>Yes</td>
+<td>None</td>
+</tr>
+<tr>
+<td>aws_secretkey</td>
+<td>Your Amazon AWS secret key</td>
+<td>Constructor</td>
+<td>Yes</td>
+<td>None</td>
+</tr>
+<tr>
+<td>http_adapter</td>
+<td>HTTP adapter to use in all access operations</td>
+<td>Constructor</td>
+<td>No</td>
+<td><code class="classname">Zend_Http_Client_Adapter_Socket</code></td>
+</tr>
+<tr>
+<td>http_adapter</td>
+<td>HTTP adapter to use in all access operations</td>
+<td>Constructor</td>
+<td>No</td>
+<td><code class="classname">Zend_Http_Client_Adapter_Socket</code></td>
+</tr>
+<tr>
+<td>visibility_timeout</td>
+<td>Message visibility timeout</td>
+<td><code class="methodname">receiveMessages()</code></td>
+<td>No</td>
+<td>60</td>
+</tr>
+</tbody>
+</table>
+            </div>
+</div>
+<br class="table-break">
+
+            <div class="table">
+<a name="zend.cloud.queueservice.adapters.options.azure"></a><p class="title"><b>Tabla 36. Zend_Cloud_QueueService_Adapter_WindowsAzure Options</b></p>
+<div class="table-contents">
+                
+
+                <table class="table" summary="Zend_Cloud_QueueService_Adapter_WindowsAzure Options" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Option key</th>
+<th>Description</th>
+<th>Used in</th>
+<th>Required</th>
+<th>Default</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>storage_accountname</td>
+<td>Windows Azure account name</td>
+<td>Constructor</td>
+<td>Yes</td>
+<td>None</td>
+</tr>
+<tr>
+<td>storage_accountkey</td>
+<td>Windows Azure account key</td>
+<td>Constructor</td>
+<td>Yes</td>
+<td>None</td>
+</tr>
+<tr>
+<td>storage_host</td>
+<td>Windows Azure access host</td>
+<td>Constructor</td>
+<td>No</td>
+<td><code class="varname">queue.core.windows.net</code></td>
+</tr>
+<tr>
+<td>storage_proxy_host</td>
+<td>Proxy hostname</td>
+<td>Constructor</td>
+<td>No</td>
+<td>None</td>
+</tr>
+<tr>
+<td>storage_proxy_port</td>
+<td>Proxy port</td>
+<td>Constructor</td>
+<td>No</td>
+<td>8080</td>
+</tr>
+<tr>
+<td>storage_proxy_credentials</td>
+<td>Proxy credentials</td>
+<td>Constructor</td>
+<td>No</td>
+<td>None</td>
+</tr>
+<tr>
+<td>http_adapter</td>
+<td>HTTP adapter to use in all access operations</td>
+<td>Constructor</td>
+<td>No</td>
+<td><code class="classname">Zend_Http_Client_Adapter_Socket</code></td>
+</tr>
+<tr>
+<td>visibility_timeout</td>
+<td>Message visibility timeout</td>
+<td><code class="methodname">receiveMessages()</code></td>
+<td>No</td>
+<td>60</td>
+</tr>
+<tr>
+<td>prefix</td>
+<td>
+                                Filter the results to only queue names beginning with given prefix
+                            </td>
+<td><code class="methodname">listQueues()</code></td>
+<td>No</td>
+<td>None</td>
+</tr>
+<tr>
+<td>max_results</td>
+<td>Limit queue list to certain number of results</td>
+<td><code class="methodname">listQueues()</code></td>
+<td>No</td>
+<td>5,000</td>
+</tr>
+<tr>
+<td>ttl</td>
+<td>Set time-to-live for message</td>
+<td><code class="methodname">sendMessage()</code></td>
+<td>No</td>
+<td>7 days</td>
+</tr>
+</tbody>
+</table>
+            </div>
+</div>
+<br class="table-break">
+
+            <div class="table">
+<a name="zend.cloud.queueservice.adapters.options.zend-queue"></a><p class="title"><b>Tabla 37. Zend_Cloud_QueueService_Adapter_ZendQueue Options</b></p>
+<div class="table-contents">
+                
+
+                <table class="table" summary="Zend_Cloud_QueueService_Adapter_ZendQueue Options" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Option key</th>
+<th>Description</th>
+<th>Used in</th>
+<th>Required</th>
+<th>Default</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>adapter</td>
+<td>
+                                Concrete <code class="classname">Zend_Queue</code> adapter to use. See the
+                                <a class="link" href="zend.queue.html" title="Zend_Queue">Zend_Queue</a> documentation for supported
+                                adapters and their options.</td>
+<td>Constructor</td>
+<td>No</td>
+<td>Filesystem</td>
+</tr>
+<tr>
+<td>timeout</td>
+<td>Visibility timeout for messages</td>
+<td>
+                                <code class="methodname">createQueue()</code>,
+                                <code class="methodname">receiveMessages()</code>
+                            </td>
+<td>No</td>
+<td>30</td>
+</tr>
+</tbody>
+</table>
+            </div>
+</div>
+<br class="table-break">
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.concepts"></a>Basic concepts</h3></div></div></div>
+        
+
+        <p>
+            Every queue service typically offers one or more <span class="emphasis"><em>queues</em></span>. Each queue
+            can store zero or more <span class="emphasis"><em>messages</em></span>. A process can send a message to a
+            queue, and another process can remove it. Usually processes remove the oldest message in
+            the queue, observing a first in, first out (FIFO) queue-style interface.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.exceptions"></a>Exceptions</h3></div></div></div>
+        
+
+        <p>
+            If some error occurs inside the storage service, a
+            <code class="classname">Zend_Cloud_QueueService_Exception</code> is thrown. If the exception was
+            caused by underlying service driver, you can use the
+            <code class="methodname">getClientException()</code> method to retrieve the original exception.
+        </p>
+
+        <p>
+            Since different cloud providers implement different sets of services, some adapters do
+            not implement certain features. In this case, the
+            <code class="classname">Zend_Cloud_OperationNotAvailableException</code> exception is thrown.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.create-queue"></a>Create a queue</h3></div></div></div>
+        
+
+        <p>
+            The <code class="methodname">createQueue()</code> method creates a message queue with the given
+            name.  It returns a queue identifier, the format of which is service-dependent.  Some
+            services return a URL for the queue identifier, while others return a GUID to use in
+            future operations.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.queueservice.create-queue.example"></a><p class="title"><b>Ejemplo 83. Creating a queue</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$queueId = $queues-&gt;createQueue('my-queue');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.delete-queue"></a>Delete a queue</h3></div></div></div>
+        
+
+        <p>
+            The <code class="methodname">deleteQueue()</code> method removes the queue from the service.
+            You must use the identifier received from <code class="methodname">createQueue()</code> when
+            calling <code class="methodname">deleteQueue()</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.queueservice.delete-queue.example"></a><p class="title"><b>Ejemplo 84. Deleting a queue</b></p>
+<div class="example-contents">
+              
+
+            <pre class="programlisting">
+$queueId = $queues-&gt;createQueue('my-queue');
+
+// ... do stuff ...
+
+$queues-&gt;deleteQueue($queueId);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Deleting a queue can take significant time for some services. Typically, you cannot
+                re-create a queue with the same name until the original queue is fully removed.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.list"></a>List queues</h3></div></div></div>
+        
+
+        <p>
+            To retrieve the list of all queues in the system, use the
+            <code class="methodname">listQueues()</code> method.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.queueservice.list.example"></a><p class="title"><b>Ejemplo 85. Listing queues</b></p>
+<div class="example-contents">
+              
+
+            <pre class="programlisting">
+$names = $queues-&gt;listQueues();
+foreach ($names as $name) {
+    echo "Found queue $name\n";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.store-metadata"></a>Set queue metadata</h3></div></div></div>
+        
+
+        <p>
+            In some services, you can associate a set of key-value pairs with the queue as queue
+            metadata. To set queue metadata, use the <code class="methodname">storeQueueMetadata()</code>
+            method:
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.queueservice.store-metadata.example"></a><p class="title"><b>Ejemplo 86. Setting queue metadata</b></p>
+<div class="example-contents">
+              
+
+            <pre class="programlisting">
+$queues-&gt;storeQueueMetadata($queueId, array(
+    'purpose'       =&gt; 'Operations',
+    'administrator' =&gt; 'joe@example.com',
+));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.fetch-metadata"></a>Fetch queue metadata</h3></div></div></div>
+        
+
+        <p>
+            To retrieve queue metadata, use the <code class="methodname">fetchQueueMetadata()</code>
+            method.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.queueservice.fetch-metadata.example"></a><p class="title"><b>Ejemplo 87. Fetching queue metadata</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$metadata = $queues-&gt;fetchQueueMetadata($queueId);
+foreac h($metadata as $key =&gt; $value) {
+    echo "Metadata $key: $value\n";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.send"></a>Send a message</h3></div></div></div>
+        
+
+        <p>
+            To add a message to a queue, use the <code class="methodname">sendMessage()</code> method.  The
+            message is passed as an unstructured string.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.queueservice.send.example"></a><p class="title"><b>Ejemplo 88. Sending a message</b></p>
+<div class="example-contents">
+              
+
+            <pre class="programlisting">
+$queues-&gt;sendMessage($queueId, "Hello world!");
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.receive"></a>Receive a message</h3></div></div></div>
+        
+
+        <p>
+            To receive one or more messages from the queue, use the
+            <code class="methodname">receiveMessages()</code> method. This method returns a
+            <code class="classname">Zend_Cloud_QueueService_MessageSet</code> instance by default, unless
+            configured otherwise. Each element of the MessageSet is an instance of
+            <code class="classname">Zend_Cloud_QueueService_Message</code> by default, unless configuired
+            otherwise.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.queueservice.receive.example"></a><p class="title"><b>Ejemplo 89. Receiving a message</b></p>
+<div class="example-contents">
+              
+            <pre class="programlisting">
+// Get the first message
+$messages = $queues-&gt;receiveMessages($queueId);
+if (count($messages)) {
+    foreach ($messages as $message) {
+        echo "Message: " . $message-&gt;getBody();
+        break;
+    }
+}
+
+// Get two messages
+$messages = $queues-&gt;receiveMessages($queueId, 2);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            When a message is received, it is not visible to other clients. It is not deleted from
+            the queue, however, until the client that has received the message calls the
+            <code class="methodname">deleteMessage()</code> method. If it is not deleted during the
+            specfied visibility timeout, it will become visible to all other clients again. In other
+            words, all clients will be able to retrieve the message with the
+            <code class="methodname">receiveMessages()</code> method if the visibility timeout is exceeded.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.delete"></a>Delete a message</h3></div></div></div>
+        
+
+        <p>
+            In order to delete the message from the queue, use the
+            <code class="methodname">deleteMessage()</code> method.  This method deletes the specified
+            message.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.queueservice.delete.example"></a><p class="title"><b>Ejemplo 90. Deleting a message</b></p>
+<div class="example-contents">
+              
+
+            <pre class="programlisting">
+// process and delete $max messages
+$messages = $queues-&gt;receiveMessages($queueId, $max);
+if (count($messages)) {
+    foreach ($messages as $message) {
+        process($message);
+        $queues-&gt;deleteMessage($queueId, $message);
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.queueservice.concreteadapters"></a>Accessing concrete adapters</h3></div></div></div>
+        
+
+        <p>
+            Sometimes it is necessary to retrieve the concrete adapter for the service that the
+            Queue API is working with. This can be achieved by using the
+            <code class="methodname">getAdapter()</code> method.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Accessing the underlying adapter breaks portability among services, so it should be
+                reserved for exceptional circumstances only.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="example">
+<a name="zend.cloud.queueservice.concreteadapters.example"></a><p class="title"><b>Ejemplo 91. Using a concrete adapter</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// send the message directly with the SQS client library
+$sqs = $queues-&gt;getAdapter();
+$sqs-&gt;sendMessage("myQueue", "hello!");
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.cloud.documentservice.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.cloud.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.cloud.storageservice.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Document Service Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> StorageService Introduction</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

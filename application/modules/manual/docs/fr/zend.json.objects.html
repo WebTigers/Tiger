@@ -1,0 +1,170 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Utilisation avancée de Zend_Json</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.json.html" title="Zend_Json">
+<link rel="prev" href="zend.json.basics.html" title="Utilisation de base">
+<link rel="next" href="zend.json.xml2json.html" title="XML to JSON conversion">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Utilisation avancée de Zend_Json</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.json.basics.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Json</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.json.xml2json.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.json.objects"></a>Utilisation avancée de Zend_Json</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.json.advanced.objects1"></a>Objets JSON</h3></div></div></div>
+        
+
+        <p>
+            Lorsque vous encodez des objets <acronym class="acronym">PHP</acronym> en tant que <acronym class="acronym">JSON</acronym>, toutes les propriétés publiques
+            de cet objet sont encodées dans un objet <acronym class="acronym">JSON</acronym>.
+        </p>
+
+        <p>
+            <acronym class="acronym">JSON</acronym> ne vous permet pas de référencer des objets, donc le soin devra être pris pour ne
+            pas coder des objets avec des références récursives. Si vous avez des problèmes de
+            récursivité, <code class="methodname">Zend_Json::encode()</code> et
+            <code class="methodname">Zend_Json_Encoder::encode()</code> autorisent un deuxième paramètre
+            facultatif afin de vérifier la récursivité ; si un objet est sérialisé deux fois, une
+            exception sera levée.
+        </p>
+
+        <p>
+            Bien que les objets Javascript correspondent de très près aux tableau associatifs de
+            <acronym class="acronym">PHP</acronym>, décoder des objets <acronym class="acronym">JSON</acronym> pose une légère difficulté. Certains suggèrent qu'un
+            identifiant de classe soit passé, et qu'une instance de cette classe soit créée et
+            définie avec les paires clé/valeur des objets <acronym class="acronym">JSON</acronym> ; d'autres pensent que cela pourrait
+            poser un risque de sécurité potentiel.
+        </p>
+
+        <p>
+            Par défaut, <code class="classname">Zend_Json</code> décodera des objets JSON comme en
+            tableaux associatifs. Cependant, si vous désirez avoir un objet en retour, vous pouvez le
+            spécifier : </p>
+<pre class="programlisting">
+// Décode des objets JSON en tant qu'objets PHP
+$phpNatif = Zend_Json::decode($valeurEncodee, Zend_Json::TYPE_OBJECT);
+</pre>
+<p> Tous les objets sont ainsi décodés et retournés comme des objets de type
+            <code class="code">StdClass</code>, avec leurs propriétés correspondantes aux paires clé/valeur de la
+            notation JSON.
+        </p>
+
+        <p>
+            La recommandation de Zend Framework est que le développeur doit décider comment
+            décoder les objets <acronym class="acronym">JSON</acronym>. Si un objet d'un type spécifié doit être créé, il peut être créé
+            dans le code du développeur et définit avec les valeurs décodées en utilisant
+            <code class="classname">Zend_Json</code>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.json.advanced.objects2"></a>Encoding PHP objects</h3></div></div></div>
+        
+
+        <p>
+            If you are encoding <acronym class="acronym">PHP</acronym> objects by default the encoding mechanism
+            can only access public properties of these objects. When a method
+            <code class="methodname">toJson()</code> is implemented on an object to encode,
+            <code class="classname">Zend_Json</code> calls this method and expects the object to return a
+            <acronym class="acronym">JSON</acronym> representation of its internal state.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.json.advanced.internal"></a>Internal Encoder/Decoder</h3></div></div></div>
+        
+
+        <p>
+            Zend_Json has two different modes depending if ext/json is enabled in
+            your <acronym class="acronym">PHP</acronym> installation or not. If ext/json is installed by default
+            <code class="methodname">json_encode()</code> and <code class="methodname">json_decode()</code> functions
+            are used for encoding and decoding <acronym class="acronym">JSON</acronym>. If ext/json is not installed
+            a Zend Framework implementation in <acronym class="acronym">PHP</acronym> code is used for en-/decoding.
+            This is considerably slower than using the php extension, but behaves
+            exactly the same.
+        </p>
+
+        <p>
+            Still sometimes you might want to use the internal encoder/decoder even
+            if you have ext/json installed. You can achieve this by calling:
+        </p>
+
+        <pre class="programlisting">
+Zend_Json::$useBuiltinEncoderDecoder = true:
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.json.advanced.expr"></a>JSON Expressions</h3></div></div></div>
+        
+
+        <p>
+            Javascript makes heavy use of anonymnous function callbacks, which
+            can be saved within <acronym class="acronym">JSON</acronym> object variables. Still they only work if not
+            returned inside double qoutes, which <code class="classname">Zend_Json</code> naturally does.
+            With the Expression support for Zend_Json support you can encode <acronym class="acronym">JSON</acronym>
+            objects with valid javascript callbacks. This works for both <code class="methodname">json_encode()</code>
+            or the internal encoder.
+        </p>
+
+        <p>
+            A javascript callback is represented using the <code class="classname">Zend_Json_Expr</code>
+            object. It implements the value object pattern and is immutable. You can set the
+            javascript expression as the first constructor argument. By default
+            <code class="classname">Zend_Json::encode</code> does not encode javascript callbacks, you have
+            to pass the option <code class="code">'enableJsonExprFinder' = true</code> into the
+            <code class="code">encode</code> function. If enabled the expression support works for all nested
+            expressions in large object structures. A usage example would look like:
+        </p>
+
+        <pre class="programlisting">
+$data = array(
+    'onClick' =&gt; new Zend_Json_Expr('function() {'
+              . 'alert("I am a valid javascript callback '
+              . 'created by Zend_Json"); }'),
+    'other' =&gt; 'no expression',
+);
+$jsonObjectWithExpression = Zend_Json::encode(
+    $data,
+    false,
+    array('enableJsonExprFinder' =&gt; true)
+);
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.json.basics.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.json.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.json.xml2json.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Utilisation de base </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> XML to JSON conversion</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Formatters</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.log.html" title="Zend_Log">
+<link rel="prev" href="zend.log.writers.html" title="Writers">
+<link rel="next" href="zend.log.filters.html" title="Filters">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Formatters</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.log.writers.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Log</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.log.filters.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.log.formatters"></a>Formatters</h2></div></div></div>
+    
+
+    <p>
+        A Formatter is an object that is responsible for taking an <span class="property">event</span> array
+        describing a log event and outputting a string with a formatted log line.
+    </p>
+
+    <p>
+        Some Writers are not line-oriented and cannot use a Formatter. An example is the
+        Database Writer, which inserts the event items directly into database columns. For
+        Writers that cannot support a Formatter, an exception is thrown if you attempt to
+        set a Formatter.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.formatters.simple"></a>Simple Formatting</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Log_Formatter_Simple</code> is the default formatter. It is
+            configured automatically when you specify no formatter. The default configuration is
+            equivalent to the following:
+        </p>
+
+        <pre class="programlisting">
+$format = '%timestamp% %priorityName% (%priority%): %message%' . PHP_EOL;
+$formatter = new Zend_Log_Formatter_Simple($format);
+</pre>
+
+        <p>
+            A formatter is set on an individual Writer object using the Writer's
+            <code class="methodname">setFormatter()</code> method:
+        </p>
+
+        <pre class="programlisting">
+$writer = new Zend_Log_Writer_Stream('php://output');
+$formatter = new Zend_Log_Formatter_Simple('hello %message%' . PHP_EOL);
+$writer-&gt;setFormatter($formatter);
+
+$logger = new Zend_Log();
+$logger-&gt;addWriter($writer);
+
+$logger-&gt;info('there');
+
+// outputs "hello there"
+</pre>
+
+        <p>
+            The constructor of <code class="classname">Zend_Log_Formatter_Simple</code> accepts a single
+            parameter: the format string. This string contains keys surrounded by
+            percent signs (e.g. <span class="command"><strong>%message%</strong></span>). The format string may
+            contain any key from the event data array.
+            You can retrieve the default keys by using the DEFAULT_FORMAT constant from
+            <code class="classname">Zend_Log_Formatter_Simple</code>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.formatters.xml"></a>Formatting to XML</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Log_Formatter_Xml</code> formats log data into
+            <acronym class="acronym">XML</acronym> strings. By default, it automatically logs all items in the event
+            data array:
+        </p>
+
+        <pre class="programlisting">
+$writer = new Zend_Log_Writer_Stream('php://output');
+$formatter = new Zend_Log_Formatter_Xml();
+$writer-&gt;setFormatter($formatter);
+
+$logger = new Zend_Log();
+$logger-&gt;addWriter($writer);
+
+$logger-&gt;info('informational message');
+</pre>
+
+        <p>
+            The code above outputs the following <acronym class="acronym">XML</acronym> (space added for clarity):
+        </p>
+
+        <pre class="programlisting">
+&lt;logEntry&gt;
+  &lt;timestamp&gt;2007-04-06T07:24:37-07:00&lt;/timestamp&gt;
+  &lt;message&gt;informational message&lt;/message&gt;
+  &lt;priority&gt;6&lt;/priority&gt;
+  &lt;priorityName&gt;INFO&lt;/priorityName&gt;
+&lt;/logEntry&gt;
+</pre>
+
+        <p>
+            It's possible to customize the root element as well as specify a mapping
+            of <acronym class="acronym">XML</acronym> elements to the items in the event data array. The constructor
+            of <code class="classname">Zend_Log_Formatter_Xml</code> accepts a string with the name of
+            the root element as the first parameter and an associative array with
+            the element mapping as the second parameter:
+        </p>
+
+        <pre class="programlisting">
+$writer = new Zend_Log_Writer_Stream('php://output');
+$formatter = new Zend_Log_Formatter_Xml('log',
+                                        array('msg' =&gt; 'message',
+                                              'level' =&gt; 'priorityName')
+                                       );
+$writer-&gt;setFormatter($formatter);
+
+$logger = new Zend_Log();
+$logger-&gt;addWriter($writer);
+
+$logger-&gt;info('informational message');
+</pre>
+
+        <p>
+            The code above changes the root element from its default of
+            <span class="property">logEntry</span> to <span class="property">log</span>. It also maps the element
+            <span class="property">msg</span> to the event data item <span class="property">message</span>. This
+            results in the following output:
+        </p>
+
+        <pre class="programlisting">
+&lt;log&gt;
+  &lt;msg&gt;informational message&lt;/msg&gt;
+  &lt;level&gt;INFO&lt;/level&gt;
+&lt;/log&gt;
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.log.writers.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.log.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.log.filters.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Writers </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Filters</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,419 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Controller Quick Start</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.html" title="Zend_Controller">
+<link rel="next" href="zend.controller.basics.html" title="Zend_Controller Basics">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Controller Quick Start</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.basics.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.quickstart"></a>Zend_Controller Quick Start</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.quickstart.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Controller</code> is the heart of Zend Framework's
+            <acronym class="acronym">MVC</acronym> system. <acronym class="acronym">MVC</acronym> stands for <a class="ulink" href="http://en.wikipedia.org/wiki/Model-view-controller" target="_top">Model-View-Controller</a>
+            and is a design pattern targeted at separating application logic
+            from display logic. <code class="classname">Zend_Controller_Front</code> implements a
+            <a class="ulink" href="http://www.martinfowler.com/eaaCatalog/frontController.html" target="_top">Front
+                Controller</a> pattern, in which all requests are
+            intercepted by the front controller and dispatched to individual
+            Action Controllers based on the <acronym class="acronym">URL</acronym> requested.
+        </p>
+
+        <p>
+            The <code class="classname">Zend_Controller</code> system was built with extensibility
+            in mind, either by subclassing the existing classes, writing new
+            classes that implement the various interfaces and abstract classes
+            that form the foundation of the controller family of classes, or
+            writing plugins or action helpers to augment or manipulate the
+            functionality of the system.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.quickstart.go"></a>Quick Start</h3></div></div></div>
+        
+
+        <p>
+            If you need more in-depth information, see the following sections.
+            If you just want to get up and running quickly, read on.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.quickstart.go.directory"></a>Create the Filesystem Layout</h4></div></div></div>
+            
+
+            <p>
+                The first step is to create your file system layout. The typical
+                layout is as follows:
+            </p>
+
+            <pre class="programlisting">
+application/
+    controllers/
+        IndexController.php
+    models/
+    views/
+        scripts/
+            index/
+                index.phtml
+        helpers/
+        filters/
+html/
+    .htaccess
+    index.php
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.quickstart.go.docroot"></a>Set the Document Root</h4></div></div></div>
+            
+
+            <p>
+                In your web server, point your document root to the
+                <code class="filename">html/</code> directory of the above file system layout.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.quickstart.go.rewrite"></a>Create the Rewrite Rules</h4></div></div></div>
+            
+
+            <p>
+                Edit the <code class="filename">html/.htaccess</code> file above to read as
+                follows:
+            </p>
+
+            <pre class="programlisting">
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} -s [OR]
+RewriteCond %{REQUEST_FILENAME} -l [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^.*$ - [NC,L]
+RewriteRule ^.*$ index.php [NC,L]
+</pre>
+
+            <div class="note"><table border="0" summary="Note: Learn about mod_rewrite">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Learn about mod_rewrite</th>
+</tr>
+<tr><td align="left" valign="top">
+                
+
+                <p>
+                    The above rewrite rules allow access to any file under your
+                    virtual host's document root. If there are files you do not
+                    want exposed in this way, you may want to be more
+                    restrictive in your rules. Go to the Apache website to
+                    <a class="ulink" href="http://httpd.apache.org/docs/2.0/mod/mod_rewrite.html" target="_top">learn
+                        more about mod_rewrite</a>.
+                </p>
+            </td></tr>
+</table></div>
+
+            <p>
+                If using <acronym class="acronym">IIS</acronym> 7.0, use the following as your rewrite
+                configuration:
+            </p>
+
+            <pre class="programlisting">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;configuration&gt;
+     &lt;system.webServer&gt;
+         &lt;rewrite&gt;
+             &lt;rules&gt;
+                 &lt;rule name="Imported Rule 1" stopProcessing="true"&gt;
+                     &lt;match url="^.*$" /&gt;
+                     &lt;conditions logicalGrouping="MatchAny"&gt;
+                         &lt;add input="{REQUEST_FILENAME}"
+                             matchType="IsFile" pattern=""
+                             ignoreCase="false" /&gt;
+                         &lt;add input="{REQUEST_FILENAME}"
+                             matchType="IsDirectory"
+                             pattern="" ignoreCase="false" /&gt;
+                     &lt;/conditions&gt;
+                     &lt;action type="None" /&gt;
+                 &lt;/rule&gt;
+                 &lt;rule name="Imported Rule 2" stopProcessing="true"&gt;
+                     &lt;match url="^.*$" /&gt;
+                     &lt;action type="Rewrite" url="index.php" /&gt;
+                 &lt;/rule&gt;
+             &lt;/rules&gt;
+         &lt;/rewrite&gt;
+     &lt;/system.webServer&gt;
+&lt;/configuration&gt;
+</pre>
+
+            <p>
+                The above rules will route requests to existing resources
+                (existing symlinks, non-empty files, or non-empty directories)
+                accordingly, and all other requests to the front controller.
+            </p>
+
+            <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    The above rewrite rules are for Apache; for examples of
+                    rewrite rules for other web servers, see the <a class="link" href="zend.controller.router.html#zend.controller.router.introduction" title="Introduction">router
+                        documentation</a>.
+                </p>
+            </td></tr>
+</table></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.quickstart.go.bootstrap"></a>Create the Bootstrap File</h4></div></div></div>
+            
+
+            <p>
+                The bootstrap file is the page all requests are routed through
+                -- <code class="filename">html/index.php</code> in this case. Open up
+                <code class="filename">html/index.php</code> in the editor of your choice and add
+                the following:
+            </p>
+
+            <pre class="programlisting">
+Zend_Controller_Front::run('/path/to/app/controllers');
+</pre>
+
+            <p>
+                This will instantiate and dispatch the front controller, which
+                will route requests to action controllers.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.quickstart.go.controller"></a>Create the Default Action Controller</h4></div></div></div>
+            
+
+            <p>
+                Before discussing action controllers, you should first
+                understand how requests are routed in Zend Framework. By
+                default, the first segment of a <acronym class="acronym">URL</acronym> path maps to a controller,
+                and the second to an action. For example, given the <acronym class="acronym">URL</acronym>
+                <code class="filename">http://framework.zend.com/roadmap/components</code>, the
+                path is <code class="filename">/roadmap/components</code>, which will map to the
+                controller <span class="emphasis"><em>roadmap</em></span> and the action
+                <span class="emphasis"><em>components</em></span>. If no action is provided, the action
+                <span class="emphasis"><em>index</em></span> is assumed, and if no controller is provided,
+                the controller <span class="emphasis"><em>index</em></span> is assumed (following the
+                Apache convention that maps a <span class="emphasis"><em>DirectoryIndex</em></span>
+                automatically).
+            </p>
+
+            <p>
+                <code class="classname">Zend_Controller</code>'s dispatcher then takes the
+                controller value and maps it to a class. By default, it
+                Title-cases the controller name and appends the word
+                <span class="emphasis"><em>Controller</em></span>. Thus, in our example above, the
+                controller <span class="emphasis"><em>roadmap</em></span> is mapped to the class
+                <code class="classname">RoadmapController</code>.
+            </p>
+
+            <p>
+                Similarly, the action value is mapped to a method of the
+                controller class. By default, the value is lower-cased, and the
+                word <span class="emphasis"><em>Action</em></span> is appended. Thus, in our example
+                above, the action <span class="emphasis"><em>components</em></span> becomes
+                <code class="methodname">componentsAction()</code>, and the final method called is
+                <code class="methodname">RoadmapController::componentsAction()</code>.
+            </p>
+
+            <p>
+                So, moving on, let's now create a default action controller and
+                action method. As noted earlier, the default controller and
+                action called are both <span class="emphasis"><em>index</em></span>. Open the file
+                <code class="filename">application/controllers/IndexController.php</code>, and
+                enter the following:
+            </p>
+
+            <pre class="programlisting">
+/** Zend_Controller_Action */
+class IndexController extends Zend_Controller_Action
+{
+    public function indexAction()
+    {
+    }
+}
+</pre>
+
+            <p>
+                By default, the <a class="link" href="zend.controller.actionhelpers.html#zend.controller.actionhelpers.viewrenderer" title="ViewRenderer">ViewRenderer</a>
+                action helper is enabled. What this means is that by simply
+                defining an action method and a corresponding view script, you
+                will immediately get content rendered. By default,
+                <code class="classname">Zend_View</code> is used as the View layer in the
+                <acronym class="acronym">MVC</acronym>. The
+                <span class="emphasis"><em>ViewRenderer</em></span> does some magic, and uses the
+                controller name (e.g., <span class="emphasis"><em>index</em></span>) and the current
+                action name (e.g., <span class="emphasis"><em>index</em></span>) to determine what
+                template to pull. By default, templates end in the
+                <code class="filename">.phtml</code> extension, so this means that, in the above
+                example, the template <code class="filename">index/index.phtml</code> will be
+                rendered. Additionally, the <span class="emphasis"><em>ViewRenderer</em></span>
+                automatically assumes that the directory <code class="filename">views/</code> at
+                the same level as the controller directory will be the base view
+                directory, and that the actual view scripts will be in the
+                <code class="filename">views/scripts/</code> subdirectory. Thus, the template
+                rendered will be found in
+                <code class="filename">application/views/scripts/index/index.phtml</code>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.quickstart.go.view"></a>Create the View Script</h4></div></div></div>
+            
+
+            <p>
+                As mentioned <a class="link" href="zend.controller.quickstart.html#zend.controller.quickstart.go.controller" title="Create the Default Action Controller">in the
+                    previous section</a>, view scripts are found in
+                <code class="filename">application/views/scripts/</code>; the view script for the
+                default controller and action is in
+                <code class="filename">application/views/scripts/index/index.phtml</code>. Create
+                this file, and type in some <acronym class="acronym">HTML</acronym>:
+            </p>
+
+            <pre class="programlisting">
+&lt;!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8" /&gt;
+  &lt;title&gt;My first Zend Framework App&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Hello, World!&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.quickstart.go.errorhandler"></a>Create the Error Controller</h4></div></div></div>
+            
+
+            <p>
+                By default, <a class="link" href="zend.controller.plugins.html#zend.controller.plugins.standard.errorhandler" title="Zend_Controller_Plugin_ErrorHandler">the
+                error handler plugin</a> is registered. This plugin expects
+                that a controller exists to handle errors. By default, it
+                assumes an <span class="emphasis"><em>ErrorController</em></span> in the default module
+                with an <code class="methodname">errorAction()</code> method:
+            </p>
+
+            <pre class="programlisting">
+class ErrorController extends Zend_Controller_Action
+{
+    public function errorAction()
+    {
+    }
+}
+</pre>
+
+            <p>
+                Assuming the already discussed directory layout, this file will
+                go in <code class="filename">application/controllers/ErrorController.php</code>.
+                You will also need to create a view script in
+                <code class="filename">application/views/scripts/error/error.phtml</code>; sample
+                content might look like:
+            </p>
+
+            <pre class="programlisting">
+&lt;!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8" /&gt;
+  &lt;title&gt;Error&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;An error occurred&lt;/h1&gt;
+    &lt;p&gt;An error occurred; please try again later.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.quickstart.go.finish"></a>View the Site!</h4></div></div></div>
+            
+
+            <p>
+                With your first controller and view under your belt, you can now
+                fire up your browser and browse to the site. Assuming
+                <code class="filename">example.com</code> is your domain, any of the following
+                <acronym class="acronym">URL</acronym>s will get to the page we've just created:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p><code class="filename">http://example.com/</code></p>
+                </li>
+<li class="listitem">
+                    <p><code class="filename">http://example.com/index</code></p>
+                </li>
+<li class="listitem">
+                    <p><code class="filename">http://example.com/index/index</code></p>
+                </li>
+</ul></div>
+
+            <p>
+                You're now ready to start creating more controllers and action
+                methods. Congratulations!
+            </p>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.basics.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Controller </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend_Controller Basics</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

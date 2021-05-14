@@ -1,0 +1,149 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Pagination Control and ScrollingStyles</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="learning.paginator.html" title="Getting Started with Zend_Paginator">
+<link rel="prev" href="learning.paginator.simple.html" title="Simple Examples">
+<link rel="next" href="learning.paginator.together.html" title="Putting it all Together">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Pagination Control and ScrollingStyles</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.paginator.simple.html">Prev</a> </td>
+<th width="60%" align="center">Getting Started with Zend_Paginator</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.paginator.together.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.paginator.control"></a>Pagination Control and ScrollingStyles</h2></div></div></div>
+    
+
+    <p>
+        Rendering the items for a page on the screen has been a good start. In the code
+        snippets in previous section we have also seen the
+        <code class="methodname">setCurrentPageNumber()</code> method to set the active page number. The
+        next step is to navigate through your pages. To do this, Paginator provides you with two
+        important tools: the ability to render the Paginator with help of a View Partial, and
+        support for so-called ScrollingStyles.
+    </p>
+
+    <p>
+        The View Partial is a small view script that renders the Pagination controls, such as
+        buttons to go to the next or previous page. Which pagination controls are rendered depends
+        on the contents of the view partial. Working with the view partial requires that you have
+        set up <code class="classname">Zend_View</code>. To get started with the pagination control, create
+        a new view script somewhere in your view scripts path. You can name it anything you want,
+        but we'll call it "controls.phtml" in this text. The reference manual contains various
+        examples of what might go in the view script. Here is one example.
+    </p>
+
+    <pre class="programlisting">
+&lt;?php if ($this-&gt;pageCount): ?&gt;
+&lt;!-- First page link --&gt;
+&lt;?php if (isset($this-&gt;previous)): ?&gt;
+  &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $this-&gt;first)); ?&gt;"&gt;
+    First
+  &lt;/a&gt; |
+&lt;?php else: ?&gt;
+  &lt;span class="disabled"&gt;First&lt;/span&gt; |
+&lt;?php endif; ?&gt;
+
+&lt;!-- Previous page link --&gt;
+&lt;?php if (isset($this-&gt;previous)): ?&gt;
+  &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $this-&gt;previous)); ?&gt;"&gt;
+    &amp;lt; Previous
+  &lt;/a&gt; |
+&lt;?php else: ?&gt;
+  &lt;span class="disabled"&gt;&amp;lt; Previous&lt;/span&gt; |
+&lt;?php endif; ?&gt;
+
+&lt;!-- Next page link --&gt;
+&lt;?php if (isset($this-&gt;next)): ?&gt;
+  &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $this-&gt;next)); ?&gt;"&gt;
+    Next &amp;gt;
+  &lt;/a&gt; |
+&lt;?php else: ?&gt;
+  &lt;span class="disabled"&gt;Next &amp;gt;&lt;/span&gt; |
+&lt;?php endif; ?&gt;
+
+&lt;!-- Last page link --&gt;
+&lt;?php if (isset($this-&gt;next)): ?&gt;
+  &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $this-&gt;last)); ?&gt;"&gt;
+    Last
+  &lt;/a&gt;
+&lt;?php else: ?&gt;
+  &lt;span class="disabled"&gt;Last&lt;/span&gt;
+&lt;?php endif; ?&gt;
+
+&lt;/div&gt;
+&lt;?php endif; ?&gt;
+</pre>
+
+    <p>
+        The next step is to tell <code class="classname">Zend_Paginator</code> which view partial can be
+        used to render the navigation controls. Put the following line in your application's
+        bootstrap file.
+    </p>
+
+    <pre class="programlisting">
+Zend_View_Helper_PaginationControl::setDefaultViewPartial('controls.phtml');
+</pre>
+
+    <p>
+        The last step is probably the easiest. Make sure you have assigned your Paginator object
+        to the a script (NOT the 'controls.phtml' script!). The only thing left to do is echo the
+        Paginator in the view script. This will automatically render the Paginator using the
+        PaginationControl view helper. In this next example, the Paginator object has been assigned
+        to the 'paginator' view variable. Don't worry if you don't fully get how it all works yet.
+        The next section will feature a complete example.
+    </p>
+
+    <pre class="programlisting">
+&lt;?php echo $this-&gt;paginator; ?&gt;
+</pre>
+
+    <p>
+        <code class="classname">Zend_Paginator</code>, together with the 'controls.phtml' view script you
+        wrote, makes sure your Paginator navigation is rendered properly. In order to decide
+        which page numbers need to be displayed on screen, Paginator uses so-called ScrollingStyles.
+        The default style is called "Sliding", which is similar to the way Yahoo's search result
+        navigation works. To mimick Google's ScrollingStyle, use the Elastic style.
+        You can set a default ScrollingStyle with the static
+        <code class="methodname">setDefaultScrollingStyle()</code> method, or you can specify a
+        ScrollingStyle dynamically when rendering the Paginator in your view script. This requires
+        manual invocation of the view helper in your view script.
+    </p>
+
+    <pre class="programlisting">
+// $this-&gt;paginator is a Paginator object
+&lt;?php echo $this-&gt;paginationControl($this-&gt;paginator, 'Elastic', 'controls.phtml'); ?&gt;
+</pre>
+
+    <p>
+        For a list of all available ScrollingStyles, see the reference manual.
+    </p>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.paginator.simple.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.paginator.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.paginator.together.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Simple Examples </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Putting it all Together</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Introduction à Zend_Search_Lucene</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.lucene.html" title="Bien démarrer avec Zend_Search_Lucene">
+<link rel="prev" href="learning.lucene.html" title="Bien démarrer avec Zend_Search_Lucene">
+<link rel="next" href="learning.lucene.index-structure.html" title="Structure d'index Lucene">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Introduction à Zend_Search_Lucene</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.lucene.html">Précédent</a> </td>
+<th width="60%" align="center">Bien démarrer avec Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.lucene.index-structure.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.lucene.intro"></a>Introduction à Zend_Search_Lucene</h2></div></div></div>
+    
+    <p>
+        Le composant <code class="classname">Zend_Search_Lucene</code> est prévu pour fournir une
+        solution de recherche full-text prête à l'emploi. Il ne nécessite aucunes extensions
+        <acronym class="acronym">PHP</acronym><a href="#ftn.idm192803710512" class="footnote" name="idm192803710512"><sup class="footnote">[1]</sup></a> ni que des logiciels supplémentaires soient installés, et peut
+                être utilisé tout de suite après l'installation du Framework Zend.
+    </p>
+    <p>
+        <code class="classname">Zend_Search_Lucene</code> est un portage <acronym class="acronym">PHP</acronym> du
+        moteur de recherche full-text open source populaire connu comme Apache Lucene. Voir <a class="ulink" href="http://lucene.apache.org" target="_top">http://lucene.apache.org/</a> pour plus de détails.
+    </p>
+    <p>
+        L'information doit être indexée pour être disponible à la recherche.
+        <code class="classname">Zend_Search_Lucene</code> et Java Lucene utilise un concept de document
+        connu sous le nom d'"indexation atomique d'élément."
+    </p>
+    <p>
+        Chaque document est un ensemble de champs : paires &lt;nom, valeur&gt; où le nom et la
+        valeur sont des chaînes <acronym class="acronym">UTF-8</acronym> <a href="#ftn.idm192803704960" class="footnote" name="idm192803704960"><sup class="footnote">[2]</sup></a>.
+        N'importe quel sous ensemble de champs de document peut être marqué comme "indexé"
+        pour inclure des données de champ durant le processus d'indexation de texte.
+    </p>
+    <p>
+        Les valeurs de champs peuvent être indexées segmentées durant l'indexation. Si un champ
+        n'est pas segmenté, alors la valeur du champ est stockée comme un seul terme ; autrement,
+        l'analyseur courant est utilisé pour la segmentation.
+    </p>
+    <p>
+        Plusieurs analyseurs sont fournis dans le paquet <code class="classname">Zend_Search_Lucene</code>.
+        L'analyseur par défaut fonctionne avec du texte <acronym class="acronym">ASCII</acronym> (comme l'analyseur
+        <acronym class="acronym">UTF-8</acronym> a besoin que l'extension <span class="emphasis"><em>mbstring</em></span> soit activée).
+        Il n'est pas sensible à la case, et saute les nombres. Utilisez d'autres analyseurs ou
+        créez votre propre analyseur si vous avez besoin de changer ce comportement.
+    </p>
+    <div class="note"><table border="0" summary="Note: Utilisation des analyseurs durant l'indexation et la recherche">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Utilisation des analyseurs durant l'indexation et la recherche</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+        <p>
+            Note importante !  Les requêtes de recherches sont aussi segmentées en utilisant
+            "l'analyseur courant", ainsi le même analyseur doit être défini par défaut durant
+            le processus d'indexation et le processus de recherche. Ceci garantira que la source
+            et le texte recherché seront transformés en termes de la même manière.
+        </p>
+    </td></tr>
+</table></div>
+    <p>
+        Les valeurs de champs sont stockés optionnellement  au sein de l'index. Ceci permet aux
+        données originale du champ d'être récupérée pendant la recherche. C'est le seul moyen
+        d'associer les résultats de recherche avec les données originales (l'ID interne du
+        document peut avoir changé après une optimisation d'index ou une auto-optimisation).
+    </p>
+    <p>
+        Ce qui doit être gardé en mémoire, c'est que l'index Lucene n'est pas une base de données.
+        Il ne fournit pas un mécanisme de sauvegarde de l'index à l'exception de la sauvegarde
+        du répertoire du système de fichier. Il ne fournit pas de mécanisme transactionnel bien
+        que soient supportés la mise à jour concurrente d'index ainsi que que la mise à jour
+        et la lecture concurrente. Il n'est pas comparable aux bases de données en terme de
+        vitesse de récupération de données.
+    </p>
+    <p>
+        Donc c'est une bonne idée :
+    </p>
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>De ne pas</em></span> utiliser l'index Lucene comme du stockage car cela
+                réduirait les performance de récupération de résultat de recherche. Stocker
+                uniquement les identifiants de documents (chemin de documents,
+                <acronym class="acronym">URL</acronym>s, identifiant unique de base données) et associer les
+                données au sein de l'index. Ex. titre, annotation, categorie, information de langue,
+                avatar. (Note : un champs peut être inclu dans l'indexation, mais pas stocké, ou
+                stocké, mais pas indexé).
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                D'écrire des fonctionalités qui peuvent reconstruire intégralement l'index, si il
+                a été corrompu pour une raison ou pour une autre.
+            </p>
+        </li>
+</ul></div>
+    <p>
+        Les documents individuels dans l'index peuvent avoir des ensemble de champs totalement
+        différents. Le même champ dans différents documents n'a pas besoin d'avoir les mêmes
+        attributs. Ex. un champs peu être indexé pour l'un des documents mais sauté pour
+        l'indexation d'un autre. Le même principe s'applique au stockage, à la segmentation,
+        ou traitement de valeur de champ comme chaîne binaire.
+    </p>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm192803710512" class="footnote"><p><a href="#idm192803710512" class="para"><sup class="para">[1] </sup></a>Bien que quelques fonctionnalités de traitement
+        <acronym class="acronym">UTF-8</acronym> nécessitent que l'extension
+            <span class="emphasis"><em>mbstring</em></span> soit activée
+                </p></div>
+<div id="ftn.idm192803704960" class="footnote"><p><a href="#idm192803704960" class="para"><sup class="para">[2] </sup></a>Les chaînes Binaires sont
+        aussi autorisées pour être utilisées comme des valeurs de champs</p></div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.lucene.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.lucene.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.lucene.index-structure.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Bien démarrer avec Zend_Search_Lucene </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Structure d'index Lucene</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,1160 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Document Service Introduction</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.cloud.html" title="SimpleCloud API: Zend_Cloud">
+<link rel="prev" href="zend.cloud.html" title="SimpleCloud API: Zend_Cloud">
+<link rel="next" href="zend.cloud.queueservice.html" title="Queue Service Introduction">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Document Service Introduction</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.cloud.html">Prev</a> </td>
+<th width="60%" align="center">SimpleCloud API: Zend_Cloud</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.cloud.queueservice.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.cloud.documentservice"></a>Document Service Introduction</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Cloud_DocumentService</code> abstracts the interfaces to all major
+        document databases - both in the cloud and locally deployed - so developers can access their
+        common functionality through one API. In other words, an application can make use of these
+        databases and services with no concern over how the application will be deployed. The data
+        source can be chosen through configuration changes alone at the time of deployment.
+    </p>
+
+    <p>
+        Document databases and services are increasingly common in application development. These
+        data sources are somewhat different from traditional relational data sources, as they eschew
+        complex relationships for performance, scalability, and flexibility. Examples of
+        document-oriented services include Amazon SimpleDB and Azure Table Storage.
+    </p>
+
+    <p>
+        The Simple Cloud API offers some flexibility for vendor-specific features with an
+        <code class="varname">$options</code> array in each method signature.  Some adapters require certain
+        options that also must be added to the <code class="varname">$options</code> array. It is a good
+        practice to retrieve these options from a configuration file to maintain compatibility with
+        all services and databases; unrecognized options will simply be discarded, making it
+        possible to use different services based on environment.
+    </p>
+
+    <p>
+        If more vendor-specific requirements are required, the developer should extend the specific
+        <code class="classname">Zend_Cloud_DocumentService</code> adapter to add support for these features.
+        In this manner, vendor-specific features can be called out in the application by referring
+        to the Simple Cloud API extensions in the subclass of the Simple Cloud adapter.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.adapterinterface"></a>Zend_Cloud_DocumentService_Adapter Interface</h3></div></div></div>
+        
+
+        <p>
+            The <code class="classname">Zend_Cloud_DocumentService_Adapter</code> interface defines methods
+            that each concrete document service adapter implements. The following adapters are
+            shipped with the Simple Cloud API:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <a class="ulink" href="http://aws.amazon.com/simpledb/" target="_top"><code class="classname">Zend_Cloud_DocumentService_Adapter_SimpleDb</code></a>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <a class="ulink" href="http://msdn.microsoft.com/en-us/library/dd179423.aspx" target="_top"><code class="classname">Zend_Cloud_DocumentService_Adapter_WindowsAzure</code></a>
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            To instantiate a document service adapter, use the static method
+            <code class="methodname">Zend_Cloud_DocumentService_Factory::getAdapter()</code>, which accepts
+            a configuration array or a <code class="classname">Zend_Config</code> object. The
+            <code class="varname">document_adapter</code> key should specify the concrete adapter class by
+            classname. Adapter-specific keys may also be passed in this configuration parameter.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.factory.example"></a><p class="title"><b>Example 70. Example: Using the SimpleDB adapter</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$adapterClass = 'Zend_Cloud_DocumentService_Adapter_SimpleDb';
+$documents = Zend_Cloud_DocumentService_Factory::getAdapter(array(
+    Zend_Cloud_DocumentService_Factory::DOCUMENT_ADAPTER_KEY    =&gt; $adapterClass,
+    Zend_Cloud_DocumentService_Adapter_SimpleDb::AWS_ACCESS_KEY =&gt; $amazonKey,
+    Zend_Cloud_DocumentService_Adapter_SimpleDb::AWS_SECRET_KEY =&gt; $amazonSecret
+));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.adapteroptions"></a>Supported Adapter Options</h3></div></div></div>
+        
+
+        <div class="table">
+<a name="zend.cloud.documentservice.options.general"></a><p class="title"><b>Table 32. Zend_Cloud_DocumentService_Adapter Common Options</b></p>
+<div class="table-contents">
+            
+            <table class="table" summary="Zend_Cloud_DocumentService_Adapter Common Options" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Option key</th>
+<th>Description</th>
+<th>Used in</th>
+<th>Required</th>
+<th>Default</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>document_class</td>
+<td>
+                            <p>
+                                Class to use to represent returned documents. The class provided must extend
+                                <code class="classname">Zend_Cloud_DocumentService_Document</code> to ensure
+                                compatibility with all document services. For all methods that
+                                return a document or collection of documents, this class will be
+                                used.
+                            </p>
+                        </td>
+<td>Constructor</td>
+<td>No</td>
+<td><code class="classname">Zend_Cloud_Document_Service_Document</code></td>
+</tr>
+<tr>
+<td>documentset_class</td>
+<td>
+                            <p>
+                                Class to use to represent collections of documents,
+                                <code class="classname">Zend_Cloud_DocumentService_DocumentSet</code> by
+                                default. Typically, objects of this class will be returned by
+                                <code class="methodname">listDocuments()</code> and
+                                <code class="methodname">query()</code>. Any class provided for this
+                                configuration value must extend
+                                <code class="classname">Zend_Cloud_DocumentService_DocumentSet</code>.
+                            </p>
+                        </td>
+<td>Constructor</td>
+<td>No</td>
+<td><code class="classname">Zend_Cloud_DocumentService_DocumentSet</code></td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <div class="table">
+<a name="zend.cloud.documentservice.options.sdb"></a><p class="title"><b>Table 33. Zend_Cloud_DocumentService_Adapter_SimpleDb Options</b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="Zend_Cloud_DocumentService_Adapter_SimpleDb Options" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Option key</th>
+<th>Description</th>
+<th>Used in</th>
+<th>Required</th>
+<th>Default</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>query_class</td>
+<td>
+                            <p>
+                                Class to use for creating and assembling queries for this document
+                                service; <code class="methodname">select()</code> will create objects of
+                                this class name, as will <code class="methodname">listDocuments()</code>.
+                            </p>
+                        </td>
+<td>Constructor</td>
+<td>No</td>
+<td><code class="classname">Zend_Cloud_DocumentService_Adapter_SimpleDb_Query</code></td>
+</tr>
+<tr>
+<td>aws_accesskey</td>
+<td>Your Amazon AWS access key</td>
+<td>Constructor</td>
+<td>Yes</td>
+<td>None</td>
+</tr>
+<tr>
+<td>aws_secretkey</td>
+<td>Your Amazon AWS secret key</td>
+<td>Constructor</td>
+<td>Yes</td>
+<td>None</td>
+</tr>
+<tr>
+<td>http_adapter</td>
+<td>HTTP adapter to use in all access operations</td>
+<td>Constructor</td>
+<td>No</td>
+<td><code class="classname">Zend_Http_Client_Adapter_Socket</code></td>
+</tr>
+<tr>
+<td>merge</td>
+<td>
+                            <p>
+                                If a boolean true, all attribute values are merged.  You may also
+                                specify an array of key pairs, where the key is the attribute key to
+                                merge, and the value indicates whether or not to merge; a boolean
+                                true value will merge the given key. Any attributes not specified in
+                                this array will be replaced.
+                            </p>
+                        </td>
+<td><code class="methodname">updateDocument()</code></td>
+<td>No</td>
+<td>True</td>
+</tr>
+<tr>
+<td>return_documents</td>
+<td>
+                            <p>
+                                If a boolean true, <code class="methodname">query()</code> returns a
+                                <code class="classname">Zend_Cloud_DocumentService_DocumentSet</code> object
+                                containing
+                                <code class="classname">Zend_Cloud_DocumentService_Document</code> objects
+                                (default case); otherwise, it returns an array of arrays.
+                            </p>
+                        </td>
+<td><code class="methodname">query()</code></td>
+<td>No</td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <div class="table">
+<a name="zend.cloud.documentservice.options.azure"></a><p class="title"><b>Table 34. Zend_Cloud_DocumentService_Adapter_WindowsAzure Options</b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="Zend_Cloud_DocumentService_Adapter_WindowsAzure Options" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Option key</th>
+<th>Description</th>
+<th>Used in</th>
+<th>Required</th>
+<th>Default</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>query_class</td>
+<td>
+                            <p>
+                                Class to use for creating and assembling queries for this document
+                                service; <code class="methodname">select()</code> will create objects of
+                                this class name, as will <code class="methodname">listDocuments()</code>.
+                            </p>
+                        </td>
+<td>Constructor</td>
+<td>No</td>
+<td><code class="classname">Zend_Cloud_DocumentService_Adapter_WindowsAzure_Query</code></td>
+</tr>
+<tr>
+<td>default_partition_key</td>
+<td>
+                            <p>
+                                The default partition key to use if none is specified in the
+                                document identifier. Windows Azure requires a two-fold document ID,
+                                consisting of a PartitionKey and a RowKey. The PartitionKey will
+                                typically be common across your database or a collection, while the
+                                RowKey will vary. As such, this setting allows you to specify the
+                                default PartitionKey to utilize for all documents.
+                            </p>
+
+                            <p>
+                                If not specified, the adapter will default to using the collection
+                                name as the PartitionKey.
+                            </p>
+                        </td>
+<td>Constructor, <code class="methodname">setDefaultPartitionKey()</code>
+</td>
+<td>Name of whatever collection the document belongs to</td>
+<td class="auto-generated"> </td>
+</tr>
+<tr>
+<td>storage_accountname</td>
+<td>Windows Azure account name</td>
+<td>Constructor</td>
+<td>Yes</td>
+<td>None</td>
+</tr>
+<tr>
+<td>storage_accountkey</td>
+<td>Windows Azure account key</td>
+<td>Constructor</td>
+<td>Yes</td>
+<td>None</td>
+</tr>
+<tr>
+<td>storage_host</td>
+<td>
+                            <p>
+                                Windows Azure access host, default is
+                                <code class="varname">table.core.windows.net</code>
+                            </p>
+                        </td>
+<td>Constructor</td>
+<td>No</td>
+<td><code class="varname">table.core.windows.net</code></td>
+</tr>
+<tr>
+<td>storage_proxy_host</td>
+<td>Proxy hostname</td>
+<td>Constructor</td>
+<td>No</td>
+<td>None</td>
+</tr>
+<tr>
+<td>storage_proxy_port</td>
+<td>Proxy port</td>
+<td>Constructor</td>
+<td>No</td>
+<td>8080</td>
+</tr>
+<tr>
+<td>storage_proxy_credentials</td>
+<td>Proxy credentials</td>
+<td>Constructor</td>
+<td>No</td>
+<td>None</td>
+</tr>
+<tr>
+<td>HTTP Adapter</td>
+<td>HTTP adapter to use in all access operations</td>
+<td>Constructor</td>
+<td>No</td>
+<td>None</td>
+</tr>
+<tr>
+<td>verify_etag</td>
+<td>
+                            <p>
+                                Verify ETag on the target document and perform the operation only if the
+                                ETag matches the expected value
+                            </p>
+                        </td>
+<td>
+                            <code class="methodname">updateDocument()</code>,
+                            <code class="methodname">replaceDocument()</code>,
+                            <code class="methodname">deleteDocument()</code>
+                        </td>
+<td>No</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.concepts"></a>Basic concepts</h3></div></div></div>
+        
+
+        <p>
+            Each document-oriented service and database uses its own terminology and constructs in
+            its API. The SimpleCloud API identifies and abstracts a number of common concepts and
+            operations that are shared among providers.
+        </p>
+
+        <p>
+            Document storage consists of a number of <span class="emphasis"><em>collections</em></span>, which are
+            logical storage units analogous to database tables in the SQL world. Collections contain
+            <span class="emphasis"><em>documents</em></span>, which are essentially a set of key-value pairs, along
+            with some metadata specific to the storage engine, and are identified by a unique
+            <span class="emphasis"><em>document ID</em></span>.
+        </p>
+
+        <p>
+            Each document has its own structure (set of fields) that does not necessarily have to
+            match the structure of any other document, even in the same collection. In fact, you can
+            change this structure after the document is created.
+        </p>
+
+        <p>
+            Documents can be retrieved by ID or by querying a collection.
+        </p>
+
+        <p>
+            Documents are represented by the class
+            <code class="classname">Zend_Cloud_DocumentService_Document</code>.  Note that the document
+            class does not validate the supplied IDs and data, and does not enforce compatibility
+            with each adapter's requirements.
+        </p>
+
+        <p>
+            The document fields can be accessed using keys as object properties and as array
+            elements.
+        </p>
+
+        <p>
+            The basic interface of <code class="classname">Zend_Cloud_DocumentService_Document</code> is as
+            follows:
+        </p>
+
+        <pre class="programlisting">
+/**
+ * ArrayAccess allows accessing fields by array key:
+ *    $doc['fieldname']
+ *
+ * IteratorAggregate allows iterating over all fields:
+ *    foreach ($document as $field =&gt; $value) {
+ *        echo "$field: $value\n";
+ *    }
+ *
+ * Countable provides a count of all fields:
+ *    count($document)
+ */
+class Zend_Cloud_DocumentService_Document
+    implements ArrayAccess, IteratorAggregate, Countable
+{
+    const KEY_FIELD = '_id';
+
+    /**
+     * $fields may be an array or an object implementing ArrayAccess.
+     * If no $id is provided, it will look for a field matching KEY_FIELD to
+     * use as the identifier.
+     */
+    public function __construct($fields, $id = null);
+
+    public function setId($id);
+    public function getId();
+    public function getFields();
+    public function getField($name);
+    public function setField($name, $value);
+
+    /**
+     * These allow overloading, so you may access fields as if they were
+     * native properties of the document
+     */
+    public function __get($name);
+    public function __set($name, $value);
+
+    /**
+     * Alternately, you can acces fields as if via native getters and
+     * setters:
+     *     $document-&gt;setFoo($value);    // set "Foo" field to value
+     *     $value = $document-&gt;getFoo(); // get "Foo" field value
+    public function __call($name, $args);
+}
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Windows Azure Document Identifiers">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Windows Azure Document Identifiers</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Windows Azure technically requires a combination of two fields to uniquely
+                identify documents: the <code class="varname">PartitionKey</code> and
+                <code class="varname">RowKey</code>, and as such, keys are fully qualified by the structure
+                <code class="code">array(PartitionKey, RowKey)</code> -- which makes them non-portable.  In most
+                situations, the <code class="varname">PartitionKey</code> will not differ for documents in a
+                single collection -- and potentially not even across your entire table instance. As
+                such, the DocumentService provides several options for specifying keys:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        Array keys will always work as expected.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        If a string key is provided:
+                    </p>
+
+                    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                            <p>
+                                If the <code class="varname">default_partition_key</code> setting was provided
+                                to the constructor, or passed to the
+                                <code class="methodname">setDefaultPartitionKey()</code> method, that value
+                                will be used for the <code class="varname">PartitionKey</code>.
+                            </p>
+                        </li>
+<li class="listitem">
+                            <p>
+                                Otherwise, the name of the collection on which you are operating
+                                will be used.
+                            </p>
+                        </li>
+</ul></div>
+                </li>
+</ul></div>
+
+            <p>
+                The takeaway is that you can utilize string keys if you wish to maximize portability
+                of your application. Just be aware that your record will contain a few extra fields
+                to denote the key (<code class="varname">PartitionKey</code>, <code class="varname">RowKey</code>, and
+                the previously undiscussed <code class="varname">Timestamp</code>) should you ever migrate
+                your data to another service.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.document.create.example"></a><p class="title"><b>Example 71. Creating a document</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$document = new Zend_Cloud_DocumentService_Document(array(
+    'key1' =&gt; 'value1',
+    'key2' =&gt; 123,
+    'key3' =&gt; 'thirdvalue',
+), "DocumentId");
+$document-&gt;otherkey = 'some more data';
+echo "key 1: " . $document-&gt;key1   . "\n"; // object notation
+echo "key 2: " . $document['key2'] . "\n"; // array notation
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.cloud.documentservice.document.explore.example"></a><p class="title"><b>Example 72. Exploring the document data</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$document = $documents-&gt;fetchDocument("mydata", $id);
+echo "Document ID: " . $document-&gt;getID() . "\n";
+foreach ($document-&gt;getFields() as $key =&gt; $value) {
+    echo "Field $key is $value\n";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.exceptions"></a>Exceptions</h3></div></div></div>
+        
+
+        <p>
+            If some error occurs in the document service,
+            <code class="classname">Zend_Cloud_DocumentService_Exception</code> is thrown.  If the exception
+            was caused by the underlying service driver, you can use the
+            <code class="methodname">getClientException()</code> method to retrieve the original exception.
+        </p>
+
+        <p>
+            Since different cloud providers implement different sets of services, some drivers do
+            not implement certain features. In this case, the
+            <code class="classname">Zend_Cloud_OperationNotAvailableException</code> exception is thrown.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.create-collection"></a>Creating a collection</h3></div></div></div>
+        
+
+        <p>
+            A new collection is created using <code class="methodname">createCollection()</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.create-collection.example"></a><p class="title"><b>Example 73. Creating collection</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$documents-&gt;createCollection("mydata");
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            If you call <code class="methodname">createCollection()</code> with a collection name that
+            already exists, the service will do nothing and leave the existing collection untouched.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.delete-collection"></a>Deleting a collection</h3></div></div></div>
+        
+
+        <p>
+            A collection is deleted by calling <code class="methodname">deleteCollection()</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.delete-collection.example"></a><p class="title"><b>Example 74. Deleting a collection</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$documents-&gt;deleteCollection("mydata");
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Deleting a collection automatically deletes all documents contained in that collection.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Deleting a collection can take significant time for some services. You cannot
+                re-create a collection with the same name until the collection and all its documents
+                have been completely removed.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Deleting a non-existent collection will have no effect.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.list-collections"></a>Listing available collections</h3></div></div></div>
+        
+
+        <p>
+            A list of existing collections is returned by
+            <code class="methodname">listCollections()</code>.  This method returns an array of all the
+            names of collections belonging to the account you specified when you created the
+            adapter.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.list-collections.example"></a><p class="title"><b>Example 75. List collections</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$list = $documents-&gt;listCollections();
+foreach ($list as $collection) {
+    echo "My collection: $collection\n";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.insert"></a>Inserting a document</h3></div></div></div>
+        
+
+        <p>
+            To insert a document, you need to provide a
+            <code class="classname">Zend_Cloud_DocumentService_Document</code> object or associative array
+            of data, as well as the collection in which you are inserting it.
+        </p>
+
+        <p>
+            Many providers require that you provide a document ID with your document. If using a
+            <code class="classname">Zend_Cloud_DocumentService_Document</code>, you can specify this by
+            passing the identifier to the constructor when you instantiate the object. If using an
+            associative array, the key name will be adapter-specific locations; for example, on
+            Azure, the ID is made up of the PartitionKey and RowKey; on Amazon SimpleDB, the ID is
+            the ItemName; you may also specify the key in the <code class="varname">_id</code> field to be
+            more portable.
+        </p>
+
+        <p>
+            As such, the easiest and most compatible way to specify the key is to use
+            a Document object.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.insert.example"></a><p class="title"><b>Example 76. Inserting a document</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// Instantiating and creating the document
+$document = new Zend_Cloud_DocumentService_Document(array(
+    'key1' =&gt; 'value1',
+    'key2' =&gt; 123,
+    'key3' =&gt; 'thirdvalue',
+), "DocumentID");
+
+// inserting into the "mydata" collection
+$documents-&gt;insertDocument("mydata", $document);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.replace"></a>Replacing a document</h3></div></div></div>
+        
+
+        <p>
+            <span class="emphasis"><em>Replacing</em></span> a document means removing all document data associated with a particular
+            document key and substituting it with a new set of data. Unlike
+            <span class="emphasis"><em>updating</em></span>, this operation does not merge old and new data but
+            replaces the document as a whole. The replace operation, like
+            <code class="methodname">insertDocument()</code>, accepts a
+            <code class="classname">Zend_Cloud_DocumentService_Document</code> document or an array of
+            key-value pairs that specify names and values of the new fields, and the collection in
+            which the document exists.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Document ID is required">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Document ID is required</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                To replace the document, the document ID is required. Just like inserting a document,
+                if you use an associative array to describe the document, you will need to provide a
+                provider-specific key indicating the document ID. As such, the most compatible way
+                to replace a document across providers is to utilize a Document object, as shown in
+                the examples.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.replace.example"></a><p class="title"><b>Example 77. Replacing a document</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$document = new Zend_Cloud_DocumentService_Document(array(
+    'key1' =&gt; 'value1',
+    'key2' =&gt; 123,
+    'key3' =&gt; 'thirdvalue',
+), "DocumentID");
+
+// Update the document as found in the "mydata" collection
+$documents-&gt;replaceDocument("mydata", $document);
+</pre>
+
+            <p>
+                You may also use an existing Document object, re-assign the fields and/or assign new
+                fields, and pass it to the <code class="methodname">replaceDocument()</code> method:
+            </p>
+
+            <pre class="programlisting">
+$docment-&gt;key4 = '4th value';
+
+// Update the document as found in the "mydata" collection
+$documents-&gt;replaceDocument("mydata", $document);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.update"></a>Updating a document</h3></div></div></div>
+        
+
+        <p>
+            <span class="emphasis"><em>Updating</em></span> a document changes the key/value pairs in an existing
+            document. This operation does not share the <span class="emphasis"><em>replace</em></span> semantics; the
+            values of the keys that are not specified in the data set will not be changed. You must
+            provide both a document key and data, either via a
+            <code class="classname">Zend_Cloud_DocumentService_Document</code> document or an array, to this
+            method. If the key is null and a document object is provided, the document key is used.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.update.example"></a><p class="title"><b>Example 78. Updating a document</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// update one field
+$documents-&gt;updateDocument("mydata", "DocumentID", array("key2" =&gt; "new value"));
+
+// or with document; this could be a document already retrieved from the service
+$document = new Zend_Cloud_DocumentService_Document(array(
+    'key1' =&gt; 'value1',
+    'key2' =&gt; 123,
+    'key3' =&gt; 'thirdvalue',
+), "DocumentID");
+$documents-&gt;updateDocument("mydata", null, $document);
+
+// copy document to another ID
+$documents-&gt;updateDocument("mydata", "AnotherDocumentID", $document);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Amazon SimpleDB supports multi-value fields, so data updates will be merged with the old key
+            value instead of replacing them. Option <span class="property">merge</span> should contain an array
+            of field names to be merged. The array should be key/value pairs, with the key
+            corresponding to the field key, and the value a boolean value indicating merge status
+            (boolean true would merge; false would not). Any keys not specified in the
+            <span class="property">merge</span> option will be replaced instead of merged.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.update.merge.example"></a><p class="title"><b>Example 79. Merging document fields</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// key2 is overwritten, key3 is merged
+$documents-&gt;updateDocument('mydata', 'DocumentID',
+    array('key2' =&gt; 'new value', 'key3' =&gt; 'additional value'),
+    array('merge' =&gt; array('key3' =&gt; true))
+);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.delete"></a>Deleting a document</h3></div></div></div>
+        
+
+        <p>
+            A document can be deleted by passing its key to
+            <code class="methodname">deleteDocument()</code>.  Deleting a non-existant document has no
+            effect.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.delete.example"></a><p class="title"><b>Example 80. Deleting a document</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$documents-&gt;deleteDocument("collectionName", "DocumentID");
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.fetch"></a>Fetching a document</h3></div></div></div>
+        
+
+        <p>
+            You can fetch a specific document by specifying its key.
+            <code class="methodname">fetchDocument()</code> returns one instance of
+            <code class="classname">Zend_Cloud_DocumentService_Document</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.fetch.example"></a><p class="title"><b>Example 81. Fetching a document</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$document = $service-&gt;fetchDocument('collectionName', 'DocumentID');
+echo "Document ID: " . var_export($document-&gt;getID(), 1) . "\n";
+foreach ($document-&gt;getFields() as $key =&gt; $value) {
+    echo "Field $key is $value\n";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.query"></a>Querying a collection</h3></div></div></div>
+        
+
+        <p>
+            To find documents in the collection that meet some criteria, use the
+            <code class="methodname">query()</code>method. This method accepts either a string which is an
+            adapter-dependent query and is passed as-is to the concrete adapter, or a structured query
+            object instance of <code class="classname">Zend_Cloud_DocumentService_Query</code>. The return
+            is a <code class="classname">Zend_Cloud_DocumentService_DocumentSet</code>, containing instances
+            of <code class="classname">Zend_Cloud_DocumentService_Document</code> that satisfy the query.
+            The DocumentSet object is iterable and countable.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.query.example"></a><p class="title"><b>Example 82. Querying a collection using a string query</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$docs = $documents-&gt;query(
+    "collectionName",
+    "RowKey eq 'rowkey2' or RowKey eq 'rowkey2'"
+);
+
+foreach ($docs as $doc) {
+    $id = $doc-&gt;getId();
+    echo "Found document with ID: "
+        . var_export($id, 1)
+        . "\n";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            If using a structured query object, typically, you will retrieve it using the
+            <code class="methodname">select()</code> method. This ensures that the query object is specific
+            to your adapter, which will ensure that it is assembled into a syntax your adapter
+            understands.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.query.struct-example"></a><p class="title"><b>Example 83. Querying a collection with structured query</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$query = $service-&gt;select();
+$query-&gt;from('collectionName')
+      -&gt;where('year &gt; ?', array(1945))
+      -&gt;limit(3);
+$docs = $documents-&gt;query('collectionName', $query);
+
+foreach ($docs as $doc) {
+    $id = $doc-&gt;getId();
+    echo "Found document with ID: "
+        . var_export($id, 1)
+        . "\n";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            <code class="classname">Zend_Cloud_DocumentService_Query</code> classes do not limit which query
+            clauses can be used, but the clause must be supported by the underlying concrete
+            adapter. Currently supported clauses include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">select()</code> - defines which fields are returned in the
+                    result.
+                </p>
+
+                <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+                    <p>
+                        Windows Azure ignores this clause's argument and always returns the whole
+                        document.
+                    </p>
+                </td></tr>
+</table></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">from()</code> - defines the collection name used in the query.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">where()</code> - defines the conditions of the query. It
+                    accepts three parameters: condition, array of arguments to replace "?" fields in
+                    the condition, and a conjunction argument which should be "and" or "or", and
+                    which will be used to join this condition with previous conditions.  Multiple
+                    <code class="methodname">where()</code> clasues may be specified.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">whereId()</code> - defines the condition by document ID (key).
+                    The document matching must have the same key. The method accepts one argument -
+                    the required ID (key).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">limit()</code> - limits the returned data to specified number
+                    of documents.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">order()</code> - sorts the returned data by specified field.
+                    Accepts two arguments - first is the field name and second is 'asc' or 'desc'
+                    specifying the sort direction.
+                </p>
+
+                <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+                    <p>
+                        This clause is not currently supported by Windows Azure.
+                    </p>
+                </td></tr>
+</table></div>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.select"></a>Creating a query</h3></div></div></div>
+        
+
+        <p>
+            For the user's convenience, the <code class="methodname">select()</code> method instantiates a
+            query object specific to the adapter, and sets the SELECT clause for it.
+        </p>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.select.example"></a><p class="title"><b>Example 84. Creating a structured query</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$query = $documents-&gt;select()
+                   -&gt;from('collectionName')
+                   -&gt;where('year &gt; ?', array(1945))
+                   -&gt;limit(3);
+$docs = $documents-&gt;query('collectionName', $query);
+foreach ($docs as $doc) {
+    $id = $doc-&gt;getId();
+    echo "Found document with ID: "
+        . var_export($id, 1)
+        . "\n";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cloud.documentservice.adapter"></a>Accessing concrete adapters</h3></div></div></div>
+        
+
+        <p>
+            Sometimes it is necessary to retrieve the concrete adapter for the service that the
+            Document API is working with. This can be achieved by using the
+            <code class="methodname">getAdapter()</code> method.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Accessing the underlying adapter breaks portability among services, so it should be
+                reserved for exceptional circumstances only.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="example">
+<a name="zend.cloud.documentservice.adapter.example"></a><p class="title"><b>Example 85. Using concrete adapters</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// Since SimpleCloud Document API doesn't support batch upload, use concrete adapter
+$amazonSdb = $documents-&gt;getAdapter();
+$amazonSdb-&gt;batchPutAttributes($items, 'collectionName');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.cloud.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.cloud.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.cloud.queueservice.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">SimpleCloud API: Zend_Cloud </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Queue Service Introduction</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

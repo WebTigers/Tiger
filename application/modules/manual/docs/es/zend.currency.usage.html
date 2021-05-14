@@ -1,0 +1,188 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Using Zend_Currency</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.currency.html" title="Zend_Currency">
+<link rel="prev" href="zend.currency.introduction.html" title="Introduction to Zend_Currency">
+<link rel="next" href="zend.currency.options.html" title="Options for currencies">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Using Zend_Currency</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.currency.introduction.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Currency</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.currency.options.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.currency.usage"></a>Using Zend_Currency</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.currency.usage.generic"></a>Generic usage</h3></div></div></div>
+        
+
+        <p>
+            The simplest usecase within an application is to use the clients locale. When you create
+            a instance of <code class="classname">Zend_Currency</code> without giving any options, your
+            clients locale will be used to set the proper currency.
+        </p>
+
+        <div class="example">
+<a name="zend.currency.usage.generic.example-1"></a><p class="title"><b>Ejemplo 155. Creating a currency with client settings</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                Let's assume that your client has set "en_US" as wished language within his browser.
+                In this case <code class="classname">Zend_Currency</code> will automatically detect the
+                currency which has to be used.
+            </p>
+
+            <pre class="programlisting">
+$currency = new Zend_Currency();
+
+// See the default settings which are depending on the client
+// var_dump($currency);
+</pre>
+
+            <p>
+                The created object would now contain the currency "US Dollar" as this is the actual
+                assigned currency for US (United States). It has also other options set, like
+                "$" for the currency sign or "USD" for the abbreviation.
+            </p>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note: Automatic locale detection does not always work">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Automatic locale detection does not always work</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                You should note that this automatic locale detection does not always work properly.
+                The reason for this behaviour is that <code class="classname">Zend_Currency</code> must have
+                a locale which includes a region. When the client would only set "en" as locale
+                <code class="classname">Zend_Currency</code> would not know which of the more than 30
+                countries was meant. In this case an exception would be raised.
+            </p>
+
+            <p>
+                A client could also omit the locale settings within his browser. This would lead to
+                the problem that your environment settings will be used as fallback and could also
+                lead to an exception.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.currency.usage.locale"></a>Currency creation based on a locale</h3></div></div></div>
+        
+
+        <p>
+            To prevent the problems with your client you could simply set the wished locale
+            manually.
+        </p>
+
+        <pre class="programlisting">
+$currency = new Zend_Currency('en_US');
+
+// You can also use the 'locale' option
+// $currency = new Zend_Currency(array('locale' =&gt; 'en_US'));
+
+// See the actual settings which are fixed to 'en_US'
+// var_dump($currency);
+</pre>
+
+        <p>
+            As within our first example the used currency will be "US Dollar". But now we are no
+            longer dependend on the clients settings.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Currency</code> also supports the usage of an application-wide
+            locale. You can set a <code class="classname">Zend_Locale</code> instance in the registry as
+            shown below. With this notation you can avoid setting the locale manually for each
+            instance when you want to use the same locale throughout the application.
+        </p>
+
+        <pre class="programlisting">
+// in your bootstrap file
+$locale = new Zend_Locale('de_AT');
+Zend_Registry::set('Zend_Locale', $locale);
+
+// somewhere in your application
+$currency = new Zend_Currency();
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.currency.usage.territory"></a>Currency creation based on a country</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Currency</code> is also able to work on a given country by using
+            <code class="classname">Zend_Locale</code> internally.
+        </p>
+
+        <pre class="programlisting">
+$currency = new Zend_Currency('US');
+
+// See the actual settings which are fixed to 'en_US'
+// var_dump($currency);
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Uppercase territories">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Uppercase territories</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                When you know that you are using a territory, then you should uppercase it.
+                Otherwise you could get an in your eyes false locale in return. For example,
+                when you give "om" then you could expect "ar_OM" to be returned. But in fact it
+                returns "om", as it's also a language.
+            </p>
+
+            <p>
+                Therefor always uppercase the input when you know that a territory is meant.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.currency.introduction.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.currency.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.currency.options.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction to Zend_Currency </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Options for currencies</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

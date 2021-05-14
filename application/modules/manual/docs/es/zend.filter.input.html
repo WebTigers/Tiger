@@ -1,0 +1,1163 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Filter_Input</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.filter.html" title="Zend_Filter">
+<link rel="prev" href="zend.filter.writing_filters.html" title="Writing Filters">
+<link rel="next" href="zend.filter.inflector.html" title="Zend_Filter_Inflector">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Filter_Input</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.filter.writing_filters.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Filter</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.filter.inflector.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.filter.input"></a>Zend_Filter_Input</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Filter_Input</code> provides a declarative interface to associate
+        multiple filters and validators, apply them to collections of data, and
+        to retrieve input values after they have been processed by the filters
+        and validators. Values are returned in escaped format by default for
+        safe <acronym class="acronym">HTML</acronym> output.
+    </p>
+
+    <p>
+        Consider the metaphor that this class is a cage for external data.
+        Data enter the application from external sources, such as <acronym class="acronym">HTTP</acronym> request
+        parameters, <acronym class="acronym">HTTP</acronym> headers, a web service, or even read from a database
+        or another file. Data are first put into the cage, and subsequently
+        the application can access data only by telling the cage what the data
+        should be and how they plan to use it. The cage inspects the data for
+        validity. It might apply escaping to the data values for the
+        appropriate context. The cage releases data only if it can fulfill
+        these responsibilities. With a simple and convenient interface, it
+        encourages good programming habits and makes developers think about how
+        data are used.
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Filters</em></span> transform input
+                values, by removing or changing characters within the value.
+                The goal is to "normalize" input values until they match an
+                expected format. For example, if a string of numeric digits is
+                needed, and the input value is "abc123", then it might be a
+                reasonable transformation to change the value to the string
+                "123".
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Validators</em></span> check input
+                values against criteria and report whether they passed the test
+                or not. The value is not changed, but the check may fail. For
+                example, if a string must look like an email address, and the
+                input value is "abc123", then the value is not considered
+                valid.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Escapers</em></span> transform a value
+                by removing magic behavior of certain characters. In some
+                output contexts, special characters have meaning. For example,
+                the characters '&lt;' and '&gt;' delimit <acronym class="acronym">HTML</acronym> tags, and if a
+                string containing those characters is output in an <acronym class="acronym">HTML</acronym>
+                context, the content between them might affect the output or
+                functionality of the <acronym class="acronym">HTML</acronym> presentation. Escaping the
+                characters removes the special meaning, so they are output as
+                literal characters.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        To use <code class="classname">Zend_Filter_Input</code>, perform the following steps:
+    </p>
+
+    <div class="orderedlist"><ol class="orderedlist" type="1">
+<li class="listitem">
+            <p>
+                Declare filter and validator rules
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Create the filter and validator processor
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Provide input data
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Retrieve validated fields and other reports
+            </p>
+        </li>
+</ol></div>
+
+    <p>
+        The following sections describe the steps for using this class.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.filter.input.declaring"></a>Declaring Filter and Validator Rules</h3></div></div></div>
+
+        
+
+        <p>
+            Before creating an instance of <code class="classname">Zend_Filter_Input</code>, declare an
+            array of filter rules and an array of validator rules.
+            This associative array maps a rule name to a filter or
+            validator or a chain of filters or validators.
+        </p>
+
+        <p>
+            The following example filter rule set that declares the field
+            'month' is filtered by <code class="classname">Zend_Filter_Digits</code>, and the field
+            'account' is filtered by <code class="classname">Zend_Filter_StringTrim</code>. Then a
+            validation rule set declares that the field 'account' is valid only if it contains only
+            alphabetical characters.
+        </p>
+
+        <pre class="programlisting">
+$filters = array(
+    'month'   =&gt; 'Digits',
+    'account' =&gt; 'StringTrim'
+);
+
+$validators = array(
+    'account' =&gt; 'Alpha'
+);
+</pre>
+
+        <p>
+            Each key in the <code class="varname">$filters</code> array above is the name of a rule for
+            applying a filter to a specific data field. By default, the name of the rule
+            is also the name of the input data field to which to apply the rule.
+        </p>
+
+        <p>
+            You can declare a rule in several formats:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    A single string scalar, which is mapped to a class name.
+                </p>
+
+                <pre class="programlisting">
+$validators = array(
+    'month'   =&gt; 'Digits',
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    An object instance of one of the classes that implement
+                    <code class="classname">Zend_Filter_Interface</code> or
+                    <code class="classname">Zend_Validate_Interface</code>.
+                </p>
+
+                <pre class="programlisting">
+$digits = new Zend_Validate_Digits();
+
+$validators = array(
+    'month'   =&gt; $digits
+);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    An array, to declare a chain of filters or validators.
+                    The elements of this array can be strings mapping to class
+                    names or filter/validator objects, as in the cases
+                    described above. In addition, you can use a third choice:
+                    an array containing a string mapping to the class name
+                    followed by arguments to pass to its constructor.
+                </p>
+
+                <pre class="programlisting">
+$validators = array(
+    'month'   =&gt; array(
+        'Digits',                // string
+        new Zend_Validate_Int(), // object instance
+        array('Between', 1, 12)  // string with constructor arguments
+    )
+);
+</pre>
+            </li>
+</ul></div>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                If you declare a filter or validator with constructor arguments
+                in an array, then you must make an array for the rule, even if
+                the rule has only one filter or validator.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            You can use a special "wildcard" rule key <span class="emphasis"><em>'*'</em></span> in
+            either the filters array or the validators array. This means that
+            the filters or validators declared in this rule will be applied to
+            all input data fields. Note that the order of entries in the
+            filters array or validators array is significant; the rules are
+            applied in the same order in which you declare them.
+        </p>
+
+        <pre class="programlisting">
+$filters = array(
+    '*'     =&gt; 'StringTrim',
+    'month' =&gt; 'Digits'
+);
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.filter.input.running"></a>Creating the Filter and Validator Processor</h3></div></div></div>
+        
+
+        <p>
+            After declaring the filters and validators arrays, use them as
+            arguments in the constructor of <code class="classname">Zend_Filter_Input</code>. This returns
+            an object that knows all your filtering and validating rules, and you
+            can use this object to process one or more sets of input data.
+        </p>
+
+        <pre class="programlisting">
+$input = new Zend_Filter_Input($filters, $validators);
+</pre>
+
+        <p>
+            You can specify input data as the third constructor argument. The
+            data structure is an associative array. The keys are field names,
+            and the values are data values. The standard <code class="varname">$_GET</code>
+            and <code class="varname">$_POST</code> superglobal variables in <acronym class="acronym">PHP</acronym> are
+            examples of this format. You can use either of these variables as input
+            data for <code class="classname">Zend_Filter_Input</code>.
+        </p>
+
+        <pre class="programlisting">
+$data = $_GET;
+
+$input = new Zend_Filter_Input($filters, $validators, $data);
+</pre>
+
+        <p>
+            Alternatively, use the <code class="methodname">setData()</code> method, passing
+            an associative array of key/value pairs the same format as
+            described above.
+        </p>
+
+        <pre class="programlisting">
+$input = new Zend_Filter_Input($filters, $validators);
+$input-&gt;setData($newData);
+</pre>
+
+        <p>
+            The <code class="methodname">setData()</code> method redefines data in an existing
+            <code class="classname">Zend_Filter_Input</code> object without changing the filtering and
+            validation rules. Using this method, you can run the same rules
+            against different sets of input data.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.filter.input.results"></a>Retrieving Validated Fields and other Reports</h3></div></div></div>
+        
+
+        <p>
+            After you have declared filters and validators and created the
+            input processor, you can retrieve reports of missing, unknown, and
+            invalid fields. You also can get the values of fields after
+            filters have been applied.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.filter.input.results.isvalid"></a>Querying if the input is valid</h4></div></div></div>
+            
+
+            <p>
+                If all input data pass the validation rules, the
+                <code class="methodname">isValid()</code> method returns <code class="constant">TRUE</code>.
+                If any field is invalid or any required field is missing,
+                <code class="methodname">isValid()</code> returns <code class="constant">FALSE</code>.
+            </p>
+
+            <pre class="programlisting">
+if ($input-&gt;isValid()) {
+  echo "OK\n";
+}
+</pre>
+
+            <p>
+                This method accepts an optional string argument, naming
+                an individual field. If the specified field passed validation
+                and is ready for fetching, <code class="methodname">isValid('fieldName')</code>
+                returns <code class="constant">TRUE</code>.
+            </p>
+
+            <pre class="programlisting">
+if ($input-&gt;isValid('month')) {
+  echo "Field 'month' is OK\n";
+}
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.filter.input.results.reports"></a>Getting Invalid, Missing, or Unknown Fields</h4></div></div></div>
+            
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>Invalid</em></span> fields are
+                        those that don't pass one or more of their validation
+                        checks.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>Missing</em></span> fields are
+                        those that are not present in the input data, but were
+                        declared with the metacommand
+                        <span class="command"><strong>'presence'=&gt;'required'</strong></span> (see the
+                        <a class="link" href="zend.filter.input.html#zend.filter.input.metacommands.presence" title="The PRESENCE metacommand">later section</a>
+                        on metacommands).
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>Unknown</em></span> fields are
+                        those that are not declared in any rule in the array of
+                        validators, but appear in the input data.
+                    </p>
+                </li>
+</ul></div>
+
+            <pre class="programlisting">
+if ($input-&gt;hasInvalid() || $input-&gt;hasMissing()) {
+  $messages = $input-&gt;getMessages();
+}
+
+// getMessages() simply returns the merge of getInvalid() and
+// getMissing()
+
+if ($input-&gt;hasInvalid()) {
+  $invalidFields = $input-&gt;getInvalid();
+}
+
+if ($input-&gt;hasMissing()) {
+  $missingFields = $input-&gt;getMissing();
+}
+
+if ($input-&gt;hasUnknown()) {
+  $unknownFields = $input-&gt;getUnknown();
+}
+</pre>
+
+            <p>
+                The results of the <code class="methodname">getMessages()</code> method is an
+                associative array, mapping a rule name to an array of error
+                messages related to that rule. Note that the index of this
+                array is the rule name used in the rule declaration, which may
+                be different from the names of fields checked by the rule.
+            </p>
+
+            <p>
+                The <code class="methodname">getMessages()</code> method returns the merge of the
+                arrays returned by the <code class="methodname">getInvalid()</code> and
+                <code class="methodname">getMissing()</code>. These methods return subsets of the
+                messages, related to validation failures, or fields that were
+                declared as required but missing from the input.
+            </p>
+
+            <p>
+                The <code class="methodname">getErrors()</code> method returns an associative array,
+                mapping a rule name to an array of error identifiers. Error
+                identifiers are fixed strings, to identify the reason for a
+                validation failure, while messages can be customized.
+                See <a class="link" href="zend.validate.introduction.html#zend.validate.introduction.using" title="Uso básico de validadores">this chapter</a> for
+                more information.
+            </p>
+
+            <p>
+                You can specify the message returned by
+                <code class="methodname">getMissing()</code> using the 'missingMessage' option,
+                as an argument to the <code class="classname">Zend_Filter_Input</code> constructor or using
+                the <code class="methodname">setOptions()</code> method.
+            </p>
+
+            <pre class="programlisting">
+$options = array(
+    'missingMessage' =&gt; "Field '%field%' is required"
+);
+
+$input = new Zend_Filter_Input($filters, $validators, $data, $options);
+
+// alternative method:
+
+$input = new Zend_Filter_Input($filters, $validators, $data);
+$input-&gt;setOptions($options);
+</pre>
+
+            <p>
+                And you can also add a translator which gives you the ability to provide multiple
+                languages for the messages which are returned by
+                <code class="classname">Zend_Filter_Input</code>.
+            </p>
+
+            <pre class="programlisting">
+$translate = new Zend_Translate_Adapter_Array(array(
+    'content' =&gt; array(
+        Zend_Filter_Input::MISSING_MESSAGE =&gt; "Where is the field?"
+    )
+);
+
+$input = new Zend_Filter_Input($filters, $validators, $data);
+$input-&gt;setTranslator($translate);
+</pre>
+
+            <p>
+                When you are using an application wide translator, then it will also be used by
+                <code class="classname">Zend_Filter_Input</code>. In this case you will not have to set the
+                translator manually.
+            </p>
+
+            <p>
+                The results of the <code class="methodname">getUnknown()</code> method is an
+                associative array, mapping field names to field values. Field
+                names are used as the array keys in this case, instead of rule
+                names, because no rule mentions the fields considered to be
+                unknown fields.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.filter.input.results.escaping"></a>Getting Valid Fields</h4></div></div></div>
+            
+
+            <p>
+                All fields that are neither invalid, missing, nor unknown are
+                considered valid. You can get values for valid fields using a
+                magic accessor. There are also non-magic accessor methods
+                <code class="methodname">getEscaped()</code> and <code class="methodname">getUnescaped()</code>.
+            </p>
+
+            <pre class="programlisting">
+$m = $input-&gt;month;                 // escaped output from magic accessor
+$m = $input-&gt;getEscaped('month');   // escaped output
+$m = $input-&gt;getUnescaped('month'); // not escaped
+</pre>
+
+            <p>
+                By default, when retrieving a value, it is filtered with the
+                <code class="classname">Zend_Filter_HtmlEntities</code>. This is the default because it is
+                considered the most common usage to output the value of a field
+                in <acronym class="acronym">HTML</acronym>. The HtmlEntities filter helps prevent unintentional
+                output of code, which can result in security problems.
+            </p>
+
+            <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    As shown above, you can retrieve the unescaped value using
+                    the <code class="methodname">getUnescaped()</code> method, but you must write
+                    code to use the value safely, and avoid security issues
+                    such as vulnerability to cross-site scripting attacks.
+                </p>
+            </td></tr>
+</table></div>
+
+            <div class="warning"><table border="0" summary="Warning: Escaping unvalidated fields">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Aviso]" src="images/warning.png"></td>
+<th align="left">Escaping unvalidated fields</th>
+</tr>
+<tr><td align="left" valign="top">
+                
+
+                <p>
+                    As mentioned before <code class="methodname">getEscaped()</code> returns only validated
+                    fields. Fields which do not have an associated validator can not be received
+                    this way. Still, there is a possible way. You can add a empty validator for all
+                    fields.
+                </p>
+
+                <pre class="programlisting">
+$validators = array('*' =&gt; array());
+
+$input = new Zend_Filter_Input($filters, $validators, $data, $options);
+</pre>
+
+                <p>
+                    But be warned that using this notation introduces a security leak which could
+                    be used for cross-site scripting attacks. Therefor you should always set
+                    individual validators for each field.
+                </p>
+            </td></tr>
+</table></div>
+
+            <p>
+                You can specify a different filter for escaping values, by
+                specifying it in the constructor options array:
+            </p>
+
+            <pre class="programlisting">
+$options = array('escapeFilter' =&gt; 'StringTrim');
+$input = new Zend_Filter_Input($filters, $validators, $data, $options);
+</pre>
+
+            <p>
+                Alternatively, you can use the
+                <code class="methodname">setDefaultEscapeFilter()</code> method:
+            </p>
+
+            <pre class="programlisting">
+$input = new Zend_Filter_Input($filters, $validators, $data);
+$input-&gt;setDefaultEscapeFilter(new Zend_Filter_StringTrim());
+</pre>
+
+            <p>
+                In either usage, you can specify the escape filter as a string
+                base name of the filter class, or as an object instance of a
+                filter class. The escape filter can be an instance of a filter
+                chain, an object of the class <code class="classname">Zend_Filter</code>.
+            </p>
+
+            <p>
+                Filters to escape output should be run in this way, to make
+                sure they run after validation. Other filters you declare in
+                the array of filter rules are applied to input data before data
+                are validated. If escaping filters were run before validation,
+                the process of validation would be more complex, and it would
+                be harder to provide both escaped and unescaped versions of the
+                data. So it is recommended to declare filters to escape output
+                using <code class="methodname">setDefaultEscapeFilter()</code>, not in the
+                <code class="varname">$filters</code> array.
+            </p>
+
+            <p>
+                There is only one method <code class="methodname">getEscaped()</code>, and
+                therefore you can specify only one filter for escaping
+                (although this filter can be a filter chain). If you need a
+                single instance of <code class="classname">Zend_Filter_Input</code> to return escaped output
+                using more than one filtering method, you should extend
+                <code class="classname">Zend_Filter_Input</code> and implement new methods in your subclass
+                to get values in different ways.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.filter.input.metacommands"></a>Using Metacommands to Control Filter or Validator Rules</h3></div></div></div>
+        
+
+        <p>
+            In addition to declaring the mapping from fields to filters
+            or validators, you can specify some "metacommands" in the array
+            declarations, to control some optional behavior of
+            <code class="classname">Zend_Filter_Input</code>. Metacommands appear as string-indexed
+            entries in a given filter or validator array value.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.filter.input.metacommands.fields"></a>The FIELDS metacommand</h4></div></div></div>
+            
+
+            <p>
+                If the rule name for a filter or validator is different than
+                the field to which it should apply, you can specify the
+                field name with the 'fields' metacommand.
+            </p>
+
+            <p>
+                You can specify this metacommand using the class constant
+                <code class="constant">Zend_Filter_Input::FIELDS</code> instead of the
+                string.
+            </p>
+
+            <pre class="programlisting">
+$filters = array(
+    'month' =&gt; array(
+        'Digits',        // filter name at integer index [0]
+        'fields' =&gt; 'mo' // field name at string index ['fields']
+    )
+);
+</pre>
+
+            <p>
+                In the example above, the filter rule applies the 'digits'
+                filter to the input field named 'mo'. The string 'month'
+                simply becomes a mnemonic key for this filtering rule; it is
+                not used as the field name if the field is specified with the
+                'fields' metacommand, but it is used as the rule name.
+            </p>
+
+            <p>
+                The default value of the 'fields' metacommand is the index of
+                the current rule. In the example above, if the 'fields'
+                metacommand is not specified, the rule would apply to the input
+                field named 'month'.
+            </p>
+
+            <p>
+                Another use of the 'fields' metacommand is to specify fields
+                for filters or validators that require multiple fields as
+                input. If the 'fields' metacommand is an array, the argument
+                to the corresponding filter or validator is an array of the
+                values of those fields. For example, it is common for users to
+                specify a password string in two fields, and they must type the
+                same string in both fields. Suppose you implement a validator
+                class that takes an array argument, and returns
+                <code class="constant">TRUE</code> if all the values in the array are equal to
+                each other.
+            </p>
+
+            <pre class="programlisting">
+$validators = array(
+    'password' =&gt; array(
+        'StringEquals',
+        'fields' =&gt; array('password1', 'password2')
+    )
+);
+// Invokes hypothetical class Zend_Validate_StringEquals,
+// passing an array argument containing the values of the two input
+// data fields named 'password1' and 'password2'.
+</pre>
+
+            <p>
+                If the validation of this rule fails, the rule key ('password') is used in the
+                return value of <code class="methodname">getInvalid()</code>, not any of the fields named
+                in the 'fields' metacommand.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.filter.input.metacommands.presence"></a>The PRESENCE metacommand</h4></div></div></div>
+            
+
+            <p>
+                Each entry in the validator array may have a metacommand called
+                'presence'. If the value of this metacommand is 'required'
+                then the field must exist in the input data, or else it is
+                reported as a missing field.
+            </p>
+
+            <p>
+                You can specify this metacommand using the class constant
+                <code class="constant">Zend_Filter_Input::PRESENCE</code> instead of the
+                string.
+            </p>
+
+            <pre class="programlisting">
+$validators = array(
+    'month' =&gt; array(
+        'digits',
+        'presence' =&gt; 'required'
+    )
+);
+</pre>
+
+            <p>
+                The default value of this metacommand is 'optional'.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.filter.input.metacommands.default"></a>The DEFAULT_VALUE metacommand</h4></div></div></div>
+            
+
+            <p>
+                If a field is not present in the input data, and you specify a
+                value for the 'default' metacommand for that rule, the field
+                takes the value of the metacommand.
+            </p>
+
+            <p>
+                You can specify this metacommand using the class constant
+                <code class="constant">Zend_Filter_Input::DEFAULT_VALUE</code> instead of the
+                string.
+            </p>
+
+            <p>
+                This default value is assigned to the field before any of the
+                validators are invoked. The default value is applied to the
+                field only for the current rule; if the same field is
+                referenced in a subsequent rule, the field has no value when
+                evaluating that rule. Thus different rules can declare
+                different default values for a given field.
+            </p>
+
+            <pre class="programlisting">
+$validators = array(
+    'month' =&gt; array(
+        'digits',
+        'default' =&gt; '1'
+    )
+);
+
+// no value for 'month' field
+$data = array();
+
+$input = new Zend_Filter_Input(null, $validators, $data);
+echo $input-&gt;month; // echoes 1
+</pre>
+
+            <p>
+                If your rule uses the <code class="constant">FIELDS</code> metacommand
+                to define an array of multiple fields, you can define
+                an array for the <code class="constant">DEFAULT_VALUE</code> metacommand
+                and the defaults of corresponding keys are used for any
+                missing fields. If <code class="constant">FIELDS</code> defines multiple
+                fields but <code class="constant">DEFAULT_VALUE</code> is a scalar, then
+                that default value is used as the value for any missing
+                fields in the array.
+            </p>
+
+            <p>
+                There is no default value for this metacommand.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.filter.input.metacommands.allow-empty"></a>The ALLOW_EMPTY metacommand</h4></div></div></div>
+            
+
+            <p>
+                By default, if a field exists in the input data, then
+                validators are applied to it, even if the value of the field is
+                an empty string (<span class="emphasis"><em>''</em></span>). This is likely to result in
+                a failure to validate. For example, if the validator checks
+                for digit characters, and there are none because a zero-length
+                string has no characters, then the validator reports the data
+                as invalid.
+            </p>
+
+            <p>
+                If in your case an empty string should be considered valid, you
+                can set the metacommand 'allowEmpty' to <code class="constant">TRUE</code>.
+                Then the input data passes validation if it is present in the
+                input data, but has the value of an empty string.
+            </p>
+
+            <p>
+                You can specify this metacommand using the class constant
+                <code class="constant">Zend_Filter_Input::ALLOW_EMPTY</code> instead of the
+                string.
+            </p>
+
+            <pre class="programlisting">
+$validators = array(
+    'address2' =&gt; array(
+        'Alnum',
+        'allowEmpty' =&gt; true
+    )
+);
+</pre>
+
+            <p>
+                The default value of this metacommand is <code class="constant">FALSE</code>.
+            </p>
+
+            <p>
+                In the uncommon case that you declare a validation rule with
+                no validators, but the 'allowEmpty' metacommand is
+                <code class="constant">FALSE</code> (that is, the field is considered invalid if
+                it is empty), <code class="classname">Zend_Filter_Input</code> returns a default error
+                message that you can retrieve with <code class="methodname">getMessages()</code>. You can
+                specify this message using the 'notEmptyMessage' option, as an
+                argument to the <code class="classname">Zend_Filter_Input</code> constructor or using the
+                <code class="methodname">setOptions()</code> method.
+            </p>
+
+            <pre class="programlisting">
+$options = array(
+    'notEmptyMessage' =&gt; "A non-empty value is required for field '%field%'"
+);
+
+$input = new Zend_Filter_Input($filters, $validators, $data, $options);
+
+// alternative method:
+
+$input = new Zend_Filter_Input($filters, $validators, $data);
+$input-&gt;setOptions($options);
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.filter.input.metacommands.break-chain"></a>The BREAK_CHAIN metacommand</h4></div></div></div>
+            
+
+            <p>
+                By default if a rule has more than one validator, all
+                validators are applied to the input, and the resulting messages
+                contain all error messages caused by the input.
+            </p>
+
+            <p>
+                Alternatively, if the value of the 'breakChainOnFailure'
+                metacommand is <code class="constant">TRUE</code>, the validator chain
+                terminates after the first validator fails. The input data is
+                not checked against subsequent validators in the chain, so it
+                might cause more violations even if you correct the one
+                reported.
+            </p>
+
+            <p>
+                You can specify this metacommand using the class constant
+                <code class="constant">Zend_Filter_Input::BREAK_CHAIN</code> instead of the
+                string.
+            </p>
+
+            <pre class="programlisting">
+$validators = array(
+    'month' =&gt; array(
+        'Digits',
+        new Zend_Validate_Between(1,12),
+        new Zend_Validate_GreaterThan(0),
+        'breakChainOnFailure' =&gt; true
+    )
+);
+$input = new Zend_Filter_Input(null, $validators);
+</pre>
+
+            <p>
+                The default value of this metacommand is <code class="constant">FALSE</code>.
+            </p>
+
+            <p>
+                The validator chain class, <code class="classname">Zend_Validate</code>, is more flexible
+                with respect to breaking chain execution than
+                <code class="classname">Zend_Filter_Input</code>. With the former class, you can set the
+                option to break the chain on failure independently for each validator in the chain.
+                With the latter class, the defined value of the
+                'breakChainOnFailure' metacommand for a rule applies uniformly
+                for all validators in the rule. If you require the more
+                flexible usage, you should create the validator chain yourself,
+                and use it as an object in the validator rule
+                definition:
+            </p>
+
+            <pre class="programlisting">
+// Create validator chain with non-uniform breakChainOnFailure
+// attributes
+$chain = new Zend_Validate();
+$chain-&gt;addValidator(new Zend_Validate_Digits(), true);
+$chain-&gt;addValidator(new Zend_Validate_Between(1,12), false);
+$chain-&gt;addValidator(new Zend_Validate_GreaterThan(0), true);
+
+// Declare validator rule using the chain defined above
+$validators = array(
+    'month' =&gt; $chain
+);
+$input = new Zend_Filter_Input(null, $validators);
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.filter.input.metacommands.messages"></a>The MESSAGES metacommand</h4></div></div></div>
+            
+
+            <p>
+                You can specify error messages for each validator in a rule
+                using the metacommand 'messages'. The value of this metacommand
+                varies based on whether you have multiple validators in the
+                rule, or if you want to set the message for a specific error
+                condition in a given validator.
+            </p>
+
+            <p>
+                You can specify this metacommand using the class constant
+                <code class="constant">Zend_Filter_Input::MESSAGES</code> instead of the
+                string.
+            </p>
+
+            <p>
+                Below is a simple example of setting the default error message
+                for a single validator.
+            </p>
+
+            <pre class="programlisting">
+$validators = array(
+    'month' =&gt; array(
+        'digits',
+        'messages' =&gt; 'A month must consist only of digits'
+    )
+);
+</pre>
+
+            <p>
+                If you have multiple validators for which you want to set the
+                error message, you should use an array for the value of the
+                'messages' metacommand.
+            </p>
+
+            <p>
+                Each element of this array is applied to the validator at the
+                same index position. You can specify a message for the
+                validator at position <span class="emphasis"><em>n</em></span> by using the value
+                <span class="emphasis"><em>n</em></span> as the array index. Thus you can allow
+                some validators to use their default message, while setting the
+                message for a subsequent validator in the chain.
+            </p>
+
+            <pre class="programlisting">
+$validators = array(
+    'month' =&gt; array(
+        'digits',
+        new Zend_Validate_Between(1, 12),
+        'messages' =&gt; array(
+            // use default message for validator [0]
+            // set new message for validator [1]
+            1 =&gt; 'A month value must be between 1 and 12'
+        )
+    )
+);
+</pre>
+
+            <p>
+                If one of your validators has multiple error messages, they are
+                identified by a message key. There are different keys in each
+                validator class, serving as identifiers for error messages that
+                the respective validator class might generate. Each validate
+                class defines constants for its message keys. You can use
+                these keys in the 'messages' metacommand by passing an
+                associative array instead of a string.
+            </p>
+
+            <pre class="programlisting">
+$validators = array(
+    'month' =&gt; array(
+        'digits', new Zend_Validate_Between(1, 12),
+        'messages' =&gt; array(
+            'A month must consist only of digits',
+            array(
+                Zend_Validate_Between::NOT_BETWEEN =&gt;
+                    'Month value %value% must be between ' .
+                    '%min% and %max%',
+                Zend_Validate_Between::NOT_BETWEEN_STRICT =&gt;
+                    'Month value %value% must be strictly between ' .
+                    '%min% and %max%'
+            )
+        )
+    )
+);
+</pre>
+
+            <p>
+                You should refer to documentation for each validator class to
+                know if it has multiple error messages, the keys of these
+                messages, and the tokens you can use in the message templates.
+            </p>
+
+            <p>
+                If you have only one validator in validation rule or all used validators
+                has the same messages set, then they can be referenced without additional
+                array construction:
+            </p>
+
+            <pre class="programlisting">
+$validators = array(
+    'month' =&gt; array(
+        new Zend_Validate_Between(1, 12),
+        'messages' =&gt; array(
+                        Zend_Validate_Between::NOT_BETWEEN =&gt;
+                            'Month value %value% must be between ' .
+                            '%min% and %max%',
+                        Zend_Validate_Between::NOT_BETWEEN_STRICT =&gt;
+                            'Month value %value% must be strictly between ' .
+                            '%min% and %max%'
+        )
+    )
+);
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.filter.input.metacommands.global"></a>Using options to set metacommands for all rules</h4></div></div></div>
+            
+
+            <p>
+                The default value for 'allowEmpty', 'breakChainOnFailure', and
+                'presence' metacommands can be set for all rules using the
+                <code class="varname">$options</code> argument to the constructor of
+                <code class="classname">Zend_Filter_Input</code>. This allows you to set the default value
+                for all rules, without requiring you to set the metacommand for
+                every rule.
+            </p>
+
+            <pre class="programlisting">
+// The default is set so all fields allow an empty string.
+$options = array('allowEmpty' =&gt; true);
+
+// You can override this in a rule definition,
+// if a field should not accept an empty string.
+$validators = array(
+    'month' =&gt; array(
+        'Digits',
+        'allowEmpty' =&gt; false
+    )
+);
+
+$input = new Zend_Filter_Input($filters, $validators, $data, $options);
+</pre>
+
+            <p>
+                The 'fields', 'messages', and 'default' metacommands cannot be
+                set using this technique.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.filter.input.namespaces"></a>Adding Filter Class Namespaces</h3></div></div></div>
+        
+
+        <p>
+            By default, when you declare a filter or validator as a string,
+            <code class="classname">Zend_Filter_Input</code> searches for the corresponding classes under
+            the <code class="classname">Zend_Filter</code> or <code class="classname">Zend_Validate</code>
+            namespaces. For example, a filter named by the string 'digits' is found in the class
+            <code class="classname">Zend_Filter_Digits</code>.
+        </p>
+
+        <p>
+            If you write your own filter or validator classes, or use filters
+            or validators provided by a third-party, the classes may exist in
+            different namespaces than <code class="classname">Zend_Filter</code> or
+            <code class="classname">Zend_Validate</code>. You can tell
+            <code class="classname">Zend_Filter_Input</code> to search more namespaces. You can specify
+            namespaces in the constructor options:
+        </p>
+
+        <pre class="programlisting">
+$options = array('filterNamespace' =&gt; 'My_Namespace_Filter',
+                 'validatorNamespace' =&gt; 'My_Namespace_Validate');
+$input = new Zend_Filter_Input($filters, $validators, $data, $options);
+</pre>
+
+        <p>
+            Alternatively, you can use the <code class="methodname">addValidatorPrefixPath($prefix,
+                $path)</code> or <code class="methodname">addFilterPrefixPath($prefix, $path)</code>
+            methods, which directly proxy to the plugin loader that is used by
+            <code class="classname">Zend_Filter_Input</code>:
+        </p>
+
+        <pre class="programlisting">
+$input-&gt;addValidatorPrefixPath('Other_Namespace', 'Other/Namespace');
+$input-&gt;addFilterPrefixPath('Foo_Namespace', 'Foo/Namespace');
+
+// Now the search order for validators is:
+// 1. My_Namespace_Validate
+// 2. Other_Namespace
+// 3. Zend_Validate
+
+// The search order for filters is:
+// 1. My_Namespace_Filter
+// 2. Foo_Namespace
+// 3. Zend_Filter
+</pre>
+
+        <p>
+            You cannot remove <code class="classname">Zend_Filter</code> and
+            <code class="classname">Zend_Validate</code> as namespaces, you only can add namespaces.
+            User-defined namespaces are searched first, Zend namespaces are searched last.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                As of version 1.5 the function <code class="methodname">addNamespace($namespace)</code>
+                was deprecated and exchanged with the plugin loader and the
+                <code class="methodname">addFilterPrefixPath()</code> and
+                <code class="methodname">addValidatorPrefixPath()</code> were added. Also the constant
+                <code class="constant">Zend_Filter_Input::INPUT_NAMESPACE</code> is now deprecated. The
+                constants <code class="constant">Zend_Filter_Input::VALIDATOR_NAMESPACE</code> and
+                <code class="constant">Zend_Filter_Input::FILTER_NAMESPACE</code> are available in releases
+                after 1.7.0.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                As of version 1.0.4, <code class="constant">Zend_Filter_Input::NAMESPACE</code>, having
+                value <span class="property">namespace</span>, was changed to
+                <code class="constant">Zend_Filter_Input::INPUT_NAMESPACE</code>, having value
+                <span class="property">inputNamespace</span>, in order to comply with the
+                <acronym class="acronym">PHP</acronym> 5.3 reservation of the keyword
+                <span class="property">namespace</span>.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.filter.writing_filters.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.filter.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.filter.inflector.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Writing Filters </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Zend_Filter_Inflector</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

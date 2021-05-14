@@ -1,0 +1,230 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Basic Usage</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.session.html" title="Zend_Session">
+<link rel="prev" href="zend.session.introduction.html" title="Introduction">
+<link rel="next" href="zend.session.advanced_usage.html" title="Advanced Usage">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Basic Usage</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.session.introduction.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Session</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.session.advanced_usage.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.session.basic_usage"></a>Basic Usage</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Session_Namespace</code> instances provide the primary
+        <acronym class="acronym">API</acronym> for manipulating session data in the Zend Framework. Namespaces are
+        used to segregate all session data, although a default namespace exists for those who only
+        want one namespace for all their session data. <code class="classname">Zend_Session</code> utilizes
+        ext/session and its special <code class="varname">$_SESSION</code> superglobal as the storage
+        mechanism for session state data. while <code class="varname">$_SESSION</code> is still available in
+        <acronym class="acronym">PHP</acronym>'s global namespace, developers should refrain from directly accessing
+        it, so that <code class="classname">Zend_Session</code> and
+        <code class="classname">Zend_Session_Namespace</code> can most effectively and securely provide its
+        suite of session related functionality.
+    </p>
+
+    <p>
+        Each instance of <code class="classname">Zend_Session_Namespace</code> corresponds to an entry of
+        the <code class="varname">$_SESSION</code> superglobal array, where the namespace is used as the key.
+    </p>
+
+    <pre class="programlisting">
+$myNamespace = new Zend_Session_Namespace('myNamespace');
+
+// $myNamespace corresponds to $_SESSION['myNamespace']
+</pre>
+
+    <p>
+        It is possible to use <code class="classname">Zend_Session</code> in conjunction with other code
+        that uses <code class="varname">$_SESSION</code> directly. To avoid problems, however, it is highly
+        recommended that such code only uses parts of <code class="varname">$_SESSION</code> that do not
+        correspond to instances of <code class="classname">Zend_Session_Namespace</code>.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.session.basic_usage.basic_examples"></a>Tutorial Examples</h3></div></div></div>
+        
+
+        <p>
+            If no namespace is specified when instantiating
+            <code class="classname">Zend_Session_Namespace</code>, all data will be transparently stored in
+            a namespace called "<code class="code">Default</code>". <code class="classname">Zend_Session</code> is not
+            intended to work directly on the contents of session namespace containers. Instead, we
+            use <code class="classname">Zend_Session_Namespace</code>. The example below demonstrates use of
+            this default namespace, showing how to count the number of client requests during a
+            session:
+        </p>
+
+        <div class="example">
+<a name="zend.session.basic_usage.basic_examples.example.counting_page_views"></a><p class="title"><b>Ejemplo 877. Counting Page Views</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$defaultNamespace = new Zend_Session_Namespace('Default');
+
+if (isset($defaultNamespace-&gt;numberOfPageRequests)) {
+    // this will increment for each page load.
+    $defaultNamespace-&gt;numberOfPageRequests++;
+} else {
+    $defaultNamespace-&gt;numberOfPageRequests = 1; // first time
+}
+
+echo "Page requests this session: ",
+    $defaultNamespace-&gt;numberOfPageRequests;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            When multiple modules use instances of <code class="classname">Zend_Session_Namespace</code>
+            having different namespaces, each module obtains data encapsulation for its session
+            data. The <code class="classname">Zend_Session_Namespace</code> constructor can be passed an
+            optional <code class="varname">$namespace</code> argument, which allows developers to partition
+            session data into separate namespaces. Namespacing provides an effective and popular way
+            to secure session state data against changes due to accidental naming collisions.
+        </p>
+
+        <p>
+            Namespace names are restricted to character sequences represented as non-empty
+            <acronym class="acronym">PHP</acronym> strings that do not begin with an underscore ("<code class="code">_</code>")
+            character. Only core components included in Zend Framework should use namespace names
+            starting with "<code class="code">Zend</code>".
+        </p>
+
+        <div class="example">
+<a name="zend.session.basic_usage.basic_examples.example.namespaces.new"></a><p class="title"><b>Ejemplo 878. New Way: Namespaces Avoid Collisions</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// in the Zend_Auth component
+$authNamespace = new Zend_Session_Namespace('Zend_Auth');
+$authNamespace-&gt;user = "myusername";
+
+// in a web services component
+$webServiceNamespace = new Zend_Session_Namespace('Some_Web_Service');
+$webServiceNamespace-&gt;user = "mywebusername";
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The example above achieves the same effect as the code below, except that the session
+            objects above preserve encapsulation of session data within their respective namespaces.
+        </p>
+
+        <div class="example">
+<a name="zend.session.basic_usage.basic_examples.example.namespaces.old"></a><p class="title"><b>Ejemplo 879. Old Way: PHP Session Access</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$_SESSION['Zend_Auth']['user'] = "myusername";
+$_SESSION['Some_Web_Service']['user'] = "mywebusername";
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.session.basic_usage.iteration"></a>Iterating Over Session Namespaces</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Session_Namespace</code> provides the full <a class="ulink" href="http://www.php.net/~helly/php/ext/spl/interfaceIteratorAggregate.html" target="_top">IteratorAggregate
+                interface</a>, including support for the <code class="code">foreach</code> statement:
+        </p>
+
+        <div class="example">
+<a name="zend.session.basic_usage.iteration.example"></a><p class="title"><b>Ejemplo 880. Session Iteration</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$aNamespace =
+    new Zend_Session_Namespace('some_namespace_with_data_present');
+
+foreach ($aNamespace as $index =&gt; $value) {
+    echo "aNamespace-&gt;$index = '$value';\n";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.session.basic_usage.accessors"></a>Accessors for Session Namespaces</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Session_Namespace</code> implements the
+            <code class="methodname">__get()</code>, <code class="methodname">__set()</code>,
+            <code class="methodname">__isset()</code>, and <code class="methodname">__unset()</code> <a class="ulink" href="http://www.php.net/manual/en/language.oop5.overloading.php" target="_top">magic
+                methods</a>, which should not be invoked directly, except from within a
+            subclass. Instead, the normal operators automatically invoke these methods, such as in
+            the following example:
+        </p>
+
+        <div class="example">
+<a name="zend.session.basic_usage.accessors.example"></a><p class="title"><b>Ejemplo 881. Accessing Session Data</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$namespace = new Zend_Session_Namespace(); // default namespace
+
+$namespace-&gt;foo = 100;
+
+echo "\$namespace-&gt;foo = $namespace-&gt;foo\n";
+
+if (!isset($namespace-&gt;bar)) {
+    echo "\$namespace-&gt;bar not set\n";
+}
+
+unset($namespace-&gt;foo);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.session.introduction.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.session.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.session.advanced_usage.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Advanced Usage</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

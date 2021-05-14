@@ -1,0 +1,273 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Utilisation de conventions de dossiers modulaires</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.plugins.html" title="Plugins">
+<link rel="next" href="zend.controller.exceptions.html" title="Exceptions avec MVC">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Utilisation de conventions de dossiers modulaires</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.plugins.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.exceptions.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.modular"></a>Utilisation de conventions de dossiers modulaires</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.modular.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            Les conventions de dossiers vous permettent de séparer les différentes
+            applications <acronym class="acronym">MVC</acronym> dans des unités isolées et les réutiliser dans le contrôleur frontal.
+            Voici une illustration :
+        </p>
+
+        <pre class="programlisting">
+docroot/
+    index.php
+application/
+    default/
+        controllers/
+            IndexController.php
+            FooController.php
+        models/
+        views/
+            scripts/
+                index/
+                foo/
+            helpers/
+            filters/
+    blog/
+        controllers/
+            IndexController.php
+        models/
+        views/
+            scripts/
+                index/
+            helpers/
+            filters/
+    news/
+        controllers/
+            IndexController.php
+            ListController.php
+        models/
+        views/
+            scripts/
+                index/
+                list/
+            helpers/
+            filters/
+</pre>
+
+        <p>
+            Ci dessus, le nom du module est utilisé comme préfixe pour les contrôleurs qu'il
+            possède. Il y a donc trois contrôleurs : "Blog_IndexController",
+            "News_IndexController", et "News_ListController". Deux contrôleurs dans le module par
+            défaut sont aussi définis, "IndexController" et "FooController". Ceux-ci ne possèdent
+            pas le nom du module dans leur nom. Cet exemple d'arborescence conseillée sera utilisé
+            dans ce chapitre.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Pas de namespace pour le module par défaut">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Pas de namespace pour le module par défaut</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+            <p>
+                Notez que dans le module par défaut, les contrôleurs n'ont pas besoin d'être
+                préfixés par le nom du module ("Default_"). Ils sont simplement distribués tels
+                quels. Ce n'est pas le cas pour les autres contrôleurs.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>Alors, comment utiliser une structure telle que celle-ci ?</p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.modular.directories"></a>Spécification des dossiers de modules</h3></div></div></div>
+        
+
+        <p>
+            La première chose à faire est d'indiquer au contrôleur frontal où se trouvent les
+            dossiers contenant les contrôleurs d'action. Passez un <code class="code">array</code> ou une
+            <code class="code">string</code> à <code class="methodname">setControllerDirectory()</code>, ou alors une
+            <code class="code">string</code> à <code class="methodname">addControllerDirectory()</code>. Si vous utilisez les
+            modules, ces appels de méthodes changent quelque peu.
+        </p>
+
+        <p>
+            Pour <code class="methodname">setControllerDirectory()</code>, un tableau est requis. Les paires
+            clé/valeur représentent le nom du module, et le chemin des contrôleurs. La clé
+            <code class="code">default</code> est utilisée pour indiquer les contrôleurs globaux (dont le nom ne
+            comporte pas le module). Chaque option doit comporter une indication vers un chemin, et
+            la clé <code class="code">default</code> doit être présente :
+        </p>
+
+        <pre class="programlisting">
+$front-&gt;setControllerDirectory(array(
+      'default' =&gt; '/path/to/application/controllers',
+      'blog'    =&gt; '/path/to/application/blog/controllers'
+));
+</pre>
+
+        <p>
+            <code class="methodname">addControllerDirectory()</code> prend en paramètre une <code class="code">string</code>
+            décrivant un chemin vers des contrôleurs. Si vous voulez indiquer un module, passez le
+            en second paramètre. Sinon, le chemin sera ajouté au module
+            <code class="code">default.</code>
+        </p>
+
+        <pre class="programlisting">
+$front-&gt;addControllerDirectory('/path/to/application/news/controllers',
+                               'news');
+</pre>
+
+        <p>
+            Enfin, si vous avez un dossier spécial regroupant tous vos modules, indiquez le
+            grâce à <code class="methodname">addModuleDirectory()</code> :
+        </p>
+
+        <pre class="programlisting">
+/**
+ * Sur cet exemple :
+ * application/
+ *     modules/
+ *         default/
+ *             controllers/
+ *         foo/
+ *             controllers/
+ *         bar/
+ *             controllers/
+ */
+$front-&gt;addModuleDirectory('/path/to/application/modules');
+</pre>
+
+        <p>
+            Dans le code ci dessus, vous déclarez 3 modules en une méthodes. Celle-ci
+            s'attend à la structure comprenant les modules <code class="code">default</code>, <code class="code">foo</code>,
+            et <code class="code">bar</code>, chacun devant posséder un dossier <code class="code">controllers</code>
+        </p>
+
+        <p>
+            Si le dossier "controllers" ne vous convient pas, changez son nom à l'aide de
+            <code class="methodname">setModuleControllerDirectoryName()</code> :
+        </p>
+
+        <pre class="programlisting">
+/**
+ * Le dossier des contrôleurs s'appelle désormais 'con'
+ * application/
+ *     modules/
+ *         default/
+ *             con/
+ *         foo/
+ *             con/
+ *         bar/
+ *             con/
+ */
+$front-&gt;setModuleControllerDirectoryName('con');
+$front-&gt;addModuleDirectory('/path/to/application/modules');
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Si vos dossiers de modules ne doivent pas utiliser de sous dossier pour les
+                contrôleurs, alors passez une valeur vide à
+                <code class="methodname">setModuleControllerDirectoryName()</code>.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.modular.router"></a>Routage des modules</h3></div></div></div>
+        
+
+        <p>
+            La route par défaut, <code class="classname">Zend_Controller_Router_Rewrite</code> est un
+            objet de type <code class="classname">Zend_Controller_Router_Route_Module</code>. Cette route
+            traite les schémas de routage suivants :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p><code class="code">:module/:controller/:action/*</code></p>
+            </li>
+<li class="listitem">
+                <p><code class="code">:controller/:action/*</code></p>
+            </li>
+</ul></div>
+
+        <p>
+            Ainsi, elle va trouver les contrôleurs et actions, avec ou sans module les
+            précédant. Un module ne sera trouvé que si sa clé existe dans le tableau d'options
+            passé au contrôleur frontal ou au distributeur.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.modular.defaultcontroller"></a>Module ou contrôleur Default global</h3></div></div></div>
+        
+
+        <p>
+            Dans le routeur par défaut, si aucun contrôleur n'est indiqué dans l'URL, un
+            contrôleur par défaut sera utilisé (<code class="code">IndexController</code>, sauf si l'on décide
+            de changer ce paramètre). Avec des modules indiqués dans l'URL, si aucun contrôleur
+            n'est indiqué, alors le distributeur cherchera dans le module demandé le contrôleur par
+            défaut. Si celui-ci est absent, c'est celui du module "default" qui sera
+            utilisé.
+        </p>
+
+        <p>
+            Si vous voulez renvoyer directement vers le contrôleur par défaut du module
+            "default", passez le paramètre <code class="code">useDefaultControllerAlways</code> à
+            <code class="constant">TRUE</code> dans le contrôleur frontal :
+        </p>
+
+        <pre class="programlisting">
+$front-&gt;setParam('useDefaultControllerAlways', true);
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.plugins.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.exceptions.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Plugins </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Exceptions avec MVC</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,626 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Searching an Index</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.search.lucene.html" title="Zend_Search_Lucene">
+<link rel="prev" href="zend.search.lucene.index-creation.html" title="Building Indexes">
+<link rel="next" href="zend.search.lucene.query-language.html" title="Query Language">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Searching an Index</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.search.lucene.index-creation.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.search.lucene.query-language.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.search.lucene.searching"></a>Searching an Index</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.searching.query_building"></a>Building Queries</h3></div></div></div>
+        
+
+        <p>
+            There are two ways to search the index. The first method uses
+            query parser to construct a query from a string. The second is
+            to programmatically create your own queries through the
+            <code class="classname">Zend_Search_Lucene</code> <acronym class="acronym">API</acronym>.
+        </p>
+
+        <p>
+        Before choosing to use the provided query parser, please consider
+        the following:
+
+            </p>
+<div class="orderedlist"><ol class="orderedlist" type="1">
+<li class="listitem">
+                    <p>
+                        If you are programmatically creating a query string and then parsing
+                        it with the query parser then you should consider building your queries
+                        directly with the query <acronym class="acronym">API</acronym>. Generally speaking, the
+                        query parser is designed for human-entered text, not for program-generated
+                        text.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        Untokenized fields are best added directly to queries and not through
+                        the query parser. If a field's values are generated programmatically
+                        by the application, then the query clauses for this field should also
+                        be constructed programmatically.
+                        An analyzer, which the query parser uses, is designed to convert
+                        human-entered text to terms. Program-generated values, like dates,
+                        keywords, etc., should be added with the query <acronym class="acronym">API</acronym>.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        In a query form, fields that are general text should use the query parser.
+                        All others, such as date ranges, keywords, etc., are better added directly
+                        through the query <acronym class="acronym">API</acronym>. A field with a limited set of
+                        values that can be specified with a pull-down menu should not be added to a
+                        query string that is subsequently parsed but instead should be added as a
+                        TermQuery clause.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        Boolean queries allow the programmer to logically combine two or more
+                        queries into new one. Thus it's the best way to add additional criteria to a
+                        search defined by a query string.
+                    </p>
+                </li>
+</ol></div>
+<p>
+        </p>
+
+        <p>
+            Both ways use the same <acronym class="acronym">API</acronym> method to search through the index:
+        </p>
+
+        <pre class="programlisting">
+$index = Zend_Search_Lucene::open('/data/my_index');
+
+$index-&gt;find($query);
+</pre>
+
+        <p>
+            You can also search multiple indexes simultaneously using MultiSearcher, which operates
+            using the same <acronym class="acronym">API</acronym> as searching on a single index:
+        </p>
+
+        <pre class="programlisting">
+$multi = new Zend_Search_Lucene_MultiSearcher();
+$multi-&gt;addIndex(Zend_Search_Lucene::open('/data/my_index_one');
+$multi-&gt;addIndex(Zend_Search_Lucene::open('/data/my_index_two');
+
+$multi-&gt;find($query);
+</pre>
+
+
+        <p>
+            The <code class="methodname">Zend_Search_Lucene::find()</code> method determines the input type
+            automatically and uses the query parser to construct an appropriate
+            <code class="classname">Zend_Search_Lucene_Search_Query</code> object from an input of type
+            string.
+        </p>
+
+        <p>
+            It is important to note that the query parser uses the standard analyzer to tokenize
+            separate parts of query string. Thus all transformations which are applied to indexed
+            text are also applied to query strings.
+        </p>
+
+        <p>
+            The standard analyzer may transform the query string to lower case for
+            case-insensitivity, remove stop-words, and stem among other transformations.
+        </p>
+
+        <p>
+            The <acronym class="acronym">API</acronym> method doesn't transform or filter input terms in any way.
+            It's therefore more suitable for computer generated or untokenized fields.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.searching.query_building.parsing"></a>Query Parsing</h4></div></div></div>
+            
+
+            <p>
+                <code class="methodname">Zend_Search_Lucene_Search_QueryParser::parse()</code> method may
+                be used to parse query strings into query objects.
+            </p>
+
+            <p>
+                This query object may be used in query construction <acronym class="acronym">API</acronym> methods
+                to combine user entered queries with programmatically generated queries.
+            </p>
+
+            <p>
+                Actually, in some cases it's the only way to search for values within untokenized
+                fields:
+            </p>
+
+            <pre class="programlisting">
+$userQuery = Zend_Search_Lucene_Search_QueryParser::parse($queryStr);
+
+$pathTerm  = new Zend_Search_Lucene_Index_Term(
+                     '/data/doc_dir/' . $filename, 'path'
+                 );
+$pathQuery = new Zend_Search_Lucene_Search_Query_Term($pathTerm);
+
+$query = new Zend_Search_Lucene_Search_Query_Boolean();
+$query-&gt;addSubquery($userQuery, true /* required */);
+$query-&gt;addSubquery($pathQuery, true /* required */);
+
+$hits = $index-&gt;find($query);
+</pre>
+
+            <p>
+                <code class="methodname">Zend_Search_Lucene_Search_QueryParser::parse()</code> method also
+                takes an optional encoding parameter, which can specify query string encoding:
+            </p>
+
+            <pre class="programlisting">
+$userQuery = Zend_Search_Lucene_Search_QueryParser::parse($queryStr,
+                                                          'iso-8859-5');
+</pre>
+
+            <p>
+                If the encoding parameter is omitted, then current locale is used.
+            </p>
+
+            <p>
+                It's also possible to specify the default query string encoding with
+                <code class="methodname">Zend_Search_Lucene_Search_QueryParser::setDefaultEncoding()</code>
+                method:
+            </p>
+
+            <pre class="programlisting">
+Zend_Search_Lucene_Search_QueryParser::setDefaultEncoding('iso-8859-5');
+...
+$userQuery = Zend_Search_Lucene_Search_QueryParser::parse($queryStr);
+</pre>
+
+            <p>
+                <code class="methodname">Zend_Search_Lucene_Search_QueryParser::getDefaultEncoding()</code>
+                returns the current default query string encoding (the empty string means "current
+                locale").
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.searching.results"></a>Search Results</h3></div></div></div>
+        
+
+        <p>
+            The search result is an array of
+            <code class="classname">Zend_Search_Lucene_Search_QueryHit</code> objects. Each of these has two
+            properties: <code class="code">$hit-&gt;id</code> is a document number within the index and
+            <code class="code">$hit-&gt;score</code> is a score of the hit in a search result. The results are
+            ordered by score (descending from highest score).
+        </p>
+
+        <p>
+            The <code class="classname">Zend_Search_Lucene_Search_QueryHit</code> object also exposes each
+            field of the <code class="classname">Zend_Search_Lucene_Document</code> found in the search as a
+            property of the hit. In the following example, a hit is returned with two fields from
+            the corresponding document: title and author.
+        </p>
+
+        <pre class="programlisting">
+$index = Zend_Search_Lucene::open('/data/my_index');
+
+$hits = $index-&gt;find($query);
+
+foreach ($hits as $hit) {
+    echo $hit-&gt;score;
+    echo $hit-&gt;title;
+    echo $hit-&gt;author;
+}
+</pre>
+
+        <p>
+            Stored fields are always returned in UTF-8 encoding.
+        </p>
+
+        <p>
+            Optionally, the original <code class="classname">Zend_Search_Lucene_Document</code> object can
+            be returned from the <code class="classname">Zend_Search_Lucene_Search_QueryHit</code>.
+            You can retrieve stored parts of the document by using the
+            <code class="methodname">getDocument()</code> method of the index object and then get them by
+            <code class="methodname">getFieldValue()</code> method:
+        </p>
+
+        <pre class="programlisting">
+$index = Zend_Search_Lucene::open('/data/my_index');
+
+$hits = $index-&gt;find($query);
+foreach ($hits as $hit) {
+    // return Zend_Search_Lucene_Document object for this hit
+    echo $document = $hit-&gt;getDocument();
+
+    // return a Zend_Search_Lucene_Field object
+    // from the Zend_Search_Lucene_Document
+    echo $document-&gt;getField('title');
+
+    // return the string value of the Zend_Search_Lucene_Field object
+    echo $document-&gt;getFieldValue('title');
+
+    // same as getFieldValue()
+    echo $document-&gt;title;
+}
+</pre>
+
+        <p>
+            The fields available from the <code class="classname">Zend_Search_Lucene_Document</code> object
+            are determined at the time of indexing. The document fields are either indexed, or
+            index and stored, in the document by the indexing application
+            (e.g. LuceneIndexCreation.jar).
+        </p>
+
+        <p>
+            Note that the document identity ('path' in our example) is also stored
+            in the index and must be retrieved from it.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.searching.results-limiting"></a>Limiting the Result Set</h3></div></div></div>
+        
+
+        <p>
+            The most computationally expensive part of searching is score calculation. It may take
+            several seconds for large result sets (tens of thousands of hits).
+        </p>
+
+        <p>
+            <code class="classname">Zend_Search_Lucene</code> gives the possibility to limit result set size
+            with <code class="methodname">getResultSetLimit()</code> and
+            <code class="methodname">setResultSetLimit()</code> methods:
+        </p>
+
+        <pre class="programlisting">
+$currentResultSetLimit = Zend_Search_Lucene::getResultSetLimit();
+
+Zend_Search_Lucene::setResultSetLimit($newLimit);
+</pre>
+
+        <p>
+            The default value of 0 means 'no limit'.
+        </p>
+
+        <p>
+            It doesn't give the 'best N' results, but only the 'first N'
+
+            <a href="#ftn.idm55285731584" class="footnote" name="idm55285731584"><sup class="footnote">[12]</sup></a>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.searching.results-scoring"></a>Results Scoring</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Search_Lucene</code> uses the same scoring algorithms as Java
+            Lucene. All hits in the search result are ordered by score by default. Hits with greater
+            score come first, and documents having higher scores should match the query more
+            precisely than documents having lower scores.
+        </p>
+
+        <p>
+            Roughly speaking, search hits that contain the searched term or phrase more frequently
+            will have a higher score.
+        </p>
+
+        <p>
+            A hit's score can be retrieved by accessing the <code class="code">score</code> property of the hit:
+        </p>
+
+        <pre class="programlisting">
+$hits = $index-&gt;find($query);
+
+foreach ($hits as $hit) {
+    echo $hit-&gt;id;
+    echo $hit-&gt;score;
+}
+</pre>
+
+        <p>
+            The <code class="classname">Zend_Search_Lucene_Search_Similarity</code> class is used to
+            calculate the score for each hit. See <a class="link" href="zend.search.lucene.extending.html#zend.search.lucene.extending.scoring" title="Scoring Algorithms">Extensibility. Scoring
+                Algorithms</a> section for details.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.searching.sorting"></a>Search Result Sorting</h3></div></div></div>
+        
+
+        <p>
+            By default, the search results are ordered by score. The programmer can change this
+            behavior by setting a sort field (or a list of fields), sort type and sort order
+            parameters.
+        </p>
+
+        <p>
+            <code class="code">$index-&gt;find()</code> call may take several optional parameters:
+        </p>
+
+        <pre class="programlisting">
+$index-&gt;find($query [, $sortField [, $sortType [, $sortOrder]]]
+                    [, $sortField2 [, $sortType [, $sortOrder]]]
+             ...);
+</pre>
+
+        <p>
+             A name of stored field by which to sort result should be passed as the
+             <code class="varname">$sortField</code> parameter.
+        </p>
+
+        <p>
+            <code class="varname">$sortType</code> may be omitted or take the following enumerated values:
+            <code class="constant">SORT_REGULAR</code> (compare items normally- default value),
+            <code class="constant">SORT_NUMERIC</code> (compare items numerically),
+            <code class="constant">SORT_STRING</code> (compare items as strings).
+        </p>
+
+        <p>
+            <code class="varname">$sortOrder</code> may be omitted or take the following enumerated values:
+            <code class="constant">SORT_ASC</code> (sort in ascending order- default value),
+            <code class="constant">SORT_DESC</code> (sort in descending order).
+        </p>
+
+        <p>
+            Examples:
+        </p>
+
+        <pre class="programlisting">
+$index-&gt;find($query, 'quantity', SORT_NUMERIC, SORT_DESC);
+</pre>
+
+        <pre class="programlisting">
+$index-&gt;find($query, 'fname', SORT_STRING, 'lname', SORT_STRING);
+</pre>
+
+        <pre class="programlisting">
+$index-&gt;find($query, 'name', SORT_STRING, 'quantity', SORT_NUMERIC, SORT_DESC);
+</pre>
+
+        <p>
+            Please use caution when using a non-default search order; the query needs to retrieve
+            documents completely from an index, which may dramatically reduce search performance.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.searching.highlighting"></a>Search Results Highlighting</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Search_Lucene</code> provides two options for search results
+            highlighting.
+        </p>
+
+        <p>
+            The first one is utilizing <code class="classname">Zend_Search_Lucene_Document_Html</code> class
+            (see <a class="link" href="zend.search.lucene.overview.html#zend.search.lucene.index-creation.html-documents" title="HTML documents">HTML documents
+                section</a> for details) using the following methods:
+        </p>
+
+        <pre class="programlisting">
+/**
+ * Highlight text with specified color
+ *
+ * @param string|array $words
+ * @param string $colour
+ * @return string
+ */
+public function highlight($words, $colour = '#66ffff');
+</pre>
+
+        <pre class="programlisting">
+/**
+ * Highlight text using specified View helper or callback function.
+ *
+ * @param string|array $words  Words to highlight. Words could be organized
+                               using the array or string.
+ * @param callback $callback   Callback method, used to transform
+                               (highlighting) text.
+ * @param array    $params     Array of additionall callback parameters passed
+                               through into it (first non-optional parameter
+                               is an HTML fragment for highlighting)
+ * @return string
+ * @throws Zend_Search_Lucene_Exception
+ */
+public function highlightExtended($words, $callback, $params = array())
+</pre>
+
+        <p>
+            To customize highlighting behavior use <code class="methodname">highlightExtended()</code>
+            method with specified callback, which takes one or more parameters
+
+            <a href="#ftn.idm55285703712" class="footnote" name="idm55285703712"><sup class="footnote">[13]</sup></a>
+            , or extend <code class="classname">Zend_Search_Lucene_Document_Html</code> class and redefine
+            <code class="methodname">applyColour($stringToHighlight, $colour)</code> method used as a
+            default highlighting callback.
+
+            <a href="#ftn.idm55285701008" class="footnote" name="idm55285701008"><sup class="footnote">[14]</sup></a>
+        </p>
+
+        <p>
+            <a class="link" href="zend.view.helpers.html" title="View Helpers">View helpers</a> also can be used as callbacks in
+            context of view script:
+        </p>
+
+        <pre class="programlisting">
+$doc-&gt;highlightExtended('word1 word2 word3...', array($this, 'myViewHelper'));
+</pre>
+
+        <p>
+            The result of highlighting operation is retrieved by
+            <code class="code">Zend_Search_Lucene_Document_Html-&gt;getHTML()</code> method.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Highlighting is performed in terms of current analyzer. So all forms of the word(s)
+                recognized by analyzer are highlighted.
+            </p>
+
+            <p>
+                E.g. if current analyzer is case insensitive and we request to highlight 'text'
+                word, then 'text', 'Text', 'TEXT' and other case combinations will be highlighted.
+            </p>
+
+            <p>
+                In the same way, if current analyzer supports stemming and we request to highlight
+                'indexed', then 'index', 'indexing', 'indices' and other word forms will be
+                highlighted.
+            </p>
+
+            <p>
+                On the other hand, if word is skipped by current analyzer (e.g. if short words
+                filter is applied to the analyzer), then nothing will be highlighted.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            The second option is to use
+            <code class="code">Zend_Search_Lucene_Search_Query-&gt;highlightMatches(string $inputHTML[,
+                $defaultEncoding = 'UTF-8'[,
+                Zend_Search_Lucene_Search_Highlighter_Interface $highlighter]])</code> method:
+        </p>
+
+        <pre class="programlisting">
+$query = Zend_Search_Lucene_Search_QueryParser::parse($queryStr);
+$highlightedHTML = $query-&gt;highlightMatches($sourceHTML);
+</pre>
+
+        <p>
+            Optional second parameter is a default <acronym class="acronym">HTML</acronym> document encoding. It's
+            used if encoding is not specified using Content-type HTTP-EQUIV meta tag.
+        </p>
+
+        <p>
+            Optional third parameter is a highlighter object which has to implement
+            <code class="classname">Zend_Search_Lucene_Search_Highlighter_Interface</code> interface:
+        </p>
+
+        <pre class="programlisting">
+interface Zend_Search_Lucene_Search_Highlighter_Interface
+{
+    /**
+     * Set document for highlighting.
+     *
+     * @param Zend_Search_Lucene_Document_Html $document
+     */
+    public function setDocument(Zend_Search_Lucene_Document_Html $document);
+
+    /**
+     * Get document for highlighting.
+     *
+     * @return Zend_Search_Lucene_Document_Html $document
+     */
+    public function getDocument();
+
+    /**
+     * Highlight specified words (method is invoked once per subquery)
+     *
+     * @param string|array $words  Words to highlight. They could be
+                                   organized using the array or string.
+     */
+    public function highlight($words);
+}
+</pre>
+
+        <p>
+            Where <code class="classname">Zend_Search_Lucene_Document_Html</code> object is an object
+            constructed from the source <acronym class="acronym">HTML</acronym> provided to the
+            <code class="classname">Zend_Search_Lucene_Search_Query-&gt;highlightMatches()</code> method.
+        </p>
+
+        <p>
+            If <code class="varname">$highlighter</code> parameter is omitted, then
+            <code class="classname">Zend_Search_Lucene_Search_Highlighter_Default</code> object is
+            instantiated and used.
+        </p>
+
+        <p>
+            Highlighter <code class="methodname">highlight()</code> method is invoked once per subquery, so
+            it has an ability to differentiate highlighting for them.
+        </p>
+
+        <p>
+            Actually, default highlighter does this walking through predefined color table. So you
+            can implement your own highlighter or just extend the default and redefine color table.
+        </p>
+
+        <p>
+            <code class="code">Zend_Search_Lucene_Search_Query-&gt;htmlFragmentHighlightMatches()</code> has similar
+            behavior. The only difference is that it takes as an input and returns
+            <acronym class="acronym">HTML</acronym> fragment without &lt;&gt;HTML&gt;, &lt;HEAD&gt;, &lt;BODY&gt; tags.
+            Nevertheless, fragment is automatically transformed to valid <acronym class="acronym">XHTML</acronym>.
+        </p>
+    </div>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm55285731584" class="footnote">
+                <p><a href="#idm55285731584" class="para"><sup class="para">[12] </sup></a>
+                    Returned hits are still ordered by score or by the specified order, if given.
+                </p>
+            </div>
+<div id="ftn.idm55285703712" class="footnote">
+                <p><a href="#idm55285703712" class="para"><sup class="para">[13] </sup></a>
+                    The first is an <acronym class="acronym">HTML</acronym> fragment for highlighting and others are
+                    callback behavior dependent. Returned value is a highlighted
+                    <acronym class="acronym">HTML</acronym> fragment.
+                </p>
+            </div>
+<div id="ftn.idm55285701008" class="footnote">
+                <p><a href="#idm55285701008" class="para"><sup class="para">[14] </sup></a>
+                    In both cases returned <acronym class="acronym">HTML</acronym> is automatically transformed into
+                    valid <acronym class="acronym">XHTML</acronym>.
+                </p>
+            </div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.search.lucene.index-creation.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.search.lucene.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.search.lucene.query-language.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Building Indexes </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Query Language</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

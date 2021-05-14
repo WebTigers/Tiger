@@ -1,0 +1,342 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Working with Zend_TimeSync</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.timesync.html" title="Zend_TimeSync">
+<link rel="prev" href="zend.timesync.introduction.html" title="Introduction">
+<link rel="next" href="zend.tool.html" title="Zend_Tool">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Working with Zend_TimeSync</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.timesync.introduction.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_TimeSync</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.tool.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.timesync.working"></a>Working with Zend_TimeSync</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_TimeSync</code> can return the actual time from any given
+        <span class="emphasis"><em>NTP</em></span> or <span class="emphasis"><em>SNTP</em></span> time server.
+        It can automatically handle multiple servers and provides a simple interface.
+    </p>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            All examples in this chapter use a public, generic time server:
+            <span class="emphasis"><em>0.europe.pool.ntp.org</em></span>. You should use a public, generic time server
+            which is close to your application server. See <a class="ulink" href="http://www.pool.ntp.org" target="_top">http://www.pool.ntp.org</a> for information.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.timesync.working.generic"></a>Generic Time Server Request</h3></div></div></div>
+        
+
+        <p>
+            Requesting the time from a time server is simple. First, you provide the time server
+            from which you want to request the time.
+        </p>
+
+        <pre class="programlisting">
+$server = new Zend_TimeSync('0.pool.ntp.org');
+
+print $server-&gt;getDate()-&gt;getIso();
+</pre>
+
+        <p>
+            So what is happening in the background of <code class="classname">Zend_TimeSync</code>? First
+            the syntax of the time server is checked. In our example,
+            '<span class="emphasis"><em>0.pool.ntp.org</em></span>' is checked and recognised as a possible address
+            for a time server. Then when calling <code class="methodname">getDate()</code> the actual set
+            time server is requested and it will return its own time.
+            <code class="classname">Zend_TimeSync</code> then calculates the difference to the actual time
+            of the server running the script and returns a <code class="classname">Zend_Date</code> object
+            with the correct time.
+        </p>
+
+        <p>
+            For details about <code class="classname">Zend_Date</code> and its methods see the <a class="link" href="zend.date.introduction.html" title="Introduction"><code class="classname">Zend_Date</code>
+                documentation</a>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.timesync.working.multiple"></a>Multiple Time Servers</h3></div></div></div>
+        
+
+        <p>
+            Not all time servers are always available to return their time. Servers may be
+            unavailable during maintenance, for example. When the time cannot be requested from the
+            time server, you will get an exception.
+        </p>
+
+        <p>
+            <code class="classname">Zend_TimeSync</code> is a simple solution that can handle multiple time
+            servers and supports an automatic fallback mechanism. There are two supported ways; you
+            can either specify an array of time servers when creating the instance, or you can add
+            additional time servers to the instance using the <code class="methodname">addServer()</code>
+            method.
+        </p>
+
+        <pre class="programlisting">
+$server = new Zend_TimeSync(array('0.pool.ntp.org',
+                                  '1.pool.ntp.org',
+                                  '2.pool.ntp.org'));
+$server-&gt;addServer('3.pool.ntp.org');
+
+print $server-&gt;getDate()-&gt;getIso();
+</pre>
+
+        <p>
+            There is no limit to the number of time servers you can add. When a time server can not
+            be reached, <code class="classname">Zend_TimeSync</code> will fallback and try to connect to the
+            next time server.
+        </p>
+
+        <p>
+            When you supply more than one time server- which is considered a best practice for
+            <code class="classname">Zend_TimeSync</code>- you should name each server. You can name your
+            servers with array keys, with the second parameter at instantiation, or with the second
+            parameter when adding another time server.
+        </p>
+
+        <pre class="programlisting">
+$server = new Zend_TimeSync(array('generic'  =&gt; '0.pool.ntp.org',
+                                  'fallback' =&gt; '1.pool.ntp.org',
+                                  'reserve'  =&gt; '2.pool.ntp.org'));
+$server-&gt;addServer('3.pool.ntp.org', 'additional');
+
+print $server-&gt;getDate()-&gt;getIso();
+</pre>
+
+        <p>
+            Naming the time servers allows you to request a specific time server as we will see
+            later in this chapter.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.timesync.working.protocol"></a>Protocols of Time Servers</h3></div></div></div>
+        
+
+        <p>
+            There are different types of time servers. Most public time servers use the
+            <span class="emphasis"><em>NTP</em></span> protocol. But there are other time synchronization
+            protocols available.
+        </p>
+
+        <p>
+            You set the proper protocol in the address of the time server. There are two
+            protocols which are supported by <code class="classname">Zend_TimeSync</code>:
+            <span class="emphasis"><em>NTP</em></span> and <span class="emphasis"><em>SNTP</em></span>. The default protocol is
+            <span class="emphasis"><em>NTP</em></span>. If you are using <span class="emphasis"><em>NTP</em></span>, you can omit the
+            protocol in the address as demonstrated in the previous examples.
+        </p>
+
+        <pre class="programlisting">
+$server = new Zend_TimeSync(array('generic'  =&gt; 'ntp:\\0.pool.ntp.org',
+                                  'fallback' =&gt; 'ntp:\\1.pool.ntp.org',
+                                  'reserve'  =&gt; 'ntp:\\2.pool.ntp.org'));
+$server-&gt;addServer('sntp:\\internal.myserver.com', 'additional');
+
+print $server-&gt;getDate()-&gt;getIso();
+</pre>
+
+        <p>
+            <code class="classname">Zend_TimeSync</code> can handle mixed time servers. So you are not
+            restricted to only one protocol; you can add any server independently from its protocol.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.timesync.working.ports"></a>Using Ports for Time Servers</h3></div></div></div>
+        
+
+        <p>
+            As with every protocol within the world wide web, the <span class="emphasis"><em>NTP</em></span> and
+            <span class="emphasis"><em>SNTP</em></span> protocols use standard ports. NTP uses port
+            <span class="emphasis"><em>123</em></span> and SNTP uses port <span class="emphasis"><em>37</em></span>.
+        </p>
+
+        <p>
+            But sometimes the port that the protocols use differs from the standard one. You can
+            define the port which has to be used for each server within the address. Just add the
+            number of the port after the address. If no port is defined, then
+            <code class="classname">Zend_TimeSync</code> will use the standard port.
+        </p>
+
+        <pre class="programlisting">
+$server = new Zend_TimeSync(array('generic'  =&gt; 'ntp:\\0.pool.ntp.org:200',
+                                  'fallback' =&gt; 'ntp:\\1.pool.ntp.org'));
+$server-&gt;addServer('sntp:\\internal.myserver.com:399', 'additional');
+
+print $server-&gt;getDate()-&gt;getIso();
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.timesync.working.options"></a>Time Servers Options</h3></div></div></div>
+        
+
+        <p>
+            There is only one option within <code class="classname">Zend_TimeSync</code> which will be used
+            internally: <span class="emphasis"><em>timeout</em></span>. You can set any self-defined option you are in
+            need of and request it, however.
+        </p>
+
+        <p>
+            The option <span class="emphasis"><em>timeout</em></span> defines the number of seconds after which
+            a connection is detected as broken when there was no response. The default value is
+            <span class="emphasis"><em>1</em></span>, which means that <code class="classname">Zend_TimeSync</code> will
+            fallback to the next time server if the requested time server does not respond in one
+            second.
+        </p>
+
+        <p>
+            With the <code class="methodname">setOptions()</code> method, you can set any option. This
+            function accepts an array where the key is the option to set and the value is the value
+            of that option. Any previously set option will be overwritten by the new value. If you
+            want to know which options are set, use the <code class="methodname">getOptions()</code>
+            method. It accepts either a key which returns the given option if specified, or, if no
+            key is set, it will return all set options.
+        </p>
+
+        <pre class="programlisting">
+Zend_TimeSync::setOptions(array('timeout' =&gt; 3, 'myoption' =&gt; 'timesync'));
+$server = new Zend_TimeSync(array('generic'  =&gt; 'ntp:\\0.pool.ntp.org',
+                                  'fallback' =&gt; 'ntp:\\1.pool.ntp.org'));
+$server-&gt;addServer('sntp:\\internal.myserver.com', 'additional');
+
+print $server-&gt;getDate()-&gt;getIso();
+print_r(Zend_TimeSync::getOptions();
+print "Timeout = " . Zend_TimeSync::getOptions('timeout');
+</pre>
+
+        <p>
+            As you can see, the options for <code class="classname">Zend_TimeSync</code> are static. Each
+            instance of <code class="classname">Zend_TimeSync</code> will use the same options.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.timesync.working.different"></a>Using Different Time Servers</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_TimeSync</code>'s default behavior for requesting a time is to
+            request it from the first given server. But sometimes it is useful to set a different
+            time server from which to request the time. This can be done with the
+            <code class="methodname">setServer()</code> method. To define the used time server set the
+            alias as a parameter within the method. To get the actual used time server call the
+            <code class="methodname">getServer()</code> method. It accepts an alias as a parameter which
+            defines the time server to be returned. If no parameter is given, the current time
+            server will be returned.
+        </p>
+
+        <pre class="programlisting">
+$server = new Zend_TimeSync(array('generic'  =&gt; 'ntp:\\0.pool.ntp.org',
+                                  'fallback' =&gt; 'ntp:\\1.pool.ntp.org'));
+$server-&gt;addServer('sntp:\\internal.myserver.com', 'additional');
+
+$actual = $server-&gt;getServer();
+$server = $server-&gt;setServer('additional');
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.timesync.working.informations"></a>Information from Time Servers</h3></div></div></div>
+        
+
+        <p>
+            Time servers not only offer the time itself, but also additional information. You can
+            get this information with the <code class="methodname">getInfo()</code> method.
+        </p>
+
+        <pre class="programlisting">
+$server = new Zend_TimeSync(array('generic'  =&gt; 'ntp:\\0.pool.ntp.org',
+                                  'fallback' =&gt; 'ntp:\\1.pool.ntp.org'));
+
+print_r ($server-&gt;getInfo());
+</pre>
+
+        <p>
+            The returned information differs with the protocol used and can also differ with the
+            server used.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.timesync.working.exceptions"></a>Handling Exceptions</h3></div></div></div>
+        
+
+        <p>
+            Exceptions are collected for all time servers and returned as an array. So you can
+            iterate through all thrown exceptions as shown in the following example:
+        </p>
+
+        <pre class="programlisting">
+$serverlist = array(
+        // invalid servers
+        'invalid_a'  =&gt; 'ntp://a.foo.bar.org',
+        'invalid_b'  =&gt; 'sntp://b.foo.bar.org',
+);
+
+$server = new Zend_TimeSync($serverlist);
+
+try {
+    $result = $server-&gt;getDate();
+    echo $result-&gt;getIso();
+} catch (Zend_TimeSync_Exception $e) {
+
+    $exceptions = $e-&gt;get();
+
+    foreach ($exceptions as $key =&gt; $myException) {
+        echo $myException-&gt;getMessage();
+        echo '&lt;br /&gt;';
+    }
+}
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.timesync.introduction.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.timesync.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.tool.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_Tool</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

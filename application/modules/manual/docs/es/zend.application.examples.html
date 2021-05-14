@@ -1,0 +1,284 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Ejemplos</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.application.html" title="Zend_Application">
+<link rel="prev" href="zend.application.theory-of-operation.html" title="Teoría de Operación">
+<link rel="next" href="zend.application.core-functionality.html" title="Funcionalidad Básica">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Ejemplos</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.application.theory-of-operation.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Application</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.application.core-functionality.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.application.examples"></a>Ejemplos</h2></div></div></div>
+    
+
+    <p>La propia clase Bootstrap suelen ser bastante mínima; a menudo, será
+        simplemente un talón
+        vacío ampliando la clase base bootstrap:</p>
+
+    <pre class="programlisting">
+class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
+{
+}
+</pre>
+
+    <p>Con el archivo de configuración coresspondiente:</p>
+
+    <pre class="programlisting">
+; APPLICATION_PATH/configs/application.ini
+[production]
+bootstrap.path = APPLICATION_PATH "/Bootstrap.php"
+bootstrap.class = "Bootstrap"
+resources.frontController.controllerDirectory = APPLICATION_PATH "/controllers"
+
+[testing : production]
+[development : production]
+</pre>
+
+    <p>
+        Sin embargo, si debiera ser necesaria un inicialización
+        personalizada, usted tiene dos
+        opciones. En primer lugar, usted puede
+        escribir métodos prefijados con
+        <span class="emphasis"><em>_init</em></span>
+        para
+        especificar códigos distintos de arranque. Estos métodos pueden ser
+        llamados por
+        <code class="methodname">bootstrap()</code>
+        , y también pueden ser
+        llamados como si fueran métodos públicos:
+        <span class="emphasis"><em>bootstrap&lt;resource&gt;()</em></span>
+        . Deben
+        aceptar opcionalmente un array de opciones.
+    </p>
+
+    <p>
+        Si su método recurso devuelve un valor, será almacenado en un
+        contenedor en el bootstrap.
+        Esto puede ser útil cuando diferentes
+        recursos necesitan interactuar (como un recurso
+        inyectándose a sí mismo
+        en otro). Luego, el método
+        <code class="methodname">getResource()</code>
+        puede
+        ser utilizado para recuperar esos valores.
+    </p>
+
+    <p>El siguiente ejemplo muestra un recurso de método para inicializar el
+        objeto solicitado.
+        Hace uso del segimiento de la dependencia (que
+        depende del recurso Front Controller),
+        obteniendo un recurso desde el
+        bootstrap y devolver el valor para almacenar en el bootstrap.</p>
+
+    <pre class="programlisting">
+class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
+{
+    protected function _initRequest(array $options = array())
+    {
+        // Garantizar que la instancia de front controller esté presente, y buscarla
+
+        $this-&gt;bootstrap('FrontController');
+        $front = $this-&gt;getResource('FrontController');
+
+        // Inicializar el objeto requerido
+        $request = new Zend_Controller_Request_Http();
+        $request-&gt;setBaseUrl('/foo');
+
+        // Agregarlo al front controller
+        $front-&gt;setRequest($request);
+
+        // Bootstrap guardará este valor en la clave 'request' de su contenedor
+        return $request;
+    }
+}
+</pre>
+
+    <p>
+        Nótese en este ejemplo la llamada a
+        <code class="methodname">bootstrap()</code>
+        ; esto asegura que el front
+        controller ha sido inicializado antes de llamar a este método.
+        Esa
+        llamada puede desencadenar tanto un recurso u otro método de la clase.
+    </p>
+
+    <p>La otra opción es usar plugins de recursos, estos son objetos que
+        realizan inicializaciones
+        específicas, y pueden ser especificados:</p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                Cuando se instancia un onbeto de
+                <code class="classname">Zend_Application</code>
+            </p>
+        </li>
+<li class="listitem">
+            <p>Durante la inicialización del objeto bootstrap (arranque)
+           </p>
+        </li>
+<li class="listitem">
+            <p>Habilitándolos explícitamente a través del método de llamada
+                al objeto bootstrap</p>
+        </li>
+</ul></div>
+
+    <p>
+        Los recursos de plugins implementan
+        <code class="classname">Zend_Application_Resource_ResourceAbstract</code>
+        ,
+        que define simplemente que permitirán la inyección del llamador y
+        opciones, y que tienen un
+        método
+        <code class="methodname">init()</code>
+        method.
+        Como ejemplo, un recurso de una Vista (View) personalizada de bootstrap
+        podría ser
+        como lo siguiente:
+    </p>
+
+    <pre class="programlisting">
+class My_Bootstrap_Resource_View
+    extends Zend_Application_Resource_ResourceAbstract
+{
+    public function init()
+    {
+        $view = new Zend_View($this-&gt;getOptions());
+        Zend_Dojo::enableView($view);
+
+        $view-&gt;doctype('XHTML1_STRICT');
+        $view-&gt;headTitle()-&gt;setSeparator(' - ')-&gt;append('My Site');
+        $view-&gt;headMeta()-&gt;appendHttpEquiv('Content-Type',
+                                           'text/html; charset=utf-8');
+
+        $view-&gt;dojo()-&gt;setDjConfigOption('parseOnLoad', true)
+                     -&gt;setLocalPath('/js/dojo/dojo.js')
+                     -&gt;registerModulePath('../spindle', 'spindle')
+                     -&gt;addStylesheetModule('spindle.themes.spindle')
+                     -&gt;requireModule('spindle.main')
+                     -&gt;disable();
+
+        $viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper(
+            'ViewRenderer'
+        );
+        $viewRenderer-&gt;setView($view);
+
+        return $view;
+    }
+}
+</pre>
+
+    <p>Para decirle al bootstrap que utilice éste, se tendría que
+        proporcionar ya sea el nombre de
+        la clase del plugin del recurso, o una
+        combinación del del prefijo de la ruta de carga del
+        plugin y el nombre
+        corto del plugin del recurso (por ejemplo, "view"):</p>
+
+    <pre class="programlisting">
+$application = new Zend_Application(
+    APPLICATION_ENV,
+    array(
+        'resources' =&gt; array(
+            'My_Bootstrap_Resource_View' =&gt; array(), // full class name; OR
+            'view' =&gt; array(),                       // short name
+
+            'FrontController' =&gt; array(
+                'controllerDirectory' =&gt; APPLICATION_PATH . '/controllers',
+            ),
+        ),
+
+        // For short names, define plugin path:
+       'pluginPaths = array(
+            'My_Bootstrap_Resource' =&gt; 'My/Bootstrap/Resource',
+        )
+    )
+);
+</pre>
+
+    <p>Los recursos que son plugins puede llamar a otros recursos e
+        inicializadores accediendo al
+        bootstrap padre:</p>
+
+    <pre class="programlisting">
+class My_Bootstrap_Resource_Layout
+    extends Zend_Application_Resource_ResourceAbstract
+{
+    public function init()
+    {
+        // ensure view is initialized...
+        $this-&gt;getBootstrap()-&gt;bootstrap('view');
+
+        // Get view object:
+        $view = $this-&gt;getBootstrap()-&gt;getResource('view');
+
+        // ...
+    }
+}
+</pre>
+
+    <p>En el uso normal, se podría instanciar la aplicación, arrancarla, y
+        ejecutarla:</p>
+
+    <pre class="programlisting">
+$application = new Zend_Application(...);
+$application-&gt;bootstrap()
+            -&gt;run();
+</pre>
+
+    <p>Para un script personalizado, se podría necesitar simplemente
+        inicializar recursos
+        específicos:</p>
+
+    <pre class="programlisting">
+$application = new Zend_Application(...);
+$application-&gt;getBootstrap()-&gt;bootstrap('db');
+
+$service = new Zend_XmlRpc_Server();
+$service-&gt;setClass('Foo');  // uses database...
+echo $service-&gt;handle();
+</pre>
+
+    <p>
+        En lugar de utilizar el método
+        <code class="methodname">bootstrap()</code>
+        para llamar a los métodos internos o recursos, también puede usar
+        sobrecarga:
+    </p>
+
+    <pre class="programlisting">
+$application = new Zend_Application(...);
+$application-&gt;getBootstrap()-&gt;bootstrapDb();
+</pre>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.application.theory-of-operation.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.application.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.application.core-functionality.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Teoría de Operación </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Funcionalidad Básica</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

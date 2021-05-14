@@ -1,0 +1,221 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The Browscap UserAgent Features Adapter</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.http.html" title="Zend_Http">
+<link rel="prev" href="zend.http.user-agent-features.html" title="The UserAgent Features Adapter">
+<link rel="next" href="zend.http.user-agent-features-device-atlas.html" title="The DeviceAtlas UserAgent Features Adapter">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">The Browscap UserAgent Features Adapter</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.http.user-agent-features.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Http</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.http.user-agent-features-device-atlas.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.http.user-agent-features-browscap"></a>The Browscap UserAgent Features Adapter</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.user-agent-features-browscap.intro"></a>Overview</h3></div></div></div>
+        
+
+        <p>
+            <a class="ulink" href="http://browsers.garykeith.com/" target="_top">Browscap</a> is an open project
+            dedicated to collecting an disseminating a "database" of browser capabilities --
+            actually a set of different files describing browser capablities. PHP has built-in
+            support for using these files via the <a class="ulink" href="http://php.net/get_browser" target="_top"><code class="function">get_browser()</code></a>
+            function. This function requires that your <code class="filename">php.ini</code> provides a
+            <code class="varname">browscap</code> entry pointing to the PHP-specific
+            <code class="filename">php_browscap.ini</code> file, which <a class="ulink" href="http://browsers.garykeith.com/stream.asp?PHP_BrowsCapINI" target="_top">you can download from
+                the browscap site</a>.
+        </p>
+
+        <p>
+            This class provides a <a class="link" href="zend.http.user-agent-features.html" title="The UserAgent Features Adapter">features
+                adapter</a> that calls <code class="function">get_browser()</code> in order to discover
+            mobile device capabilities to inject into <code class="classname">UserAgent</code> device
+            instances.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: You may need to restart your webserver">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">
+<a name="zend.http.user-agent-features-browscap.intro.browscap-usage"></a>You may need to restart your webserver</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                The <code class="varname">browscap</code> <code class="filename">php.ini</code> setting is a
+                <code class="constant">PHP_INI_SYSTEM</code> setting, meaning it can only be set in your
+                <code class="filename">php.ini</code> file or in your web server configuration. As such, you
+                may need to restart your web server after adding the entry.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.user-agent-features-browscap.quick-start"></a>Quick Start</h3></div></div></div>
+        
+
+        <p>
+            First, if you haven't already, <a class="ulink" href="http://browsers.garykeith.com/stream.asp?PHP_BrowsCapINI" target="_top">download the
+                php_browscap.ini file</a>, and put it somewhere your web server can access it;
+            make sure the web server has permissions to read the file. Typically, you'll place this
+            in the same location as your <code class="filename">php.ini</code> file.
+        </p>
+
+        <p>
+            Next, update your <code class="filename">php.ini</code> file to add the following line:
+        </p>
+
+        <pre class="programlisting">
+browscap = /path/to/php_browscap.ini
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Keep it simple">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Keep it simple</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                If you put your <code class="filename">php_browscap.ini</code> file next to the
+                <code class="filename">php.ini</code> file, you can omit the path information, and simply
+                specify the filename.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Next, simply provide configuration to your application as follows:
+        </p>
+
+        <pre class="programlisting">
+resources.useragent.mobile.features.classname = "Zend_Http_UserAgent_Device_Features_Browscap"
+</pre>
+
+        <p>
+            At this point, you're all set.  You can access the browser information in a variety of
+            ways. From within the MVC portion of your application, you can access it via the
+            bootstrap. Within plugins, this is done by grabbing the bootstrap from the front
+            controller.
+        </p>
+
+        <pre class="programlisting">
+$bootstrap = Zend_Controller_Front::getInstance()-&gt;getParam('bootstrap');
+$userAgent = $bootstrap-&gt;getResource('useragent');
+</pre>
+
+        <p>
+            From your action controller, use <code class="methodname">getInvokeArg()</code> to grab the
+            bootstrap, and from there, the user agent object.
+        </p>
+
+        <pre class="programlisting">
+$bootstrap = $this-&gt;getInvokeArg('bootstrap');
+$userAgent = $bootstrap-&gt;getResource('useragent');
+</pre>
+
+        <p>
+            Within your view, you can grab it using the <code class="classname">UserAgent</code> view
+            helper.
+        </p>
+
+        <pre class="programlisting">
+$userAgent = $this-&gt;userAgent();
+</pre>
+
+        <p>
+            Once you have the user agent object, you can query it for different capabilities. As one
+            example, you may want to use an alternate layout script based on the user agent
+            capabilities.
+        </p>
+        
+        <pre class="programlisting">
+$device = $userAgent-&gt;getDevice();
+
+$cssSupport    = $device-&gt;getFeature('cssversion');
+$jsSupport     = $device-&gt;getFeature('javascript');
+
+switch (true) {
+    case ($jsSupport &amp;&amp; $cssSupport &gt;= 3):
+        $layout-&gt;setLayout('layout-html5');
+        break;
+    case ($jsSupport &amp;&amp; $cssSupport &lt; 3):
+        $layout-&gt;setLayout('layout-xhtml');
+        break;
+    case (!$jsSupport &amp;&amp; $cssSupport &lt; 3):
+        $layout-&gt;setLayout('layout-html-transitional');
+        break;
+    default:
+        $layout-&gt;setLayout('layout-web-1');
+        break;
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.user-agent-features-browscap.options"></a>Configuration Options</h3></div></div></div>
+        
+
+        <p>
+            The browscap adapter has no configuration options.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.user-agent-features-browscap.methods"></a>Available Methods</h3></div></div></div>
+        
+
+        <div class="variablelist"><dl class="variablelist">
+<dt>
+<a name="zend.http.user-agent-features-browscap.methods.get-from-request"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getFromRequest</span>(<span class="methodparam">
+                            array $request, array $config
+                        </span>);</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Decompose the request in order to return an array of device capabilities.
+                    </p>
+                </dd>
+</dl></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.http.user-agent-features.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.http.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.http.user-agent-features-device-atlas.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">The UserAgent Features Adapter </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> The DeviceAtlas UserAgent Features Adapter</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

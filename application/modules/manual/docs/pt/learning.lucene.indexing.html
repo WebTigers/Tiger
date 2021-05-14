@@ -1,0 +1,151 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Indexing</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="learning.lucene.html" title="Iniciando com o Zend_Search_Lucene">
+<link rel="prev" href="learning.lucene.index-opening.html" title="Index Opening and Creation">
+<link rel="next" href="learning.lucene.searching.html" title="Searching">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Indexing</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.lucene.index-opening.html">Anterior</a> </td>
+<th width="60%" align="center">Iniciando com o Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.lucene.searching.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.lucene.indexing"></a>Indexing</h2></div></div></div>
+    
+
+    <p>
+        Indexing is performed by adding a new document to an existing or new index:
+    </p>
+
+    <pre class="programlisting">
+$index-&gt;addDocument($doc);
+</pre>
+
+    <p>
+        There are two ways to create document object. The first is to do it manually.
+    </p>
+
+    <div class="example">
+<a name="learning.lucene.indexing.doc-creation"></a><p class="title"><b>Exemplo 5. Manual Document Construction</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+$doc = new Zend_Search_Lucene_Document();
+$doc-&gt;addField(Zend_Search_Lucene_Field::Text('url', $docUrl));
+$doc-&gt;addField(Zend_Search_Lucene_Field::Text('title', $docTitle));
+$doc-&gt;addField(Zend_Search_Lucene_Field::unStored('contents', $docBody));
+$doc-&gt;addField(Zend_Search_Lucene_Field::binary('avatar', $avatarData));
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <p>
+        The second method is to load it from <acronym class="acronym">HTML</acronym> or Microsoft Office 2007 files:
+    </p>
+
+    <div class="example">
+<a name="learning.lucene.indexing.doc-loading"></a><p class="title"><b>Exemplo 6. Document loading</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+$doc = Zend_Search_Lucene_Document_Html::loadHTML($htmlString);
+$doc = Zend_Search_Lucene_Document_Docx::loadDocxFile($path);
+$doc = Zend_Search_Lucene_Document_Pptx::loadPptFile($path);
+$doc = Zend_Search_Lucene_Document_Xlsx::loadXlsxFile($path);
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <p>
+        If a document is loaded from one of the supported formats, it still can be extended manually
+        with new user defined fields.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.lucene.indexing.policy"></a>Indexing Policy</h3></div></div></div>
+        
+
+        <p>
+            You should define indexing policy within your application architectural design.
+        </p>
+
+        <p>
+            You may need an on-demand indexing configuration (something like <acronym class="acronym">OLTP</acronym>
+            system). In such systems, you usually add one document per user request. As such, the
+            <span class="emphasis"><em>MaxBufferedDocs</em></span> option will not affect the system. On the other
+            hand, <span class="emphasis"><em>MaxMergeDocs</em></span> is really helpful as it allows you to limit
+            maximum script execution time. <span class="emphasis"><em>MergeFactor</em></span> should be set to a value
+            that keeps balance between the average indexing time (it's also affected by average
+            auto-optimization time) and search performance (index optimization level is dependent on
+            the number of segments).
+        </p>
+
+        <p>
+            If you will be primarily performing batch index updates, your configuration should use a
+            <span class="emphasis"><em>MaxBufferedDocs</em></span> option set to the maximum value supported by the
+            available amount of memory. <span class="emphasis"><em>MaxMergeDocs</em></span> and
+            <span class="emphasis"><em>MergeFactor</em></span> have to be set to values reducing auto-optimization
+            involvement as much as possible <a href="#ftn.idm205698011872" class="footnote" name="idm205698011872"><sup class="footnote">[5]</sup></a>. Full index optimization should be applied after
+            indexing.
+        </p>
+
+        <div class="example">
+<a name="learning.lucene.indexing.optimization"></a><p class="title"><b>Exemplo 7. Index optimization</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$index-&gt;optimize();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            In some configurations, it's more effective to serialize index updates by organizing
+            update requests into a queue and processing several update requests in a single script
+            execution. This reduces index opening overhead, and allows utilizing index document
+            buffering.
+        </p>
+    </div>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm205698011872" class="footnote"><p><a href="#idm205698011872" class="para"><sup class="para">[5] </sup></a>An additional limit is the maximum file
+                    handlers supported by the operation system for concurrent open
+                    operations</p></div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.lucene.index-opening.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.lucene.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.lucene.searching.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Index Opening and Creation </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Searching</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,540 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Langage de requêtes</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.search.lucene.html" title="Zend_Search_Lucene">
+<link rel="prev" href="zend.search.lucene.searching.html" title="Chercher dans un index">
+<link rel="next" href="zend.search.lucene.query-api.html" title="API de construction de requêtes">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Langage de requêtes</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.search.lucene.searching.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.search.lucene.query-api.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.search.lucene.query-language"></a>Langage de requêtes</h2></div></div></div>
+    
+    <p>
+        Java Lucene et <code class="classname">Zend_Search_Lucene</code> fournissent des langages de requêtes plutôt puissants.
+    </p>
+    <p>
+        Ces langages sont pratiquement pareils, exceptées les quelques différences ci-dessous.
+    </p>
+    <p>
+        La syntaxe complète du langage de requêtes Java Lucene peut être trouvée
+        <a class="ulink" href="http://lucene.apache.org/java/2_3_0/queryparsersyntax.html" target="_top">ici</a>.
+    </p>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.terms"></a>Termes</h3></div></div></div>
+        
+        <p>
+            Une requête est décomposée en termes et opérateurs. Il y a 3 types de termes : le termes simples, les
+            phrases et les sous-requêtes.
+        </p>
+        <p>
+            Un terme simple est un simple mot, tel que "test" ou "hello".
+        </p>
+        <p>
+            Une phrase est un groupe de mots inclus dans des double guillemets, tel que "hello dolly".
+        </p>
+        <p>
+            Une sous-requête est une requête incluse dans des parenthèses, tel que "(hello dolly)".
+        </p>
+        <p>
+            De multiples termes peuvent être combinés ensemble avec des opérateurs booléens pour former
+            des requêtes complexes (voyez ci-dessous).
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.fields"></a>Champs</h3></div></div></div>
+        
+        <p>
+            Lucene supporte les champs de données. Lorsque vous effectuez une recherche, vous pouvez soit
+            spécifier un champ, soit utiliser le champ par défaut. Le nom du champ dépend des données indexées
+            et le champ par défaut est défini par les paramètres courants.
+        </p>
+        <p>
+            La première différence et la plus significative avec Java Lucene est que par défaut les termes
+            sont cherchés dans <span class="emphasis"><em>tous les champs</em></span>.
+        </p>
+        <p>
+            Il y a deux méthodes statiques dans la classe <code class="classname">Zend_Search_Lucene</code> qui
+            permettent au développeur de configurer ces paramètres :
+        </p>
+        <pre class="programlisting">
+$defaultSearchField = Zend_Search_Lucene::getDefaultSearchField();
+...
+Zend_Search_Lucene::setDefaultSearchField('contents');
+</pre>
+        <p>
+            La valeur <code class="constant">NULL</code> indique que la recherche est effectuée dans tous les champs. C'est
+            le paramétrage par défaut
+        </p>
+        <p>
+            Vous pouvez chercher dans des champs spécifiques en tapant le nom du champ suivi de ":", suivi du terme
+            que vous cherchez.
+        </p>
+        <p>
+            Par exemple, prenons un index Lucene contenant deux champs -title et text- avec text comme champ par défaut.
+            Si vous voulez trouver le document ayant pour titre "The Right Way" qui contient le text "don't go this way",
+            vous pouvez entrer :
+        </p>
+        <pre class="programlisting">
+title:"The Right Way" AND text:go
+</pre>
+        <p>
+            or
+        </p>
+        <pre class="programlisting">
+title:"Do it right" AND go
+</pre>
+        <p>
+            "text" étant le champ par défaut, l'indicateur de champ n'est pas requis.
+        </p>
+        <p>
+            Note: Le champ n'est valable que pour le terme, la phrase ou la sous-requête qu'il précède directement,
+            ainsi la requête
+            </p>
+<pre class="programlisting">
+title:Do it right
+</pre>
+<p>
+            ne trouvera que "Do" dans le champ 'title'. Elle trouvera "it" et "right" dans le champ par défaut (si le
+            champ par défaut est défini) ou dans tous les champs indexés (si le champ par défaut est défini à <code class="constant">NULL</code>).
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.wildcard"></a>Jokers (Wildcards)</h3></div></div></div>
+        
+        <p>
+            Lucene supporte les recherches avec joker sur un ou plusieurs caractères au sein des termes simples (mais pas
+            dans les phrases).
+        </p>
+        <p>
+            Pour effectuez une recherche avec joker sur un seul caractère, utilisez le symbole "?".
+        </p>
+        <p>
+            Pour effectuez une recherche avec joker sur plusieurs caractères, utilisez le symbole "*".
+        </p>
+        <p>
+            La recherche avec un joker sur un seul caractère va faire correspondre le terme avec le "?" remplacé par n'importe quel autre caractère unique.
+            Par exemple, pour trouver "text" ou "test" vous pouvez utiliser la recherche :
+            </p>
+<pre class="programlisting">
+te?t
+</pre>
+<p>
+        </p>
+        <p>
+            La rechercher par joker sur plusieurs caractères recherche pour 0 ou plus caractères quand elle fait correspondre
+            une chaîne avec les termes de recherche. Par exemple, pour trouver test, tests ou tester, on peut utiliser la recherche :
+            </p>
+<pre class="programlisting">
+test*
+</pre>
+<p>
+        </p>
+        <p>
+            Vous pouvez utiliser "?", "*" ou les deux n'importe où dans un terme :
+            </p>
+<pre class="programlisting">
+*wr?t*
+</pre>
+<p>
+            Cela va chercher "write", "wrote", "written", "rewrite", "rewrote", etc.
+        </p>
+        <p>
+            Depuis la version 1.7.7 du ZF, les termes avec joker requierent un préfixe. La longueur
+            par défaut du préfixe est de 3 (comme dans Java Lucene). Ainsi les termes "*", "te?t" ou "wr?t"
+            causeront une exception<a href="#ftn.idm192780908064" class="footnote" name="idm192780908064"><sup class="footnote">[15]</sup></a>.
+        </p>
+        <p>
+            Ce paramètre peut être modifié à l'aide des méthodes <code class="code">Zend_Search_Lucene_Search_Query_Wildcard::getMinPrefixLength()</code>
+            et <code class="code">Zend_Search_Lucene_Search_Query_Wildcard::setMinPrefixLength()</code>.
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.modifiers"></a>Modificateurs de termes</h3></div></div></div>
+        
+        <p>
+            Lucene supporte la modification des termes pour fournir un large panel d'options de recherche.
+        </p>
+        <p>
+            Le modificateur "~" peut être utilisé pour spécifier des recherches de proximité dans les phrases ou
+            des recherches floues pour les termes individuels.
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.range"></a>Recherche par intervalle</h3></div></div></div>
+        
+        <p>
+            Dans une requêtes par intervalle, le développeur ou l'utilisateur peut rechercher des documents dont la valeur du/des champ(s) se trouve entre
+            la borne inférieur et la borne supérieur de l'intervalle. Les requêtes d'intervalle peuvent être inclusives ou exclusives pour les bornes supérieures ou inférieures.
+            Le tri est effectué de manière lexicographique.
+            </p>
+<pre class="programlisting">
+mod_date:[20020101 TO 20030101]
+</pre>
+<p>
+            Cela va trouver les documents dont la valeur du champ mod_date se trouve entre 20020101 et 20030101, bornes incluses.
+            Notez que les requêtes d'intervalles ne sont pas réservées aux champs de date. Vous pouvez également les utiliser pour d'autres types de champ.
+            </p>
+<pre class="programlisting">
+title:{Aida TO Carmen}
+</pre>
+<p>
+            Cela va trouver tous les documents dont le titre serait triés entre Aida et Carmen, sans inclure ni Aida, ni Carmen.
+        </p>
+        <p>
+            Les requêtes d'intervalles inclusives utilisent des crochets. Les exclusives utilisent des accolades.
+        </p>
+        <p>
+            Si aucun champ n'est spécifié, par défaut <code class="classname">Zend_Search_Lucene</code> cherchera l'intervalle spécifié dans tous les champs.
+            </p>
+<pre class="programlisting">
+{Aida TO Carmen}
+</pre>
+<p>
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.fuzzy"></a>Recherches floues</h3></div></div></div>
+        
+        <p>
+            <code class="classname">Zend_Search_Lucene</code> tout comme Java Lucene supporte les recherches floues basées sur les algorithmes "Levenshtein Distance" ou "Edit Distance".
+            Pour effectuer une recherche floue, utilisez le symbole tilde "~" à la fin du mot pour un terme simple. Par exemple
+            pour chercher un terme similaire à "roam", utilisez la recherche floue suivante :
+            </p>
+<pre class="programlisting">
+roam~
+</pre>
+<p>
+            Cette recherche va trouver des termes tels que foam ou roams.
+            Un paramètre additionnel (et optionnel) peut spécifier la similarité requise. La valeur doit se trouver
+            entre 0 et 1. Avec une valeur proche de 1, seuls les termes très similaires vont correspondre. Par exemple :
+            </p>
+<pre class="programlisting">
+roam~0.8
+</pre>
+<p>
+            Si le paramètre n'est pas fourni, la valeur par défaut est à 0.5.
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.matched-terms-limitations"></a>Limitation des termes correspondants</h3></div></div></div>
+        
+        <p>
+            Les recherches floues, par intervalle ou par joker peuvent correspondre à trop de termes. Cela peut
+            causer d'énormes baisses de performances.
+        </p>
+        <p>
+            Du coup, Zend_Search_Lucene définit une limite dans le nombre de correspondances par requêtes (ou sous-requêtes).
+            Cette limite peut être récupérée et définie à l'aide des méthodes <code class="code">Zend_Search_Lucene::getTermsPerQueryLimit()</code>/<code class="code">Zend_Search_Lucene::setTermsPerQueryLimit($limit)</code>.
+        </p>
+        <p>
+            La limite du nombre de correspondances par requête est de 1024.
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.proximity-search"></a>Recherches de proximité</h3></div></div></div>
+        
+        <p>
+            Lucene permet de trouver des mots dans une phrase qui se trouvent à une certaine distance les uns des autres dans une chaîne.
+            Pour effectuer une recherche de proximité, utilisez le symbole tilde "~" à la fin de la phrase. Par exemple pour retrouver
+            "Zend" et "Framework" avec 10 mots entre eux dans un document, utilisez la recherche :
+            </p>
+<pre class="programlisting">
+"Zend Framework"~10
+</pre>
+<p>
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.boosting"></a>Booster un terme</h3></div></div></div>
+        
+        <p>
+            Java Lucene et <code class="classname">Zend_Search_Lucene</code> fournissent le niveau de pertinence des documents
+            basé sur les termes trouvés. Pour booster la pertinence d'un terme, utilisez le symbole circonflexe "^" avec
+            un facteur de boost (un nombre) à la fin du terme que vous cherchez. Plus le facteur de boost est élevé, plus
+            la pertinence du terme le sera.
+        </p>
+        <p>
+            Le boostage vous permet de contrôler la pertinence d'un document en boostant les termes individuellement.
+            Par exemple, si vous cherchez
+            </p>
+<pre class="programlisting">
+PHP framework
+</pre>
+<p>
+            et que vous voulez que le terme "PHP" soit plus pertinent, boostez le en utilisant le symbole ^ et
+            son facteur de boost juste après le terme. Vous pourriez écrire :
+            </p>
+<pre class="programlisting">
+PHP^4 framework
+</pre>
+<p>
+            Cela fera en sorte que les documents possédant le terme PHP seront plus pertinents. Vous pouvez également
+            booster des phrases ou des sous-requêtes, comme dans l'exemple ci-dessous :
+            </p>
+<pre class="programlisting">
+"PHP framework"^4 "Zend Framework"
+</pre>
+<p>
+            Par défaut, le facteur de boost est 1. Bien que le facteur de boost doive être positif,
+            il peut être inférieur à 1 (p. ex. 0.2).
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.boolean"></a>Opérateurs booléens</h3></div></div></div>
+        
+        <p>
+            Les opérateurs booléens permettent de combiner des termes avec des opérateurs logiques.
+            Lucene supporte AND, "+", OR, NOT et "-" en tant qu'opérateurs booléens.
+            Dans Java Lucene, les opérateurs booléens doivent être en MAJUSCULE. Ce n'est pas
+            nécessaire dans <code class="classname">Zend_Search_Lucene</code>.
+        </p>
+        <p>
+            Les opérateurs AND, OR et NOT et "+", "-" définissent deux styles différents pour
+            construire des requêtes booléennes.
+            Contrairement à Java Lucene, <code class="classname">Zend_Search_Lucene</code> ne permet pas
+            de mixer ces deux styles.
+        </p>
+        <p>
+            Si le style AND/OR/NOT est utilisé, un opérateur AND ou OR devra être présent entre
+            chaque terme de requête.
+            Chaque terme peut également être précédé de l'opérateur NOT. L'opérateur AND à la priorité sur
+            l'opérateur OR. Cela diffère du comportement de Java Lucene.
+        </p>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.query-language.boolean.and"></a>AND</h4></div></div></div>
+            
+            <p>
+                L'opérateur AND signifie que tous les termes dans le "groupe AND" doivent correspondre à
+                une partie du/des champs cherché(s).
+            </p>
+            <p>
+                Pour chercher des documents qui contiennent "PHP framework" et "Zend Framework", utilisez
+                la requête :
+                </p>
+<pre class="programlisting">
+"PHP framework" AND "Zend Framework"
+</pre>
+<p>
+            </p>
+        </div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.query-language.boolean.or"></a>OR</h4></div></div></div>
+            
+            <p>
+                L'opérateur OR divise la requête en plusieurs termes optionnels.
+            </p>
+            <p>
+                Pour chercher des documents qui contiennent "PHP framework" ou "Zend Framework", utilisez
+                la requête :
+                </p>
+<pre class="programlisting">
+"PHP framework" OR "Zend Framework"
+</pre>
+<p>
+            </p>
+        </div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.query-language.boolean.not"></a>NOT</h4></div></div></div>
+            
+            <p>
+                L'opérateur NOT exclut les documents qui contiennent le terme situé après NOT. Mais un "groupe AND"
+                qui contient uniquement des termes précédés de NOT ne retournera aucun résultat au lieu de retourner
+                tous les documents indexés.
+            </p>
+            <p>
+                Pour chercher des documents qui contiennent "PHP framework", mais pas "Zend Framework", utilisez
+                la requête :
+                </p>
+<pre class="programlisting">
+"PHP framework" AND NOT "Zend Framework"
+</pre>
+<p>
+            </p>
+        </div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.query-language.boolean.other-form"></a>Les opérateurs &amp;&amp;, ||, et !</h4></div></div></div>
+            
+            <p>
+                &amp;&amp;, ||, et ! peuvent être utilisés à la place de la notation AND, OR, et NOT.
+            </p>
+        </div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.query-language.boolean.plus"></a>+</h4></div></div></div>
+            
+            <p>
+                L'opérateur "+" ou 'requis' stipule que le terme après le symbole "+" doit correspondre au document.
+            </p>
+            <p>
+                Pour chercher des documents qui doivent contenir "Zend" et peuvent contenir "Framework", utilisez
+                la requête :
+                </p>
+<pre class="programlisting">
++Zend Framework
+</pre>
+<p>
+            </p>
+        </div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.query-language.boolean.minus"></a>-</h4></div></div></div>
+            
+            <p>
+                L'opérateur "-" ou 'interdit' exclut les documents qui correspondent au terme suivant le symbole "-".
+            </p>
+            <p>
+                Pour chercher des documents qui contiennent "PHP framework" mais pas "Zend Framework", utilisez
+                la requête :
+                </p>
+<pre class="programlisting">
+"PHP framework" -"Zend Framework"
+</pre>
+<p>
+            </p>
+        </div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.query-language.boolean.no-operator"></a>Pas d'opérateur</h4></div></div></div>
+            
+            <p>
+                Si aucun opérateur n'est utilisé, le comportement de la recherche est définit par "l'opérateur
+                booléen par défaut".
+            </p>
+            <p>
+                Il est défini à <code class="code">OR</code> par défaut.
+            </p>
+            <p>
+                Cela implique que chaque terme est optionnel par défaut. Il peut être présent ou pas dans le document, mais
+                les documents avec le terme recevront un score plus élevé.
+            </p>
+            <p>
+                Pour chercher des documents qui doivent contenir "PHP framework" et peuvent contenir "Zend Framework", utilisez
+                la requête :
+                </p>
+<pre class="programlisting">
++"PHP framework" "Zend Framework"
+</pre>
+<p>
+            </p>
+            <p>
+                L'opérateur booléen par défaut peut être défini ou récupéré avec les méthodes
+                <code class="classname">Zend_Search_Lucene_Search_QueryParser::setDefaultOperator($operator)</code> et
+                <code class="classname">Zend_Search_Lucene_Search_QueryParser::getDefaultOperator()</code>, respectivement.
+            </p>
+            <p>
+                Ces méthodes travaillent avec les constantes
+                <code class="classname">Zend_Search_Lucene_Search_QueryParser::B_AND</code> et
+                <code class="classname">Zend_Search_Lucene_Search_QueryParser::B_OR</code>.
+            </p>
+        </div>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.grouping"></a>Groupement</h3></div></div></div>
+        
+        <p>
+            Java Lucene et <code class="classname">Zend_Search_Lucene</code> supportent l'usage de parenthèses pour grouper des clauses et former
+            des sous-requêtes. Cela peut s'avérer utile si vous voulez contrôler la priorité des opérateurs logiques pour une requête
+            ou bien mixer différents styles de requête :
+            </p>
+<pre class="programlisting">
++(framework OR library) +php
+</pre>
+<p>
+            <code class="classname">Zend_Search_Lucene</code> supporte l'imbrication de requêtes à n'importe quel niveau.
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.field-grouping"></a>Groupement de champs</h3></div></div></div>
+        
+        <p>
+            Lucene supporte également l'usage des parenthèses pour grouper plusieurs clauses sur un simple champ.
+        </p>
+        <p>
+            Pour chercher un titre (champ 'title') qui contient le mot "return" ET la phrase "pink panther", utilisez la requête :
+            </p>
+<pre class="programlisting">
+title:(+return +"pink panther")
+</pre>
+<p>
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.query-language.escaping"></a>Echappement des caractères spéciaux</h3></div></div></div>
+        
+        <p>
+            Lucene supporte l'échappement des caractères spéciaux qui sont utilisés dans la syntaxe
+            de requête. La liste des caractères spéciaux est la suivante :
+        </p>
+        <p>
+            + - &amp;&amp; || ! ( ) { } [ ] ^ " ~ * ? : \
+        </p>
+        <p>
+            dans les termes simples, + et - sont automatiquement traités comme des caractères normaux.
+        </p>
+        <p>
+            Pour d'autres occurences de ces caractères, utilisez le \ avant chaque caractère spécial si vous
+            voulez l'échapper. Par exemple, pour chercher (1+1):2, utilisez la requête :
+            </p>
+<pre class="programlisting">
+\(1\+1\)\:2
+</pre>
+<p>
+        </p>
+    </div>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm192780908064" class="footnote">
+            <p><a href="#idm192780908064" class="para"><sup class="para">[15] </sup></a>Veuillez noter qu'il ne s'agit pas d'une <code class="code">Zend_Search_Lucene_Search_QueryParserException</code>,
+            mais d'une <code class="code">Zend_Search_Lucene_Exception</code>. Elle est levée pendant l'opération de réécriture de la requête (exécution).</p>
+</div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.search.lucene.searching.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.search.lucene.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.search.lucene.query-api.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Chercher dans un index </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> API de construction de requêtes</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Extending and Configuring Zend_Tool_Framework</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.tool.framework.html" title="Zend_Tool_Framework">
+<link rel="prev" href="zend.tool.framework.system-providers.html" title="Shipped System Providers">
+<link rel="next" href="zend.tool.project.html" title="Zend_Tool_Project">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Extending and Configuring Zend_Tool_Framework</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.tool.framework.system-providers.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Tool_Framework</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.tool.project.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.tool.framework.extending"></a>Extending and Configuring Zend_Tool_Framework</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.tool.framework.console-client"></a>Customizing Zend_Tool Console Client</h3></div></div></div>
+        
+
+        <p>
+            As of Zend Framework 1.9, <code class="classname">Zend_Tool_Framework</code> allows developers
+            to store information, provider specific configuration values, and custom files in a
+            special location on the developers machine. These configuration values and files can be
+            used by providers to extend functionality, customize functionality, or any other reasons
+            a provider sees fit.
+        </p>
+
+        <p>
+            The primary purpose, and the purpose most immediately used by existing providers is to
+            allow developers to customize the way the "out of the box" providers do work.
+        </p>
+
+        <p>
+            One of the more commonly requested features is to be able to provide custom project
+            profiles to <code class="classname">Zend_Tool_Project</code>'s Project Provider. This would
+            allow developers to store a custom profile in a special place that can be used
+            repeatedly by the <code class="classname">Zend_Tool</code> system in order to build custom
+            profiles. Another commonly requested feature is to be able to configure the behavior of
+            providers with a configuration setting. In order to achieve this, not only do we have to
+            have a <code class="classname">Zend_Tool</code> configuration file, but we also have to have a
+            place to find this configuration file.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.tool.framework.console-client.home-directory"></a>The Home Directory</h4></div></div></div>
+            
+
+            <p>
+                Before the Console Client can start searching for a <code class="classname">Zend_Tool</code>
+                configuration file or a local storage directory, it must first be able to identify
+                where the "home directory" is located.
+            </p>
+
+            <p>
+                On *nix-based machines, <acronym class="acronym">PHP</acronym> will be populated with an environment
+                variable named <code class="constant">HOME</code> with a path to the current users home
+                directory. Typically, this path will be very similar to
+                <code class="filename">/home/myusername</code>.
+            </p>
+
+            <p>
+                On Windows-based machines, <acronym class="acronym">PHP</acronym> will typically be populated with
+                an environment variable named <code class="constant">HOMEPATH</code> with the current users
+                home directory. This directory is usually found in either
+                <code class="filename">C:\Documents and Settings\Username\</code>, or in Vista at
+                <code class="filename">C:\Users\Username</code>.
+            </p>
+
+            <p>
+                If either a home directory cannot be found, or you wish to change the location of
+                where <code class="classname">Zend_Tool_Framework</code> Console Client finds the home
+                directory, you can provide an environment variable named
+                <code class="constant">ZF_HOME</code> to specify where to find the home directory.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.tool.framework.console-client.local-storage"></a>Local Storage</h4></div></div></div>
+            
+
+            <p>
+                Once a home directory can be located, <code class="classname">Zend_Tool_Framework</code>'s
+                Console Client can either autodiscover the local storage directory, or it can be
+                told where to expect the local storage directory.
+            </p>
+
+            <p>
+                Assuming the home directory has been found (here noted as <code class="varname">$HOME</code>),
+                the Console Client will then look for the local storage directory in
+                <code class="filename">$HOME/.zf/</code>. If found, it will set the local storage directory
+                to this location.
+            </p>
+
+            <p>
+                If the directory cannot be found, or the developer wishes to override this location,
+                that can be done by setting an environment variable. Regardless if
+                <code class="varname">$HOME</code> has been previously set or not, the developer may supply
+                the environment variable <code class="constant">ZF_STORAGE_DIR</code>.
+            </p>
+
+            <p>
+                Once the path to a local storage directory is found, the directory
+                <span class="emphasis"><em>must</em></span> exist for it to be passed into the
+                <code class="classname">Zend_Tool_Framework</code> runtime, as it will not be created for
+                you.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.tool.framework.console-client.configuration-file"></a>User Configuration</h4></div></div></div>
+            
+
+            <p>
+                Like local storage, once a home directory can be located,
+                <code class="classname">Zend_Tool_Framework</code>'s Console Client can then either attempt
+                to autodiscover the path to a configuration file, or it can be told specifically
+                where to find the configuration file.
+            </p>
+
+            <p>
+                Assuming the home directory has been found (here noted as <code class="varname">$HOME</code>),
+                the Console Client will then attempt to look for the existence of a configuration
+                file located at <code class="filename">$HOME/.zf.ini</code>. This file, if found, will be
+                used as the configuration file for <code class="classname">Zend_Tool_Framework</code>.
+            </p>
+
+            <p>
+                If that location does not exist, but a local storage directory does, then the
+                Console Client will then attempt to locate the configuration file within the local
+                storage directory. Assuming the local storage directory exists in
+                <code class="varname">$LOCAL_STORAGE</code>, then if a file exists as
+                <code class="filename">$LOCAL_STORAGE/zf.ini</code>, it will be found by the Console Client
+                and utilized as the <code class="classname">Zend_Tool_Framework</code> configuration file.
+            </p>
+
+            <p>
+                If the file cannot be autodiscovered or the developer wishes to specify the location
+                of location of the configuration file, the developer can do so by setting an
+                environment variable. If the environment variable
+                <code class="constant">ZF_CONFIG_FILE</code> is set, then its value will be used as the
+                location of the configuration file to use with the Console Client. The
+                <code class="constant">ZF_CONFIG_FILE</code> can point to any
+                <code class="classname">Zend_Config</code> readable <acronym class="acronym">INI</acronym>,
+                <acronym class="acronym">XML</acronym> or <acronym class="acronym">PHP</acronym> File.
+            </p>
+
+            <p>
+                If the file does not exist in either the autodiscovered or the provided location, it
+                will not be used as <code class="classname">Zend_Tool_Framework</code> does not attempt to
+                create the file automatically.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.tool.framework.console-client.configuration-content"></a>User Configuration File Content</h4></div></div></div>
+            
+
+            <p>
+                The configuration file should be structured as a <code class="classname">Zend_Config</code>
+                configuration file, in <acronym class="acronym">INI</acronym> format, and without any sections being
+                defined. First level keys should be used by the provider searching for a specific
+                value. For example, if the "Project" provider is expecting a "profiles" directory,
+                then it should typically be understood that it will search for the following
+                <acronym class="acronym">INI</acronym> key value pair:
+            </p>
+
+            <pre class="programlisting">
+project.profile = some/path/to/some-directory
+</pre>
+
+            <p>
+                The only reserved <acronym class="acronym">INI</acronym> prefix is the value "php". The "php" prefix
+                to values will be reserved to store names and values of runtime settable
+                <acronym class="acronym">PHP</acronym> values, such as <span class="property">include_path</span> or
+                <span class="property">error_reporting</span>. To override the
+                <span class="property">include_path</span> and <span class="property">error_reporting</span> with an
+                <acronym class="acronym">INI</acronym> value, a developer would set:
+            </p>
+
+            <pre class="programlisting">
+php.include_path = "/path/to/includes1:/path/to/includes2"
+php.error_reporting = 1
+</pre>
+
+            <div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="/assets/manual/img/important.png"></td>
+<th align="left">Important</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    The reserved prefix "php" only works with <acronym class="acronym">INI</acronym> files. You
+                    can't set <acronym class="acronym">PHP</acronym> <acronym class="acronym">INI</acronym> values with
+                    <acronym class="acronym">PHP</acronym> or <acronym class="acronym">XML</acronym> config.
+                </p>
+            </td></tr>
+</table></div>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.tool.framework.system-providers.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.tool.framework.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.tool.project.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Shipped System Providers </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend_Tool_Project</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

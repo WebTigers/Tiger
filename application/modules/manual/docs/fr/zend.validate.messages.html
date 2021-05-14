@@ -1,0 +1,216 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Messages de validation</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.validate.html" title="Zend_Validate">
+<link rel="prev" href="zend.validate.writing_validators.html" title="Écrire des validateurs">
+<link rel="next" href="zend.version.html" title="Zend_Version">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Messages de validation</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.validate.writing_validators.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Validate</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.version.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.validate.messages"></a>Messages de validation</h2></div></div></div>
+    
+
+    <p>
+        Chaque validateur basé sur <code class="classname">Zend_Validate</code> propose un ou plusieurs messages
+        dans le cas d'un échec. Vous pouvez utiliser ces informations pour créer vos propres messages
+        ou pour traduire les messages présents.
+    </p>
+
+    <p>
+        Ces messages sont représentés par des constantes se trouvant en haut de chaque classe de validateur.
+        Voyons <code class="classname">Zend_Validate_GreaterThan</code> pour un exemple complet:
+    </p>
+
+    <pre class="programlisting">
+protected $_messageTemplates = array(
+    self::NOT_GREATER =&gt; "'%value%' n'est pas plus grande que '%min%'",
+);
+</pre>
+
+    <p>
+        Comme vous le voyez, la constante <code class="constant">self::NOT_GREATER</code> fait référence à un échec et est
+        utilisée comme clé, le message lui-même est utilisé comme valeur dans le tableau des messages.
+    </p>
+
+    <p>
+        Vous pouvez récupérer les templates de messages d'un validateur en utilisant la méthode
+        <code class="methodname">getMessageTemplates()</code>. Elle vous retourne le tableau comme vu ci-dessus qui contient
+        tous les messages que le validateur pourrait retourner en cas d'échec de validation.
+    </p>
+
+    <pre class="programlisting">
+$validator = new Zend_Validate_GreaterThan();
+$messages  = $validator-&gt;getMessageTemplates();
+</pre>
+
+    <p>
+        La méthode <code class="methodname">setMessage()</code> permet de modifier un message unique correspondant à un
+        cas particulier d'échec de validation.
+    </p>
+
+    <pre class="programlisting">
+$validator = new Zend_Validate_GreaterThan();
+$validator-&gt;setMessage('Entrez une valeur plus petite', Zend_Validate_GreaterThan::NOT_GREATER);
+</pre>
+
+    <p>
+        Le deuxième paramètre indique le cas d'échec à surcharger. Lorsque vous omettez ce paramètre,
+        alors le message précisé sera affecté comme message pour tous les cas d'échec possibles du validateur.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.validate.messages.pretranslated"></a>Utiliser les messages de validations pré-traduits</h3></div></div></div>
+        
+
+        <p>
+            Zend Framework est livré avec plus de 45 validateurs différents et plus de 200 messages d'échecs.
+            Cela peut-être pénible de tous les traduire. Pour votre convenance, Zend Framework est livré avec
+            des messages d'échec pré-traduits. Vous les trouverez dans <code class="filename">/resources/languages</code>
+            de votre installation de Zend Framework.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Chemin utilisé">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Chemin utilisé</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Les fichiers de ressources sont en dehors du dossier library car les traductions sont sensées
+                être en dehors de ce chemin.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Donc pour traduire les messages de validation en français par exemple, tout ce qu'il y a à faire est
+            d'attacher un objet de traduction à <code class="classname">Zend_Validate</code> en utilisant les fichiers
+            de ressources (pré-traductions).
+        </p>
+
+        <pre class="programlisting">
+$translator = new Zend_Translate(
+    array(
+        'adapter' =&gt; 'array',
+        'content' =&gt; '/resources/languages',
+        'locale'  =&gt; $language,
+        'scan' =&gt; Zend_Translate::LOCALE_DIRECTORY
+    )
+);
+Zend_Validate_Abstract::setDefaultTranslator($translator);
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Adaptateur de traduction utilisé">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Adaptateur de traduction utilisé</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                L'adaptateur array a été utilisé, ceci pour permettre une modification simple des
+                messages pré-traduits.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="note"><table border="0" summary="Note: Langues supportées">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Langues supportées</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Cette caractéristique de pré-traduction est jeune, donc le nombre de langues supportées peut
+                ne pas être complet. De nouvelles langues seront ajoutées dans les sorties futures.
+            </p>
+
+            <p>
+                Vous pouvez aussi partir de ces fichiers pré-traduits pour créer vos propres traductions,
+                par exemple.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.validate.messages.limitation"></a>Limiter la taille d'un message de validation</h3></div></div></div>
+        
+
+        <p>
+            Il peut être nécessaire parfois de limiter la taille en caractères des messages d'erreur
+            retournés. par exemple si une vue n'autorise que 100 caractères par ligne.
+            <code class="classname">Zend_Validate</code> propose une telle option.
+        </p>
+
+        <p>
+            La taille actuelle est
+            <code class="methodname">Zend_Validate::getMessageLength()</code>. -1 signifie que le message ne
+            sera pas tronqué et entièrement retourné, c'est le comportement par défaut.
+        </p>
+
+        <p>
+            Pour limiter la taille, utilisez
+            <code class="methodname">Zend_Validate::setMessageLength()</code>. Lorsque la taille excède cette valeur,
+            le message sera alors tronqué et suivi de '<span class="emphasis"><em>...</em></span>'.
+        </p>
+
+        <pre class="programlisting">
+Zend_Validate::setMessageLength(100);
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Où ce paramètre est-il utilisé ?">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Où ce paramètre est-il utilisé ?</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                La taille des messages affecte aussi les messages personnalisés enregistrés, dès
+                que le validateur considéré étend <code class="classname">Zend_Validate_Abstract</code>.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.validate.writing_validators.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.validate.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.version.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Écrire des validateurs </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_Version</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Memory Objects</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.memory.html" title="Zend_Memory">
+<link rel="prev" href="zend.memory.memory-manager.html" title="Memory Manager">
+<link rel="next" href="zend.mime.html" title="Zend_Mime">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Memory Objects</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.memory.memory-manager.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Memory</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.mime.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.memory.memory-objects"></a>Memory Objects</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.memory.memory-objects.movable"></a>Movable</h3></div></div></div>
+        
+
+        <p>
+            Create movable memory objects using the <code class="methodname">create([$data])</code>
+            method of the memory manager:
+        </p>
+
+        <pre class="programlisting">
+$memObject = $memoryManager-&gt;create($data);
+</pre>
+
+        <p>
+            "Movable" means that such objects may be swapped and unloaded from
+            memory and then loaded when application code accesses the object.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.memory.memory-objects.locked"></a>Locked</h3></div></div></div>
+        
+
+        <p>
+            Create locked memory objects using the <code class="methodname">createLocked([$data])</code>
+            method of the memory manager:
+        </p>
+
+        <pre class="programlisting">
+$memObject = $memoryManager-&gt;createLocked($data);
+</pre>
+
+        <p>
+            "Locked" means that such objects are never swapped and unloaded
+            from memory.
+        </p>
+
+        <p>
+            Locked objects provides the same interface as movable objects
+            (<code class="classname">Zend_Memory_Container_Interface</code>).
+            So locked object can be used in any place instead of movable objects.
+        </p>
+
+        <p>
+            It's useful if an application or developer can decide, that some
+            objects should never be swapped, based on performance considerations.
+        </p>
+
+        <p>
+            Access to locked objects is faster, because the memory manager doesn't
+            need to track changes for these objects.
+        </p>
+
+        <p>
+            The locked objects class (<code class="classname">Zend_Memory_Container_Locked</code>)
+            guarantees virtually the same performance as working with a string
+            variable. The overhead is a single dereference to get the class property.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.memory.memory-objects.value"></a>Memory container 'value' property</h3></div></div></div>
+        
+
+        <p>
+            Use the memory container (movable or locked) '<span class="property">value</span>'
+            property to operate with memory object data:
+        </p>
+
+        <pre class="programlisting">
+$memObject = $memoryManager-&gt;create($data);
+
+echo $memObject-&gt;value;
+
+$memObject-&gt;value = $newValue;
+
+$memObject-&gt;value[$index] = '_';
+
+echo ord($memObject-&gt;value[$index1]);
+
+$memObject-&gt;value = substr($memObject-&gt;value, $start, $length);
+</pre>
+
+        <p>
+            An alternative way to access memory object data is to use the <a class="link" href="zend.memory.memory-objects.html#zend.memory.memory-objects.api.getRef" title="getRef() method"><code class="methodname">getRef()</code></a>
+            method. This method <span class="emphasis"><em>must</em></span> be used for <acronym class="acronym">PHP</acronym>
+            versions before 5.2. It also may have to be used in some other
+            cases for performance reasons.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.memory.memory-objects.api"></a>Memory container interface</h3></div></div></div>
+        
+
+        <p>
+            Memory container provides the following methods:
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.memory-objects.api.getRef"></a>getRef() method</h4></div></div></div>
+            
+
+            <pre class="programlisting">
+public function &amp;getRef();
+</pre>
+
+            <p>
+                The <code class="methodname">getRef()</code> method returns reference to the object value.
+            </p>
+
+            <p>
+                Movable objects are loaded from the cache at this moment if the
+                object is not already in memory. If the object is loaded from
+                the cache, this might cause swapping of other objects if the
+                memory limit would be exceeded by having all the managed
+                objects in memory.
+            </p>
+
+            <p>
+                The <code class="methodname">getRef()</code> method <span class="emphasis"><em>must</em></span> be
+                used to access memory object data for <acronym class="acronym">PHP</acronym> versions before 5.2.
+            </p>
+
+            <p>
+                Tracking changes to data needs additional resources.
+                The <code class="methodname">getRef()</code> method returns reference to string,
+                which is changed directly by user application.
+                So, it's a good idea to use the <code class="methodname">getRef()</code> method
+                for value data processing:
+            </p>
+
+            <pre class="programlisting">
+$memObject = $memoryManager-&gt;create($data);
+
+$value = &amp;$memObject-&gt;getRef();
+
+for ($count = 0; $count &lt; strlen($value); $count++) {
+    $char = $value[$count];
+    ...
+}
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.memory-objects.api.touch"></a>touch() method</h4></div></div></div>
+            
+
+            <pre class="programlisting">
+public function touch();
+</pre>
+
+            <p>
+                The <code class="methodname">touch()</code> method should be used in common with
+                <code class="methodname">getRef()</code>. It signals that object value has been changed:
+            </p>
+
+            <pre class="programlisting">
+$memObject = $memoryManager-&gt;create($data);
+...
+
+$value = &amp;$memObject-&gt;getRef();
+
+for ($count = 0; $count &lt; strlen($value); $count++) {
+    ...
+    if ($condition) {
+        $value[$count] = $char;
+    }
+    ...
+}
+
+$memObject-&gt;touch();
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.memory-objects.api.lock"></a>lock() method</h4></div></div></div>
+            
+
+            <pre class="programlisting">
+public function lock();
+</pre>
+
+            <p>
+                The <code class="methodname">lock()</code> methods locks object in memory.
+                It should be used to prevent swapping of some objects you choose.
+                Normally, this is not necessary, because the memory manager uses
+                an intelligent algorithm to choose candidates for swapping.
+                But if you exactly know, that at this part of code some
+                objects should not be swapped, you may lock them.
+            </p>
+
+            <p>
+                Locking objects in memory also guarantees that reference
+                returned by the <code class="methodname">getRef()</code> method is valid until you
+                unlock the object:
+            </p>
+
+            <pre class="programlisting">
+$memObject1 = $memoryManager-&gt;create($data1);
+$memObject2 = $memoryManager-&gt;create($data2);
+...
+
+$memObject1-&gt;lock();
+$memObject2-&gt;lock();
+
+$value1 = &amp;$memObject1-&gt;getRef();
+$value2 = &amp;$memObject2-&gt;getRef();
+
+for ($count = 0; $count &lt; strlen($value2); $count++) {
+    $value1 .= $value2[$count];
+}
+
+$memObject1-&gt;touch();
+$memObject1-&gt;unlock();
+$memObject2-&gt;unlock();
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.memory-objects.api.unlock"></a>unlock() method</h4></div></div></div>
+            
+
+            <pre class="programlisting">
+public function unlock();
+</pre>
+
+            <p>
+                <code class="methodname">unlock()</code> method unlocks object when it's no longer
+                necessary to be locked. See the example above.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.memory.memory-objects.api.isLocked"></a>isLocked() method</h4></div></div></div>
+            
+
+            <pre class="programlisting">
+public function isLocked();
+</pre>
+
+            <p>
+                The <code class="methodname">isLocked()</code> method can be used to check if
+                object is locked. It returns <code class="constant">TRUE</code> if the object
+                is locked, or <code class="constant">FALSE</code> if it is not locked.
+                This is always <code class="constant">TRUE</code> for "locked" objects,
+                and may be either <code class="constant">TRUE</code> or <code class="constant">FALSE</code>
+                for "movable" objects.
+            </p>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.memory.memory-manager.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.memory.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.mime.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Memory Manager </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_Mime</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Envoyer plusieurs courriels par connexion SMTP</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.mail.html" title="Zend_Mail">
+<link rel="prev" href="zend.mail.sending.html" title="Envoyer des courriels en utilisant SMTP">
+<link rel="next" href="zend.mail.different-transports.html" title="Utiliser différents transports">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Envoyer plusieurs courriels par connexion SMTP</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.mail.sending.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Mail</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.mail.different-transports.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.mail.multiple-emails"></a>Envoyer plusieurs courriels par connexion SMTP</h2></div></div></div>
+    
+
+    <p>
+        Par défaut un transport SMTP unique crée une connexion unique et la réutilise pour
+        toute la durée de la vie du script. Vous pouvez envoyer plusieurs courriels à travers cette
+        connexion SMTP. Une commande RSET doit être envoyée avant chaque distribution pour garantir
+        que le dialogue SMTP correct est respecté.
+    </p>
+
+    <p>
+        Optionally, you can also define a default From email address and name,
+        as well as a default reply-to header. This can be done through the static
+        methods <code class="methodname">setDefaultFrom()</code> and
+        <code class="methodname">setDefaultReplyTo()</code>. These defaults will be used when you
+        don't specify a From/Reply-to Address or -Name until the defaults are reset (cleared).
+        Resetting the defaults can be done through the use of the
+        <code class="methodname">clearDefaultFrom()</code> and
+        <code class="methodname">clearDefaultReplyTo</code>.
+    </p>
+
+    <div class="example">
+<a name="zend.mail.multiple-emails.example-1"></a><p class="title"><b>Exemple 570. Envoyer plusieurs courriels par connexion SMTP</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+// Créer un transport
+$config = array('name' =&gt; 'sender.example.com');
+$transport = new Zend_Mail_Transport_Smtp('mail.example.com', $config);
+
+// Ajouter les nom et adresses "From" &amp; "Reply-To" pour tous les courriels
+// à envoyer
+Zend_Mail::setDefaultFrom('sender@example.com', 'John Doe');
+Zend_Mail::setDefaultReplyTo('replyto@example.com','Jane Doe');
+
+// Boucle à travers les messages
+for ($i = 0; $i &lt; 5; $i++) {
+    $mail = new Zend_Mail();
+    $mail-&gt;addTo('studio@example.com', 'Test');
+    $mail-&gt;setSubject(
+        'Démonstration - Envoyer plusieurs emails par connexion SMTP'
+    );
+    $mail-&gt;setBodyText('...Votre message ici...');
+    $mail-&gt;send($transport);
+}
+
+// Effacer les valeurs par défaut
+Zend_Mail::clearDefaultFrom();
+Zend_Mail::clearDefaultReplyTo();
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <p>
+        Si vous voulez avoir une connexion SMTP séparée pour chaque distribution de courriel, vous
+        devez créer et détruire votre transport avant et après chaque appel de la méthode
+        <code class="methodname">send()</code>. Ou sinon, vous pouvez manipuler la connexion entre chaque
+        distribution en accédant à l'objet de protocole de transport.
+    </p>
+
+    <div class="example">
+<a name="zend.mail.multiple-emails.example-2"></a><p class="title"><b>Exemple 571. Contrôler manuellement la connexion de transport</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+// Créer un transport
+$transport = new Zend_Mail_Transport_Smtp();
+
+$protocol = new Zend_Mail_Protocol_Smtp('mail.example.com');
+$protocol-&gt;connect();
+$protocol-&gt;helo('sender.example.com');
+
+$transport-&gt;setConnection($protocol);
+
+// Boucle à travers les messages
+for ($i = 0; $i &lt; 5; $i++) {
+    $mail = new Zend_Mail();
+    $mail-&gt;addTo('studio@example.com', 'Test');
+    $mail-&gt;setFrom('studio@example.com', 'Test');
+    $mail-&gt;setSubject(
+        'Démonstration - Envoyer plusieurs emails par connexion SMTP'
+    );
+    $mail-&gt;setBodyText('...Votre message ici...');
+
+    // Contrôler manuellement la connexion
+    $protocol-&gt;rset();
+    $mail-&gt;send($transport);
+}
+
+$protocol-&gt;quit();
+$protocol-&gt;disconnect();
+</pre>
+    </div>
+</div>
+<br class="example-break">
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.mail.sending.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.mail.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.mail.different-transports.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Envoyer des courriels en utilisant SMTP </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Utiliser différents transports</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,949 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Lire des courriels</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.mail.html" title="Zend_Mail">
+<link rel="prev" href="zend.mail.smtp-secure.html" title="Sécuriser les transports SMTP">
+<link rel="next" href="zend.markup.html" title="Zend_Markup">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Lire des courriels</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.mail.smtp-secure.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Mail</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.markup.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.mail.read"></a>Lire des courriels</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Mail</code> peut lire des courriels provenant de différents stockages
+        locaux ou distants. Tous bénéficient de la même <acronym class="acronym">API</acronym> pour compter et extraire les messages,
+        certains implémentent des interfaces additionnelles pour des fonctionnalités moins communes.
+        Pour une vue d'ensemble des fonctionnalités des stockages implémentés voir la table
+        suivante.
+    </p>
+
+    <div class="table">
+<a name="zend.mail.read.table-1"></a><p class="title"><b>Tableau 114. Vue d'ensemble des fonctionnalités de lecture de courriels</b></p>
+<div class="table-contents">
+        
+
+        <table class="table" summary="Vue d'ensemble des fonctionnalités de lecture de courriels" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Fonctionnalité</th>
+<th>Mbox</th>
+<th>Maildir</th>
+<th>Pop3</th>
+<th>IMAP</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Type de stockage</td>
+<td>local</td>
+<td>local</td>
+<td>distant</td>
+<td>distant</td>
+</tr>
+<tr>
+<td>Extraction des messages</td>
+<td>Oui</td>
+<td>Oui</td>
+<td>Oui</td>
+<td>Oui</td>
+</tr>
+<tr>
+<td>Extraction des parties mimes</td>
+<td>émulé</td>
+<td>émulé</td>
+<td>émulé</td>
+<td>émulé</td>
+</tr>
+<tr>
+<td>Dossiers</td>
+<td>Oui</td>
+<td>Oui</td>
+<td>Non</td>
+<td>Oui</td>
+</tr>
+<tr>
+<td>Créer des messages/dossiers</td>
+<td>Non</td>
+<td>A faire</td>
+<td>Non</td>
+<td>A faire</td>
+</tr>
+<tr>
+<td>Flags</td>
+<td>Non</td>
+<td>Oui</td>
+<td>Non</td>
+<td>Oui</td>
+</tr>
+<tr>
+<td>Quota</td>
+<td>Non</td>
+<td>Oui</td>
+<td>Non</td>
+<td>Non</td>
+</tr>
+</tbody>
+</table>
+    </div>
+</div>
+<br class="table-break">
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mail.read-example"></a>Exemple simple avec Pop3</h3></div></div></div>
+        
+
+        <pre class="programlisting">
+$mail = new Zend_Mail_Storage_Pop3(array('host'     =&gt; 'localhost',
+                                         'user'     =&gt; 'test',
+                                         'password' =&gt; 'test'));
+
+echo $mail-&gt;countMessages() . " messages trouvés\n";
+foreach ($mail as $message) {
+    echo "Mail from '{$message-&gt;from}': {$message-&gt;subject}\n";
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mail.read-open-local"></a>Ouvrir un stockage local</h3></div></div></div>
+        
+
+        <p>
+            Mbox et Maildir sont les deux formats supportés pour le stockage local des courriels,
+            tous les deux dans leurs formats le plus simple.
+        </p>
+
+        <p>
+            Si vous voulez lire un fichier Mbox, vous devez juste donner le nom du fichier au
+            constructeur de <code class="classname">Zend_Mail_Storage_Mbox</code>:
+        </p>
+
+        <pre class="programlisting">
+$mail =
+    new Zend_Mail_Storage_Mbox(array('filename' =&gt; '/home/test/mail/inbox'));
+</pre>
+
+        <p>Maildir est très similaire mais nécessite un nom de dossier :</p>
+
+        <pre class="programlisting">
+$mail =
+    new Zend_Mail_Storage_Maildir(array('dirname' =&gt; '/home/test/mail/'));
+</pre>
+
+        <p>
+            Ces deux constructeurs lèvent une exception
+            <code class="classname">Zend_Mail_Exception</code> si le stockage ne peut pas être lu.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mail.read-open-remote"></a>Ouvrir un stockage distant</h3></div></div></div>
+        
+
+        <p>
+            Pour les stockages distants les deux protocoles les plus populaires sont supportés
+            : Pop3 et Imap. Les deux nécessitent au moins un hôte et un utilisateur pour se
+            connecter et s'identifier. Le mot de passe par défaut est une chaîne vide et le port par
+            défaut celui donné dans la <acronym class="acronym">RFC</acronym> du protocole.
+        </p>
+
+        <pre class="programlisting">
+// connexion à Pop3
+$mail = new Zend_Mail_Storage_Pop3(array('host'     =&gt; 'exemple.com'
+                                         'user'     =&gt; 'test',
+                                         'password' =&gt; 'test'));
+
+// connexion à Imap
+$mail = new Zend_Mail_Storage_Imap(array('host'     =&gt; 'exemple.com'
+                                         'user'     =&gt; 'test',
+                                         'password' =&gt; 'test'));
+
+// exemple à un port non standard
+$mail = new Zend_Mail_Storage_Pop3(array('host'     =&gt; 'exemple.com',
+                                         'port'     =&gt; 1120
+                                         'user'     =&gt; 'test',
+                                         'password' =&gt; 'test'));
+</pre>
+
+        <p>
+            Pour ces deux stockages <acronym class="acronym">SSL</acronym> et TLS sont supportés. Si vous utilisez <acronym class="acronym">SSL</acronym> le port
+            par défaut change comme indiqué dans la <acronym class="acronym">RFC</acronym>.
+        </p>
+
+        <pre class="programlisting">
+// exemples pour Zend_Mail_Storage_Pop3,
+// identique à Zend_Mail_Storage_Imap
+
+// utiliser SSL avec un port différent
+// (par défaut 995 pour Pop3 et 993 pour Imap)
+$mail = new Zend_Mail_Storage_Pop3(array('host'     =&gt; 'exemple.com'
+                                         'user'     =&gt; 'test',
+                                         'password' =&gt; 'test',
+                                         'ssl'      =&gt; 'SSL'));
+
+// utiliser TLS
+$mail = new Zend_Mail_Storage_Pop3(array('host'     =&gt; 'exemple.com'
+                                         'user'     =&gt; 'test',
+                                         'password' =&gt; 'test',
+                                         'ssl'      =&gt; 'TLS'));
+</pre>
+
+        <p>
+            Les deux constructeurs peuvent lever une exception
+            <code class="classname">Zend_Mail_Exception</code> ou
+            <code class="classname">Zend_Mail_Protocol_Exception</code>(étendant
+            <code class="classname">Zend_Mail_Exception</code>), en fonction du type de l'erreur.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mail.read-fetching"></a>Extraire des messages et autres méthodes simples</h3></div></div></div>
+        
+
+        <p>
+            Dès que vous avez ouvert l'accès, les messages peuvent être extraits. Vous devez
+            fournir un numéro de message, qui est un compteur qui démarre à 1 pour le premier
+            message. Pour extraire le message vous utilisez la méthode <code class="methodname">getMessage()</code>
+            :
+        </p>
+
+        <pre class="programlisting">
+$message = $mail-&gt;getMessage($numeroDeMessage);
+</pre>
+
+        <p>
+            L'accès sous forme de tableau est aussi supporté, mais cet méthode d'accès ne
+            supporte pas les paramètres additionnels qui aurait pu être ajouté à
+            <code class="methodname">getMessage()</code>. Tant que vous n'en n'avez pas besoin et que vous pouvez vivre
+            avec les valeurs par défaut, vous pouvez utiliser :
+        </p>
+
+        <pre class="programlisting">
+$message = $mail[$numeroDeMessage];
+</pre>
+
+        <p>
+            Pour itérer tous les messages, l'interface <code class="code">Iterator</code> est implémentée
+            :
+        </p>
+
+        <pre class="programlisting">
+foreach ($mail as $numeroDeMessage =&gt; $message) {
+    // faire qqch ...
+}
+</pre>
+
+        <p>
+            Pour compter les messages dans le stockage, vous pouvez soit utiliser la méthode
+            <code class="methodname">countMessages()</code> ou utiliser l'accès de type tableau :
+        </p>
+
+        <pre class="programlisting">
+// par méthode
+$maxMessage = $mail-&gt;countMessages();
+
+// type tableau
+$maxMessage = count($mail);
+</pre>
+
+        <p>
+            Pour supprimer un mail vous pouvez utiliser la méthode
+            <code class="methodname">removeMessage()</code> ou l'accès de type tableau :
+        </p>
+
+        <pre class="programlisting">
+// méthode
+$mail-&gt;removeMessage($numeroDeMessage);
+
+// type tableau
+unset($mail[$messageNum]);
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mail.read-message"></a>Travailler avec les messages</h3></div></div></div>
+        
+
+        <p>
+            Après avoir extrait les messages avec <code class="methodname">getMessage()</code> vous voulez
+            extraire les en-têtes, le contenu ou une partie d'un message multipart. Tous les
+            en-têtes peuvent être accédés via les propriétés ou la méthode <code class="methodname">getHeader()</code>
+            si vous voulez plus de contrôle ou avoir accès à des en-têtes peu communs. Les noms des
+            en-têtes gérés en interne avec une casse minuscule, ainsi la casse du nom de l'en-tête
+            importe peu. En outre les en-têtes avec un tiret-bas peuvent être écrit avec la <a class="ulink" href="http://en.wikipedia.org/wiki/CamelCase" target="_top">notation Camel</a>. Si aucun en-tête
+            n'est trouvé pour les deux notations, une exception est levée. Pour éviter ceci, la
+            méthode <code class="methodname">headerExists()</code> peut être utilisée pour vérifier l'existence d'un
+            en-tête.
+        </p>
+
+        <pre class="programlisting">
+// récupérer l'objet message
+$message = $mail-&gt;getMessage(1);
+
+// afficher le sujet du message
+echo $message-&gt;subject . "\n";
+
+// récupérer l'en-tête content-type
+$type = $message-&gt;contentType;
+
+// vérifier si CC est spécifié :
+if( isset($message-&gt;cc) ) { // ou $message-&gt;headerExists('cc');
+    $cc = $message-&gt;cc;
+}
+</pre>
+
+        <p>
+            Si vous avez plusieurs en-têtes avec le même nom, par exemple les en-têtes
+            "Received", vous pourriez les vouloir sous la forme d'un tableau plutôt qu'en tant que
+            chaîne. Ceci est possible avec la méthode <code class="methodname">getHeader()</code>.
+        </p>
+
+        <pre class="programlisting">
+// récupérer l'en-tête comme une propriété - le résultat est toujours
+// une chaîne, avec de nouvelles lignes entre chaque occurence
+// dans le message
+$received = $message-&gt;received;
+
+// la même chose avec la méthode getHeader()
+$received = $message-&gt;getHeader('received', 'string');
+
+// ou mieux un tableau avec une entrée pour chaque occurence
+$received = $message-&gt;getHeader('received', 'array');
+foreach ($received as $line) {
+    // faire qqch
+}
+
+// si vous ne définissez pas de format vous récupérerez la représentation
+// interne (chaîne pour en-têtes uniques, tableau pour en-têtes multiples
+$received = $message-&gt;getHeader('received');
+if (is_string($received)) {
+    // seulement un en-tête received trouvé dans le message
+}
+</pre>
+
+        <p>
+            La méthode <code class="methodname">getHeaders()</code> retourne tous les headers sous forme de
+            tableau avec des clés en minuscules et des valeurs en tant que tableau pour des en-têtes
+            multiples ou une chaîne pour des en-têtes uniques.
+        </p>
+
+        <pre class="programlisting">
+// récupère tous les en-têtes
+foreach ($message-&gt;getHeaders() as $name =&gt; $value) {
+    if (is_string($value)) {
+        echo "$name: $value\n";
+        continue;
+    }
+    foreach ($value as $entry) {
+        echo "$name: $entry\n";
+    }
+}
+</pre>
+
+        <p>
+            Si vous n'avez pas de message de type multipart, extraire le contenu est facilité
+            avec <code class="methodname">getContent()</code>. A la différence des en-têtes, le contenu est seulement
+            extrait en cas de besoin (alias late-fetch).
+        </p>
+
+        <pre class="programlisting">
+// affiche le contenu du message
+echo '&lt;pre&gt;';
+echo $message-&gt;getContent();
+echo '&lt;/pre&gt;';
+</pre>
+
+        <p>
+            Vérifier si un message est de type multipart est réalisé avec la méthode
+            <code class="methodname">isMultipart()</code>. Si vous avez un message de type multipart vous pouvez
+            récupérer une instance de <code class="classname">Zend_Mail_Part</code> avec la méthode
+            <code class="methodname">getPart()</code>. <code class="classname">Zend_Mail_Part</code> est la classe de base de
+            <code class="classname">Zend_Mail_Message</code>, donc vous avez les mêmes méthodes :
+            <code class="methodname">getHeader()</code>, <code class="methodname">getHeaders()</code>, <code class="methodname">getContent()</code>,
+            <code class="methodname">getPart()</code>, <code class="methodname">isMultipart()</code> et les propriétés pour les
+            en-têtes.
+        </p>
+
+        <pre class="programlisting">
+// récupérer la première partie non-multipart
+$part = $message;
+while ($part-&gt;isMultipart()) {
+    $part = $message-&gt;getPart(1);
+}
+echo 'Le type de cette partie est '
+   . strtok($part-&gt;contentType, ';')
+   . "\n";
+echo "Contenu :\n";
+echo $part-&gt;getContent();
+</pre>
+
+        <p>
+            <code class="classname">Zend_Mail_Part</code> implémente aussi
+            <code class="classname">RecursiveIterator</code>, qui rend facile le scan de toutes les parties. Et pour
+            un affichage facile, il implémente de plus la méthode magique <code class="methodname">__toString()</code>
+            qui retourne le contenu.
+        </p>
+
+        <pre class="programlisting">
+// affiche la première partie de type text/plain=
+$foundPart = null;
+foreach (new RecursiveIteratorIterator($mail-&gt;getMessage(1)) as $part) {
+    try {
+        if (strtok($part-&gt;contentType, ';') == 'text/plain') {
+            $foundPart = $part;
+            break;
+        }
+    } catch (Zend_Mail_Exception $e) {
+        // ignore
+    }
+}
+if (!$foundPart) {
+    echo 'Aucune partie "plain text" trouvés';
+} else {
+    echo "Partie \"plain text\" : \n" . $foundPart;
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mail.read-flags"></a>Vérifier les drapeaux ("flags")</h3></div></div></div>
+        
+
+        <p>
+            Maildir et IMAP supporte l'enregistrement de drapeaux. La classe
+            <code class="classname">Zend_Mail_Storage</code> possède des constantes pour tous les drapeaux
+            maildir et IMAP connus, nommés
+            <code class="classname">Zend_Mail_Storage::FLAG_&lt;nomdudrapeau&gt;</code>. Pour vérifier les
+            drapeaux <code class="classname">Zend_Mail_Message</code> possède une méthode
+            <code class="methodname">hasFlag()</code>. Avec <code class="methodname">getFlags()</code> vous récupérez tous les drapeaux
+            existants.
+        </p>
+
+        <pre class="programlisting">
+// trouvé les messages non lus
+echo "Emails non lus :\n";
+foreach ($mail as $message) {
+    if ($message-&gt;hasFlag(Zend_Mail_Storage::FLAG_SEEN)) {
+        continue;
+    }
+    // marque les emails récents/nouveaux
+    if ($message-&gt;hasFlag(Zend_Mail_Storage::FLAG_RECENT)) {
+        echo '! ';
+    } else {
+        echo '  ';
+    }
+    echo $message-&gt;subject . "\n";
+}
+
+// vérifie les drapeaux connus
+$flags = $message-&gt;getFlags();
+echo "Le message est marqué comme : ";
+foreach ($flags as $flag) {
+    switch ($flag) {
+        case Zend_Mail_Storage::FLAG_ANSWERED:
+            echo 'Réponse ';
+            break;
+        case Zend_Mail_Storage::FLAG_FLAGGED:
+            echo 'Marqués ';
+            break;
+
+        // ...
+        // vérifie d'autres drapeaux
+        // ...
+
+        default:
+            echo $flag . '(drapeau inconnu) ';
+    }
+}
+</pre>
+
+        <p>
+            Comme IMAP autorise les drapeaux définis par client ou l'utilisateur, vous pouvez
+            obtenir ces drapeaux même s'ils n'ont pas de constante dans
+            <code class="classname">Zend_Mail_Storage</code>. Au lieu de cela ils sont retournés comme une
+            chaîne et peuvent être vérifiés de la même manière avec <code class="methodname">hasFlag()</code>.
+        </p>
+
+        <pre class="programlisting">
+// Vérifie le message avec les drapeaux $EstUnSpam, $SpamTeste
+if (!$message-&gt;hasFlag('$SpamTeste')) {
+    echo 'ce message n\'est pas considéré comme un spam';
+} else if ($message-&gt;hasFlag('$EstUnSpam')) {
+    echo 'ce message est un spam';
+} else {
+    echo 'ce message est sûr';
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mail.read-folders"></a>Utiliser les dossiers</h3></div></div></div>
+        
+
+        <p>
+            Tous les stockages, excepté Pop3, supportent les dossiers, également appelés
+            boîtes aux lettres. L'interface implémentée par tous les stockages supportant les
+            dossiers s'appelle <code class="classname">Zend_Mail_Storage_Folder_Interface</code>. En outre
+            toutes ces classes ont un paramètre facultatif additionnel appelé <span class="property">folder</span>,
+            qui est le dossier choisi après ouverture, dans le constructeur.
+        </p>
+
+        <p>
+            Pour les stockages locaux vous devez employer les classes séparées appelées
+            <code class="classname">Zend_Mail_Storage_Folder_Mbox</code> ou
+            <code class="classname">Zend_Mail_Storage_Folder_Maildir</code>. Tous les deux ont besoin d'un
+            paramètre nommé <span class="property">dirname</span> avec le nom du dossier de base. Le format pour le
+            maildir est comme définie dans maildir++ (avec un point comme délimiteur par défaut),
+            Mbox est une hiérarchie de dossiers avec des fichiers Mbox. Si vous n'avez pas un
+            dossier de Mbox appelé INBOX dans votre dossier de base Mbox vous devez placer un autre
+            dossier dans le constructeur.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Mail_Storage_Imap</code> supporte déjà des dossiers par
+            défaut. Exemples pour ouvrir ces stockages :
+        </p>
+
+        <pre class="programlisting">
+// mbox avec dossiers
+$mail = new Zend_Mail_Storage_Folder_Mbox(
+            array('dirname' =&gt; '/home/test/mail/')
+        );
+
+// mbox avec un dossier par défaut nommé INBOX, fontionne aussi
+// avec Zend_Mail_Storage_Folder_Maildir et Zend_Mail_Storage_Imap
+$mail = new Zend_Mail_Storage_Folder_Mbox(
+            array('dirname' =&gt; '/home/test/mail/', 'folder'  =&gt; 'Archive')
+        );
+
+// maildir avec dossiers
+$mail = new Zend_Mail_Storage_Folder_Maildir(
+            array('dirname' =&gt; '/home/test/mail/')
+        );
+
+// maildir avec deux-points comme délimiteur,
+// comme suggéré dans Maildir++
+$mail = new Zend_Mail_Storage_Folder_Maildir(
+            array('dirname' =&gt; '/home/test/mail/', 'delim'   =&gt; ':')
+        );
+
+// imap est le même avec ou sans dossier
+$mail = new Zend_Mail_Storage_Imap(array('host'     =&gt; 'example.com',
+                                         'user'     =&gt; 'test',
+                                         'password' =&gt; 'test'));
+</pre>
+
+        <p>
+            Avec la méthode <code class="methodname">getFolders($root = null)</code> vous pouvez obtenir la
+            hiérarchie des dossiers en commençant par le dossier racine ou le dossier fourni. Elle
+            est retournée comme instance de <code class="classname">Zend_Mail_Storage_Folder</code>, qui
+            implémente <code class="classname">RecursiveIterator</code> et tous ses enfants sont également des
+            instances de <code class="classname">Zend_Mail_Storage_Folder</code>. Chacune de ces instances à
+            des noms locaux et globaux retournés par les méthodes <code class="methodname">getLocalName()</code> et
+            <code class="methodname">getGlobalName()</code>. Le nom global est le nom absolu du dossier racine
+            (délimiteurs y compris), le nom local est le nom dans le dossier parent.
+        </p>
+
+        <div class="table">
+<a name="zend.mail.read-folders.table-1"></a><p class="title"><b>Tableau 115. Noms de dossiers</b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="Noms de dossiers" border="1">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Nom global</th>
+<th>Nom local</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>/INBOX</td>
+<td>INBOX</td>
+</tr>
+<tr>
+<td>/Archive/2005</td>
+<td>2005</td>
+</tr>
+<tr>
+<td>List.ZF.General</td>
+<td>General</td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <p>
+            Si vous employez l'itérateur, la clé de l'élément courant est le nom local. Le nom
+            global est également retourné par la méthode magique <code class="methodname">__toString()</code>. Quelques
+            dossiers peuvent ne pas être sélectionnables, ce qui veut dire qu'ils ne peuvent pas
+            stocker des messages et les choisir entraînerait une erreur. Ceci peut être vérifié avec
+            la méthode <code class="methodname">isSelectable()</code>. Ainsi il est très facile de produire l'arbre
+            entier dans une vue :
+        </p>
+
+        <pre class="programlisting">
+$folders = new RecursiveIteratorIterator(
+                    $this-&gt;mail-&gt;getFolders(),
+                    RecursiveIteratorIterator::SELF_FIRST
+                );
+echo '&lt;select name="folder"&gt;';
+foreach ($folders as $localName =&gt; $folder) {
+    $localName = str_pad('', $folders-&gt;getDepth(), '-', STR_PAD_LEFT)
+               . $localName;
+    echo '&lt;option';
+    if (!$folder-&gt;isSelectable()) {
+        echo ' disabled="disabled"';
+    }
+    echo ' value="' . htmlspecialchars($folder) . '"&gt;'
+        . htmlspecialchars($localName) . '&lt;/option&gt;';
+}
+echo '&lt;/select&gt;';
+</pre>
+
+        <p>
+            Les dossiers choisis courants sont retournés par la méthode
+            <code class="methodname">getCurrentFolder()</code>. Changer de dossier est fait avec la méthode
+            <code class="methodname">selectFolder()</code>, qui a besoin du nom global comme paramètre. Si vous voulez
+            éviter d'écrire des délimiteurs vous pouvez également employer les propriétés d'une
+            instance de <code class="classname">Zend_Mail_Storage_Folder</code> :
+        </p>
+
+        <pre class="programlisting">
+// selon votre stockage et ses réglages $rootFolder-&gt;Archive-&gt;2005
+// est la même chose que :
+//   /Archive/2005
+//  Archive:2005
+//  INBOX.Archive.2005
+//  ...
+$folder = $mail-&gt;getFolders()-&gt;Archive-&gt;2005;
+echo 'Le précédent dossier était '
+   . $mail-&gt;getCurrentFolder()
+   . "Le nouveau dossier est $folder\n";
+$mail-&gt;selectFolder($folder);
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mail.read-advanced"></a>Utilisation avancée</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.mail.read-advanced.noop"></a>Utiliser NOOP</h4></div></div></div>
+            
+
+            <p>
+                Si vous employez un stockage distant et avez une longue tâche vous pourriez
+                devoir maintenir la connexion persistante par l'intermédiaire du noop :
+            </p>
+
+            <pre class="programlisting">
+foreach ($mail as $message) {
+
+    // faire qqch...
+
+    $mail-&gt;noop(); // maintient la connexion
+
+    // faire autre chose...
+
+    $mail-&gt;noop(); // maintient la connexion
+}
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.mail.read-advanced.extending"></a>Mettre en cache des instances</h4></div></div></div>
+            
+
+            <p>
+                <code class="classname">Zend_Mail_Storage_Mbox</code>,
+                <code class="classname">Zend_Mail_Storage_Folder_Mbox</code>,
+                <code class="classname">Zend_Mail_Storage_Maildir</code> et
+                <code class="classname">Zend_Mail_Storage_Folder_Maildir</code> implémentant les méthodes
+                magiques <code class="methodname">__sleep()</code> et <code class="methodname">__wakeup()</code>, ce qui veut dire qu'ils
+                sont sérialisable. Ceci évite d'analyser les dossiers ou l'arbre des dossiers plus
+                d'une fois. L'inconvénient est que votre stockage de Mbox ou de Maildir ne doit pas
+                changer. Quelques contrôles faciles sont faits, comme ré-analyser le dossier courant
+                de Mbox si le temps de modification change ou ré-analysé la structure du dossier si
+                un dossier a disparu (ce qui a toujours comme conséquence une erreur, mais vous
+                pouvez rechercher un autre dossier après). Il est meilleur si vous avez quelque
+                chose comme un fichier de signal pour des changements et la vérifiez avant
+                d'employer l'instance caché.
+            </p>
+
+            <pre class="programlisting">
+// il n'y a pas de gestionnaire spécifique de cache utilisé ici,
+// changer le code pour utiliser votre gestionnaire de cache
+$signal_file = '/home/test/.mail.last_change';
+$mbox_basedir = '/home/test/mail/';
+$cache_id = 'exemple de mail en cache ' . $mbox_basedir . $signal_file;
+
+$cache = new Your_Cache_Class();
+if (!$cache-&gt;isCached($cache_id) ||
+    filemtime($signal_file) &gt; $cache-&gt;getMTime($cache_id)) {
+    $mail = new Zend_Mail_Storage_Folder_Pop3(
+                array('dirname' =&gt; $mbox_basedir)
+            );
+} else {
+    $mail = $cache-&gt;get($cache_id);
+}
+
+// faire qqch ...
+
+$cache-&gt;set($cache_id, $mail);
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="idm192505940176"></a>Étendre les classes de protocoles</h4></div></div></div>
+            
+
+            <p>
+                Les stockages distants utilisent deux classes :
+                <code class="classname">Zend_Mail_Storage_&lt;NOM&gt;</code> et
+                <code class="classname">Zend_Mail_Protocol_&lt;NOM&gt;</code>. La classe de protocole
+                traduit les commandes et les réponses de protocole et issu de ou pour <acronym class="acronym">PHP</acronym>, comme des
+                méthodes pour les commandes ou les variables avec différentes structures pour les
+                données. L'autre/classe principale met en application l'interface commune.
+            </p>
+
+            <p>
+                Si vous avez besoin de fonctionnalités additionnelles de protocole vous pouvez
+                étendre la classe de protocole et l'employer dans le constructeur de la classe
+                principale. Supposer par exemple que nous devons joindre différents ports avant que
+                nous puissions nous relier à POP3.
+            </p>
+
+            <pre class="programlisting">
+Zend_Loader::loadClass('Zend_Mail_Storage_Pop3');
+
+class Example_Mail_Exception extends Zend_Mail_Exception
+{}
+
+class Example_Mail_Protocol_Exception extends Zend_Mail_Protocol_Exception
+{}
+
+class Example_Mail_Protocol_Pop3_Knock extends Zend_Mail_Protocol_Pop3
+{
+    private $host, $port;
+
+    public function __construct($host, $port = null)
+    {
+        // pas d'auto-connexion dans cette classe
+        $this-&gt;host = $host;
+        $this-&gt;port = $port;
+    }
+
+    public function knock($port)
+    {
+        $sock = @fsockopen($this-&gt;host, $port);
+        if ($sock) {
+            fclose($sock);
+        }
+    }
+
+    public function connect($host = null, $port = null, $ssl = false)
+    {
+        if ($host === null) {
+            $host = $this-&gt;host;
+        }
+        if ($port === null) {
+            $port = $this-&gt;port;
+        }
+        parent::connect($host, $port);
+    }
+}
+
+class Example_Mail_Pop3_Knock extends Zend_Mail_Storage_Pop3
+{
+    public function __construct(array $params)
+    {
+        // ... vérifier les $params ici ! ...
+        $protocol =
+            new Example_Mail_Protocol_Pop3_Knock($params['host']);
+
+        // faire votre fonction "spéciale"
+        foreach ((array)$params['knock_ports'] as $port) {
+            $protocol-&gt;knock($port);
+        }
+
+        // récupérer l'état coorect
+        $protocol-&gt;connect($params['host'], $params['port']);
+        $protocol-&gt;login($params['user'], $params['password']);
+
+        // initialise le parent
+        parent::__construct($protocol);
+    }
+}
+
+$mail = new Example_Mail_Pop3_Knock(
+            array('host'        =&gt; 'localhost',
+                                   'user'        =&gt; 'test',
+                                   'password'    =&gt; 'test',
+                                   'knock_ports' =&gt; array(1101,
+                                                          1105,
+                                                          1111))
+        );
+</pre>
+
+            <p>
+                Comme vous voyez nous supposons toujours que nous sommes reliés, identifiés
+                et, si supporté, un dossier est choisi dans le constructeur de la classe principale.
+                Ainsi si vous assignez votre propre classe de protocole vous devez toujours vous
+                assurer que c'est fait ou la prochaine méthode échouera si le serveur ne la permet
+                pas dans l'état actuel.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.mail.read-advanced.quota"></a>Utilisation des Quotas (avant 1.5)</h4></div></div></div>
+            
+
+            <p>
+                <code class="classname">Zend_Mail_Storage_Writable_Maildir</code> supporte les quotas
+                Maildir++. Ceci est désactivé par défaut, mais il est possible de l'utiliser
+                manuellement, si la vérification automatique n'est pas souhaitée (ce qui veut dire
+                que <code class="methodname">appendMessage()</code>, <code class="methodname">removeMessage()</code> et
+                <code class="methodname">copyMessage()</code> ne vérifie pas et n'ajoute pas d'entrée dans le fichier
+                de contrôle de la taille du dossier de mails). Si vous l'activez une exception sera
+                levée si vous tentez d'écrire dans le dossier de mails et qu'il a déjà atteint son
+                quota.
+            </p>
+
+            <p>
+                Il existe trois méthodes pour les quotas : <code class="methodname">getQuota()</code>,
+                <code class="methodname">setQuota()</code> et <code class="methodname">checkQuota()</code>:
+            </p>
+
+            <pre class="programlisting">
+$mail = new Zend_Mail_Storage_Writable_Maildir(
+            array('dirname' =&gt; '/home/test/mail/')
+        );
+$mail-&gt;setQuota(true); // true pour activer, false pour désactiver
+echo 'La vérification du quota est maintenant ',
+     $mail-&gt;getQuota() ? 'active' : 'inactive',
+     "\n";
+// la vérification du quota peut être utilisée
+// si celle-ci est désactivée
+echo 'Vous êtes ',
+     $mail-&gt;checkQuota() ? 'hors quota' : 'dans le quota',
+     "\n";
+</pre>
+
+            <p>
+                <code class="methodname">checkQuota()</code> peut aussi retournée une réponse plus détaillée
+                :
+            </p>
+
+            <pre class="programlisting">
+$quota = $mail-&gt;checkQuota(true);
+echo 'Vous êtes ',
+     $quota['over_quota'] ? 'hors quota' : 'dans le quota',
+     "\n";
+echo 'Vous avez ',
+     $quota['count'],
+     ' de ',
+     $quota['quota']['count'],
+     ' messages et vous utilisez ';
+echo $quota['size'], ' de ', $quota['quota']['size'], ' octets';
+</pre>
+
+            <p>
+                Si vous voulez spécifier votre propre quota plutôt que d'utiliser celui
+                spécifié dans le fichier de contrôle de la taille du dossier de mails, vous pouvez
+                le faire avec <code class="methodname">setQuota()</code> :
+            </p>
+
+            <pre class="programlisting">
+// le nombre de messages et la taille en octet sont supportés,
+// l'ordre est important
+$quota = $mail-&gt;setQuota(array('size' =&gt; 10000, 'count' =&gt; 100));
+</pre>
+
+            <p>
+                Pour ajouter vos propres vérifications de quota, utilisez des caractères
+                uniques en tant que clé et ils seront préservés (mais évidemment non vérifié). Il
+                est aussi possible d'étendre
+                <code class="classname">Zend_Mail_Storage_Writable_Maildir</code> pour définir votre propre
+                quota seulement si le fichier de contrôle de la taille du dossier de mails est
+                absent (qui peut se produire dans Maildir++) :
+            </p>
+
+            <pre class="programlisting">
+class Exemple_Mail_Storage_Maildir extends Zend_Mail_Storage_Writable_Maildir {
+    // getQuota est appelé avec $fromStorage = true
+    // par la vérification de quota
+    public function getQuota($fromStorage = false) {
+        try {
+            return parent::getQuota($fromStorage);
+        } catch (Zend_Mail_Storage_Exception $e) {
+            if (!$fromStorage) {
+                // Erreur inconnue
+                throw $e;
+            }
+            // le fichier de contrôle de la taille du dossier de mails
+            // doit être absent
+
+            list($count, $size) = get_un_autre_quota();
+            return array('count' =&gt; $count, 'size' =&gt; $size);
+        }
+    }
+}
+</pre>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.mail.smtp-secure.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.mail.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.markup.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Sécuriser les transports SMTP </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_Markup</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

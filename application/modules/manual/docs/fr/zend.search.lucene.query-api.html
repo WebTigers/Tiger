@@ -1,0 +1,726 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>API de construction de requêtes</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.search.lucene.html" title="Zend_Search_Lucene">
+<link rel="prev" href="zend.search.lucene.query-language.html" title="Langage de requêtes">
+<link rel="next" href="zend.search.lucene.charset.html" title="Jeu de caractères">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">API de construction de requêtes</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.search.lucene.query-language.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.search.lucene.charset.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.search.lucene.query-api"></a>API de construction de requêtes</h2></div></div></div>
+    
+    <p>
+        En plus du parsage automatique d'une requête en chaîne de caractères, il est également possible de construire
+        cette requête à l'aide de l'<acronym class="acronym">API</acronym> de requête.
+    </p>
+    <p>
+        Les requêtes utilisateur peuvent être combinées avec les requêtes créées à travers l'API de requêtes.
+        Utilisez simplement le parseur de requêtes pour construire une requête à partir d'une chaîne :
+        </p>
+<pre class="programlisting">
+$query = Zend_Search_Lucene_Search_QueryParser::parse($queryString);
+</pre>
+<p>
+    </p>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.queries.exceptions"></a>Les Exceptions du parseur de requêtes</h3></div></div></div>
+        
+        <p>
+        Le parseur de requêtes peut générer deux types d'exceptions :
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Une <code class="classname">Zend_Search_Lucene_Exception</code> est levée si quelque-chose d'anormal se produit dans le
+                    parseur même.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Une <code class="classname">Zend_Search_Lucene_Search_QueryParserException</code> est levée s'il y a une erreur dans la syntaxe de la requête.
+                </p>
+            </li>
+</ul></div>
+<p>
+        C'est une bonne idée d'attraper les <code class="classname">Zend_Search_Lucene_Search_QueryParserException</code>s et
+        de les traiter de manière appropriée :
+        </p>
+<pre class="programlisting">
+try {
+    $query = Zend_Search_Lucene_Search_QueryParser::parse($queryString);
+} catch (Zend_Search_Lucene_Search_QueryParserException $e) {
+    echo "Query syntax error: " . $e-&gt;getMessage() . "\n";
+}
+</pre>
+<p>
+        </p>
+        <p>
+            La même technique devrait être utilisée pour la méthode find() d'un objet <code class="classname">Zend_Search_Lucene</code>.
+        </p>
+        <p>
+            Depuis la version 1.5, les exceptions de parsage de requête sont supprimées par défaut. Si la requête ne
+            respecte pas le langage de requêtes, elle est "tokenizée" à l'aide de l'analyseur par défaut et tous les
+            termes "tokenizés" sont utilisés dans la recherche.
+            Pour activer les exceptions, utilisez <code class="methodname">Zend_Search_Lucene_Search_QueryParser::dontSuppressQueryParsingExceptions()</code>.
+            Les méthodes <code class="methodname">Zend_Search_Lucene_Search_QueryParser::suppressQueryParsingExceptions()</code> et
+            <code class="methodname">Zend_Search_Lucene_Search_QueryParser::queryParsingExceptionsSuppressed()</code>
+            sont également destinées à gérer le comportement de gestion des exceptions.
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.queries.term-query"></a>Requête sur un terme</h3></div></div></div>
+        
+        <p>
+            Les requêtes de termes peuvent être utilisées pour une recherche
+            sur un seul terme.
+        </p>
+        <p>
+        Requête par chaîne de caractères:
+        </p>
+        <pre class="programlisting">
+word1
+</pre>
+        <p>ou</p>
+        <p>
+        Construction de la requête via l'<acronym class="acronym">API</acronym>:
+        </p>
+        <pre class="programlisting">
+$term  = new Zend_Search_Lucene_Index_Term('word1', 'field1');
+$query = new Zend_Search_Lucene_Search_Query_Term($term);
+$hits  = $index-&gt;find($query);
+</pre>
+        <p>
+            L'argument field est optionnel. <code class="classname">Zend_Search_Lucene</code> cherche dans
+            tous les champs indexés si aucun champ n'a été spécifié :
+            </p>
+<pre class="programlisting">
+// Recherche de 'word1' dans tous les champs indexés.
+$term  = new Zend_Search_Lucene_Index_Term('word1');
+$query = new Zend_Search_Lucene_Search_Query_Term($term);
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.queries.multiterm-query"></a>Requête multi-termes</h3></div></div></div>
+        
+        <p>
+            Les requêtes multi-termes peuvent être utilisées pour chercher sur une
+            collection de termes.
+        </p>
+        <p>
+            Chaque terme dans une collection peut être défini comme <span class="emphasis"><em>requis</em></span>,
+            <span class="emphasis"><em>interdit</em></span>, ou <span class="emphasis"><em>aucun des deux</em></span>.
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>requis</em></span> signifie que les documents ne correspondant pas
+                        au terme ne correspondront pas à la requête;
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>interdit</em></span> signifie que les documents correspondant
+                        au terme ne correspondront pas à la requête;
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>aucun des deux</em></span>, dans ce cas les documents n'ont pas
+                        l'interdiction, ni l'obligation de correspondre au terme. Cela dit, un document
+                        devra correspondre au moins à l'un des termes pour correspondre à la requête.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+        <p>
+            Si des termes optionnels sont ajoutés à une requête possédant des termes requis,
+            les deux requêtes auront les mêmes résultats, mais les termes optionnels pourraient
+            influer sur le score des documents retournés.
+        </p>
+        <p>
+            Les deux méthodes de recherche peuvent être utilisées pour les requêtes multi-termes.
+        </p>
+        <p>
+            Requête par chaîne de caractères:
+        </p>
+        <pre class="programlisting">
++word1 author:word2 -word3
+</pre>
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    '+' est utilisé pour définir un terme requis.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    '-' est utilisé pour définir un terme interdit.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Le préfixe 'field:' est utilisé pour indiqué un champ sur lequel on veut chercher.
+                    S'il est omis, la recherche se fera sur tous les champs.
+                </p>
+            </li>
+</ul></div>
+        <p>or</p>
+        <p>
+        Construction de la requête via l'<acronym class="acronym">API</acronym>:
+        </p>
+        <pre class="programlisting">
+$query = new Zend_Search_Lucene_Search_Query_MultiTerm();
+$query-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word1'), true);
+$query-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word2', 'author'),
+                null);
+$query-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word3'), false);
+$hits  = $index-&gt;find($query);
+</pre>
+        <p>
+            Il est également possible de spécifier des listes de termes dans le contructeur de la requête multi-termes :
+            </p>
+<pre class="programlisting">
+$terms = array(new Zend_Search_Lucene_Index_Term('word1'),
+               new Zend_Search_Lucene_Index_Term('word2', 'author'),
+               new Zend_Search_Lucene_Index_Term('word3'));
+$signs = array(true, null, false);
+$query = new Zend_Search_Lucene_Search_Query_MultiTerm($terms, $signs);
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+        <p>
+            Le tableau <code class="varname">$signs</code> contient des informations sur le type de chaque terme :
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="constant">TRUE</code> est utilisé pour définir un terme requis.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">FALSE</code> est utilisé pour définir un terme interdit.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">NULL</code> est utilisé pour définir un terme qui n'est ni
+                        requis, ni interdit.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.queries.boolean-query"></a>Requête booléene</h3></div></div></div>
+        
+        <p>
+            Les requêtes booléenes permettent de construire une requête qui utilise d'autres requêtes
+            et des opérateurs booléens.
+        </p>
+        <p>
+            Chaque sous-requête dans une collection peut être définie comme <span class="emphasis"><em>requis</em></span>,
+            <span class="emphasis"><em>interdit</em></span>, ou <span class="emphasis"><em>optionnel</em></span>.
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>requis</em></span> signifie que les documents ne correspondant pas
+                        à la sous-requête ne correspondront pas à la requête;
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>interdit</em></span> signifie que les documents correspondant
+                        à la sous-requête ne correspondront pas à la requête;
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>optionel</em></span>, dans ce cas les documents n'ont pas
+                        l'interdiction, ni l'obligation de correspondre à la sous-requête. Cela dit, un document
+                        devra correspondre au moins à l'une des sous-requêtes pour correspondre à la requête.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+        <p>
+            Si des sous-requêtes optionnelles sont ajoutées à une requête possédant des sous-requêtes requises,
+            les deux requêtes auront les mêmes résultats, mais les sous-requêtes optionnelles pourraient
+            influer sur le score des documents retournés.
+        </p>
+        <p>
+            Les deux méthodes de recherche peuvent être utilisées pour les requêtes booléenes.
+        </p>
+        <p>
+            Requête par chaîne de caractères:
+        </p>
+        <pre class="programlisting">
++(word1 word2 word3) (author:word4 author:word5) -(word6)
+</pre>
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    '+' est utilisé pour définir une sous-requêtes requise.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    '-' est utilisé pour définir une sous-requêtes interdite.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Le préfixe 'field:' est utilisé pour indiqué un champ sur lequel on veut chercher.
+                    S'il est omis, la recherche se fera sur tous les champs.
+                </p>
+            </li>
+</ul></div>
+        <p>or</p>
+        <p>
+        Construction de la requête via l'<acronym class="acronym">API</acronym>:
+        </p>
+        <pre class="programlisting">
+$query = new Zend_Search_Lucene_Search_Query_Boolean();
+$subquery1 = new Zend_Search_Lucene_Search_Query_MultiTerm();
+$subquery1-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word1'));
+$subquery1-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word2'));
+$subquery1-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word3'));
+$subquery2 = new Zend_Search_Lucene_Search_Query_MultiTerm();
+$subquery2-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word4', 'author'));
+$subquery2-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word5', 'author'));
+$term6 = new Zend_Search_Lucene_Index_Term('word6');
+$subquery3 = new Zend_Search_Lucene_Search_Query_Term($term6);
+$query-&gt;addSubquery($subquery1, true  /* required */);
+$query-&gt;addSubquery($subquery2, null  /* optional */);
+$query-&gt;addSubquery($subquery3, false /* prohibited */);
+$hits  = $index-&gt;find($query);
+</pre>
+        <p>
+            Il est également possible de spécifier des listes de sous-requêtes dans le constructeur
+            d'une requêtes booléene :
+            </p>
+<pre class="programlisting">
+...
+$subqueries = array($subquery1, $subquery2, $subquery3);
+$signs = array(true, null, false);
+$query = new Zend_Search_Lucene_Search_Query_Boolean($subqueries, $signs);
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+        <p>
+            Le tableau <code class="varname">$signs</code> contient des informations sur le type de chaque sous-requête :
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="constant">TRUE</code> est utilisé pour définir une sous-requête requise.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">FALSE</code> est utilisé pour définir une sous-requête interdite.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">NULL</code> est utilisé pour définir une sous-requête qui n'est
+                        ni requise, ni interdite.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+        <p>
+            Chaque requête qui utilise des opérateurs booléens peut être réécrite en utilisant les notations
+            de signes et construites à l'aide de l'API. Par exemple :
+            </p>
+<pre class="programlisting">
+word1 AND (word2 AND word3 AND NOT word4) OR word5
+</pre>
+<p>
+            est équivalent à
+            </p>
+<pre class="programlisting">
+(+(word1) +(+word2 +word3 -word4)) (word5)
+</pre>
+<p>
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.queries.wildcard"></a>Requête Joker (wildcard)</h3></div></div></div>
+        
+        <p>
+            Les requêtes Joker peuvent être utilisées pour chercher des documents contenant
+            des chaînes de caractères qui correspondent aux modèles (pattern) spécifiés.
+        </p>
+        <p>
+            Le symbole '?' est utilisé comme un joker d'un seul caractère.
+        </p>
+        <p>
+            Le symbole '*' est utilisé comme un joker pour plusieurs caractères.
+        </p>
+        <p>
+            Requête par chaîne de caractères:
+            </p>
+<pre class="programlisting">
+field1:test*
+</pre>
+<p>
+        </p>
+        <p>ou</p>
+        <p>
+            Construction de la requête via l'<acronym class="acronym">API</acronym>:
+            </p>
+<pre class="programlisting">
+$pattern = new Zend_Search_Lucene_Index_Term('test*', 'field1');
+$query = new Zend_Search_Lucene_Search_Query_Wildcard($pattern);
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+        <p>
+            L'argument field est optionnel. <code class="classname">Zend_Search_Lucene</code> cherche dans
+            tous les champs indexés si aucun champ n'a été spécifié :
+            </p>
+<pre class="programlisting">
+$pattern = new Zend_Search_Lucene_Index_Term('test*');
+$query = new Zend_Search_Lucene_Search_Query_Wildcard($pattern);
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.queries.fuzzy"></a>Requête floue (fuzzy query)</h3></div></div></div>
+        
+        <p>
+            Les requêtes floues peuvent être utilisées pour chercher des documents contenant
+            des chaînes de caractères qui correspondent à des termes similaires au terme cherché.
+        </p>
+        <p>
+            Requête par chaîne de caractères:
+            </p>
+<pre class="programlisting">
+field1:test~
+</pre>
+<p>
+            Cette requête va correspondre à des documents contenant 'test', 'text', 'best' ou d'autres mots similaires.
+        </p>
+        <p>ou</p>
+        <p>
+            Construction de la requête via l'<acronym class="acronym">API</acronym>:
+            </p>
+<pre class="programlisting">
+$term = new Zend_Search_Lucene_Index_Term('test', 'field1');
+$query = new Zend_Search_Lucene_Search_Query_Fuzzy($term);
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+        <p>
+            Un indice de similarité (optional similarity) peut être spécifié après le signe "~".
+        </p>
+        <p>
+            Requête par chaîne de caractères:
+            </p>
+<pre class="programlisting">
+field1:test~0.4
+</pre>
+<p>
+        </p>
+        <p>ou</p>
+        <p>
+            Construction de la requête via l'<acronym class="acronym">API</acronym>:
+            </p>
+<pre class="programlisting">
+$term = new Zend_Search_Lucene_Index_Term('test', 'field1');
+$query = new Zend_Search_Lucene_Search_Query_Fuzzy($term, 0.4);
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+        <p>
+            L'argument field est optionnel. <code class="classname">Zend_Search_Lucene</code> cherche dans
+            tous les champs indexés si aucun champ n'a été spécifié :
+            </p>
+<pre class="programlisting">
+$term = new Zend_Search_Lucene_Index_Term('test');
+$query = new Zend_Search_Lucene_Search_Query_Fuzzy($term);
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.queries.phrase-query"></a>Requête de phrase</h3></div></div></div>
+        
+        <p>
+            Les requêtes de phrase peuvent être utilisées pour chercher une phrase dans des documents.
+        </p>
+        <p>
+            Les requêtes de phrase sont très flexible et permettent à l'utilisateur ou au développeur de chercher
+            des phrases exactes aussi bien que des phrases 'imprécises'.
+        </p>
+        <p>
+            Les phrases peuvent aussi contenir des trous ou des termes aux mêmes places; elles peuvent
+            être générées par l'analyseur dans différents buts. Par exemple, un terme peut être dupliqué
+            pour augmenter son poids, ou plusieurs synonymes peuvent être placés sur une seule et unique position.
+        </p>
+        <pre class="programlisting">
+$query1 = new Zend_Search_Lucene_Search_Query_Phrase();
+// Ajoute 'word1' à la position relative 0.
+$query1-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word1'));
+// Ajoute 'word2' à la position relative 1.
+$query1-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word2'));
+// Ajoute 'word3' à la position relative 3.
+$query1-&gt;addTerm(new Zend_Search_Lucene_Index_Term('word3'), 3);
+...
+$query2 = new Zend_Search_Lucene_Search_Query_Phrase(
+                array('word1', 'word2', 'word3'), array(0,1,3));
+...
+// Requête sans trou.
+$query3 = new Zend_Search_Lucene_Search_Query_Phrase(
+                array('word1', 'word2', 'word3'));
+...
+$query4 = new Zend_Search_Lucene_Search_Query_Phrase(
+                array('word1', 'word2'), array(0,1), 'annotation');
+</pre>
+        <p>
+            Une requête de phrase peut être construite en une seule étape à l'aide du constructeur ou
+            étape par étape avec des appels à la méthode <code class="methodname">Zend_Search_Lucene_Search_Query_Phrase::addTerm()</code>.
+        </p>
+        <p>
+            Le constructeur de la classe <code class="classname">Zend_Search_Lucene_Search_Query_Phrase</code> prends trois arguments optionnels :
+        </p>
+        <pre class="programlisting">
+Zend_Search_Lucene_Search_Query_Phrase(
+    [array $terms[, array $offsets[, string $field]]]
+);
+</pre>
+        <p>
+            Le paramètre <code class="varname">$terms</code> est un tableau de chaînes de caractères qui
+            contient une collection de termes pour une phrase. S'il est omis ou égal à <code class="constant">NULL</code>,
+            une requête vide sera construite.
+        </p>
+        <p>
+            Le paramètre <code class="varname">$offsets</code> est un tableau d'entiers qui contient les positions
+            des termes dans la phrase. S'il est omis ou égale à <code class="constant">NULL</code>, les positions
+            des termes seront implicitement séquentielles sans trou.
+        </p>
+        <p>
+            Le paramètre <code class="varname">$field</code> est un chaîne de caractères qui indique le
+            champ dans lequel chercher. S'il est omis ou égal à <code class="constant">NULL</code>, la
+            recherche se fera dans le champ par défaut.
+        </p>
+        <p>
+            Ainsi :
+        </p>
+        <pre class="programlisting">
+$query =
+    new Zend_Search_Lucene_Search_Query_Phrase(array('zend', 'framework'));
+</pre>
+        <p>
+            va chercher la phrase 'zend framework' dans tous les champs.
+        </p>
+        <pre class="programlisting">
+$query = new Zend_Search_Lucene_Search_Query_Phrase(
+                 array('zend', 'download'), array(0, 2)
+             );
+</pre>
+        <p>
+            va chercher la phrase 'zend ????? download' et correspondra à 'zend platform download', 'zend studio
+            download', 'zend core download', 'zend framework download', etc.
+        </p>
+        <pre class="programlisting">
+$query = new Zend_Search_Lucene_Search_Query_Phrase(
+                 array('zend', 'framework'), null, 'title'
+             );
+</pre>
+        <p>
+            va chercher la phrase 'zend framework' dans le champ 'title'.
+        </p>
+        <p>
+            La méthode <code class="methodname">Zend_Search_Lucene_Search_Query_Phrase::addTerm()</code> prends deux
+            arguments, un <code class="classname">Zend_Search_Lucene_Index_Term</code> requis et une position optionnelle :
+        </p>
+        <pre class="programlisting">
+Zend_Search_Lucene_Search_Query_Phrase::addTerm(
+    Zend_Search_Lucene_Index_Term $term[, integer $position]
+);
+</pre>
+        <p>
+            Le paramètre <code class="varname">$term</code> décrit le prochain terme dans la phrase. Il doit
+            indiquer le même champ que les termes précédents, sinon une exception sera levée.
+        </p>
+        <p>
+            Le paramètre <code class="varname">$position</code> indique la position du terme dans la phrase.
+        </p>
+        <p>
+            Ainsi :
+        </p>
+        <pre class="programlisting">
+$query = new Zend_Search_Lucene_Search_Query_Phrase();
+$query-&gt;addTerm(new Zend_Search_Lucene_Index_Term('zend'));
+$query-&gt;addTerm(new Zend_Search_Lucene_Index_Term('framework'));
+</pre>
+        <p>
+            va chercher la phrase 'zend framework'.
+         </p>
+        <pre class="programlisting">
+$query = new Zend_Search_Lucene_Search_Query_Phrase();
+$query-&gt;addTerm(new Zend_Search_Lucene_Index_Term('zend'), 0);
+$query-&gt;addTerm(new Zend_Search_Lucene_Index_Term('framework'), 2);
+</pre>
+        <p>
+            va chercher la phrase 'zend ????? download' et correspondra à 'zend platform download', 'zend studio
+            download', 'zend core download', 'zend framework download', etc.
+        </p>
+        <pre class="programlisting">
+$query = new Zend_Search_Lucene_Search_Query_Phrase();
+$query-&gt;addTerm(new Zend_Search_Lucene_Index_Term('zend', 'title'));
+$query-&gt;addTerm(new Zend_Search_Lucene_Index_Term('framework', 'title'));
+</pre>
+        <p>
+            va chercher la phrase 'zend framework' dans le champ 'title'.
+        </p>
+        <p>
+            Le 'slop factor' établit le nombre d'autres mots autorisés entre les mots spécifiés dans la requête de phrase.
+            S'il est défini à zéro, la requête correspondante sera une recherche d'une phrase exacte. Pour des valeurs
+            supérieures à zéro, cela fonctionne comme les opérateurs WITHIN ou NEAR.
+        </p>
+        <p>
+            Le 'slop factor' est en fait une distance d'édition, où les éditions consistent à déplacer les termes dans
+            la phrase recherchée. Par exemple, inverser l'ordre de deux mots requiert deux déplacements (le premier
+            déplacement positionne les mots l'un sur l'autre), donc pour permettre le réarrangement de phrase, le
+            'slop factor' doit être d'au moins deux.
+        </p>
+        <p>
+            Les correspondances les plus exactes possèdent un meilleur score que celles ayant eu recours au 'slop factor';
+            ainsi les résultats de recherche sont classés par exactitude. Le 'slop factor' est à zéro par défaut, requérant des
+            correspondances exactes.
+        </p>
+        <p>
+            Le 'slop factor' peut être assigné après la création de la requête :
+        </p>
+        <pre class="programlisting">
+// Requêtes sans trou.
+$query =
+    new Zend_Search_Lucene_Search_Query_Phrase(array('word1', 'word2'));
+// Search for 'word1 word2', 'word1 ... word2'
+$query-&gt;setSlop(1);
+$hits1 = $index-&gt;find($query);
+// Recherche pour 'word1 word2', 'word1 ... word2',
+// 'word1 ... ... word2', 'word2 word1'
+$query-&gt;setSlop(2);
+$hits2 = $index-&gt;find($query);
+</pre>
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.queries.range"></a>Requête d'intervalle</h3></div></div></div>
+        
+        <p>
+            Les <a class="link" href="zend.search.lucene.query-language.html#zend.search.lucene.query-language.range" title="Recherche par intervalle">requêtes d'intervalle</a> sont dédiées à la recherche de termes dans un intervalle spécifié.
+        </p>
+        <p>
+            Requête par chaîne de caractères:
+            </p>
+<pre class="programlisting">
+mod_date:[20020101 TO 20030101]
+title:{Aida TO Carmen}
+</pre>
+<p>
+        </p>
+        <p>ou</p>
+        <p>
+            Construction de la requête via l'<acronym class="acronym">API</acronym>:
+            </p>
+<pre class="programlisting">
+$from = new Zend_Search_Lucene_Index_Term('20020101', 'mod_date');
+$to   = new Zend_Search_Lucene_Index_Term('20030101', 'mod_date');
+$query = new Zend_Search_Lucene_Search_Query_Range(
+                 $from, $to, true // inclusive
+             );
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+        <p>
+            L'argument field est optionnel. <code class="classname">Zend_Search_Lucene</code> cherche dans
+            tous les champs indexés si aucun champ n'a été spécifié :
+            </p>
+<pre class="programlisting">
+$from = new Zend_Search_Lucene_Index_Term('Aida');
+$to   = new Zend_Search_Lucene_Index_Term('Carmen');
+$query = new Zend_Search_Lucene_Search_Query_Range(
+                 $from, $to, false // non-inclusive
+             );
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+        <p>
+            L'une ou l'autre (mais pas les deux) des bornes peut être définie à <code class="constant">NULL</code>.
+            Dans ce cas, <code class="classname">Zend_Search_Lucene</code> cherche depuis le début ou jusqu'à la
+            fin du dictionnaire pour le(s) champs spécifié(s) :
+            </p>
+<pre class="programlisting">
+// recherche pour ['20020101' TO ...]
+$from = new Zend_Search_Lucene_Index_Term('20020101', 'mod_date');
+$query = new Zend_Search_Lucene_Search_Query_Range(
+                 $from, null, true // inclusive
+             );
+$hits  = $index-&gt;find($query);
+</pre>
+<p>
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.search.lucene.query-language.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.search.lucene.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.search.lucene.charset.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Langage de requêtes </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Jeu de caractères</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

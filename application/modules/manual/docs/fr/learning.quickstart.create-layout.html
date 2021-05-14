@@ -1,0 +1,271 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Créer une layout</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.quickstart.html" title="Démarrez rapidement avec Zend Framework">
+<link rel="prev" href="learning.quickstart.create-project.html" title="Créer votre projet">
+<link rel="next" href="learning.quickstart.create-model.html" title="Créer un modèle et une table en base de données">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Créer une layout</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.quickstart.create-project.html">Précédent</a> </td>
+<th width="60%" align="center">Démarrez rapidement avec Zend Framework</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.quickstart.create-model.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.quickstart.create-layout"></a>Créer une layout</h2></div></div></div>
+    
+
+    <p>
+        Vous avez remarqué que les scripts de vue dans les sections précédentes étaient des
+        fragments de <acronym class="acronym">HTML</acronym>, pas des pages complètes. C'est le design :
+        nous voulons que nos actions retournent du contenu uniquement relatif à elles mêmes et
+        non de l'application en général.
+    </p>
+
+    <p>
+        Maintenant nous devons introduire le contenu généré dans une page entière
+        <acronym class="acronym">HTML</acronym>. Nous utiliserons un layout global pour tout le site dans ce but.
+    </p>
+
+    <p>
+        Il y a deux designs pattern que le Zend Framework utilise pour les layouts : <a class="ulink" href="http://martinfowler.com/eaaCatalog/twoStepView.html" target="_top">Two Step View</a> et
+        <a class="ulink" href="http://www.oracle.com/technetwork/java/compositeview-137722.html" target="_top">Composite
+            View</a>. <span class="emphasis"><em>Two Step View</em></span> est souvent associé au pattern <a class="ulink" href="http://www.martinfowler.com/eaaCatalog/transformView.html" target="_top">Transform View</a>
+        l'idée de base est que les vues de l'application créent une représentation qui est ensuite
+        injectée dans une vue plus globale. Le pattern <span class="emphasis"><em>Composite View</em></span>
+        traite avec une vue fabriquée à partir de plusieurs vues applicatives.
+    </p>
+
+    <p>
+        Dans Zend Framework, <a class="link" href="zend.layout.html" title="Zend_Layout">Zend_Layout</a> combine les idées de
+        ces patterns. Plutôt que chaque vue inclue tout le design, chacune ne contient que ses
+        propres données.
+    </p>
+
+    <p>
+        Par contre vous pourriez avoir besoin occasionnellement d'informations globales dans la vue
+        générale. Heureusement, le Zend Framework propose une variété de conteneurs appelés
+        <span class="emphasis"><em>placeholders</em></span> pour permettre de stocker de telles informations depuis
+        les scripts de vue des actions.
+    </p>
+
+    <p>
+        Pour démarrer avec <code class="classname">Zend_Layout</code>, nous devons d'abord informer le
+        bootstrap de l'objet <code class="classname">Layout</code> (ressource). On peut activer cela au
+        moyen de la commande <span class="command"><strong>zf enable layout</strong></span>:
+    </p>
+
+    <pre class="programlisting">
+% zf enable layout
+Layouts have been enabled, and a default layout created at
+application/layouts/scripts/layout.phtml
+A layout entry has been added to the application config file.
+</pre>
+
+    <p>
+        Comme le suggère la commande, <code class="filename">application/configs/application.ini</code>
+        est mis à jour et contient maintenant les informations suivantes dans la section
+        <code class="constant">production</code> :
+    </p>
+
+    <pre class="programlisting">
+; application/configs/application.ini
+
+; Add to [production] section:
+resources.layout.layoutPath = APPLICATION_PATH "/layouts/scripts"
+</pre>
+
+    <p>
+        Le fichier <acronym class="acronym">INI</acronym> final devrait ressembler à ceci :
+    </p>
+
+    <pre class="programlisting">
+; application/configs/application.ini
+
+[production]
+; PHP settings we want to initialize
+phpSettings.display_startup_errors = 0
+phpSettings.display_errors = 0
+includePaths.library = APPLICATION_PATH "/../library"
+bootstrap.path = APPLICATION_PATH "/Bootstrap.php"
+bootstrap.class = "Bootstrap"
+appnamespace = "Application"
+resources.frontController.controllerDirectory = APPLICATION_PATH "/controllers"
+resources.frontController.params.displayExceptions = 0
+resources.layout.layoutPath = APPLICATION_PATH "/layouts/scripts"
+
+[staging : production]
+
+[testing : production]
+phpSettings.display_startup_errors = 1
+phpSettings.display_errors = 1
+
+[development : production]
+phpSettings.display_startup_errors = 1
+phpSettings.display_errors = 1
+</pre>
+
+    <p>
+        Cette directive indique à l'application de chercher les scripts de layout dans
+        <code class="filename">application/layouts/scripts</code>. Si vous examinez votre structure de
+        répertoires, vous verrez que ce dossier a été créé pour vous, avec le fichier
+        <code class="filename">layout.phtml</code>.
+    </p>
+
+    <p>
+        Nous voulons aussi nous assurer que nous avons une déclaration de DocType XHTML pour notre
+        application. Pour activer cela, nous devons ajouter une ressource à notre bootstrap.
+    </p>
+
+    <p>
+        La manière la plus simple d'ajouter une ressource au bootstrap est de définir une méthode
+        protégée qui commence par <code class="methodname">_init</code>. Dans notre cas, nous voulons
+        initialiser le doctype et donc nous créons une méthode
+        <code class="methodname">_initDoctype()</code> :
+    </p>
+
+    <pre class="programlisting">
+// application/Bootstrap.php
+
+class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
+{
+    protected function _initDoctype()
+    {
+    }
+}
+</pre>
+
+    <p>
+        Dans cette méthode, nous devons renseigner la vue au sujet du doctype. Mais d'où va
+        provenir notre objet de vue ? La solution simple consiste à initialiser la ressource
+        <code class="classname">View</code> et la récupérer dans la méthode de bootstrap pour l'utiliser.
+    </p>
+
+    <p>
+        Pour initialiser la vue, ajoutez la ligne suivante dans le fichier
+        <code class="filename">application/configs/application.ini</code>, dans la section
+        <code class="constant">production</code> :
+    </p>
+
+    <pre class="programlisting">
+; application/configs/application.ini
+
+; Add to [production] section:
+resources.view[] =
+</pre>
+
+    <p>
+        Ceci indique de charger la vue avec aucune option (les '[]' indiquent que la clé "view" est
+        un tableau et nous ne lui passons rien du tout).
+    </p>
+
+    <p>
+        Maintenant que nous possédons une vue, retournons à notre méthode
+        <code class="methodname">_initDoctype()</code>. A l'intérieur, nous allons d'abord nous assurer
+        que la ressource <code class="classname">View</code> existe, puis nous la récupèrerons et la
+        configurerons :
+    </p>
+
+    <pre class="programlisting">
+// application/Bootstrap.php
+
+class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
+{
+    protected function _initDoctype()
+    {
+        $this-&gt;bootstrap('view');
+        $view = $this-&gt;getResource('view');
+        $view-&gt;doctype('XHTML1_STRICT');
+    }
+}
+</pre>
+
+    <p>
+        Maintenant que <code class="classname">Zend_Layout</code> est initialisé et que le Doctype est
+        réglé, créons notre vue globale de layout :
+    </p>
+
+    <pre class="programlisting">
+&lt;!-- application/layouts/scripts/layout.phtml --&gt;
+&lt;?php echo $this-&gt;doctype() ?&gt;
+&lt;html xmlns="http://www.w3.org/1999/xhtml"&gt;
+&lt;head&gt;
+  &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8" /&gt;
+  &lt;title&gt;Zend Framework Quickstart Application&lt;/title&gt;
+  &lt;?php echo $this-&gt;headLink()-&gt;appendStylesheet('/css/global.css') ?&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id="header" style="background-color: #EEEEEE; height: 30px;"&gt;
+    &lt;div id="header-logo" style="float: left"&gt;
+        &lt;b&gt;ZF Quickstart Application&lt;/b&gt;
+    &lt;/div&gt;
+    &lt;div id="header-navigation" style="float: right"&gt;
+        &lt;a href="&lt;?php echo $this-&gt;url(
+            array('controller'=&gt;'guestbook'),
+            'default',
+            true) ?&gt;"&gt;Guestbook&lt;/a&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;?php echo $this-&gt;layout()-&gt;content ?&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+    <p>
+        Nous récupérons le contenu de l'application au moyen de l'aide de vue
+        <code class="methodname">layout()</code> et nous accédons à la clé "content". Vous pouvez utiliser
+        d'autres segments de l'objet de réponse, mais dans la plupart des cas ce n'est pas
+        nécessaire.
+    </p>
+
+    <p>
+        Notez aussi l'utilisation du placeholer <code class="methodname">headLink()</code>. C'est un moyen
+        simple de générer du <acronym class="acronym">HTML</acronym> pour les éléments &lt;link&gt; et ca permet de
+        les garder sous le coude au travers de l'application. Si vous devez ajouter des feuilles
+        CSS c'est aussi possible.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Checkpoint">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Checkpoint</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Allez maintenant sur "http://localhost" et regarder le code source rendu. Vous devriez
+            voir votre entête XHTML et vos sections head, title et body.
+        </p>
+    </td></tr>
+</table></div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.quickstart.create-project.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.quickstart.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.quickstart.create-model.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Créer votre projet </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Créer un modèle et une table en base de données</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

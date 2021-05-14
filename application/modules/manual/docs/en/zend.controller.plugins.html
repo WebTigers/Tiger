@@ -1,0 +1,736 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Plugins</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.response.html" title="The Response Object">
+<link rel="next" href="zend.controller.modular.html" title="Using a Conventional Modular Directory Structure">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Plugins</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.response.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.modular.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.plugins"></a>Plugins</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.plugins.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            The controller architecture includes a plugin system that allows
+            user code to be called when certain events occur in the controller
+            process lifetime. The front controller uses a plugin broker as a
+            registry for user plugins, and the plugin broker ensures that event
+            methods are called on each plugin registered with the front
+            controller.
+        </p>
+
+        <p>
+            The event methods are defined in the abstract class
+            <code class="classname">Zend_Controller_Plugin_Abstract</code>, from which user plugin
+            classes inherit:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">routeStartup()</code> is called before
+                    <code class="classname">Zend_Controller_Front</code> calls on <a class="link" href="zend.controller.router.html" title="The Standard Router">the router</a>
+                    to evaluate the request against the registered routes.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">routeShutdown()</code> is called after <a class="link" href="zend.controller.router.html" title="The Standard Router">the router</a>
+                    finishes routing the request.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">dispatchLoopStartup()</code> is called before
+                    <code class="classname">Zend_Controller_Front</code> enters its dispatch loop.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">preDispatch()</code> is called before an action is
+                    dispatched by <a class="link" href="zend.controller.dispatcher.html" title="The Dispatcher">the
+                        dispatcher</a>. This callback allows for proxy or
+                    filter behavior. By altering the request and resetting its
+                    dispatched flag (via
+                    <code class="methodname">Zend_Controller_Request_Abstract::setDispatched(false)</code>),
+                    the current action may be skipped and/or replaced.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">postDispatch()</code> is called after an action is
+                    dispatched by <a class="link" href="zend.controller.dispatcher.html" title="The Dispatcher">the
+                        dispatcher</a>. This callback allows for proxy or
+                    filter behavior. By altering the request and resetting its
+                    dispatched flag (via
+                    <code class="methodname">Zend_Controller_Request_Abstract::setDispatched(false)</code>),
+                    a new action may be specified for dispatching.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">dispatchLoopShutdown()</code> is called after
+                    <code class="classname">Zend_Controller_Front</code> exits its dispatch loop.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.plugins.writing"></a>Writing Plugins</h3></div></div></div>
+        
+
+        <p>
+            In order to write a plugin class, simply include and extend the
+            abstract class <code class="classname">Zend_Controller_Plugin_Abstract</code>:
+        </p>
+
+        <pre class="programlisting">
+class MyPlugin extends Zend_Controller_Plugin_Abstract
+{
+    // ...
+}
+</pre>
+
+        <p>
+            None of the methods of <code class="classname">Zend_Controller_Plugin_Abstract</code>
+            are abstract, and this means that plugin classes are not forced to
+            implement any of the available event methods listed above. Plugin
+            writers may implement only those methods required by their
+            particular needs.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Controller_Plugin_Abstract</code> also makes the request
+            and response objects available to controller plugins via the
+            <code class="methodname">getRequest()</code> and <code class="methodname">getResponse()</code>
+            methods, respectively.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.plugins.using"></a>Using Plugins</h3></div></div></div>
+        
+
+        <p>
+            Plugin classes are registered with
+            <code class="methodname">Zend_Controller_Front::registerPlugin()</code>, and may be
+            registered at any time. The following snippet illustrates how a
+            plugin may be used in the controller chain:
+        </p>
+
+        <pre class="programlisting">
+class MyPlugin extends Zend_Controller_Plugin_Abstract
+{
+    public function routeStartup(Zend_Controller_Request_Abstract $request)
+    {
+        $this-&gt;getResponse()
+             -&gt;appendBody("&lt;p&gt;routeStartup() called&lt;/p&gt;\n");
+    }
+
+    public function routeShutdown(Zend_Controller_Request_Abstract $request)
+    {
+        $this-&gt;getResponse()
+             -&gt;appendBody("&lt;p&gt;routeShutdown() called&lt;/p&gt;\n");
+    }
+
+    public function dispatchLoopStartup(
+        Zend_Controller_Request_Abstract $request)
+    {
+        $this-&gt;getResponse()
+             -&gt;appendBody("&lt;p&gt;dispatchLoopStartup() called&lt;/p&gt;\n");
+    }
+
+    public function preDispatch(Zend_Controller_Request_Abstract $request)
+    {
+        $this-&gt;getResponse()
+             -&gt;appendBody("&lt;p&gt;preDispatch() called&lt;/p&gt;\n");
+    }
+
+    public function postDispatch(Zend_Controller_Request_Abstract $request)
+    {
+        $this-&gt;getResponse()
+             -&gt;appendBody("&lt;p&gt;postDispatch() called&lt;/p&gt;\n");
+    }
+
+    public function dispatchLoopShutdown()
+    {
+        $this-&gt;getResponse()
+             -&gt;appendBody("&lt;p&gt;dispatchLoopShutdown() called&lt;/p&gt;\n");
+    }
+}
+
+$front = Zend_Controller_Front::getInstance();
+$front-&gt;setControllerDirectory('/path/to/controllers')
+      -&gt;setRouter(new Zend_Controller_Router_Rewrite())
+      -&gt;registerPlugin(new MyPlugin());
+$front-&gt;dispatch();
+</pre>
+
+        <p>
+            Assuming that no actions called emit any output, and only one action
+            is called, the functionality of the above plugin would still create
+            the following output:
+        </p>
+
+        <pre class="programlisting">
+&lt;p&gt;routeStartup() called&lt;/p&gt;
+&lt;p&gt;routeShutdown() called&lt;/p&gt;
+&lt;p&gt;dispatchLoopStartup() called&lt;/p&gt;
+&lt;p&gt;preDispatch() called&lt;/p&gt;
+&lt;p&gt;postDispatch() called&lt;/p&gt;
+&lt;p&gt;dispatchLoopShutdown() called&lt;/p&gt;
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Plugins may be registered at any time during the front
+                controller execution. However, if an event has passed for which
+                the plugin has a registered event method, that method will not
+                be triggered.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.plugins.manipulating"></a>Retrieving and Manipulating Plugins</h3></div></div></div>
+        
+
+        <p>
+            On occasion, you may need to unregister or retrieve a plugin. The
+            following methods of the front controller allow you to do so:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">getPlugin($class)</code> allows you to retrieve a
+                    plugin by class name. If no plugins match, it returns
+                    <code class="constant">FALSE</code>. If more than one plugin of that class
+                    is registered, it returns an array.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getPlugins()</code> retrieves the entire plugin stack.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">unregisterPlugin($plugin)</code> allows you to remove
+                    a plugin from the stack. You may pass a plugin object, or
+                    the class name of the plugin you wish to unregister. If you
+                    pass the class name, any plugins of that class will be
+                    removed.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.plugins.standard"></a>Plugins Included in the Standard Distribution</h3></div></div></div>
+        
+
+        <p>
+            Zend Framework includes a plugin for error handling in its standard
+            distribution.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.plugins.standard.actionstack"></a>ActionStack</h4></div></div></div>
+    
+
+    <p>
+        The <span class="emphasis"><em>ActionStack</em></span> plugin allows you to manage a stack of
+        requests, and operates as a <span class="emphasis"><em>postDispatch</em></span> plugin. If a
+        forward (i.e., a call to another action) is already detected in the
+        current request object, it does nothing. However, if not, it checks its
+        stack and pulls the topmost item off it and forwards to the action
+        specified in that request. The stack is processed in <acronym class="acronym">LIFO</acronym> order.
+    </p>
+
+    <p>
+        You can retrieve the plugin from the front controller at any time using
+        <code class="methodname">Zend_Controller_Front::getPlugin('Zend_Controller_Plugin_ActionStack')</code>.
+        Once you have the plugin object, there are a variety of mechanisms you
+        can use to manipulate it.
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <code class="methodname">getRegistry()</code> and <code class="methodname">setRegistry()</code>.
+                Internally, <span class="emphasis"><em>ActionStack</em></span> uses a
+                <code class="classname">Zend_Registry</code> instance to store the stack. You can
+                substitute a different registry instance or retrieve it with
+                these accessors.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">getRegistryKey()</code> and
+                <code class="methodname">setRegistryKey()</code>.
+                These can be used to indicate which registry key to use when
+                pulling the stack. Default value is
+                '<code class="classname">Zend_Controller_Plugin_ActionStack</code>'.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">getStack()</code> allows you to retrieve the stack of
+                actions in its entirety.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">pushStack()</code> and <code class="methodname">popStack()</code> allow
+                you to add to and pull from the stack, respectively.
+                <code class="methodname">pushStack()</code> accepts a request object.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        An additional method, <code class="methodname">forward()</code>, expects a request object,
+        and sets the state of the current request object in the front controller
+        to the state of the provided request object, and markes it as
+        undispatched (forcing another iteration of the dispatch loop).
+    </p>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.plugins.standard.errorhandler"></a>Zend_Controller_Plugin_ErrorHandler</h4></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Controller_Plugin_ErrorHandler</code> provides a drop-in
+        plugin for handling exceptions thrown by your application, including
+        those resulting from missing controllers or actions; it is an
+        alternative to the methods listed in the <a class="link" href="zend.controller.exceptions.html" title="MVC Exceptions">MVC Exceptions section</a>.
+    </p>
+
+    <p>
+        The primary targets of the plugin are:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>Intercept exceptions raised when no route matched</p>
+        </li>
+<li class="listitem">
+            <p>Intercept exceptions raised due to missing controllers or action methods</p>
+        </li>
+<li class="listitem">
+            <p>Intercept exceptions raised within action controllers</p>
+        </li>
+</ul></div>
+
+    <p>
+        In other words, the <span class="emphasis"><em>ErrorHandler</em></span> plugin is designed to
+        handle <acronym class="acronym">HTTP</acronym> 404-type errors (page missing) and 500-type errors (internal
+        error). It is not intended to catch exceptions raised in other plugins.
+    </p>
+
+    <p>
+        By default, <code class="classname">Zend_Controller_Plugin_ErrorHandler</code> will
+        forward to <code class="methodname">ErrorController::errorAction()</code> in the default
+        module. You may set alternate values for these by using the various
+        accessors available to the plugin:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <code class="methodname">setErrorHandlerModule()</code> sets the controller module to use.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">setErrorHandlerController()</code> sets the controller to use.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">setErrorHandlerAction()</code> sets the controller action to use.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">setErrorHandler()</code> takes an associative array, which
+                may contain any of the keys 'module', 'controller', or 'action',
+                with which it will set the appropriate values.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Additionally, you may pass an optional associative array to the
+        constructor, which will then proxy to <code class="methodname">setErrorHandler()</code>.
+    </p>
+
+    <p>
+        <code class="classname">Zend_Controller_Plugin_ErrorHandler</code> registers a
+        <code class="methodname">postDispatch()</code> hook and checks for exceptions registered in
+        <a class="link" href="zend.controller.response.html" title="The Response Object">the response object</a>. If
+        any are found, it attempts to forward to the registered error handler
+        action.
+    </p>
+
+    <p>
+        If an exception occurs dispatching the error handler, the plugin will
+        tell the front controller to throw exceptions, and rethrow the last
+        exception registered with the response object.
+    </p>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.plugins.standard.errorhandler.fourohfour"></a>Using the ErrorHandler as a 404 Handler</h5></div></div></div>
+        
+
+        <p>
+            Since the <span class="emphasis"><em>ErrorHandler</em></span> plugin captures not only
+            application errors, but also errors in the controller chain arising
+            from missing controller classes and/or action methods, it can be
+            used as a 404 handler. To do so, you will need to have your error
+            controller check the exception type.
+        </p>
+
+        <p>
+            Exceptions captured are logged in an object registered in the
+            request. To retrieve it, use
+            <code class="methodname">Zend_Controller_Action::_getParam('error_handler')</code>:
+        </p>
+
+        <pre class="programlisting">
+class ErrorController extends Zend_Controller_Action
+{
+    public function errorAction()
+    {
+        $errors = $this-&gt;_getParam('error_handler');
+    }
+}
+</pre>
+
+        <p>
+            Once you have the error object, you can get the type via
+            <span class="command"><strong>$errors-&gt;type;</strong></span>. It will be one of the following:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="constant">Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE</code>,
+                    indicating no route matched.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="constant">Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER</code>,
+                    indicating the controller was not found.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="constant">Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION</code>,
+                    indicating the requested action was not found.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="constant">Zend_Controller_Plugin_ErrorHandler::EXCEPTION_OTHER</code>,
+                    indicating other exceptions.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            You can then test for either of the first three types, and, if so,
+            indicate a 404 page:
+        </p>
+
+        <pre class="programlisting">
+class ErrorController extends Zend_Controller_Action
+{
+    public function errorAction()
+    {
+        $errors = $this-&gt;_getParam('error_handler');
+
+        switch ($errors-&gt;type) {
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
+                // 404 error -- controller or action not found
+                $this-&gt;getResponse()
+                     -&gt;setRawHeader('HTTP/1.1 404 Not Found');
+
+                // ... get some output to display...
+                break;
+            default:
+                // application error; display error page, but don't
+                // change status code
+                break;
+        }
+    }
+}
+</pre>
+
+        <p>
+            Finally, you can retrieve the exception that triggered the error
+            handler by grabbing the <span class="property">exception</span> property of the
+            <span class="emphasis"><em>error_handler</em></span> object:
+        </p>
+
+        <pre class="programlisting">
+public function errorAction()
+{
+        $errors = $this-&gt;_getParam('error_handler');
+
+        switch ($errors-&gt;type) {
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
+                // 404 error -- controller or action not found
+                $this-&gt;getResponse()
+                     -&gt;setRawHeader('HTTP/1.1 404 Not Found');
+
+                // ... get some output to display...
+                break;
+            default:
+                // application error; display error page, but don't change
+                // status code
+
+                // ...
+
+                // Log the exception:
+                $exception = $errors-&gt;exception;
+                $log = new Zend_Log(
+                    new Zend_Log_Writer_Stream(
+                        '/tmp/applicationException.log'
+                    )
+                );
+                $log-&gt;debug($exception-&gt;getMessage() . "\n" .
+                            $exception-&gt;getTraceAsString());
+                break;
+        }
+}
+</pre>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.plugins.standard.errorhandler.buffer"></a>Handling Previously Rendered Output</h5></div></div></div>
+        
+
+        <p>
+            If you dispatch multiple actions in a request, or if your action
+            makes multiple calls to <code class="methodname">render()</code>, it's possible that the
+            response object already has content stored within it. This can lead
+            to rendering a mixture of expected content and error content.
+        </p>
+
+        <p>
+            If you wish to render errors inline in such pages, no changes will
+            be necessary. If you do not wish to render such content, you should
+            clear the response body prior to rendering any views:
+        </p>
+
+        <pre class="programlisting">
+$this-&gt;getResponse()-&gt;clearBody();
+</pre>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.plugins.standard.errorhandler.examples"></a>Plugin Usage Examples</h5></div></div></div>
+        
+
+        <div class="example">
+<a name="zend.controller.plugins.standard.errorhandler.examples.example-1"></a><p class="title"><b>Example 155. Standard Usage</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$front = Zend_Controller_Front::getInstance();
+$front-&gt;registerPlugin(new Zend_Controller_Plugin_ErrorHandler());
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.controller.plugins.standard.errorhandler.examples.example-2"></a><p class="title"><b>Example 156. Setting a Different Error Handler</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$front = Zend_Controller_Front::getInstance();
+$front-&gt;registerPlugin(new Zend_Controller_Plugin_ErrorHandler(array(
+    'module'     =&gt; 'mystuff',
+    'controller' =&gt; 'static',
+    'action'     =&gt; 'error'
+)));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.controller.plugins.standard.errorhandler.examples.example-3"></a><p class="title"><b>Example 157. Using Accessors</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$plugin = new Zend_Controller_Plugin_ErrorHandler();
+$plugin-&gt;setErrorHandlerModule('mystuff')
+       -&gt;setErrorHandlerController('static')
+       -&gt;setErrorHandlerAction('error');
+
+$front = Zend_Controller_Front::getInstance();
+$front-&gt;registerPlugin($plugin);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.plugins.standard.errorhandler.controllerexamples"></a>Error Controller Example</h5></div></div></div>
+        
+
+        <p>
+            In order to use the Error Handler plugin, you need an error
+            controller. Below is a simple example.
+        </p>
+
+        <pre class="programlisting">
+class ErrorController extends Zend_Controller_Action
+{
+    public function errorAction()
+    {
+        $errors = $this-&gt;_getParam('error_handler');
+
+        switch ($errors-&gt;type) {
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
+                // 404 error -- controller or action not found
+                $this-&gt;getResponse()-&gt;setRawHeader('HTTP/1.1 404 Not Found');
+
+                $content =&lt;&lt;&lt;EOH
+&lt;h1&gt;Error!&lt;/h1&gt;
+&lt;p&gt;The page you requested was not found.&lt;/p&gt;
+EOH;
+                break;
+            default:
+                // application error
+                $content =&lt;&lt;&lt;EOH
+&lt;h1&gt;Error!&lt;/h1&gt;
+&lt;p&gt;An unexpected error occurred. Please try again later.&lt;/p&gt;
+EOH;
+                break;
+        }
+
+        // Clear previous content
+        $this-&gt;getResponse()-&gt;clearBody();
+
+        $this-&gt;view-&gt;content = $content;
+    }
+}
+</pre>
+    </div>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.plugins.standard.puthandler"></a>Zend_Controller_Plugin_PutHandler</h4></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Controller_Plugin_PutHandler</code> provides a drop-in
+        plugin for marshalling <code class="constant">PUT</code> request bodies into request parameters, just
+        like <code class="constant">POST</code> request bodies. It will inspect the request and, if
+        <code class="constant">PUT</code>, will use parse_str to parse the raw <code class="constant">PUT</code> body
+        into an array of params which is then set on the request. E.g.,
+    </p>
+
+    <pre class="programlisting">
+PUT /notes/5.xml HTTP/1.1
+
+title=Hello&amp;body=World
+</pre>
+
+    <p>
+        To receive the 'title' and 'body' params as regular request params,
+        register the plugin:
+    </p>
+
+    <pre class="programlisting">
+$front = Zend_Controller_Front::getInstance();
+$front-&gt;registerPlugin(new Zend_Controller_Plugin_PutHandler());
+</pre>
+
+    <p>
+        Then you can access the <code class="constant">PUT</code> body params by name from the request inside
+        your controller:
+    </p>
+
+    <pre class="programlisting">
+...
+public function putAction()
+{
+    $title = $this-&gt;getRequest()-&gt;getParam('title'); // $title = "Hello"
+    $body = $this-&gt;getRequest()-&gt;getParam('body'); // $body = "World"
+}
+...
+</pre>
+</div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.response.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.modular.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">The Response Object </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Using a Conventional Modular Directory Structure</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,513 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Scripts de vue</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.view.html" title="Zend_View">
+<link rel="prev" href="zend.view.controllers.html" title="Scripts de contrôleur">
+<link rel="next" href="zend.view.helpers.html" title="Aides de vue">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Scripts de vue</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.view.controllers.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_View</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.view.helpers.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.view.scripts"></a>Scripts de vue</h2></div></div></div>
+    
+
+    <p>
+        Une fois que le contrôleur a assigné les variables et appelé <code class="methodname">render()</code>,
+        <code class="classname">Zend_View</code> inclue le script de vue requis et l'exécute "à l'intérieur"
+        de la portée de l'instance <code class="classname">Zend_View</code>. Donc dans vos scripts de vue,
+        les références à <code class="varname">$this</code> pointent en fait sur l'instance
+        <code class="classname">Zend_View</code> elle-même.
+    </p>
+
+    <p>
+        Les variables assignées à la vue depuis le contrôleur lui sont référées comme des
+        propriétés de l'instance. Par exemple, si le contrôleur a assigné une variable
+        "quelquechose", vous vous référerez à cette variable par <code class="code">$this-&gt;quelquechose</code>
+        dans le script de vue. (Cela vous permet de garder une trace pour savoir quelles valeurs ont
+        été assignées au script, et lesquelles sont internes au script lui même.)
+    </p>
+
+    <p>
+        Pour rappel, voici l'exemple de script issu de l'introduction de ce chapitre sur
+        <code class="classname">Zend_View</code>.
+    </p>
+
+    <pre class="programlisting">
+&lt;?php if ($this-&gt;livres): ?&gt;
+
+    &lt;!-- La table des livres --&gt;
+    &lt;table&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Auteur&lt;/th&gt;
+            &lt;th&gt;Titre&lt;/th&gt;
+        &lt;/tr&gt;
+
+        &lt;?php foreach ($this-&gt;livres as $cle =&gt; $livre): ?&gt;
+        &lt;tr&gt;
+            &lt;td&gt;&lt;?php echo $this-&gt;escape($livre['auteur']) ?&gt;&lt;/td&gt;
+            &lt;td&gt;&lt;?php echo $this-&gt;escape($livre['titre']) ?&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;?php endforeach; ?&gt;
+
+    &lt;/table&gt;
+
+&lt;?php else: ?&gt;
+
+    &lt;p&gt;Aucun livre à afficher&lt;/p&gt;
+
+&lt;?php endif; ?&gt;
+</pre>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.scripts.escaping"></a>Échapper la sortie</h3></div></div></div>
+        
+
+        <p>
+            Une des tâches les plus importantes à effectuer dans un script de vue est de
+            s'assurer que la sortie est correctement échappée ; de plus ceci permet d'éviter les
+            attaques de type cross-site scripting (XSS). A moins que vous n'utilisiez une fonction,
+            une méthode, ou une aide qui gère l'échappement, vous devriez toujours échapper les
+            variables lors de l'affichage.
+        </p>
+
+        <p>
+            <code class="classname">Zend_View</code> a une méthode appelée <code class="methodname">escape()</code> qui
+            se charge de l'échappement.
+        </p>
+
+        <pre class="programlisting">
+// mauvaise pratique d'affichage
+echo $this-&gt;variable;
+
+// bonne pratique d'affichage
+echo $this-&gt;escape($this-&gt;variable);
+</pre>
+
+        <p>
+            Par défaut, la méthode <code class="methodname">escape()</code> utilise la fonction <acronym class="acronym">PHP</acronym>
+            <code class="methodname">htmlspecialchar()</code> pour l'échappement. Cependant, en fonction de votre
+            environnement, vous souhaitez peut-être un échappement différent. Utilisez la méthode
+            <code class="methodname">setEscape()</code> au niveau du contrôleur pour dire à
+            <code class="classname">Zend_View</code> quelle méthode de rappel ("callback") elle doit
+            utiliser.
+        </p>
+
+        <pre class="programlisting">
+// crée une instance Zend_View
+$view = new Zend_View();
+
+// spécifie qu'il faut utiliser htmlentities
+// comme rappel d'échappement
+$view-&gt;setEscape('htmlentities');
+
+// ou spécifie qu'il faut utiliser une méthode statique
+// comme rappel d'échappement
+$view-&gt;setEscape(array('UneClasse', 'nomDeMethode'));
+
+// ou alors une méthode d'instance
+$obj = new UneClasse();
+$view-&gt;setEscape(array($obj, 'nomDeMethode'));
+
+// et ensuite effectue le rendu de la vue
+echo $view-&gt;render(...);
+</pre>
+
+        <p>
+            La fonction ou méthode de rappel doit prendre la valeur à échapper dans le premier
+            paramètre, et tous les autres paramètres devraient être optionnels.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.scripts.templates"></a>Utiliser des systèmes de gabarit (template) alternatifs</h3></div></div></div>
+        
+
+        <p>
+            Bien que <acronym class="acronym">PHP</acronym> lui-même un moteur de gabarit puissant, beaucoup de développeurs
+            pensent que c'est beaucoup trop puissant ou complexe pour les graphistes/intégrateurs et
+            veulent utiliser un moteur de template alternatif. <code class="classname">Zend_View</code>
+            fournit deux mécanismes pour faire cela, le premier à travers les scripts de vues, le
+            second en implémentant <code class="classname">Zend_View_Interface</code>.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.view.scripts.templates.scripts"></a>Système de gabarit utilisant les scripts de vues</h4></div></div></div>
+            
+
+            <p>
+                Un script de vue peut être utilisé pour instancier et manipuler un objet de
+                gabarit séparé, comme un gabarit de type PHPLIB. Le script de vue pour ce type
+                d'activité pourrait ressembler à ceci :
+            </p>
+
+            <pre class="programlisting">
+include_once 'template.inc';
+$tpl = new Template();
+
+if ($this-&gt;livres) {
+    $tpl-&gt;setFile(array(
+        "listelivre" =&gt; "listelivre.tpl",
+        "chaquelivre" =&gt; "chaquelivre.tpl",
+    ));
+
+    foreach ($this-&gt;livres as $cle =&gt; $livre) {
+        $tpl-&gt;set_var('auteur', $this-&gt;escape($livre['auteur']);
+        $tpl-&gt;set_var('titre', $this-&gt;escape($livre['titre']);
+        $tpl-&gt;parse("livre", "chaquelivre", true);
+    }
+
+    $tpl-&gt;pparse("output", "listelivre");
+} else {
+    $tpl-&gt;setFile("nobooks", "pasdelivres.tpl")
+    $tpl-&gt;pparse("output", "pasdelivres");
+}
+</pre>
+
+            <p>Et ceci pourrait être les fichiers de gabarits correspondants :</p>
+
+            <pre class="programlisting">
+&lt;!-- listelivre.tpl --&gt;
+&lt;table&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Auteur&lt;/th&gt;
+        &lt;th&gt;Titre&lt;/th&gt;
+    &lt;/tr&gt;
+    {livres}
+&lt;/table&gt;
+
+&lt;!-- chaquelivre.tpl --&gt;
+    &lt;tr&gt;
+        &lt;td&gt;{auteur}&lt;/td&gt;
+        &lt;td&gt;{title}&lt;/td&gt;
+    &lt;/tr&gt;
+
+&lt;!-- pasdelivres.tpl --&gt;
+&lt;p&gt;Aucun livre à afficher&lt;/p&gt;
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.view.scripts.templates.interface"></a>Système de gabarit utilisant Zend_View_Interface</h4></div></div></div>
+            
+
+            <p>
+                Certains peuvent trouver plus facile de simplement fournir un moteur de
+                gabarit compatible avec <code class="classname">Zend_View</code>.
+                <code class="classname">Zend_View_Interface</code> définit l'interface de compatibilité
+                minimale nécessaire :
+            </p>
+
+            <pre class="programlisting">
+/**
+ * Retourne l'objet moteur de gabarit actuel
+ */
+public function getEngine();
+
+/**
+ * Affecte le dossier des scripts de gabarits
+ */
+public function setScriptPath($path);
+
+/**
+ * Règle un chemin de base pour toutes les ressources de vue
+ */
+public function setBasePath($path, $prefix = 'Zend_View');
+
+/**
+ * Ajoute un chemin de base supplémentaire pour les ressources de vue
+ */
+public function addBasePath($path, $prefix = 'Zend_View');
+
+/**
+ * Récupère les chemins actuels vers les ressources de vue
+ */
+public function getScriptPaths();
+
+/**
+ * Méthode à surcharger pour affecter les variables des gabarits
+ * en tant que propriétés de l'objet
+ */
+public function __set($key, $value);
+public function __isset($key);
+public function __unset($key);
+
+/**
+ * Affectation manuelle de variable de gabarit, ou possibilité
+ * d'affecter des variables en masse.
+ */
+public function assign($spec, $value = null);
+
+/**
+ * Efface toutes les variables du gabarit déjà affectées
+ */
+public function clearVars();
+
+/**
+ * Effectue le rendu du gabarit nommé $name
+ */
+public function render($name);
+</pre>
+
+            <p>
+                En utilisant cette interface, il devient relativement facile d'encapsuler un
+                moteur de gabarit tiers comme une classe compatible
+                <code class="classname">Zend_View</code>. Comme par exemple, le code suivant est une
+                encapsulation potentielle de Smarty :
+            </p>
+
+            <pre class="programlisting">
+class Zend_View_Smarty implements Zend_View_Interface
+{
+    /**
+     * Objet Smarty
+     * @var Smarty
+     */
+    protected $_smarty;
+
+    /**
+     * Constructeur
+     *
+     * @param string $tmplPath
+     * @param array $extraParams
+     * @return void
+     */
+    public function __construct($tmplPath = null,
+                                $extraParams = array())
+    {
+        $this-&gt;_smarty = new Smarty;
+
+        if (null !== $tmplPath) {
+            $this-&gt;setScriptPath($tmplPath);
+        }
+
+        foreach ($extraParams as $key =&gt; $value) {
+            $this-&gt;_smarty-&gt;$key = $value;
+        }
+    }
+
+    /**
+     * Retourne l'objet moteur de gabarit
+     *
+     * @return Smarty
+     */
+    public function getEngine()
+    {
+        return $this-&gt;_smarty;
+    }
+
+    /**
+     * Affecte le dossier des scripts de gabarits
+     *
+     * @param string $path Le répertoire à affecter au path
+     * @return void
+     */
+    public function setScriptPath($path)
+    {
+        if (is_readable($path)) {
+            $this-&gt;_smarty-&gt;template_dir = $path;
+            return;
+        }
+
+        throw new Exception('Répertoire fourni invalide');
+    }
+
+    /**
+     * Récupère le dossier courant des gabarits
+     *
+     * @return string
+     */
+    public function getScriptPaths()
+    {
+        return array($this-&gt;_smarty-&gt;template_dir);
+    }
+
+    /**
+     * Alias pour setScriptPath
+     *
+     * @param string $path
+     * @param string $prefix Unused
+     * @return void
+     */
+    public function setBasePath($path, $prefix = 'Zend_View')
+    {
+        return $this-&gt;setScriptPath($path);
+    }
+
+    /**
+     * Alias pour setScriptPath
+     *
+     * @param string $path
+     * @param string $prefix Unused
+     * @return void
+     */
+    public function addBasePath($path, $prefix = 'Zend_View')
+    {
+        return $this-&gt;setScriptPath($path);
+    }
+
+    /**
+     * Affectation une variable au gabarit
+     *
+     * @param string $key Le nom de la variable
+     * @param mixed $val La valeur de la variable
+     * @return void
+     */
+    public function __set($key, $val)
+    {
+        $this-&gt;_smarty-&gt;assign($key, $val);
+    }
+
+    /**
+     * Autorise le fonctionnement du test avec empty() and isset()
+     *
+     * @param string $key
+     * @return boolean
+     */
+    public function __isset($key)
+    {
+        return (null !== $this-&gt;_smarty-&gt;get_template_vars($key));
+    }
+
+    /**
+     * Autorise l'effacement de toutes les variables du gabarit
+     *
+     * @param string $key
+     * @return void
+     */
+    public function __unset($key)
+    {
+        $this-&gt;_smarty-&gt;clear_assign($key);
+    }
+
+    /**
+     * Affectation de variables au gabarit
+     *
+     * Autorise une affectation simple (une clé =&gt; une valeur)
+     * OU
+     * le passage d'un tableau (paire de clé =&gt; valeur)
+     * à affecter en masse
+     *
+     * @see __set()
+     * @param string|array $spec Le type d'affectation à utiliser
+                                (clé ou tableau de paires clé =&gt; valeur)
+     * @param mixed $value (Optionel) Si vous assignez une variable nommée,
+                                      utilisé ceci comme valeur
+     * @return void
+     */
+    public function assign($spec, $value = null)
+    {
+        if (is_array($spec)) {
+            $this-&gt;_smarty-&gt;assign($spec);
+            return;
+        }
+
+        $this-&gt;_smarty-&gt;assign($spec, $value);
+    }
+
+    /**
+     * Effacement de toutes les variables affectées
+     *
+     * Efface toutes les variables affectées à Zend_View
+     * via {@link assign()} ou surcharge de propriété
+     * ({@link __get()}/{@link __set()}).
+     *
+     * @return void
+     */
+    public function clearVars()
+    {
+        $this-&gt;_smarty-&gt;clear_all_assign();
+    }
+
+    /**
+     * Exécute le gabarit et retourne l'affichage
+     *
+     * @param string $name Le gabarit à exécuter
+     * @return string L'affichage
+     */
+    public function render($name)
+    {
+        return $this-&gt;_smarty-&gt;fetch($name);
+    }
+}
+</pre>
+
+            <p>
+                Dans cet exemple, vous instanciez la classe
+                <code class="classname">Zend_View_Smarty</code> au lieu de <code class="classname">Zend_View</code>,
+                et vous l'utilisez de la même façon :
+            </p>
+
+            <pre class="programlisting">
+//Exemple 1a. Dans l'initView() de l'initializer.
+$view = new Zend_View_Smarty('/chemin/vers/les/templates');
+$viewRenderer =
+    Zend_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
+$viewRenderer-&gt;setView($view)
+             -&gt;setViewBasePathSpec($view-&gt;_smarty-&gt;template_dir)
+             -&gt;setViewScriptPathSpec(':controller/:action.:suffix')
+             -&gt;setViewScriptPathNoControllerSpec(':action.:suffix')
+             -&gt;setViewSuffix('tpl');
+
+//Exemple 1b. L'utilisation dans le contrôleur d'action reste la même
+class FooController extends Zend_Controller_Action
+{
+    public function barAction()
+    {
+        $this-&gt;view-&gt;book   = 'Zend PHP 5 Certification Study Guide';
+        $this-&gt;view-&gt;author = 'Davey Shafik and Ben Ramsey'
+    }
+}
+
+//Example 2. Initialisation de la vue dans le contrôleur d'action
+class FooController extends Zend_Controller_Action
+{
+    public function init()
+    {
+        $this-&gt;view   = new Zend_View_Smarty('/path/to/templates');
+        $viewRenderer = $this-&gt;_helper-&gt;getHelper('viewRenderer');
+        $viewRenderer-&gt;setView($this-&gt;view)
+                     -&gt;setViewBasePathSpec($view-&gt;_smarty-&gt;template_dir)
+                     -&gt;setViewScriptPathSpec(':controller/:action.:suffix')
+                     -&gt;setViewScriptPathNoControllerSpec(':action.:suffix')
+                     -&gt;setViewSuffix('tpl');
+    }
+}
+</pre>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.view.controllers.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.view.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.view.helpers.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Scripts de contrôleur </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Aides de vue</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

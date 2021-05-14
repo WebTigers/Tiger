@@ -1,0 +1,227 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Internationaliser un formulaire Zend_Form</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.form.html" title="Zend_Form">
+<link rel="prev" href="zend.form.standardDecorators.html" title="Décorateurs standards fournis avec Zend Framework">
+<link rel="next" href="zend.form.advanced.html" title="Advanced Zend_Form Usage">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Internationaliser un formulaire Zend_Form</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.form.standardDecorators.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Form</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.form.advanced.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.form.i18n"></a>Internationaliser un formulaire Zend_Form</h2></div></div></div>
+    
+
+    <p>
+        De plus en plus de développeurs ont besoin de fournir des applications multilingues.
+        <code class="classname">Zend_Form</code> propose des moyens simples dans ce but, et gère cette
+        responsabilité en tandem avec <a class="link" href="zend.translate.html" title="Zend_Translate">Zend_Translate</a> et <a class="link" href="zend.validate.html" title="Zend_Validate">Zend_Validate</a>.
+    </p>
+
+    <p>
+        Par défaut, aucune internationalisation (i18n) n'est effectuée. Pour l'activer dans
+        <code class="classname">Zend_Form</code>, vous devrez instancier un objet
+        <code class="classname">Zend_Translate</code> avec un adaptateur et l'attacher à
+        <code class="classname">Zend_Form</code> et/ou <code class="classname">Zend_Validate</code>. Voyez la <a class="link" href="zend.translate.html" title="Zend_Translate">documentation de Zend_Translate</a> pour plus d'informations sur
+        la création de son objet et de ses adaptateurs.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: L'i18n peut être désactivée par objet">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">L'i18n peut être désactivée par objet</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Vous pouvez désactiver la traduction pour tout formulaire, élément, groupe
+            d'affichage ou sous-formulaire en appelant sa méthode
+            <code class="methodname">setDisableTranslator($flag)</code> ou en lui passant un paramètre
+            <code class="code">disableTranslator</code>. Ceci peut être utile pour désactiver l'i18n pour des
+            éléments de formulaires individuels, ou des groupes d'éléments par exemple.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.i18n.initialization"></a>Initialiser l'i18n dans les formulaires</h3></div></div></div>
+        
+
+        <p>
+            Pour activer les traductions dans vos formulaires, vous avez besoin soit d'un
+            objet <code class="classname">Zend_Translate</code> complet, ou alors d'un objet
+            <code class="classname">Zend_Translate_Adapter</code> , comme ceci est détaillé dans la
+            documentation de <code class="classname">Zend_Translate</code>. Une fois un objet d'i18n en
+            votre possession, plusieurs choix s'offrent à vous :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Le plus simple</em></span> : ajoutez l'objet d'i18n dans le
+                    registre. Tout composant utilisant l'i18n dans Zend Framework a la capacité de
+                    découvrir de lui-même un objet de traduction si celui-ci est enregistré dans le
+                    registre à la clé "Zend_Translate" :
+                </p>
+
+                <pre class="programlisting">
+// utilisez la clé registre 'Zend_Translate' ;
+// $translate est un objet Zend_Translate :
+Zend_Registry::set('Zend_Translate', $translate);
+</pre>
+
+                <p>
+                    Cet objet sera cherché par <code class="classname">Zend_Form</code>,
+                    <code class="classname">Zend_Validate</code>, et
+                    <code class="classname">Zend_View_Helper_Translate</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Si tout ce qui vous importe est la traduction des messages d'erreurs, vous
+                    pouvez ajouter l'objet de traduction à
+                    <code class="classname">Zend_Validate_Abstract</code> :
+                </p>
+
+                <pre class="programlisting">
+// Indique aux classes de validation d'utiliser
+// un objet de traduction spécifique :
+Zend_Validate_Abstract::setDefaultTranslator($translate);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    Autre manière de procéder; attacher un objet de traduction à
+                    <code class="classname">Zend_Form</code> de manière générale. Ceci aura pour effet,
+                    entres-autres, de gérer la traduction des messages d'erreur de la
+                    validation :
+                </p>
+
+                <pre class="programlisting">
+// Indique à toutes les classes de formulaire d'utiliser un objet de traduction
+// Indique aussi aux validateurs d'utiliser ce même objet pour traduire
+// les messages d'erreur :
+Zend_Form::setDefaultTranslator($translate);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    Enfin, il est possible d'attacher un objet de traduction à une instance du
+                    formulaire, ou à un ou plusieurs de ses éléments, grâce à
+                    <code class="methodname">setTranslator()</code> :
+                </p>
+
+                <pre class="programlisting">
+// Indique à *cette* instance de formulaire, d'utiliser un objet de
+// traduction. L'objet de traduction sera aussi utilisé par tous les
+// validateurs pour traduire les messages d'erreur :
+$form-&gt;setTranslator($translate);
+
+// Indique à *cette* instance d'élément de formulaire, d'utiliser
+// un objet de traduction. L'objet de traduction sera aussi utilisé
+// par tous les validateurs de *cet* élément spécifique :
+$element-&gt;setTranslator($translate);
+</pre>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.i18n.standard"></a>Cibles gérées par l'I18n</h3></div></div></div>
+        
+
+        <p>
+            Maintenant que vous avez attaché un objet de traduction, que pouvez vous faire
+            avec ?
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Messages d'erreur des validateurs</em></span> : les messages
+                    d'erreurs des validateurs peuvent être traduits. Pour cela, utilisez les
+                    identifiants des messages des validateurs (constantes de vos validateurs
+                    <code class="classname">Zend_Validate</code>. Pour plus d'informations sur ces clés,
+                    voyez la documentation de <a class="link" href="zend.validate.html" title="Zend_Validate">Zend_Validate</a>.
+                </p>
+
+                <p>
+                    Aussi, depuis la version 1.6.0, vous pouvez fournir des chaînes de
+                    traduction en utilisant les messages d'erreur actuels comme identifiants. C'est
+                    le comportement recommandé pour 1.6.0 ou supérieures, nous allons déprécier
+                    l'utilisation des clés (constantes de classe) dans les prochaines
+                    versions.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Labels</em></span> : les labels des éléments seront traduits si
+                    un objet de traduction et une chaîne de traduction existent.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Légende des Fieldset</em></span> : les groupes d'éléments et les
+                    sous-formulaires sont rendus dans des "fieldsets" par défaut. Le décorateur
+                    FieldSet essaye de traduire la légende via l'objet de traduction.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Description des formulaires et éléments de
+                    formulaire</em></span> : tous les types relatifs au formulaire (éléments,
+                    formulaires, groupes d'éléments ou sous-formulaires) permettent de spécifier
+                    une description optionnelle. Le décorateur Description essaye de traduire la
+                    description.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Valeurs de Multi-option</em></span> : les éléments héritant de
+                    <code class="classname">Zend_Form_Element_Multi</code>(MultiCheckbox, Multiselect, et
+                    Radio) peuvent aussi traduire les valeurs (et non les clés) de leurs
+                    options.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Labels de Submit et Button</em></span> : les boutons (éléments
+                    Submit, Button et Reset) vont traduire le label affiché à l'utilisateur.
+                </p>
+            </li>
+</ul></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.form.standardDecorators.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.form.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.form.advanced.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Décorateurs standards fournis avec Zend Framework </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Advanced Zend_Form Usage</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

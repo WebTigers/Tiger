@@ -1,0 +1,371 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Loading Files and Classes Dynamically</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.loader.html" title="Zend_Loader">
+<link rel="prev" href="zend.loader.html" title="Zend_Loader">
+<link rel="next" href="zend.loader.autoloader.html" title="The Autoloader">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Loading Files and Classes Dynamically</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.loader.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Loader</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.loader.autoloader.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.loader.load"></a>Loading Files and Classes Dynamically</h2></div></div></div>
+    
+
+    <p>
+        The <code class="classname">Zend_Loader</code> class includes methods to help you load files
+        dynamically.
+    </p>
+
+    <div class="tip"><table border="0" summary="Tip: Zend_Loader vs. require_once()">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="/assets/manual/img/tip.png"></td>
+<th align="left">Zend_Loader vs. require_once()</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            The <code class="classname">Zend_Loader</code> methods are best used if the filename you need to
+            load is variable. For example, if it is based on a parameter from
+            user input or method argument. If you are loading a file or a
+            class whose name is constant, there is no benefit to using
+            <code class="classname">Zend_Loader</code> over using traditional <acronym class="acronym">PHP</acronym>
+            functions such as <a class="ulink" href="http://php.net/require_once" target="_top"><code class="methodname">require_once()</code></a>.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.load.file"></a>Loading Files</h3></div></div></div>
+        
+
+        <p>
+            The static method <code class="methodname">Zend_Loader::loadFile()</code> loads a
+            <acronym class="acronym">PHP</acronym> file. The file loaded may contain any <acronym class="acronym">PHP</acronym>
+            code. The method is a wrapper for the <acronym class="acronym">PHP</acronym> function
+            <a class="ulink" href="http://php.net/include" target="_top"><code class="methodname">include()</code></a>,
+            which emits a <acronym class="acronym">PHP</acronym> warning on failure, for example
+            if the specified file does not exist.
+        </p>
+
+        <div class="example">
+<a name="zend.loader.load.file.example"></a><p class="title"><b>Example 510. Example of the loadFile() Method</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+Zend_Loader::loadFile($filename, $dirs=null, $once=false);
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The <code class="varname">$filename</code> argument specifies the filename to load,
+            which must not contain any path information.
+            A security check is performed on <code class="varname">$filename</code>.
+            The <code class="varname">$filename</code> may only contain alphanumeric characters,
+            dashes ("-"), underscores ("_"), or periods (".").
+            No such restriction is placed on the <code class="varname">$dirs</code> argument.
+        </p>
+
+        <p>
+            The <code class="varname">$dirs</code> argument specifies which directories to search for the
+            file in. If the value is <code class="constant">NULL</code>, only the include_path
+            is searched; if the value is a string or an array, the directory or directories
+            specified will be searched, followed by the <span class="property">include_path</span>.
+        </p>
+
+        <p>
+            The <code class="varname">$once</code> argument is a boolean. If <code class="constant">TRUE</code>,
+            <code class="methodname">Zend_Loader::loadFile()</code> uses the <acronym class="acronym">PHP</acronym>
+            function <a class="ulink" href="http://php.net/include" target="_top"><code class="methodname">include_once()</code></a>
+            for loading the file, otherwise the <acronym class="acronym">PHP</acronym> function
+            <a class="ulink" href="http://php.net/include_once" target="_top"><code class="methodname">include()</code></a>
+            is used.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.load.class"></a>Loading Classes</h3></div></div></div>
+        
+
+        <p>
+            The static method <code class="methodname">Zend_Loader::loadClass($class, $dirs)</code>
+            loads a <acronym class="acronym">PHP</acronym> file and then checks for the existence of the class.
+        </p>
+
+        <div class="example">
+<a name="zend.loader.load.class.example"></a><p class="title"><b>Example 511. Example of the loadClass() Method</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+Zend_Loader::loadClass('Container_Tree',
+    array(
+        '/home/production/mylib',
+        '/home/production/myapp'
+    )
+);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The string specifying the class is converted to a relative path
+            by substituting underscores with directory separators for your OS, and appending
+            '.php'. In the example above, 'Container_Tree' becomes 'Container\\Tree.php' on Windows.
+        </p>
+
+        <p>
+            If <code class="varname">$dirs</code> is a string or an array,
+            <code class="methodname">Zend_Loader::loadClass()</code> searches the directories in
+            the order supplied. The first matching file is loaded. If the file
+            does not exist in the specified <code class="varname">$dirs</code>, then the
+            <span class="property">include_path</span> for the <acronym class="acronym">PHP</acronym> environment is
+            searched.
+        </p>
+
+        <p>
+            If the file is not found or the class does not exist after the load,
+            <code class="methodname">Zend_Loader::loadClass()</code> throws a
+            <code class="classname">Zend_Exception</code>.
+        </p>
+
+        <p>
+            <code class="methodname">Zend_Loader::loadFile()</code> is used for loading, so the
+            class name may only contain alphanumeric characters and the hyphen
+            ('-'), underscore ('_'), and period ('.').
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Loading Classes from PHP Namespaces">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Loading Classes from PHP Namespaces</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Starting in version 1.10.0, Zend Framework now allows loading classes from
+                <acronym class="acronym">PHP</acronym> namespaces. This support follows the same guidelines and
+                implementation as that found in the <a class="ulink" href="http://groups.google.com/group/php-standards/web/psr-0-final-proposal" target="_top">PHP
+                Framework Interop Group PSR-0</a> reference implementation.
+            </p>
+
+            <p>
+                Under this guideline, the following rules apply:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        Each namespace separator is converted to a
+                        <code class="constant">DIRECTORY_SEPARATOR</code> when loading from the file system.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        Each "_" character in the <span class="emphasis"><em>CLASS NAME</em></span> is converted to a
+                        <code class="constant">DIRECTORY_SEPARATOR</code>. The "_" character has no special
+                        meaning in the namespace.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        The fully-qualified namespace and class is suffixed with ".php" when loading
+                        from the file system.
+                    </p>
+                </li>
+</ul></div>
+
+            <p>
+                As examples:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="classname">\Doctrine\Common\IsolatedClassLoader</code> =&gt;
+                        <code class="filename">/path/to/project/lib/vendor/Doctrine/Common/IsolatedClassLoader.php</code>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="classname">\namespace\package\Class_Name</code> =&gt;
+                        <code class="filename">/path/to/project/lib/vendor/namespace/package/Class/Name.php</code>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="classname">\namespace\package_name\Class_Name</code> =&gt;
+                        <code class="filename">/path/to/project/lib/vendor/namespace/package_name/Class/Name.php</code>
+                    </p>
+                </li>
+</ul></div>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.load.isreadable"></a>Testing if a File is Readable</h3></div></div></div>
+        
+
+        <p>
+            The static method <code class="methodname">Zend_Loader::isReadable($pathname)</code>
+            returns <code class="constant">TRUE</code> if a file at the specified pathname exists
+            and is readable, <code class="constant">FALSE</code> otherwise.
+        </p>
+
+        <div class="example">
+<a name="zend.loader.load.isreadable.example"></a><p class="title"><b>Example 512. Example of isReadable() method</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+if (Zend_Loader::isReadable($filename)) {
+    // do something with $filename
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The <code class="varname">$filename</code> argument specifies the filename to
+            check. This may contain path information.
+            This method is a wrapper for the <acronym class="acronym">PHP</acronym> function
+            <a class="ulink" href="http://php.net/is_readable" target="_top"><code class="methodname">is_readable()</code></a>.
+            The <acronym class="acronym">PHP</acronym> function does not search the
+            <span class="property">include_path</span>, while
+            <code class="methodname">Zend_Loader::isReadable()</code> does.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.load.autoload"></a>Using the Autoloader</h3></div></div></div>
+        
+
+        <p>
+            The <code class="classname">Zend_Loader</code> class contains a method you can register with the
+            <acronym class="acronym">PHP</acronym> SPL autoloader. <code class="methodname">Zend_Loader::autoload()</code>
+            is the callback method. As a convenience, <code class="classname">Zend_Loader</code> provides
+            the <code class="methodname">registerAutoload()</code> function to register its
+            <code class="methodname">autoload()</code> method. If the <span class="property">spl_autoload</span>
+            extension is not present in your <acronym class="acronym">PHP</acronym> environment, then the
+            <code class="methodname">registerAutoload()</code> method throws a
+            <code class="classname">Zend_Exception</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.loader.load.autoload.example"></a><p class="title"><b>Example 513. Example of registering the autoloader callback method</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+Zend_Loader::registerAutoload();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            After registering the Zend Framework autoload callback, you can
+            reference classes from Zend Framework without having to load
+            them explicitly. The <code class="methodname">autoload()</code> method uses
+            <code class="methodname">Zend_Loader::loadClass()</code> automatically when you
+            reference a class.
+        </p>
+
+        <p>
+            If you have extended the <code class="classname">Zend_Loader</code> class, you can give an
+            optional argument to <code class="methodname">registerAutoload()</code>, to specify
+            the class from which to register an <code class="methodname">autoload()</code> method.
+        </p>
+
+        <div class="example">
+<a name="zend.loader.load.autoload.example-extended"></a><p class="title"><b>Example 514. Example of registering the autoload callback method from an
+                extended class</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                Because of the semantics of static function references in <acronym class="acronym">PHP</acronym>,
+                you must implement code for both <code class="methodname">loadClass()</code>
+                and <code class="methodname">autoload()</code>, and the <code class="methodname">autoload()</code>
+                must call <code class="methodname">self::loadClass()</code>. If your
+                <code class="methodname">autoload()</code> method delegates to its parent to
+                call <code class="methodname">self::loadClass()</code>, then it calls the
+                method of that name in the parent class, not the subclass.
+            </p>
+
+            <pre class="programlisting">
+class My_Loader extends Zend_Loader
+{
+    public static function loadClass($class, $dirs = null)
+    {
+        parent::loadClass($class, $dirs);
+    }
+
+    public static function autoload($class)
+    {
+        try {
+            self::loadClass($class);
+            return $class;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+}
+
+Zend_Loader::registerAutoload('My_Loader');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            You can remove an autoload callback. The
+            <code class="methodname">registerAutoload()</code> has an optional second argument,
+            which is <code class="constant">TRUE</code> by default. If this argument is
+            <code class="constant">FALSE</code>, the autoload callback is unregistered from the
+            SPL autoload stack.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.loader.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.loader.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.loader.autoloader.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Loader </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> The Autoloader</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

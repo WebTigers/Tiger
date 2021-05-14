@@ -1,0 +1,207 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Authenticating with AuthSub</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.gdata.html" title="Zend_Gdata">
+<link rel="prev" href="zend.gdata.analytics.html" title="Using Google Analytics">
+<link rel="next" href="zend.gdata.books.html" title="Using the Book Search Data API">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Authenticating with AuthSub</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.gdata.analytics.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Gdata</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.gdata.books.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.gdata.authsub"></a>Authenticating with AuthSub</h2></div></div></div>
+    
+
+    <p>
+        The AuthSub mechanism enables you to write web applications
+        that acquire authenticated access Google Data services,
+        without having to write code that handles user credentials.
+    </p>
+
+    <p>
+        See <a class="ulink" href="http://code.google.com/apis/accounts/AuthForWebApps.html" target="_top">http://code.google.com/apis/accounts/AuthForWebApps.html</a>
+        for more information about Google Data AuthSub authentication.
+    </p>
+
+    <p>
+        The Google documentation says the ClientLogin mechanism is appropriate
+        for "installed applications" whereas the AuthSub mechanism is
+        for "web applications." The difference is that AuthSub requires
+        interaction from the user, and a browser interface that can react
+        to redirection requests. The ClientLogin solution uses <acronym class="acronym">PHP</acronym> code to
+        supply the account credentials; the user is not required to enter her
+        credentials interactively.
+    </p>
+
+    <p>
+        The account credentials supplied via the AuthSub mechanism are
+        entered by the user of the web application. Therefore they must be
+        account credentials that are known to that user.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Registered applications">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Registered applications</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            <code class="classname">Zend_Gdata</code> currently does not support use of secure tokens,
+            because the AuthSub authentication does not support passing a digital certificate
+            to acquire a secure token.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.authsub.login"></a>Creating an AuthSub authenticated Http Client</h3></div></div></div>
+        
+
+        <p>
+            Your <acronym class="acronym">PHP</acronym> application should provide a hyperlink to the
+            Google <acronym class="acronym">URL</acronym> that performs authentication. The static function
+            <code class="methodname">Zend_Gdata_AuthSub::getAuthSubTokenUri()</code>
+            provides the correct <acronym class="acronym">URL</acronym>. The arguments to this function include
+            the <acronym class="acronym">URL</acronym> to your <acronym class="acronym">PHP</acronym> application so that Google can
+            redirect the user's browser back to your application after the user's
+            credentials have been verified.
+        </p>
+
+        <p>
+            After Google's authentication server redirects the user's browser
+            back to the current application, a <code class="constant">GET</code> request parameter is set,
+            called <span class="emphasis"><em>token</em></span>. The value of this parameter is a single-use token
+            that can be used for authenticated access. This token can be converted into a multi-use
+            token and stored in your session.
+        </p>
+
+        <p>
+            Then use the token value in a call to
+            <code class="methodname">Zend_Gdata_AuthSub::getHttpClient()</code>.
+            This function returns an instance of <code class="classname">Zend_Http_Client</code>,
+            with appropriate headers set so that subsequent requests your
+            application submits using that <acronym class="acronym">HTTP</acronym> Client are also authenticated.
+        </p>
+
+        <p>
+            Below is an example of <acronym class="acronym">PHP</acronym> code for a web application
+            to acquire authentication to use the Google Calendar service
+            and create a <code class="classname">Zend_Gdata</code> client object using that authenticated
+            <acronym class="acronym">HTTP</acronym> Client.
+        </p>
+
+        <pre class="programlisting">
+$my_calendar = 'http://www.google.com/calendar/feeds/default/private/full';
+
+if (!isset($_SESSION['cal_token'])) {
+    if (isset($_GET['token'])) {
+        // You can convert the single-use token to a session token.
+        $session_token =
+            Zend_Gdata_AuthSub::getAuthSubSessionToken($_GET['token']);
+        // Store the session token in our session.
+        $_SESSION['cal_token'] = $session_token;
+    } else {
+        // Display link to generate single-use token
+        $googleUri = Zend_Gdata_AuthSub::getAuthSubTokenUri(
+            'http://'. $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'],
+            $my_calendar, 0, 1);
+        echo "Click &lt;a href='$googleUri'&gt;here&lt;/a&gt; " .
+             "to authorize this application.";
+        exit();
+    }
+}
+
+// Create an authenticated HTTP Client to talk to Google.
+$client = Zend_Gdata_AuthSub::getHttpClient($_SESSION['cal_token']);
+
+// Create a Gdata object using the authenticated Http Client
+$cal = new Zend_Gdata_Calendar($client);
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.authsub.logout"></a>Revoking AuthSub authentication</h3></div></div></div>
+        
+
+        <p>
+            To terminate the authenticated status of a given token, use the
+            <code class="methodname">Zend_Gdata_AuthSub::AuthSubRevokeToken()</code>
+            static function. Otherwise, the token is still valid for
+            some time.
+        </p>
+
+        <pre class="programlisting">
+// Carefully construct this value to avoid application security problems.
+$php_self = htmlentities(substr($_SERVER['PHP_SELF'],
+                         0,
+                         strcspn($_SERVER['PHP_SELF'], "\n\r")),
+                         ENT_QUOTES);
+
+if (isset($_GET['logout'])) {
+    Zend_Gdata_AuthSub::AuthSubRevokeToken($_SESSION['cal_token']);
+    unset($_SESSION['cal_token']);
+    header('Location: ' . $php_self);
+    exit();
+}
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Security notes">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Security notes</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                The treatment of the <code class="varname">$php_self</code> variable in the
+                example above is a general security guideline, it is not
+                specific to <code class="classname">Zend_Gdata</code>. You should always filter content you
+                output to <acronym class="acronym">HTTP</acronym> headers.
+            </p>
+
+            <p>
+                Regarding revoking authentication tokens, it is recommended to
+                do this when the user is finished with her Google Data session.
+                The possibility that someone can intercept the token and use
+                it for malicious purposes is very small, but nevertheless it is
+                a good practice to terminate authenticated access to any service.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.gdata.analytics.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.gdata.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.gdata.books.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Using Google Analytics </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Using the Book Search Data API</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

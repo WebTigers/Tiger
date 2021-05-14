@@ -1,0 +1,403 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>MVC Exceptions</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.modular.html" title="Using a Conventional Modular Directory Structure">
+<link rel="next" href="zend.currency.html" title="Zend_Currency">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">MVC Exceptions</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.modular.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.currency.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.exceptions"></a>MVC Exceptions</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.exceptions.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            The <acronym class="acronym">MVC</acronym> components in Zend Framework utilize a Front Controller,
+            which means that all requests to a given site will go through a
+            single entry point. As a result, all exceptions bubble up to the
+            Front Controller eventually, allowing the developer to handle them
+            in a single location.
+        </p>
+
+        <p>
+            However, exception messages and backtrace information often contain
+            sensitive system information, such as <acronym class="acronym">SQL</acronym> statements, file
+            locations, and more. To help protect your site, by default
+            <code class="classname">Zend_Controller_Front</code> catches all exceptions and
+            registers them with the response object; in turn, by default, the
+            response object does not display exception messages.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.exceptions.handling"></a>Handling Exceptions</h3></div></div></div>
+        
+
+        <p>
+            Several mechanisms are built in to the <acronym class="acronym">MVC</acronym> components already to
+            allow you to handle exceptions.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    By default, the <a class="link" href="zend.controller.plugins.html#zend.controller.plugins.standard.errorhandler" title="Zend_Controller_Plugin_ErrorHandler">error
+                    handler plugin</a> is registered and active. This plugin
+                    was designed to handle:
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem"><p>Errors due to missing controllers or actions</p></li>
+<li class="listitem"><p>Errors occurring within action controllers</p></li>
+</ul></div>
+
+                <p>
+                    It operates as a <code class="methodname">postDispatch()</code> plugin, and
+                    checks to see if a dispatcher, action controller, or
+                    other exception has occurred. If so, it forwards to an error
+                    handler controller.
+                </p>
+
+                <p>
+                    This handler will cover most exceptional situations, and
+                    handle missing controllers and actions gracefully.
+                </p>
+            </li>
+<li class="listitem">
+                <p><code class="methodname">Zend_Controller_Front::throwExceptions()</code></p>
+
+                <p>
+                    By passing a boolean <code class="constant">TRUE</code> value to this method, you can
+                    tell the front controller that instead of aggregating exceptions
+                    in the response object or using the error handler plugin,
+                    you'd rather handle them yourself. As an example:
+                </p>
+
+                <pre class="programlisting">
+$front-&gt;throwExceptions(true);
+try {
+    $front-&gt;dispatch();
+} catch (Exception $e) {
+    // handle exceptions yourself
+}
+</pre>
+
+                <p>
+                    This method is probably the easiest way to add custom
+                    exception handling covering the full range of possible
+                    exceptions to your front controller application.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">Zend_Controller_Response_Abstract::renderExceptions()</code>
+                </p>
+
+                <p>
+                    By passing a boolean <code class="constant">TRUE</code> value to this method, you tell
+                    the response object that it should render an exception message
+                    and backtrace when rendering itself. In this scenario, any
+                    exception raised by your application will be displayed. This
+                    is only recommended for non-production environments.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">Zend_Controller_Front::returnResponse()</code> and
+                    <code class="methodname">Zend_Controller_Response_Abstract::isException()</code>.
+                </p>
+
+                <p>
+                    By passing a boolean <code class="constant">TRUE</code> to
+                    <code class="methodname">Zend_Controller_Front::returnResponse()</code>,
+                    <code class="methodname">Zend_Controller_Front::dispatch()</code> will not render the
+                    response, but instead return it. Once you have the response,
+                    you may then test to see if any exceptions were trapped using
+                    its <code class="methodname">isException()</code> method, and retrieving the
+                    exceptions via the <code class="methodname">getException()</code> method. As an
+                    example:
+                </p>
+
+                <pre class="programlisting">
+$front-&gt;returnResponse(true);
+$response = $front-&gt;dispatch();
+if ($response-&gt;isException()) {
+    $exceptions = $response-&gt;getException();
+    // handle exceptions ...
+} else {
+    $response-&gt;sendHeaders();
+    $response-&gt;outputBody();
+}
+</pre>
+
+                <p>
+                    The primary advantage this method offers over
+                    <code class="methodname">Zend_Controller_Front::throwExceptions()</code> is to
+                    allow you to conditionally render the response after
+                    handling the exception. This will catch any exception in the
+                    controller chain, unlike the error handler plugin.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.exceptions.internal"></a>MVC Exceptions You May Encounter</h3></div></div></div>
+        
+
+        <p>
+            The various <acronym class="acronym">MVC</acronym> components -- request, router, dispatcher, action
+            controller, and response objects -- may each throw exceptions on
+            occasion. Some exceptions may be conditionally overridden, and
+            others are used to indicate the developer may need to consider
+            their application structure.
+        </p>
+
+        <p>As some examples:</p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">Zend_Controller_Dispatcher::dispatch()</code> will,
+                    by default, throw an exception if an invalid controller is
+                    requested. There are two recommended ways to deal with
+                    this.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            Set the <span class="property">useDefaultControllerAlways</span> parameter.
+                        </p>
+
+                        <p>
+                            In your front controller, or your dispatcher, add
+                            the following directive:
+                        </p>
+
+                        <pre class="programlisting">
+$front-&gt;setParam('useDefaultControllerAlways', true);
+
+// or
+
+$dispatcher-&gt;setParam('useDefaultControllerAlways', true);
+</pre>
+
+                        <p>
+                            When this flag is set, the dispatcher will use the
+                            default controller and action instead of throwing an
+                            exception. The disadvantage to this method is that
+                            any typos a user makes when accessing your site will
+                            still resolve and display your home page, which can
+                            wreak havoc with search engine optimization.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            The exception thrown by <code class="methodname">dispatch()</code> is
+                            a <code class="classname">Zend_Controller_Dispatcher_Exception</code>
+                            containing the text 'Invalid controller specified'.
+                            Use one of the methods outlined in <a class="link" href="zend.controller.exceptions.html#zend.controller.exceptions.handling" title="Handling Exceptions">the
+                                previous section</a> to catch the exception,
+                            and then redirect to a generic error page or the
+                            home page.
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">Zend_Controller_Action::__call()</code> will throw a
+                    <code class="classname">Zend_Controller_Action_Exception</code> if it cannot
+                    dispatch a non-existent action to a method. Most likely,
+                    you will want to use some default action in the controller
+                    in cases like this. Ways to achieve this include:
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            Subclass <code class="classname">Zend_Controller_Action</code> and
+                            override the <code class="methodname">__call()</code> method. As an
+                            example:
+                        </p>
+
+                        <pre class="programlisting">
+class My_Controller_Action extends Zend_Controller_Action
+{
+    public function __call($method, $args)
+    {
+        if ('Action' == substr($method, -6)) {
+            $controller = $this-&gt;getRequest()-&gt;getControllerName();
+            $url = '/' . $controller . '/index';
+            return $this-&gt;_redirect($url);
+        }
+
+        throw new Exception('Invalid method');
+    }
+}
+</pre>
+
+                        <p>
+                            The example above intercepts any undefined action
+                            method called and redirects it to the default action
+                            in the controller.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            Subclass <code class="classname">Zend_Controller_Dispatcher</code>
+                            and override the <code class="methodname">getAction()</code> method to
+                            verify the action exists. As an example:
+                        </p>
+
+                        <pre class="programlisting">
+class My_Controller_Dispatcher extends Zend_Controller_Dispatcher
+{
+    public function getAction($request)
+    {
+        $action = $request-&gt;getActionName();
+        if (empty($action)) {
+            $action = $this-&gt;getDefaultAction();
+            $request-&gt;setActionName($action);
+            $action = $this-&gt;formatActionName($action);
+        } else {
+            $controller = $this-&gt;getController();
+            $action     = $this-&gt;formatActionName($action);
+            if (!method_exists($controller, $action)) {
+                $action = $this-&gt;getDefaultAction();
+                $request-&gt;setActionName($action);
+                $action = $this-&gt;formatActionName($action);
+            }
+        }
+
+        return $action;
+    }
+}
+</pre>
+
+                        <p>
+                            The above code checks to see that the requested
+                            action exists in the controller class; if not, it
+                            resets the action to the default action.
+                        </p>
+
+                        <p>
+                            This method is nice because you can transparently
+                            alter the action prior to final dispatch. However,
+                            it also means that typos in the <acronym class="acronym">URL</acronym> may still
+                            dispatch correctly, which is not great for search
+                            engine optimization.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            Use
+                            <code class="methodname">Zend_Controller_Action::preDispatch()</code>
+                            or
+                            <code class="methodname">Zend_Controller_Plugin_Abstract::preDispatch()</code>
+                            to identify invalid actions.
+                        </p>
+
+                        <p>
+                            By subclassing <code class="classname">Zend_Controller_Action</code>
+                            and modifying <code class="methodname">preDispatch()</code>, you can
+                            modify all of your controllers to forward to
+                            another action or redirect prior to actually
+                            dispatching the action. The code for this will look
+                            similar to the code for overriding
+                            <code class="methodname">__call()</code>, above.
+                        </p>
+
+                        <p>
+                            Alternatively, you can check this information in a
+                            global plugin. This has the advantage of being
+                            action controller independent; if your application
+                            consists of a variety of action controllers, and not
+                            all of them inherit from the same class, this method
+                            can add consistency in handling your various
+                            classes.
+                        </p>
+
+                        <p>
+                            As an example:
+                        </p>
+
+                        <pre class="programlisting">
+class My_Controller_PreDispatchPlugin extends Zend_Controller_Plugin_Abstract
+{
+    public function preDispatch(Zend_Controller_Request_Abstract $request)
+    {
+        $front      = Zend_Controller_Front::getInstance();
+        $dispatcher = $front-&gt;getDispatcher();
+        $class      = $dispatcher-&gt;getControllerClass($request);
+        if (!$class) {
+            $class = $dispatcher-&gt;getDefaultControllerClass($request);
+        }
+
+        $r      = new ReflectionClass($class);
+        $action = $dispatcher-&gt;getActionMethod($request);
+
+        if (!$r-&gt;hasMethod($action)) {
+            $defaultAction  = $dispatcher-&gt;getDefaultAction();
+            $controllerName = $request-&gt;getControllerName();
+            $response       = $front-&gt;getResponse();
+            $response-&gt;setRedirect('/' . $controllerName
+                                  . '/' . $defaultAction);
+            $response-&gt;sendHeaders();
+            exit;
+        }
+    }
+}
+</pre>
+
+                        <p>
+                            In this example, we check to see if the action
+                            requested is available in the controller. If not, we
+                            redirect to the default action in the controller,
+                            and exit script execution immediately.
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+</ul></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.modular.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.currency.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Using a Conventional Modular Directory Structure </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend_Currency</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Search_Lucene Introduction</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="learning.lucene.html" title="Iniciando com o Zend_Search_Lucene">
+<link rel="prev" href="learning.lucene.html" title="Iniciando com o Zend_Search_Lucene">
+<link rel="next" href="learning.lucene.index-structure.html" title="Lucene Index Structure">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Search_Lucene Introduction</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.lucene.html">Anterior</a> </td>
+<th width="60%" align="center">Iniciando com o Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.lucene.index-structure.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.lucene.intro"></a>Zend_Search_Lucene Introduction</h2></div></div></div>
+    
+
+    <p>
+        The <code class="classname">Zend_Search_Lucene</code> component is intended to provide a
+        ready-for-use full-text search solution. It doesn't require any <acronym class="acronym">PHP</acronym>
+        extensions<a href="#ftn.idm205698075552" class="footnote" name="idm205698075552"><sup class="footnote">[1]</sup></a> or additional software to be installed, and can be used
+        immediately after Zend Framework installation.
+    </p>
+
+    <p>
+        <code class="classname">Zend_Search_Lucene</code> is a pure <acronym class="acronym">PHP</acronym> port of the
+        popular open source full-text search engine known as Apache Lucene. See <a class="ulink" href="http://lucene.apache.org" target="_top">http://lucene.apache.org/</a> for the details.
+    </p>
+
+    <p>
+        Information must be indexed to be available for searching.
+        <code class="classname">Zend_Search_Lucene</code> and Java Lucene use a document concept known as an
+        "atomic indexing item."
+    </p>
+
+    <p>
+        Each document is a set of fields: &lt;name, value&gt; pairs where name and value are
+        <acronym class="acronym">UTF-8</acronym> strings<a href="#ftn.idm205698070176" class="footnote" name="idm205698070176"><sup class="footnote">[2]</sup></a>. Any subset of the document fields may be marked
+        as "indexed" to include field data in the text indexing process.
+    </p>
+
+    <p>
+        Field values may or may not be tokenized while indexing. If a field is not tokenized, then
+        the field value is stored as one term; otherwise, the current analyzer is used for
+        tokenization.
+    </p>
+
+    <p>
+        Several analyzers are provided within the <code class="classname">Zend_Search_Lucene</code> package.
+        The default analyzer works with <acronym class="acronym">ASCII</acronym> text (since the
+        <acronym class="acronym">UTF-8</acronym> analyzer needs the <span class="emphasis"><em>mbstring</em></span> extension to be
+        turned on). It is case insensitive, and it skips numbers. Use other analyzers or create your
+        own analyzer if you need to change this behavior.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Using analyzers during indexing and searching">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Using analyzers during indexing and searching</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Important note! Search queries are also tokenized using the "current analyzer", so the
+            same analyzer must be set as the default during both the indexing and searching process.
+            This will guarantee that source and searched text will be transformed into terms in the
+            same way.
+        </p>
+    </td></tr>
+</table></div>
+
+    <p>
+        Field values are optionally stored within an index. This allows the original field data to
+        be retrieved from the index while searching. This is the only way to associate search
+        results with the original data (internal document IDs may be changed after index
+        optimization or auto-optimization).
+    </p>
+
+    <p>
+        The thing that should be remembered is that a Lucene index is not a database. It doesn't
+        provide index backup mechanisms except backup of the file system directory. It doesn't
+        provide transactional mechanisms though concurrent index update as well as concurrent update
+        and read are supported. It doesn't compare with databases in data retrieving speed.
+    </p>
+
+    <p>
+        So it's good idea:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Not</em></span> to use Lucene index as a storage since it may dramatically
+                decrease search hit retrieving performance. Store only unique document identifiers
+                (doc paths, <acronym class="acronym">URL</acronym>s, database unique IDs) and associated data within
+                an index. E.g. title, annotation, category, language info, avatar. (Note: a field
+                may be included in indexing, but not stored, or stored, but not indexed).
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                To write functionality that can rebuild an index completely if it's corrupted for
+                any reason.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Individual documents in the index may have completely different sets of fields. The same
+        fields in different documents don't need to have the same attributes. E.g. a field may be
+        indexed for one document and skipped from indexing for another. The same applies for
+        storing, tokenizing, or treating field value as a binary string.
+    </p>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm205698075552" class="footnote"><p><a href="#idm205698075552" class="para"><sup class="para">[1] </sup></a>Though some <acronym class="acronym">UTF-8</acronym> processing functionality
+                requires the <span class="emphasis"><em>mbstring</em></span> extension to be turned
+                on</p></div>
+<div id="ftn.idm205698070176" class="footnote"><p><a href="#idm205698070176" class="para"><sup class="para">[2] </sup></a>Binary strings are also allowed to be used
+                as field values</p></div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.lucene.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.lucene.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.lucene.index-structure.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Iniciando com o Zend_Search_Lucene </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Lucene Index Structure</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

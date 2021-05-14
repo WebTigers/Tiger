@@ -1,0 +1,102 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_View_Abstract</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.view.html" title="Zend_View">
+<link rel="prev" href="zend.view.helpers.html" title="View Helpers">
+<link rel="next" href="zend.wildfire.html" title="Zend_Wildfire">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_View_Abstract</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.view.helpers.html">Prev</a> </td>
+<th width="60%" align="center">Zend_View</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.wildfire.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.view.abstract"></a>Zend_View_Abstract</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_View_Abstract</code> is the base class on which
+        <code class="classname">Zend_View</code> is built; <code class="classname">Zend_View</code> itself simply
+        extends it and declares a concrete implementation of the
+        <code class="methodname">_run()</code> method (which is invoked by
+        <code class="methodname">render()</code>).
+    </p>
+
+    <p>
+        Many developers find that they want to extend
+        <code class="classname">Zend_View_Abstract</code> to add custom functionality, and
+        inevitably run into issues with its design, which includes a number of
+        private members. This document aims to explain the decision behind the
+        design.
+    </p>
+
+    <p>
+        <code class="classname">Zend_View</code> is something of an anti-templating engine in that
+        it uses <acronym class="acronym">PHP</acronym> natively for its templating. As a result, all of
+        <acronym class="acronym">PHP</acronym> is available, and view scripts inherit the scope of their calling
+        object.
+    </p>
+
+    <p>
+        It is this latter point that is salient to the design decisions.
+        Internally, <code class="methodname">Zend_View::_run()</code> does the following:
+    </p>
+
+    <pre class="programlisting">
+protected function _run()
+{
+    include func_get_arg(0);
+}
+</pre>
+
+    <p>
+        As such, the view scripts have access to the current object
+        (<code class="varname">$this</code>), <span class="emphasis"><em>and any methods or members of that
+            object</em></span>. Since many operations depend on members with
+        limited visibility, this poses a problem: the view scripts could
+        potentially make calls to such methods or modify critical properties
+        directly. Imagine a script overwriting <code class="varname">$_path</code> or
+        <code class="varname">$_file</code> inadvertently -- any further calls to
+        <code class="methodname">render()</code> or view helpers would break!
+    </p>
+
+    <p>
+        Fortunately, <acronym class="acronym">PHP</acronym> 5 has an answer to this with its visibility
+        declarations: private members are not accessible by objects extending a
+        given class. This led to the current design: since
+        <code class="classname">Zend_View</code> <span class="emphasis"><em>extends</em></span>
+        <code class="classname">Zend_View_Abstract</code>, view scripts are thus limited to only
+        protected or public methods and members of
+        <code class="classname">Zend_View_Abstract</code> -- effectively limiting the actions it
+        can perform, and allowing us to secure critical areas from abuse by view
+        scripts.
+    </p>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.view.helpers.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.view.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.wildfire.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">View Helpers </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend_Wildfire</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

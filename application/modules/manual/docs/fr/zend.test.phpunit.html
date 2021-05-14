@@ -1,0 +1,1059 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Test_PHPUnit</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.test.html" title="Zend_Test">
+<link rel="prev" href="zend.test.introduction.html" title="Introduction">
+<link rel="next" href="zend.test.phpunit.db.html" title="Zend_Test_PHPUnit_Db">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Test_PHPUnit</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.test.introduction.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Test</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.test.phpunit.db.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.test.phpunit"></a>Zend_Test_PHPUnit</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Test_PHPUnit</code> fournit un TestCase pour les applications <acronym class="acronym">MVC</acronym>
+        qui contient des assertions qui permettent de tester toute une variété de responsabilités.
+        La manière la plus facile de comprendre ce qui peut être fait est de regarder l'exemple
+        suivant.
+    </p>
+
+    <div class="example">
+<a name="zend.test.phpunit.loginexample"></a><p class="title"><b>Exemple 898. Exemple d'un TestCase d'une application de login</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            L'exemple suivant est un simple test pour un contrôleur
+            <code class="classname">UserController</code> permettant de vérifier différentes choses :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Le formulaire de login doit être affiché aux utilisateurs
+                    non-authentifiés.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Quand un utilisateur se connecte, il doit être redirigé vers sa page de
+                    profil, et cette page doit affichée des informations particulières.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Cet exemple particulier suppose différentes choses. Premièrement, la majeure
+            partie de notre fichier d'amorçage a été déplacé dans un plugin. Ceci simplifie le
+            paramétrage dans le cas des tests en spécifiant rapidement votre environnement, et ainsi
+            vous permet d'amorcer votre application en une seule ligne. Ensuite, notre exemple
+            suppose que le chargement automatique ("autoload") est activé donc nous n'avons pas à
+            nous soucier de charger les classes appropriées (comme le bon contrôleur, le bon plugin,
+            etc.)
+        </p>
+
+        <pre class="programlisting">
+class UserControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
+{
+    public function setUp()
+    {
+        $this-&gt;bootstrap = array($this, 'appBootstrap');
+        parent::setUp();
+    }
+
+    public function appBootstrap()
+    {
+        $this-&gt;frontController-&gt;registerPlugin(
+            new Bugapp_Plugin_Initialize('development')
+        );
+    }
+
+    public function testCallWithoutActionShouldPullFromIndexAction()
+    {
+        $this-&gt;dispatch('/user');
+        $this-&gt;assertController('user');
+        $this-&gt;assertAction('index');
+    }
+
+    public function testIndexActionShouldContainLoginForm()
+    {
+        $this-&gt;dispatch('/user');
+        $this-&gt;assertAction('index');
+        $this-&gt;assertQueryCount('form#loginForm', 1);
+    }
+
+    public function testValidLoginShouldGoToProfilePage()
+    {
+        $this-&gt;request-&gt;setMethod('POST')
+              -&gt;setPost(array(
+                  'username' =&gt; 'foobar',
+                  'password' =&gt; 'foobar'
+              ));
+        $this-&gt;dispatch('/user/login');
+        $this-&gt;assertRedirectTo('/user/view');
+
+        $this-&gt;resetRequest()
+             -&gt;resetResponse();
+        $this-&gt;request-&gt;setMethod('GET')
+             -&gt;setPost(array());
+        $this-&gt;dispatch('/user/view');
+        $this-&gt;assertRoute('default');
+        $this-&gt;assertModule('default');
+        $this-&gt;assertController('user');
+        $this-&gt;assertAction('view');
+        $this-&gt;assertNotRedirect();
+        $this-&gt;assertQuery('dl');
+        $this-&gt;assertQueryContentContains('h2', 'User: foobar');
+    }
+}
+</pre>
+
+        <p>
+            Cet exemple pourrait être écrit plus simplement : toutes les assertions ne sont
+            pas nécessaires et sont fournies seulement à titre d'illustration. Cependant, il montre
+            bien combien il est simple de tester vos applications.
+        </p>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.test.phpunit.bootstrapping"></a>Amorcer votre TestCase</h3></div></div></div>
+    
+
+    <p>
+        Comme noté dans <a class="link" href="zend.test.phpunit.html#zend.test.phpunit.loginexample" title="Exemple 898. Exemple d'un TestCase d'une application de login">l'exemple de
+        login</a>, tous les tests <acronym class="acronym">MVC</acronym> doivent étendre
+        <code class="classname">Zend_Test_PHPUnit_ControllerTestCase</code>. Cette classe étend elle-même
+        <code class="classname">PHPUnit_Framework_TestCase</code>, et vous fournit donc toute la structure et les
+        assertions que vous attendez de PHPUnit - ainsi que quelques échafaudages et assertions
+        spécifiques à l'implémentation <acronym class="acronym">MVC</acronym> de Zend Framework.
+    </p>
+
+    <p>
+        Si vous voulez tester votre application <acronym class="acronym">MVC</acronym>, vous devez d'abord l'amorcer
+        ("bootstrap"). Il existe plusieurs manières pour faire ceci, toutes celles-ci s'articulent
+        autour de la propriété publique <code class="varname">$bootstrap</code>.
+    </p>
+
+     <p>
+        Premièrement, et probablement le plus simple, créez simplement une instance de
+        <code class="classname">Zend_Application</code> comme vous la souhaitez dans votre fichier
+        <code class="filename">index.php</code>, et assignez la à la propriété <code class="varname">$bootstrap</code>.
+        Typiquement, vous réaliserez ceci dans votre méthode <code class="methodname">setUp()</code> ;
+        vous devrez ensuite <code class="methodname">parent::setUp()</code> :
+    </p>
+
+    <pre class="programlisting">
+class UserControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
+{
+    public function setUp()
+    {
+        // Assign and instantiate in one step:
+        $this-&gt;bootstrap = new Zend_Application(
+            'testing',
+            APPLICATION_PATH . '/configs/application.ini'
+        );
+        parent::setUp();
+    }
+}
+</pre>
+
+    <p>
+        Deuxièmement, vous pouvez paramétrer cette propriété pour qu'elle pointe vers un
+        fichier. Si vous faîtes ceci, le fichier ne doit pas distribuer le contrôleur frontal, mais
+        seulement paramétrer celui-ci et faire tout réglage spécifique à votre application.
+    </p>
+
+    <pre class="programlisting">
+class UserControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
+{
+    public $bootstrap = '/chemin/vers/amorcage/fichier.php'
+
+    // ...
+}
+</pre>
+
+    <p>
+        Troisièmement, vous pouvez fournir un callback <acronym class="acronym">PHP</acronym> qui doit être exécuter pour amorcer
+        votre application. Cet exemple est montré dans <a class="link" href="zend.test.phpunit.html#zend.test.phpunit.loginexample" title="Exemple 898. Exemple d'un TestCase d'une application de login">l'exemple de login</a>. Si le callback est une
+        fonction ou une méthode statique, ceci peut être paramétrer au niveau de la classe :
+    </p>
+
+    <pre class="programlisting">
+class UserControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
+{
+    public $bootstrap = array('App', 'bootstrap');
+
+    // ...
+}
+</pre>
+
+    <p>
+        Dans le cas où une instance d'objet est nécessaire, nous recommandons de réaliser ceci
+        dans votre méthode <code class="methodname">setUp()</code> :
+    </p>
+
+    <pre class="programlisting">
+class UserControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
+{
+    public function setUp()
+    {
+        // Utilisez la méthode "start" de l'instance d'objet Bootstrap :
+        $bootstrap = new Bootstrap('test');
+        $this-&gt;bootstrap = array($bootstrap, 'start');
+        parent::setUp();
+    }
+}
+</pre>
+
+    <p>
+        Notez l'appel de <code class="methodname">parent::setUp()</code>; ceci est nécessaire puisque la méthode
+        <code class="methodname">setUp()</code> de <code class="classname">Zend_Test_PHPUnit_ControllerTestCase</code>
+        exécutera le reste du processus d'amorçage (incluant l'appel du callback).
+    </p>
+
+    <p>
+        En utilisation normale, la méthode <code class="methodname">setUp()</code> amorcera l'application. Ce
+        premier processus inclue le nettoyage de l'environnement pour rendre un état de requête
+        propre, va réinitialiser tout plugins ou aides, va réinitialiser l'instance du contrôleur
+        frontal, et créer de nouveaux objets de requête et de réponse. Une fois ceci fait, la
+        méthode va faire un <code class="methodname">include()</code> du fichier spécifié dans <code class="varname">$bootstrap</code>,
+        ou appeler le callback spécifié.
+    </p>
+
+    <p>
+        L'amorçage doit être le proche possible de ce que fera réellement votre application.
+        Cependant, il y a plusieurs avertissements :
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                Ne fournissez pas d'implémentations alternatives des objets "Request" et
+                "Response" ; ils ne seront pas utilisés.
+                <code class="classname">Zend_Test_PHPUnit_ControllerTestCase</code> utilise des objets de
+                requête et de réponse personnalisés, respectivement
+                <code class="classname">Zend_Controller_Request_HttpTestCase</code> et
+                <code class="classname">Zend_Controller_Response_HttpTestCase</code>. Ces objets fournissent
+                des méthodes pour paramétrer l'environnement de requête dans le but souhaité, et
+                récupérer les objets de réponse façonnés.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                N'espérez pas faire des tests spécifiques de serveur. Autrement dit, ces tests
+                ne garantissent pas que le code va s'exécuter sur un serveur avec une configuration
+                spécifique, mais simplement que l'application va fonctionner comme souhaité si le
+                routeur est capable de router une requête donnée. À cet effet, ne paramétrez pas
+                d'en-têtes spécifiques au serveur dans l'objet de requête.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Une fois que votre application est amorcée, vous pouvez commencer à écrire vos
+        tests.
+    </p>
+</div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.test.phpunit.testing"></a>Tester vos contrôleurs et vos applications MVC</h3></div></div></div>
+    
+
+    <p>
+        Une fois , votre fichier d'amorçage en place, vous pouvez commencer à tester. Tester
+        est typiquement ce que vous auriez pu faire avec une suite de test PHPUnit ("test suite"),
+        avec quelques petites différences mineures.
+    </p>
+
+    <p>
+        Premièrement, vous devez distribuer l'URL à tester en utilisant la méthode
+        <code class="methodname">dispatch()</code> de TestCase :
+    </p>
+
+    <pre class="programlisting">
+class IndexControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
+{
+    // ...
+
+    public function testPageAccueil()
+    {
+        $this-&gt;dispatch('/');
+        // ...
+    }
+}
+</pre>
+
+    <p>
+        Il y a des moments, cependant, où vous devez fournir des informations supplémentaires
+        - des variables GET et POST, des informations de COOKIE, etc. Vous pouvez peupler la requête
+        avec ces informations :
+    </p>
+
+    <pre class="programlisting">
+class FooControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
+{
+    // ...
+
+    public function testBarActionShouldReceiveAllParameters()
+    {
+        // Passer les variables GET :
+        $this-&gt;request-&gt;setQuery(array(
+            'foo' =&gt; 'bar',
+            'bar' =&gt; 'baz',
+        ));
+
+        // Passer les variables POST :
+        $this-&gt;request-&gt;setPost(array(
+            'baz'  =&gt; 'bat',
+            'lame' =&gt; 'bogus',
+        ));
+
+        // Paramètrer une valeur de cookie :
+        $this-&gt;request-&gt;setCookie('user', 'matthew');
+        // ou plusieurs :
+        $this-&gt;request-&gt;setCookies(array(
+            'timestamp' =&gt; time(),
+            'host'      =&gt; 'foobar',
+        ));
+
+        // Ajouter des en-têtes :
+        $this-&gt;request-&gt;setHeader('X-Requested-With', 'XmlHttpRequest');
+
+        // Définir le type de requête :
+        $this-&gt;request-&gt;setMethod('POST');
+
+        // Distribuer :
+        $this-&gt;dispatch('/foo/bar');
+
+        // ...
+    }
+}
+</pre>
+
+    <p>Maintenant que la requête est construite, il est temps de créer des assertions.</p>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.test.phpunit.testing.redirector"></a>Controller Tests and the Redirector Action Helper</h4></div></div></div>
+        
+
+        <div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td>
+<th align="left">Important</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                The redirect action helper issues an <code class="methodname">exit()</code> statement
+                when using the method <code class="methodname">gotoAndExit()</code>
+                and will then obviously also stops a test running for this method.
+                For testability of your application dont use that method on the
+                redirector!
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Due to its nature the redirector action helper plugin issues a redirect
+            and exists after this. Because you cannot test parts of an application
+            that issue exit calls <code class="classname">Zend_Test_PHPUnit_ControllerTestCase</code>
+            automatically disables the exit part of the redirector which can cause
+            different behaviours in tests and the real application. To make sure
+            redirect work correctly you should it them in the following way:
+        </p>
+
+        <pre class="programlisting">
+class MyController extends Zend_Controller_Action
+{
+    public function indexAction()
+    {
+        if($someCondition == true) {
+            return $this-&gt;_redirect(...);
+        } else if($anotherCondition == true) {
+            $this-&gt;_redirector-&gt;gotoSimple("foo");
+            return;
+        }
+
+        // do some stuff here
+    }
+}
+</pre>
+
+        <div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td>
+<th align="left">Important</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Depending on your application this is not enough as additional action, <code class="methodname">preDispatch()</code> or
+                <code class="methodname">postDispatch()</code> logic might be executed. This cannot be handled in a good way with
+                Zend Test currently.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+</div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.test.phpunit.assertions"></a>Assertions</h3></div></div></div>
+    
+
+    <p>
+        Les assertions sont le coeur des tests unitaires; vous les utilisez pour vérifier que
+        le résultat est bien celui que vous attendiez. A cette fin,
+        <code class="classname">Zend_Test_PHPUnit_ControllerTestCase</code> fournit un certain nombre
+        d'assertions pour simplifier le test de vos applications et contrôleurs <acronym class="acronym">MVC</acronym>.
+    </p>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.test.phpunit.assertions.query"></a>Les assertions par sélecteurs CSS</h4></div></div></div>
+        
+
+        <p>
+            Les sélecteurs <acronym class="acronym">CSS</acronym> sont une manière simple de vérifier que certaines constructions
+            sont bien présentes dans le contenu de votre réponse. Cela rend aussi plus simple de
+            s'assurer que les éléments nécessaires pour les librairies Javascript et/ou
+            l'intégration d'AJAX sont présents ; la plupart des bibliothèques Javascript fournissent
+            des mécanismes pour charger des éléments DOM sur la base des sélecteurs <acronym class="acronym">CSS</acronym>, ainsi la
+            syntaxe sera identique.
+        </p>
+
+        <p>
+            Cette fonctionnalité est fournie via <a class="link" href="zend.dom.query.html" title="Zend_Dom_Query">Zend_Dom_Query</a>, et intégré à un jeu d'assertions de type
+            "<code class="code">Query*</code>". Chacune de ces assertions prend un sélecteur <acronym class="acronym">CSS</acronym> en tant que
+            premier argument, avec optionnellement des arguments additionnels et/ou un message
+            d'erreur, basé sur le type d'assertion. Vous pouvez trouver les règles d'écriture des
+            électeurs <acronym class="acronym">CSS</acronym> dans le chapitre <a class="link" href="zend.dom.query.html#zend.dom.query.operation" title="Aspect théorique">Zend_Dom_Query -
+            Aspect théorique</a>. Les assertion "<code class="code">Query*</code>" incluent :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertQuery($path, $message = '')</code> : vérifie qu'un ou
+                    plusieurs éléments DOM correspondant au sélecteur <acronym class="acronym">CSS</acronym> fourni sont présents. Si
+                    un <code class="varname">$message</code> est présent, il sera ajouté en cas d'échec de
+                    l'assertion.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertQueryContentContains($path, $match, $message = '')</code> :
+                    vérifie qu'un ou plusieurs éléments DOM correspondant au sélecteur <acronym class="acronym">CSS</acronym> fourni
+                    sont présents, et qu'au moins un de ceux-ci contient le contenu fournit dans
+                    <code class="varname">$match</code>. Si un <code class="varname">$message</code> est présent, il sera ajouté en
+                    cas d'échec de l'assertion.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertQueryContentRegex($path, $pattern, $message = '')</code> :
+                    vérifie qu'un ou plusieurs éléments DOM correspondant au sélecteur <acronym class="acronym">CSS</acronym> fourni
+                    sont présents, et qu'au moins un de ceux-ci correspond à l'expression régulière
+                    fournie dans <code class="varname">$pattern</code>. Si un <code class="varname">$message</code> est présent, il
+                    sera ajouté en cas d'échec de l'assertion.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertQueryCount($path, $count, $message = '')</code> : vérifie
+                    qu'un nombre exact <code class="varname">$count</code> d'éléments DOM correspondant au sélecteur
+                    <acronym class="acronym">CSS</acronym> fourni sont présents. Si un <code class="varname">$message</code> est présent, il sera
+                    ajouté en cas d'échec de l'assertion.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertQueryCountMin($path, $count, $message = '')</code> : vérifie
+                    qu'au moins un nombre <code class="varname">$count</code> d'éléments DOM correspondant au
+                    sélecteur <acronym class="acronym">CSS</acronym> fourni sont présents. Si un <code class="varname">$message</code> est présent, il
+                    sera ajouté en cas d'échec de l'assertion. <span class="emphasis"><em>Note :</em></span> spécifier
+                    une valeur de 1 pour <code class="varname">$count</code> est la même chose qu'un simple
+                    <code class="methodname">assertQuery()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertQueryCountMax($path, $count, $message = '')</code> : vérifie
+                    qu'il n'y a pas plus d'un nombre <code class="varname">$count</code> d'éléments DOM
+                    correspondant au sélecteur <acronym class="acronym">CSS</acronym> fourni sont présents. Si un <code class="varname">$message</code>
+                    est présent, il sera ajouté en cas d'échec de l'assertion. <span class="emphasis"><em>Note
+                    :</em></span> spécifier une valeur de 1 pour <code class="varname">$count</code> est la même
+                    chose qu'un simple <code class="methodname">assertQuery()</code>.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            De plus, toutes les méthodes ci-dessus possèdent une variante "<code class="code">Not</code>"
+            qui correspond à l'assertion négative : <code class="methodname">assertNotQuery()</code>,
+            <code class="methodname">assertNotQueryContentContains()</code>, <code class="methodname">assertNotQueryContentRegex()</code>,
+            et <code class="methodname">assertNotQueryCount()</code>. (Notez que les versions <code class="code">CountMin</code> et
+            <code class="code">CountMax</code> n'ont pas de variantes pour des raisons évidentes).
+        </p>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.test.phpunit.assertions.xpath"></a>Les assertions XPath</h4></div></div></div>
+        
+
+        <p>
+            Certains développeurs sont plus familiers avec XPath qu'avec des sélecteurs <acronym class="acronym">CSS</acronym>,
+            ainsi les variantes XPath des toutes les <a class="link" href="zend.test.phpunit.html#zend.test.phpunit.assertions.query" title="Les assertions par sélecteurs CSS">assertions Query</a> sont aussi
+            fournies. Il s'agit de :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p><code class="methodname">assertXpath($path, $message = '')</code></p>
+            </li>
+<li class="listitem">
+                <p><code class="methodname">assertNotXpath($path, $message = '')</code></p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">assertXpathContentContains($path, $match, $message =
+                    '')</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">assertNotXpathContentContains($path, $match, $message =
+                    '')</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">assertXpathContentRegex($path, $pattern, $message =
+                    '')</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">assertNotXpathContentRegex($path, $pattern, $message =
+                    '')</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p><code class="methodname">assertXpathCount($path, $count, $message = '')</code></p>
+            </li>
+<li class="listitem">
+                <p><code class="methodname">assertNotXpathCount($path, $count, $message = '')</code></p>
+            </li>
+<li class="listitem">
+                <p><code class="methodname">assertXpathCountMin($path, $count, $message = '')</code></p>
+            </li>
+<li class="listitem">
+                <p><code class="methodname">assertNotXpathCountMax($path, $count, $message = '')</code></p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.test.phpunit.assertions.redirect"></a>Les assertions de redirections</h4></div></div></div>
+        
+
+        <p>
+            Souvent une action va redirigé le visiteur. Plutôt que de suivre cette
+            redirection, <code class="classname">Zend_Test_PHPUnit_ControllerTestCase</code> vous permet de
+            tester ces redirections avec un jeu d'assertions :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertRedirect($message = '')</code> : vérifie simplement qu'une
+                    redirection est apparue.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">assertNotRedirect($message = '') </code>: vérifie qu'aucune
+                    redirection n'est apparue.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertRedirectTo($url, $message = '')</code> : vérifie qu'une
+                    redirection est apparue, et que la valeur de l'en-tête "<code class="code">Location</code>"
+                    est l' <code class="varname">$url</code> fourni.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">assertNotRedirectTo($url, $message = '') </code>: vérifie soit
+                    qu'aucune redirection n'est apparue, ou que la valeur de l'en-tête
+                    "<code class="code">Location</code>" n'est pas l' <code class="varname">$url</code> fourni.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">assertRedirectRegex($pattern, $message = '') </code>: vérifie qu'une
+                    redirection est apparue, et que la valeur de l'en-tête "<code class="code">Location</code>"
+                    correspond à l'expression régulière fourni dans <code class="varname">$pattern</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertNotRedirectRegex($pattern, $message = '')</code> : vérifie
+                    soit qu'aucune redirection n'est apparue, ou que la valeur de l'en-tête
+                    "<code class="code">Location</code>" ne correspond pas à l'expression régulière fourni dans
+                    <code class="varname">$pattern</code>.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.test.phpunit.assertions.header"></a>Les assertions d'en-têtes de réponses</h4></div></div></div>
+        
+
+        <p>
+            En plus de vérifier les en-têtes de redirection, vous avez souvent besoin de
+            vérifier des codes de réponse <acronym class="acronym">HTTP</acronym> et des en-têtes spécifiques - par exemple, pour
+            déterminer si une action entraînera une réponse 404 ou 500, ou pour s'assurer qu'une
+            réponse <acronym class="acronym">JSON</acronym> contient bien l'en-tête <code class="code">Content-Type</code> approprié. Les assertions
+            suivantes sont disponibles :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="code">assertResponseCode($code, $message = '') </code>: vérifie qu'une
+                    réponse renvoie le code de réponse <acronym class="acronym">HTTP</acronym> fourni.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertHeader($header, $message = '')</code> : vérifie qu'une réponse
+                    renvoie l'en-tête fourni.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertHeaderContains($header, $match, $message = '')</code> :
+                    vérifie qu'une réponse renvoie l'en-tête fourni et que son contenu vaut la
+                    chaîne fournie.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">assertHeaderRegex($header, $pattern, $message = '') </code>: vérifie
+                    qu'une réponse renvoie l'en-tête fourni et que son contenu correspond à
+                    l'expression régulière fournie.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            De plus, toutes les méthodes ci-dessus possèdent une variante "<code class="code">Not</code>"
+            qui correspond à l'assertion négative.
+        </p>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.test.phpunit.assertions.request"></a>Les assertions de requêtes</h4></div></div></div>
+        
+
+        <p>
+            Il est souvent pratique de vérifier l'action, le contrôleur et le module
+            dernièrement exécuté ; ou, vous pouvez vouloir vérifier quelle route a été utilisée. Les
+            assertions suivantes peuvent vous aider dans ce cas :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="code">assertModule($module, $message = '') </code>: vérifie que le module
+                    fourni a été utilisé lors de la dernière action distribuée.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertController($controller, $message = '')</code> : vérifie que le
+                    contrôleur fourni a été utilisé lors de la dernière action distribuée.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">assertAction($action, $message = '')</code> : vérifie que l'action
+                    fournie est bien la dernière distribuée.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">assertRoute($route, $message = '') </code>: vérifie que la route
+                    nommée fournie a été utilisée par le routeur.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            De plus, toutes les méthodes ci-dessus possèdent une variante "<code class="code">Not</code>"
+            qui correspond à l'assertion négative.
+        </p>
+    </div>
+</div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.test.phpunit.examples"></a>Exemples</h3></div></div></div>
+    
+
+    <p>
+        Savoir comment configurer votre infrastructure de tests et comment faire des
+        assertions est seulement la moitié du travail ; maintenant il est temps de commencer à
+        regarder quelques scénarios réels de test pour voir comment vous pouvez les étendre.
+    </p>
+
+    <div class="example">
+<a name="zend.test.phpunit.examples.userController"></a><p class="title"><b>Exemple 899. Test d'un contrôleur "UserController"</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Considérons une tâche habituelle d'un site Web : l'authentification et
+            l'enregistrement d'utilisateurs. Dans notre exemple, nous avons défini un contrôleur
+            "<code class="code">UserController</code>" pour gérer ceci, il requiert le conditions suivantes
+            :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Si un utilisateur n'est pas authentifié, il sera toujours redirigé vers la
+                    page de login, sans se soucier de l'action demandée.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    La page avec le formulaire de login présente à la fois le formulaire de
+                    login et le formulaire d'enregistrement.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Fournir une identification invalide entraîne un retour au formulaire de
+                    login.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Une identification valide entraîne une redirection vers la page avec le
+                    profil de l'utilisateur.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    La page de profil peut être personnalisée pour contenir le nom
+                    d'utilisateur.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Les utilisateurs déjà authentifiés qui accèdent à la page de login sont
+                    redirigés vers leur page de profil.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    En cas de déconnexion, un utilisateur est redirigé vers la page de
+                    login.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Avec des données invalides, l'enregistrement doit entraîner un
+                    échec.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Nous pourrions, et devrions définir d'autres tests, mais ceux-ci suffiront pour
+            l'instant.
+        </p>
+
+        <p>
+            Pour notre application, nous définirons un plugin "<code class="code">Initialize</code>", qui
+            fonctionne en <code class="methodname">routeStartup()</code>. Ceci nous permet d'encapsuler notre fichier
+            d'amorçage dans une interface POO, et qui nous permet aussi de fournir par une solution
+            simple une fonction de rappel ("callback"). Regardons d'abord les bases de cette classe
+            :
+        </p>
+
+        <pre class="programlisting">
+class Bugapp_Plugin_Initialize extends Zend_Controller_Plugin_Abstract
+{
+    /**
+     * @var Zend_Config
+     */
+    protected static $_config;
+
+    /**
+     * @var string Current environment
+     */
+    protected $_env;
+
+    /**
+     * @var Zend_Controller_Front
+     */
+    protected $_front;
+
+    /**
+     * @var string Path to application root
+     */
+    protected $_root;
+
+    /**
+     * Constructor
+     *
+     * Initialize environment, root path, and configuration.
+     *
+     * @param  string $env
+     * @param  string|null $root
+     * @return void
+     */
+    public function __construct($env, $root = null)
+    {
+        $this-&gt;_setEnv($env);
+        if (null === $root) {
+            $root = realpath(dirname(__FILE__) . '/../../../');
+        }
+        $this-&gt;_root = $root;
+
+        $this-&gt;initPhpConfig();
+
+        $this-&gt;_front = Zend_Controller_Front::getInstance();
+    }
+
+    /**
+     * Route startup
+     *
+     * @return void
+     */
+    public function routeStartup(Zend_Controller_Request_Abstract $request)
+    {
+        $this-&gt;initDb();
+        $this-&gt;initHelpers();
+        $this-&gt;initView();
+        $this-&gt;initPlugins();
+        $this-&gt;initRoutes();
+        $this-&gt;initControllers();
+    }
+
+    // definition of methods would follow...
+}
+</pre>
+
+        <p>Ceci nous permet de créer un callback d'amorçage comme ce qui suit :</p>
+
+        <pre class="programlisting">
+class UserControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
+{
+    public function appBootstrap()
+    {
+        $controller = $this-&gt;getFrontController();
+        $controller-&gt;registerPlugin(
+            new Bugapp_Plugin_Initialize('development')
+        );
+    }
+
+    public function setUp()
+    {
+        $this-&gt;bootstrap = array($this, 'appBootstrap');
+        parent::setUp();
+    }
+
+    // ...
+}
+</pre>
+
+        <p>
+            Une fois ceci en place, nous pouvons écrire nos tests. Cependant, combien de ces
+            tests nécessiteront qu'un utilisateur soit connecté ? La solution la plus simple est
+            d'utiliser la logique de votre application pour faire ceci... et d'esquiver un peu par
+            l'utilisation des méthodes <code class="methodname">resetResponse()</code> et <code class="methodname">resetResponse()</code>,
+            qui vous permettront de distribuer une nouvelle requête.
+        </p>
+
+        <pre class="programlisting">
+class UserControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
+{
+    // ...
+
+    public function loginUser($user, $password)
+    {
+        $this-&gt;request-&gt;setMethod('POST')
+                      -&gt;setPost(array(
+                          'username' =&gt; $user,
+                          'password' =&gt; $password,
+                      ));
+        $this-&gt;dispatch('/user/login');
+        $this-&gt;assertRedirectTo('/user/view');
+
+        $this-&gt;resetRequest()
+             -&gt;resetResponse();
+
+        $this-&gt;request-&gt;setPost(array());
+
+        // ...
+    }
+
+    // ...
+}
+</pre>
+
+        <p>Écrivons maintenant les tests :</p>
+
+        <pre class="programlisting">
+class UserControllerTest extends Zend_Test_PHPUnit_ControllerTestCase
+{
+    // ...
+
+    public function testCallWithoutActionShouldPullFromIndexAction()
+    {
+        $this-&gt;dispatch('/user');
+        $this-&gt;assertController('user');
+        $this-&gt;assertAction('index');
+    }
+
+    public function testLoginFormShouldContainLoginAndRegistrationForms()
+    {
+        $this-&gt;dispatch('/user');
+        $this-&gt;assertQueryCount('form', 2);
+    }
+
+    public function testInvalidCredentialsShouldResultInRedisplayOfLoginForm()
+    {
+        $request = $this-&gt;getRequest();
+        $request-&gt;setMethod('POST')
+                -&gt;setPost(array(
+                    'username' =&gt; 'bogus',
+                    'password' =&gt; 'reallyReallyBogus',
+                ));
+        $this-&gt;dispatch('/user/login');
+        $this-&gt;assertNotRedirect();
+        $this-&gt;assertQuery('form');
+    }
+
+    public function testValidLoginShouldRedirectToProfilePage()
+    {
+        $this-&gt;loginUser('foobar', 'foobar');
+    }
+
+    public function testAuthenticatedUserShouldHaveCustomizedProfilePage()
+    {
+        $this-&gt;loginUser('foobar', 'foobar');
+        $this-&gt;request-&gt;setMethod('GET');
+        $this-&gt;dispatch('/user/view');
+        $this-&gt;assertNotRedirect();
+        $this-&gt;assertQueryContentContains('h2', 'foobar');
+    }
+
+    public function testAuthenticatedUsersShouldBeRedirectedToProfilePageWhenVisitingLoginPage()
+    {
+        $this-&gt;loginUser('foobar', 'foobar');
+        $this-&gt;request-&gt;setMethod('GET');
+        $this-&gt;dispatch('/user');
+        $this-&gt;assertRedirectTo('/user/view');
+    }
+
+    public function testUserShouldRedirectToLoginPageOnLogout()
+    {
+        $this-&gt;loginUser('foobar', 'foobar');
+        $this-&gt;request-&gt;setMethod('GET');
+        $this-&gt;dispatch('/user/logout');
+        $this-&gt;assertRedirectTo('/user');
+    }
+
+    public function testRegistrationShouldFailWithInvalidData()
+    {
+        $data = array(
+            'username' =&gt; 'This will not work',
+            'email'    =&gt; 'this is an invalid email',
+            'password' =&gt; 'Th1s!s!nv@l1d',
+            'passwordVerification' =&gt; 'wrong!',
+        );
+        $request = $this-&gt;getRequest();
+        $request-&gt;setMethod('POST')
+                -&gt;setPost($data);
+        $this-&gt;dispatch('/user/register');
+        $this-&gt;assertNotRedirect();
+        $this-&gt;assertQuery('form .errors');
+    }
+}
+</pre>
+
+        <p>
+            Notez que ces tests sont laconiques, et, pour la plupart, ne recherchent pas le
+            contenu réel. Au lieu de cela, ils recherchent des objets construits dans la réponse -
+            codes et en-têtes de réponse, et noeuds DOM. Ceci vous permet de vérifier que la
+            structure est comme prévue - sans entraîner un échec dans vos tests à chaque fois qu'un
+            contenu est ajouté au site.
+        </p>
+
+        <p>
+            Notez également que nous utilisons la structure du document dans nos essais. Par
+            exemple, dans le test final, nous recherchons un formulaire qui a un noeud avec la
+            classe "errors" ; ceci nous permet de déterminer simplement la présence des erreurs de
+            validation de formulaire, et sans nous inquiéter de quelles erreurs spécifiques
+            pourraient avoir été levées.
+        </p>
+
+        <p>
+            Cette application <span class="emphasis"><em>peut</em></span> utiliser une base de données. Si oui,
+            vous aurez besoin probablement d'un certain échafaudage pour s'assurer que la base de
+            données est dans une configuration initiale et testable au début de chaque essai.
+            PHPUnit fournit déjà une fonctionnalité pour faire ceci ; <a class="ulink" href="http://www.phpunit.de/manual/3.4/en/database.html" target="_top">lisez ceci dans la
+            documentation PHPUnit</a>. Nous recommandons d'utiliser une base de données séparée
+            pour les tests et pour la production, et recommandons en particulier d'employer un
+            fichier SQLite ou une base de données en mémoire, d'autant que les deux options
+            s'exécutent très bien, sans nécessité d'un serveur séparé, et peuvent utiliser la
+            plupart de la syntaxe <acronym class="acronym">SQL</acronym>
+        </p>
+    </div>
+</div>
+<br class="example-break">
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.test.introduction.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.test.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.test.phpunit.db.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_Test_PHPUnit_Db</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

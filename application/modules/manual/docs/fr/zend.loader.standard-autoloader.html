@@ -1,0 +1,318 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The StandardAutoloader</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.loader.html" title="Zend_Loader">
+<link rel="prev" href="zend.loader.autoloader-factory.methods.get-registered-autoloaders.html" title="getRegisteredAutoloaders">
+<link rel="next" href="zend.loader.standard-autoloader.methods.constructor.html" title="__construct">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">The StandardAutoloader</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.loader.autoloader-factory.methods.get-registered-autoloaders.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Loader</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.loader.standard-autoloader.methods.constructor.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.loader.standard-autoloader"></a>The StandardAutoloader</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.standard-autoloader.intro"></a>Overview</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Loader_StandardAutoloader</code> is designed as a <a class="ulink" href="http://groups.google.com/group/php-standards/web/psr-0-final-proposal" target="_top">PSR-0</a>-compliant
+            autoloader. It assumes a 1:1 mapping of the namespace+classname to the filesystem,
+            wherein namespace separators and underscores are translated to directory separators. A
+            simple statement that illustrates how resolution works is as follows:
+        </p>
+
+        <pre class="programlisting">
+$filename = str_replace(array('_', '\\'), DIRECTORY_SEPARATOR, $classname) 
+          . '.php';
+</pre>
+
+        <p>
+            Previous incarnations of PSR-0-compliant autoloaders in Zend Framework have relied upon
+            the <code class="varname">include_path</code> for file lookups. This has led to a number of
+            issues:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Due to the use of <code class="function">include</code>, if the file is not
+                    found, a warning is raised -- even if another autoloader is capable of resolving
+                    the class later.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Documenting how to setup the <code class="varname">include_path</code> has proven to be
+                    a difficult concept to convey.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    If multiple Zend Framework installations exist on the
+                    <code class="varname">include_path</code>, the first one on the path wins -- even if that
+                    was not the one the developer intended.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            To solve these problems, the <code class="classname">StandardAutoloader</code> by default
+            requires that you explicitly register namespace/path pairs (or vendor prefix/path
+            pairs), and will only load a file if it exists within the given path. Multiple pairs may
+            be provided.
+        </p>
+
+        <p>
+            As a measure of last resort, you may also use the
+            <code class="classname">StandardAutoloader</code> as a "fallback" autoloader -- one that will
+            look for classes of any namespace or vendor prefix on the
+            <code class="classname">include_path</code>. This practice is not recommended, however, due to
+            performance implications.
+        </p>
+
+        <p>
+            Finally, as with all autoloaders in Zend Framework, the
+            <code class="classname">StandardAutoloader</code> is capable of registering itself with PHP's
+            SPL autoloader registry.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Vocabulary: Namespaces vs. Vendor Prefixes">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Vocabulary: Namespaces vs. Vendor Prefixes</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+            
+
+            <p>
+                In terms of autloading, a "namespace" corresponds to PHP's own definition of
+                namespaces in PHP versions 5.3 and above.
+            </p>
+
+            <p>
+                A "vendor prefix" refers to the practice, popularized in PHP versions prior to 5.3,
+                of providing a pseudo-namespace in the form of underscore-separated words in class
+                names. As an example, the class <code class="classname">Phly_Couch_Document</code> uses a
+                vendor prefix of "Phly", and a component prefix of "Phly_Couch" -- but it is a class
+                sitting in the global namespace within PHP 5.3.
+            </p>
+
+            <p>
+                The <code class="classname">StandardAutoloader</code> is capable of loading either
+                namespaced or vendor prefixed class names, but treats them separately when
+                attempting to match them to an appropriate path.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.standard-autoloader.quick-start"></a>Quick Start</h3></div></div></div>
+        
+
+        <p>
+            Basic use of the <code class="classname">StandardAutoloader</code> requires simply registering
+            namespace/path pairs. This can either be done at instantiation, or via explicit method
+            calls after the object has been initialized. Calling <code class="methodname">register()</code>
+            will register the autoloader with the SPL autoloader registry.
+        </p>
+
+        <p>
+            By default, the class will register the "Zend" namespace to the directory above where
+            its own classfile is located on the filesystem.
+        </p>
+
+        <div class="example">
+<a name="zend.loader.standard-autoloader.quick-start.example-manual-configuration"></a><p class="title"><b>Exemple 512. Manual Configuration</b></p>
+<div class="example-contents">
+            
+            
+            <pre class="programlisting">
+// This example assumes ZF is on your include_path.
+// You could also load the autoloader class from a path relative to the
+// current script, or via an absolute path.
+require_once 'Zend/Loader/StandardAutoloader.php';
+$loader = new Zend_Loader_StandardAutoloader();
+
+// Register the "Phly" namespace:
+$loader-&gt;registerNamespace('Phly', APPLICATION_PATH . '/../library/Phly');
+
+// Register the "Scapi" vendor prefix:
+$loader-&gt;registerPrefix('Scapi', APPLICATION_PATH . '/../library/Scapi');
+
+// Optionally, specify the autoloader as a "fallback" autoloader;
+// this is not recommended.
+$loader-&gt;setFallbackAutoloader(true);
+
+// Register with spl_autoload:
+$loader-&gt;register();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.loader.standard-autoloader.quick-start.example-constructor-configuration"></a><p class="title"><b>Exemple 513. Configuration at Instantiation</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                The <code class="classname">StandardAutoloader</code> may also be configured at
+                instantiation. Please note:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        The argument passed may be either an array or a
+                        <span class="interface">Traversable</span> object (such as a
+                        <code class="classname">Zend_Config</code> object.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        The argument passed is also a valid argument for passing to the
+                        <code class="methodname">setOptions()</code> method.
+                    </p>
+                </li>
+</ul></div>
+
+            <p>
+                The following is equivalent to the previous example.
+            </p>
+
+            <pre class="programlisting">
+require_once 'Zend/Loader/StandardAutoloader.php';
+$loader = new Zend_Loader_StandardAutoloader(array(
+    'namespaces' =&gt; array(
+        'Phly' =&gt; APPLICATION_PATH . '/../library/Phly',
+    ),
+    'prefixes' =&gt; array(
+        'Scapi' =&gt; APPLICATION_PATH . '/../library/Scapi',
+    ),
+    'fallback_autoloader' =&gt; true,
+));
+
+// Register with spl_autoload:
+$loader-&gt;register();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.standard-autoloader.options"></a>Configuration Options</h3></div></div></div>
+        
+        
+        <p>
+            The <code class="classname">StandardAutoloader</code> defines the following options.
+        </p>
+
+        <div class="variablelist">
+<p class="title"><b>StandardAutoloader Options</b></p>
+<dl class="variablelist">
+<dt><span class="term">namespaces</span></dt>
+<dd>
+                    <p>
+                        An associative array of namespace/path pairs. The path should be an absolute
+                        path or path relative to the calling script, and contain only classes that
+                        live in that namespace (or its subnamespaces). By default, the "Zend"
+                        namespace is registered, pointing to the arent directory of the file
+                        defining the <code class="classname">StandardAutoloader</code>.
+                    </p>
+                </dd>
+<dt><span class="term">prefixes</span></dt>
+<dd>
+                    <p>
+                        An associative array of vendor prefix/path pairs. The path should be an absolute
+                        path or path relative to the calling script, and contain only classes that
+                        begin with the provided vendor prefix.
+                    </p>
+                </dd>
+<dt><span class="term">fallback_autoloader</span></dt>
+<dd>
+                    <p>
+                        A boolean value indicating whether or not this instance should act as a
+                        "fallback" autoloader (i.e., look for classes of any namespace or vendor
+                        prefix on the <code class="varname">include_path</code>). By default,
+                        <code class="constant">false</code>.
+                    </p>
+                </dd>
+</dl>
+</div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.standard-autoloader.methods"></a>Available Methods</h3></div></div></div>
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.standard-autoloader.examples"></a>Examples</h3></div></div></div>
+        
+
+        <p>
+            Please review the <a class="link" href="zend.loader.standard-autoloader.html#zend.loader.standard-autoloader.quick-start" title="Quick Start">examples
+                in the quick start</a> for usage.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.loader.autoloader-factory.methods.get-registered-autoloaders.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.loader.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.loader.standard-autoloader.methods.constructor.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">getRegisteredAutoloaders </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> __construct</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

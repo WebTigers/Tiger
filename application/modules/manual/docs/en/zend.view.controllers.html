@@ -1,0 +1,223 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Controller Scripts</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.view.html" title="Zend_View">
+<link rel="prev" href="zend.view.introduction.html" title="Introduction">
+<link rel="next" href="zend.view.scripts.html" title="View Scripts">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Controller Scripts</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.view.introduction.html">Prev</a> </td>
+<th width="60%" align="center">Zend_View</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.view.scripts.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.view.controllers"></a>Controller Scripts</h2></div></div></div>
+    
+
+    <p>
+        The controller is where you instantiate and configure <code class="classname">Zend_View</code>.
+        You then assign variables to the view, and tell the view to
+        render output using a particular script.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.controllers.assign"></a>Assigning Variables</h3></div></div></div>
+        
+
+        <p>
+            Your controller script should assign necessary variables to the view
+            before it hands over control to the view script. Normally, you
+            can do assignments one at a time by assigning to property names
+            of the view instance:
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+$view-&gt;a = "Hay";
+$view-&gt;b = "Bee";
+$view-&gt;c = "Sea";
+</pre>
+
+        <p>
+            However, this can be tedious when you have already collected the
+            values to be assigned into an array or object.
+        </p>
+
+        <p>
+            The assign() method lets you assign from an array or object "in
+            bulk". The following examples have the same effect as the above
+            one-by-one property assignments.
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+
+// assign an array of key-value pairs, where the
+// key is the variable name, and the value is
+// the assigned value.
+$array = array(
+    'a' =&gt; "Hay",
+    'b' =&gt; "Bee",
+    'c' =&gt; "Sea",
+);
+$view-&gt;assign($array);
+
+// do the same with an object's public properties;
+// note how we cast it to an array when assigning.
+$obj = new StdClass;
+$obj-&gt;a = "Hay";
+$obj-&gt;b = "Bee";
+$obj-&gt;c = "Sea";
+$view-&gt;assign((array) $obj);
+</pre>
+
+        <p>
+            Alternatively, you can use the assign method to assign
+            one-by-one by passing a string variable name, and then the
+            variable value.
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+$view-&gt;assign('a', "Hay");
+$view-&gt;assign('b', "Bee");
+$view-&gt;assign('c', "Sea");
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.controllers.render"></a>Rendering a View Script</h3></div></div></div>
+        
+
+        <p>
+            Once you have assigned all needed variables, the controller
+            should tell <code class="classname">Zend_View</code> to render a particular view script.
+            Do so by calling the render() method. Note that the method will
+            return the rendered view, not print it, so you need to print or
+            echo it yourself at the appropriate time.
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+$view-&gt;a = "Hay";
+$view-&gt;b = "Bee";
+$view-&gt;c = "Sea";
+echo $view-&gt;render('someView.php');
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.controllers.script-paths"></a>View Script Paths</h3></div></div></div>
+        
+
+        <p>
+            By default, <code class="classname">Zend_View</code> expects your view scripts to be relative to
+            your calling script. For example, if your controller script is at
+            "/path/to/app/controllers" and it calls
+            $view-&gt;render('someView.php'), <code class="classname">Zend_View</code> will look for
+            "/path/to/app/controllers/someView.php".
+        </p>
+
+        <p>
+            Obviously, your view scripts are probably located elsewhere. To
+            tell <code class="classname">Zend_View</code> where it should look for view scripts, use the
+            setScriptPath() method.
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+$view-&gt;setScriptPath('/path/to/app/views');
+</pre>
+
+        <p>
+            Now when you call $view-&gt;render('someView.php'), it will look
+            for "/path/to/app/views/someView.php".
+        </p>
+
+        <p>
+            In fact, you can "stack" paths using the addScriptPath()
+            method. As you add paths to the stack, <code class="classname">Zend_View</code> will look
+            at the most-recently-added path for the requested view
+            script. This allows you override default views with custom
+            views so that you may create custom "themes" or "skins" for
+            some views, while leaving others alone.
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+$view-&gt;addScriptPath('/path/to/app/views');
+$view-&gt;addScriptPath('/path/to/custom/');
+
+// now when you call $view-&gt;render('booklist.php'), Zend_View will
+// look first for "/path/to/custom/booklist.php", then for
+// "/path/to/app/views/booklist.php", and finally in the current
+// directory for "booklist.php".
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Never use user input to set script paths">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Never use user input to set script paths</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                <code class="classname">Zend_View</code> uses script paths to lookup and render
+                view scripts. As such, these directories should be known
+                before-hand, and under your control. <span class="emphasis"><em>Never</em></span>
+                set view script paths based on user input, as you can
+                potentially open yourself up to Local File Inclusion
+                vulnerability if the specified path includes parent directory
+                traversals. For example, the following input could trigger the
+                issue:
+            </p>
+
+            <pre class="programlisting">
+// $_GET['foo'] == '../../../etc'
+$view-&gt;addScriptPath($_GET['foo']);
+$view-&gt;render('passwd');
+</pre>
+
+            <p>
+                While this example is contrived, it does clearly show the
+                potential issue. If you <span class="emphasis"><em>must</em></span> rely on user
+                input to set your script path, properly filter the input and
+                check to ensure it exists under paths controlled by your
+                application.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.view.introduction.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.view.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.view.scripts.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> View Scripts</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

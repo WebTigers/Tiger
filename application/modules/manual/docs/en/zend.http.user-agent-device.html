@@ -1,0 +1,500 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The UserAgent Device Interface</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.http.html" title="Zend_Http">
+<link rel="prev" href="zend.http.user-agent.html" title="Zend_Http_UserAgent">
+<link rel="next" href="zend.http.user-agent-features.html" title="The UserAgent Features Adapter">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">The UserAgent Device Interface</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.http.user-agent.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Http</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.http.user-agent-features.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.http.user-agent-device"></a>The UserAgent Device Interface</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.user-agent-device.intro"></a>Overview</h3></div></div></div>
+        
+
+        <p>
+            Once the User-Agent has been parsed and capabilities retrieved from the <a class="link" href="zend.http.user-agent-features.html" title="The UserAgent Features Adapter">Features adapter</a>, you will be
+            returned an object that represents the discovered brower device. This interface
+            describes the various capabilities you may now introspect.
+        </p>
+
+        <p>
+            Additionally, the various device classes define algorithms for matching the devices they
+            describe. By implementing this interface, you may provide additional logic around these
+            capabilities.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.user-agent-device.quick-start"></a>Quick Start</h3></div></div></div>
+        
+
+        <p>
+            The <code class="interfacename">Zend_Http_UserAgent_Device</code> interface defines the
+            following methods.
+        </p>
+
+        <pre class="programlisting">
+interface Zend_Http_UserAgent_Device extends Serializable
+{
+    public function __construct($userAgent = null, array $server = array(), array $config = array());
+    public static function match($userAgent, $server);
+    public function getAllFeatures();
+    public function getAllGroups();
+    public function getBrowser();
+    public function getBrowserVersion();
+    public function getGroup($group);
+    public function getImageFormatSupport();
+    public function getImages();
+    public function getMaxImageHeight();
+    public function getMaxImageWidth();
+    public function getPhysicalScreenHeight();
+    public function getPhysicalScreenWidth();
+    public function getPreferredMarkup();
+    public function getUserAgent();
+    public function getXhtmlSupportLevel();
+    public function hasFlashSupport();
+    public function hasPdfSupport();
+    public function hasPhoneNumber();
+    public function httpsSupport();
+}
+</pre>
+
+        <p>
+            The static function <code class="methodname">match()</code> should be used to determine whether
+            the provided User-Agent and environment (represented by the <code class="varname">$server</code>
+            variable) match this device. If they do, the <code class="classname">Zend_Http_UserAgent</code>
+            class will then create an instance of the class, passing it the User-Agent,
+            <code class="varname">$server</code> array, and any configuration available; at this time, it is
+            expected that the Device class will consult with a features adapter, if present, and
+            populate itself with discovered capabilities.
+        </p>
+
+        <p>
+            In practice, you will likely extend
+            <code class="classname">Zend_Http_UserAgent_AbstractDevice</code>, which provides functionality
+            around discovering capabilities from the User-Agent string itself, as well as
+            discovering and querying a <a class="link" href="zend.http.user-agent-features.html" title="The UserAgent Features Adapter">Features
+                adapter</a>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.user-agent-device.options"></a>Configuration Options</h3></div></div></div>
+        
+
+        <p>
+            Configuration options are defined on a per-device basis. The following options are
+            defined in <code class="classname">Zend_Http_UserAgent_AbstractDevice</code>. Like all options,
+            the "." character represents an additional level of depth to the configuration array.
+        </p>
+
+        <div class="variablelist">
+<p class="title"><b>Device Options</b></p>
+<dl class="variablelist">
+<dt><span class="term">features.classname</span></dt>
+<dd>
+                    <p>
+                        The name of a <a class="link" href="zend.http.user-agent-features.html" title="The UserAgent Features Adapter">Features
+                            adapter</a> class that has either been previously loaded or which is
+                        discoverable via autoloading, or used in conjunction with the
+                        <code class="varname">features.path</code> option. This class must implement the
+                        <code class="interfacename">Zend_Http_UserAgent_Features_Adapter</code>
+                        interface.
+                    </p>
+                </dd>
+<dt><span class="term">features.path</span></dt>
+<dd>
+                    <p>
+                        If provided, the filesystem path to the features adapter class being used.
+                        The path must either be an absolute path or discoverable via the
+                        <code class="varname">include_path</code>.
+                    </p>
+                </dd>
+</dl>
+</div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.user-agent-device.methods"></a>Available Methods</h3></div></div></div>
+        
+
+        <div class="variablelist"><dl class="variablelist">
+<dt>
+<a name="zend.http.user-agent-device.methods.constructor"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">__construct</span>(<span class="methodparam">
+                            $userAgent = null, array $server = array(), array $config =
+                                array()
+                        </span>);</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Expects a User-Agent string, an array representing the HTTP environment, and an
+                        array of configuration values. The values are all optional, as they may be
+                        populated during deserialization.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.match"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">match</span>(<span class="methodparam">
+                            $userAgent, $server
+                        </span>);</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        This method is static.
+                    </p>
+
+                    <p>
+                        Provided the <code class="varname">$userAgent</code> string and an array representing the
+                        HTTP headers provided in the request, determine if they match the capabilities
+                        of this device. This method should return a boolean.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-all-features"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getAllFeatures</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Returns an array of key/value pairs representing the features supported by
+                        this device instance.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-all-groups"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getAllGroups</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Similar to <code class="methodname">getAllFeatures()</code>, this retrieves all
+                        features, but grouped by type.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.has-feature"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">hasFeature</span>(<span class="methodparam">
+                            $feature
+                        </span>);</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Query the device to determine if it contains information on a specific
+                        feature.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-feature"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getFeature</span>(<span class="methodparam">
+                            $feature
+                        </span>);</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Retrieve the value of a specific device feature, if present. Typically, this
+                        will return a boolean <code class="constant">false</code> or a
+                        <code class="constant">null</code> value if the feature is not defined.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-browser"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getBrowser</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Returns the browser string as discoverd from the User-Agent string.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-browser-version"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getBrowserVersion</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Retrieve the browser version as discovered from the User-Agent string.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-group"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getGroup</span>(<span class="methodparam">
+                            $group
+                        </span>);</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Get all features from a given feature group.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-image-format-support"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getImageFormatSupport</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Retrieve a list of supported image types.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-images"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getImages</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Alias for <code class="methodname">getImageFormatSupport()</code>.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-max-image-height"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getMaxImageHeight</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Retrieve the maximum supported image height for the current device instance.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-max-image-width"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getMaxImageWidth</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Retrieve the maximum supported image width for the current device instance.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-physical-screen-height"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getPhysicalScreenHeight</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Retrieve the physical screen height for the current device instance.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-physical-screen-width"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getPhysicalScreenWidth</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Retrieve the physical screen width for the current device instance.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-preferred-markup"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getPreferredMarkup</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Retrieve the preferred markup format for the current device instance.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-user-agent"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getUserAgent</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Retrieve the User-Agent string for the current device instance.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.get-xhtml-support-level"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">getXhtmlSupportLevel</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Retrieve the supported X/HTML version for the current device instance.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.has-flash-support"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">hasFlashSupport</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Determine if the current device instance supports Flash.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.has-pdf-support"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">hasPdfSupport</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Determine if the current device instance supports PDF.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.has-phone-number"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">hasPhoneNumber</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Determine if the device has an associated phone number. Note: does not
+                        retrieve the phone number. This can be useful for determining if the device
+                        is a mobile phone versus another wireless capable device.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.http.user-agent-device.methods.https-support"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">httpsSupport</span>();</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Determine if the current device instance supports HTTPS.
+                    </p>
+                </dd>
+</dl></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.user-agent-device.examples"></a>Examples</h3></div></div></div>
+        
+
+        <div class="example">
+<a name="zend.http.user-agent-device.examples.support"></a><p class="title"><b>Example 487. Determining Supported Features</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                You may wish to direct the user to specific areas of your site based on features
+                supported by the device they are using. For instance, if a particular app works only
+                in Flash, you might direct a non-Flash-capable device to a page indicating the
+                application will not work on their device; or for a device not capable of HTTPS, you
+                may indicate certain actions, such as purchases, are not available.
+            </p>
+
+            <pre class="programlisting">
+$userAgent = new Zend_Http_UserAgent();
+$device    = $userAgent-&gt;getDevice();
+
+// Redirect to a Flash version of the app:
+if ($device-&gt;hasFlashSupport()) {
+    header('Location: /flash/app');
+    exit;
+}
+
+// Determine whether to show a "purchase" link:
+if ($device-&gt;httpsSupport()) {
+    echo '&lt;a href="https://store-site.com/purchase"&gt;Purchase!&lt;/a&gt;';
+} else {
+    echo 'Purchasing is unavailable on this device.';
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.http.user-agent-device.examples.images"></a><p class="title"><b>Example 488. Dynamically Scaling Images</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                You may wish to alter the image sizes present in order to achieve a specific design
+                within mobile devices. You may use a variety of methods in the device object to make
+                this happen.
+            </p>
+
+            <pre class="programlisting">
+$userAgent = new Zend_Http_UserAgent();
+$device    = $userAgent-&gt;getDevice();
+
+// Get the maximum image width and height
+$maxWidth  = $device-&gt;getMaxImageWidth();
+$maxHeight = $device-&gt;getMaxImageHeight();
+
+// Create an &lt;img&gt; tag with appropriate sizes
+echo '&lt;img src="/images/foo.png"';
+if ((null !== $maxWidth) &amp;&amp; ($maxWidth &lt; 328)) {
+    echo ' width="' . $maxWidth . '"';
+}
+if ((null !== $maxHeight) &amp;&amp; ($maxHeight &lt; 400)) {
+    echo ' height="' . $maxHeight . '"';
+}
+echo '/&gt;';
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note: Markup- based scaling is not ideal">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Markup- based scaling is not ideal</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Markup-based scaling such as in the example above is not the best approach, as
+                it means that the full-sized image is still delivered to the device. A better
+                approach is to pre-scale your images to a variety of sizes representing the
+                devices you wish to support, and then using the device capabilities to determine
+                which image to use.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.http.user-agent.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.http.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.http.user-agent-features.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Http_UserAgent </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> The UserAgent Features Adapter</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

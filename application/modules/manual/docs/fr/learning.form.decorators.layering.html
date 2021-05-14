@@ -1,0 +1,396 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Chainer les décorateurs</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.form.decorators.html" title="Bien comprendre et utiliser les décorateurs Zend Form">
+<link rel="prev" href="learning.form.decorators.simplest.html" title="Les bases des décorateurs">
+<link rel="next" href="learning.form.decorators.individual.html" title="Rendu individuel des décorateurs">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Chainer les décorateurs</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.form.decorators.simplest.html">Précédent</a> </td>
+<th width="60%" align="center">Bien comprendre et utiliser les décorateurs Zend Form</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.form.decorators.individual.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.form.decorators.layering"></a>Chainer les décorateurs</h2></div></div></div>
+    
+
+    <p>
+        Si vous avez bien suivi <a class="link" href="learning.form.decorators.simplest.html" title="Les bases des décorateurs">la section
+            précédente</a>, vous avez pu remarquer que la méthode
+        <code class="methodname">render()</code> prend un argument, <code class="varname">$content</code>.
+        Il est de type chaîne de caractères. <code class="methodname">render()</code> va utiliser cette
+        chaîne et décider de la remplacer, de rajouter ou de faire précéder du contenu à celle-ci.
+        Ceci permet de chaîner les décorateurs -- ce qui ouvre des possibilités de créer ses propres
+        décorateurs qui vont rendre chacun une petite partie des données d'un élément -- c'est la
+        chaîne complète de décorateurs qui déterminera le rendu final réel de l'élément.
+    </p>
+
+    <p>
+        Voyons voir en pratique comment ça fonctionne.
+    </p>
+
+    <p>
+        Pour la plupart des éléments, les décorateurs suivants sont chargés par défaut :
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <code class="classname">ViewHelper</code> : utilise une aide de vue pour rendre
+                l'élément balise de formulaire à proprement parlé.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Errors</code> : utilise l'aide de vue
+                <code class="classname">FormErrors</code> pour afficher les erreurs de validation
+                éventuelles.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Description</code> : utilise l'aide de vue
+                <code class="classname">FormNote</code> afin de rendre la description éventuelle de
+                l'élément.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">HtmlTag</code> : encapsule les trois objets ci-dessus
+                dans un tag <code class="code">&lt;dd&gt;</code>.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Label</code> : rend l'intitulé de l'élément en utilisant
+                l'aide de vue <code class="classname">FormLabel</code> (et en encapsulant le tout
+                dans un tag <code class="code">&lt;dt&gt;</code>).
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Notez bien que chaque décorateur n'a qu'une petite tâche particulière et opère sur une
+        partie spécifique des données de l'élément auquel il est rattaché, le décorateur
+        <code class="classname">Errors</code> récupère les messages de validation de l'élément et
+        effectue leur rendu, le décorateur <code class="classname">Label</code> rend simplement le
+        libellé. Ceci fait que chaque décorateur est très petit, réutilisable, et surtout testable.
+    </p>
+
+    <p>
+        Cet argument <code class="varname">$content</code> vient de là aussi : chaque décorateur
+        travaille avec sa méthode <code class="methodname">render()</code> sur un contenu (généralement
+        généré par le décorateur immédiatement précédent dans la pile globale) et embellit ce
+        contenu en lui rajoutant ou en lui faisant précéder des informations. Il peut aussi
+        remplacer totalement son contenu.
+    </p>
+
+    <p>
+        Ainsi, pensez au mécanisme des décorateurs comme la conception d'un oignon de l'intérieur
+        vers l'extérieur.
+    </p>
+
+    <p>
+        Voyons voir un exemple, le même que celui<a class="link" href="learning.form.decorators.simplest.html" title="Les bases des décorateurs">de la section précédente</a> :
+    </p>
+
+    <pre class="programlisting">
+class My_Decorator_SimpleInput extends Zend_Form_Decorator_Abstract
+{
+    protected $_format = '&lt;label for="%s"&gt;%s&lt;/label&gt;'
+                       . '&lt;input id="%s" name="%s" type="text" value="%s"/&gt;';
+
+    public function render($content)
+    {
+        $element = $this-&gt;getElement();
+        $name    = htmlentities($element-&gt;getFullyQualifiedName());
+        $label   = htmlentities($element-&gt;getLabel());
+        $id      = htmlentities($element-&gt;getId());
+        $value   = htmlentities($element-&gt;getValue());
+
+        $markup  = sprintf($this-&gt;_format, $id, $label, $id, $name, $value);
+        return $markup;
+    }
+}
+</pre>
+
+    <p>
+        Supprimons la fonctionnalité libellé (label) et créons un décorateur spécifique pour lui.
+    </p>
+
+    <pre class="programlisting">
+class My_Decorator_SimpleInput extends Zend_Form_Decorator_Abstract
+{
+    protected $_format = '&lt;input id="%s" name="%s" type="text" value="%s"/&gt;';
+
+    public function render($content)
+    {
+        $element = $this-&gt;getElement();
+        $name    = htmlentities($element-&gt;getFullyQualifiedName());
+        $id      = htmlentities($element-&gt;getId());
+        $value   = htmlentities($element-&gt;getValue());
+
+        $markup  = sprintf($this-&gt;_format, $id, $name, $value);
+        return $markup;
+    }
+}
+
+class My_Decorator_SimpleLabel extends Zend_Form_Decorator_Abstract
+{
+    protected $_format = '&lt;label for="%s"&gt;%s&lt;/label&gt;';
+
+    public function render($content)
+    {
+        $element = $this-&gt;getElement();
+        $id      = htmlentities($element-&gt;getId());
+        $label   = htmlentities($element-&gt;getLabel());
+
+        $markup = sprint($this-&gt;_format, $id, $label);
+        return $markup;
+    }
+}
+</pre>
+
+    <p>
+        Ok, ca semble bon mais il y a un problème : le dernier décorateur va l'emporter. Vous
+        allez vous retrouver avec comme seul rendu, celui du dernier décorateur.
+    </p>
+
+    <p>
+        Pour faire fonctionner le tout comme il se doit, concaténez simplement le contenu précédent
+        <code class="varname">$content</code> avec le contenu généré :
+    </p>
+
+    <pre class="programlisting">
+return $content . $markup;
+</pre>
+
+    <p>
+        Le problème avec cette approche est que vous ne pouvez pas choisir où se place le contenu
+        du décorateur en question. Heureusement, un mécanisme standard existe ;
+        <code class="classname">Zend_Form_Decorator_Abstract</code> possède le concept de place et définit
+        des constantes pour le régler. Aussi, il permet de préciser un séparateur à placer entre
+        les 2. Voyons celà :
+    </p>
+
+    <pre class="programlisting">
+class My_Decorator_SimpleInput extends Zend_Form_Decorator_Abstract
+{
+    protected $_format = '&lt;input id="%s" name="%s" type="text" value="%s"/&gt;';
+
+    public function render($content)
+    {
+        $element = $this-&gt;getElement();
+        $name    = htmlentities($element-&gt;getFullyQualifiedName());
+        $id      = htmlentities($element-&gt;getId());
+        $value   = htmlentities($element-&gt;getValue());
+
+        $markup  = sprintf($this-&gt;_format, $id, $name, $value);
+
+        $placement = $this-&gt;getPlacement();
+        $separator = $this-&gt;getSeparator();
+        switch ($placement) {
+            case self::PREPEND:
+                return $markup . $separator . $content;
+            case self::APPEND:
+            default:
+                return $content . $separator . $markup;
+        }
+    }
+}
+
+class My_Decorator_SimpleLabel extends Zend_Form_Decorator_Abstract
+{
+    protected $_format = '&lt;label for="%s"&gt;%s&lt;/label&gt;';
+
+    public function render($content)
+    {
+        $element = $this-&gt;getElement();
+        $id      = htmlentities($element-&gt;getId());
+        $label   = htmlentities($element-&gt;getLabel());
+
+        $markup = sprintf($this-&gt;_format, $id, $label);
+
+        $placement = $this-&gt;getPlacement();
+        $separator = $this-&gt;getSeparator();
+        switch ($placement) {
+            case self::APPEND:
+                return $markup . $separator . $content;
+            case self::PREPEND:
+            default:
+                return $content . $separator . $markup;
+        }
+    }
+}
+</pre>
+
+    <p>
+        Notez que dans l'exemple ci-dessus, nous intervertissons les comportements par défaut
+        avec append et prepend.
+    </p>
+
+    <p>
+        Créons dès lors un élément de formulaire qui va utiliser tout celà :
+    </p>
+
+    <pre class="programlisting">
+$element = new Zend_Form_Element('foo', array(
+    'label'      =&gt; 'Foo',
+    'belongsTo'  =&gt; 'bar',
+    'value'      =&gt; 'test',
+    'prefixPath' =&gt; array('decorator' =&gt; array(
+        'My_Decorator' =&gt; 'path/to/decorators/',
+    )),
+    'decorators' =&gt; array(
+        'SimpleInput',
+        'SimpleLabel',
+    ),
+));
+</pre>
+
+    <p>
+        Comment ça fonctionne ? et bien nous appelons <code class="methodname">render()</code>,
+        l'élément va alors commencer une itération sur tous ses décorateurs, en appelant
+        <code class="methodname">render()</code> sur chacun. Il va passer une chaîne vide comme contenu
+        pour le premier décorateur, et le rendu de chaque décorateur va servir de contenu pour
+        le suivant, ainsi de suite :
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                Contenu initial : chaîne vide: ''.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Chaîne vide ('') est passée au décorateur <code class="classname">SimpleInput</code>, qui
+                génère un tag de formulaire de type input qu'il ajoute à la chaîne vide :
+                <span class="emphasis"><em>&lt;input id="bar-foo" name="bar[foo]" type="text"
+                    value="test"/&gt;</em></span>.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Ce contenu généré est alors passé comme contenu original pour le décorateur
+                <code class="classname">SimpleLabel</code> qui génère un libellé et le place avant le
+                contenu original avec comme séparateur <code class="constant">PHP_EOL</code>, ce qui
+                donne : <span class="emphasis"><em>&lt;label for="bar-foo"&gt;\n&lt;input id="bar-foo"
+                    name="bar[foo]" type="text" value="test"/&gt;</em></span>.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Mais attendez une minute ! Et si nous voulions que le libellé soit rendu après le tag
+        de formulaire pour une raison quelconque ? Vous souvenez-vous de l'option
+        "placement" ? Vous pouvez la préciser comme option de décorateur, et le plus simple
+        est alors de la passer à la création de l'élément :
+    </p>
+
+    <pre class="programlisting">
+$element = new Zend_Form_Element('foo', array(
+    'label'      =&gt; 'Foo',
+    'belongsTo'  =&gt; 'bar',
+    'value'      =&gt; 'test',
+    'prefixPath' =&gt; array('decorator' =&gt; array(
+        'My_Decorator' =&gt; 'path/to/decorators/',
+    )),
+    'decorators' =&gt; array(
+        'SimpleInput'
+        array('SimpleLabel', array('placement' =&gt; 'append')),
+    ),
+));
+</pre>
+
+    <p>
+        Notez que passer des options vous oblige à préciser le nom du décorateur dans un tableau en
+        tant que premier élément, le deuxième élément est un tableau d'options.
+    </p>
+
+    <p>
+        Le code ci-dessus propose un rendu : <span class="emphasis"><em>&lt;input id="bar-foo" name="bar[foo]"
+            type="text" value="test"/&gt;\n&lt;label for="bar-foo"&gt;</em></span>.
+    </p>
+
+    <p>
+        Grâce à cette technique, vous pouvez avoir plusieurs décorateurs dont chacun s'occupe
+        de rendre une petite partie d'un élément ; et c'est en utilisant plusieurs décorateurs
+        et en les chaînant correctement que vous obtiendrez un rendu complet : l'oignon final.
+    </p>
+
+    <p>
+        Avantages et inconvénients d'une telle technique, commençons par les inconvénients :
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                C'est plus complexe qu'un rendu simple. Vous devez faire attention à chaque
+                décorateur mais en plus à l'ordre dans lequel ils agissent.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Ça consomme plus de ressources. Plus de décorateurs, plus d'objets, multipliés par
+                le nombre d'éléments dans un formulaire et la consommation en ressources augmente.
+                La mise en cache peut aider.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Les avantages sont :
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                Réutilisabilité. Vous pouvez créer des décorateurs complètement réutilisables car
+                vous ne vous souciez pas du rendu final, mais de chaque petit bout de rendu.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Fléxibilité. Il est en théorie possible d'arriver au rendu final voulu très
+                exactement, et ceci avec une petite poignée de décorateurs.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Les exemples ci-dessus montrent l'utilisation de décorateurs au sein même d'un objet
+        <code class="classname">Zend_Form</code> et nous avons vu comment les décorateurs jouent les uns
+        avec les autres pour arriver au rendu final. Afin de pouvoir les utiliser de manière
+        indépendante, a version 1.7 a ajouté des méthodes flexibles rendant les formulaires
+        ressemblant au style Rail. Nous allons nous pencher sur ce fait dans la section suivante.
+    </p>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.form.decorators.simplest.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.form.decorators.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.form.decorators.individual.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Les bases des décorateurs </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Rendu individuel des décorateurs</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

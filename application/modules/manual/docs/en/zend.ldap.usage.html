@@ -1,0 +1,272 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Usage Scenarios</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.ldap.html" title="Zend_Ldap">
+<link rel="prev" href="zend.ldap.api.html" title="API overview">
+<link rel="next" href="zend.ldap.tools.html" title="Tools">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Usage Scenarios</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.ldap.api.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Ldap</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.ldap.tools.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.ldap.usage"></a>Usage Scenarios</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.ldap.usage.authentication"></a>Authentication scenarios</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.ldap.usage.authentication.openldap"></a>OpenLDAP</h4></div></div></div>
+            
+            <p></p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.ldap.usage.authentication.activedirectory"></a>ActiveDirectory</h4></div></div></div>
+            
+            <p></p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.ldap.usage.basic"></a>Basic CRUD operations</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.ldap.usage.basic.retrieve"></a>Retrieving data from the LDAP</h4></div></div></div>
+            
+
+            <div class="example">
+<a name="zend.ldap.usage.basic.retrieve.dn"></a><p class="title"><b>Example 496. Getting an entry by its DN</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$options = array(/* ... */);
+$ldap = new Zend_Ldap($options);
+$ldap-&gt;bind();
+$hm = $ldap-&gt;getEntry('cn=Hugo Müller,ou=People,dc=my,dc=local');
+/*
+$hm is an array of the following structure
+array(
+    'dn'          =&gt; 'cn=Hugo Müller,ou=People,dc=my,dc=local',
+    'cn'          =&gt; array('Hugo Müller'),
+    'sn'          =&gt; array('Müller'),
+    'objectclass' =&gt; array('inetOrgPerson', 'top'),
+    ...
+)
+*/
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="example">
+<a name="zend.ldap.usage.basic.retrieve.exists"></a><p class="title"><b>Example 497. Check for the existence of a given DN</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$options = array(/* ... */);
+$ldap = new Zend_Ldap($options);
+$ldap-&gt;bind();
+$isThere = $ldap-&gt;exists('cn=Hugo Müller,ou=People,dc=my,dc=local');
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="example">
+<a name="zend.ldap.usage.basic.retrieve.counting-children"></a><p class="title"><b>Example 498. Count children of a given DN</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$options = array(/* ... */);
+$ldap = new Zend_Ldap($options);
+$ldap-&gt;bind();
+$childrenCount = $ldap-&gt;countChildren(
+                            'cn=Hugo Müller,ou=People,dc=my,dc=local');
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="example">
+<a name="zend.ldap.usage.basic.retrieve.search"></a><p class="title"><b>Example 499. Searching the LDAP tree</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$options = array(/* ... */);
+$ldap = new Zend_Ldap($options);
+$ldap-&gt;bind();
+$result = $ldap-&gt;search('(objectclass=*)',
+                        'ou=People,dc=my,dc=local',
+                        Zend_Ldap_Ext::SEARCH_SCOPE_ONE);
+foreach ($result as $item) {
+    echo $item["dn"] . ': ' . $item['cn'][0] . PHP_EOL;
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.ldap.usage.basic.add"></a>Adding data to the LDAP</h4></div></div></div>
+            
+
+            <div class="example">
+<a name="idm482245862832"></a><p class="title"><b>Example 500. Add a new entry to the LDAP</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$options = array(/* ... */);
+$ldap = new Zend_Ldap($options);
+$ldap-&gt;bind();
+$entry = array();
+Zend_Ldap_Attribute::setAttribute($entry, 'cn', 'Hans Meier');
+Zend_Ldap_Attribute::setAttribute($entry, 'sn', 'Meier');
+Zend_Ldap_Attribute::setAttribute($entry, 'objectClass', 'inetOrgPerson');
+$ldap-&gt;add('cn=Hans Meier,ou=People,dc=my,dc=local', $entry);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.ldap.usage.basic.delete"></a>Deleting from the LDAP</h4></div></div></div>
+            
+
+            <div class="example">
+<a name="idm482245859584"></a><p class="title"><b>Example 501. Delete an existing entry from the LDAP</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$options = array(/* ... */);
+$ldap = new Zend_Ldap($options);
+$ldap-&gt;bind();
+$ldap-&gt;delete('cn=Hans Meier,ou=People,dc=my,dc=local');
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.ldap.usage.basic.update"></a>Updating the LDAP</h4></div></div></div>
+            
+
+            <div class="example">
+<a name="idm482245856592"></a><p class="title"><b>Example 502. Update an existing entry on the LDAP</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$options = array(/* ... */);
+$ldap = new Zend_Ldap($options);
+$ldap-&gt;bind();
+$hm = $ldap-&gt;getEntry('cn=Hugo Müller,ou=People,dc=my,dc=local');
+Zend_Ldap_Attribute::setAttribute($hm, 'mail', 'mueller@my.local');
+Zend_Ldap_Attribute::setPassword($hm,
+                                 'newPa$$w0rd',
+                                 Zend_Ldap_Attribute::PASSWORD_HASH_SHA1);
+$ldap-&gt;update('cn=Hugo Müller,ou=People,dc=my,dc=local', $hm);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.ldap.usage.extended"></a>Extended operations</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.ldap.usage.extended.copy-and-move"></a>Copy and move entries in the LDAP</h4></div></div></div>
+            
+
+            <div class="example">
+<a name="zend.ldap.usage.extended.copy-and-move.copy"></a><p class="title"><b>Example 503. Copy a LDAP entry recursively with all its descendants</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$options = array(/* ... */);
+$ldap = new Zend_Ldap($options);
+$ldap-&gt;bind();
+$ldap-&gt;copy('cn=Hugo Müller,ou=People,dc=my,dc=local',
+            'cn=Hans Meier,ou=People,dc=my,dc=local',
+            true);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="example">
+<a name="zend.ldap.usage.extended.copy-and-move.move-to-subtree"></a><p class="title"><b>Example 504. 
+                    Move a LDAP entry recursively with all its descendants to a different subtree
+                </b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$options = array(/* ... */);
+$ldap = new Zend_Ldap($options);
+$ldap-&gt;bind();
+$ldap-&gt;moveToSubtree('cn=Hugo Müller,ou=People,dc=my,dc=local',
+                     'ou=Dismissed,dc=my,dc=local',
+                     true);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.ldap.api.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.ldap.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.ldap.tools.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">API overview </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Tools</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

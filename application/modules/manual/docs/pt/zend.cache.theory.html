@@ -1,0 +1,240 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The Theory of Caching</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.cache.html" title="Zend_Cache">
+<link rel="prev" href="zend.cache.introduction.html" title="Introduction">
+<link rel="next" href="zend.cache.frontends.html" title="Zend_Cache Frontends">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">The Theory of Caching</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.cache.introduction.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Cache</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.cache.frontends.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.cache.theory"></a>The Theory of Caching</h2></div></div></div>
+    
+
+    <p>
+        There are three key concepts in <code class="classname">Zend_Cache</code>. One is the unique
+        identifier (a string) that is used to identify cache records. The second one is the
+        <span class="emphasis"><em>'lifetime'</em></span> directive as seen in the examples; it defines for how long
+        the cached resource is considered 'fresh'. The third key concept is conditional execution so
+        that parts of your code can be skipped entirely, boosting performance. The main frontend
+        function (e.g. <code class="methodname">Zend_Cache_Core::get()</code>) is always designed to return
+        <code class="constant">FALSE</code> for a cache miss if that makes sense for the nature of a
+        frontend. That enables
+        end-users to wrap parts of the code they would like to cache (and skip) in
+        <span class="emphasis"><em><code class="methodname">if()</code>{ ... }</em></span> statements where the condition is
+        a <code class="classname">Zend_Cache</code> method itself. On the end if these blocks you must save
+        what you've generated, however (e.g. <code class="methodname">Zend_Cache_Core::save()</code>).
+    </p>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            The conditional execution design of your generating code is not necessary in some
+            frontends (<span class="emphasis"><em>Function</em></span>, for an example) when the whole logic is
+            implemented inside the frontend.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            'Cache hit' is a term for a condition when a cache record is found, is valid and is
+            'fresh' (in other words hasn't expired yet). 'Cache miss' is everything else. When a
+            cache miss happens, you must generate your data (as you would normally do) and have it
+            cached. When you have a cache hit, on the other hand, the backend automatically fetches
+            the record from cache transparently.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cache.factory"></a>The Zend_Cache Factory Method</h3></div></div></div>
+        
+
+        <p>
+            A good way to build a usable instance of a <code class="classname">Zend_Cache</code> Frontend is
+            given in the following example :
+        </p>
+
+        <pre class="programlisting">
+// We choose a backend (for example 'File' or 'Sqlite'...)
+$backendName = '[...]';
+
+// We choose a frontend (for example 'Core', 'Output', 'Page'...)
+$frontendName = '[...]';
+
+// We set an array of options for the chosen frontend
+$frontendOptions = array([...]);
+
+// We set an array of options for the chosen backend
+$backendOptions = array([...]);
+
+// We create an instance of Zend_Cache
+// (of course, the two last arguments are optional)
+$cache = Zend_Cache::factory($frontendName,
+                             $backendName,
+                             $frontendOptions,
+                             $backendOptions);
+</pre>
+
+        <p>
+            In the following examples we will assume that the <code class="varname">$cache</code> variable
+            holds a valid, instantiated frontend as shown and that you understand how to pass
+            parameters to your chosen backends.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Always use <code class="methodname">Zend_Cache::factory()</code> to get frontend instances.
+                Instantiating frontends and backends yourself will not work as expected.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cache.tags"></a>Tagging Records</h3></div></div></div>
+        
+
+        <p>
+            Tags are a way to categorize cache records. When you save a cache with the
+            <code class="methodname">save()</code> method, you can set an array of tags to apply for this
+            record. Then you will be able to clean all cache records tagged with a given tag (or
+            tags):
+        </p>
+
+        <pre class="programlisting">
+$cache-&gt;save($huge_data, 'myUniqueID', array('tagA', 'tagB', 'tagC'));
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                note than the <code class="methodname">save()</code> method accepts an optional fourth
+                argument: <code class="varname">$specificLifetime</code> (if != <code class="constant">FALSE</code>,
+                it sets a specific lifetime for this particular cache record)
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cache.clean"></a>Cleaning the Cache</h3></div></div></div>
+        
+
+        <p>
+            To remove or invalidate in particular cache id, you can use the
+            <code class="methodname">remove()</code> method :
+        </p>
+
+        <pre class="programlisting">
+$cache-&gt;remove('idToRemove');
+</pre>
+
+        <p>
+            To remove or invalidate several cache ids in one operation, you can use the
+            <code class="methodname">clean()</code> method. For example to remove all cache records :
+        </p>
+
+        <pre class="programlisting">
+// clean all records
+$cache-&gt;clean(Zend_Cache::CLEANING_MODE_ALL);
+
+// clean only outdated
+$cache-&gt;clean(Zend_Cache::CLEANING_MODE_OLD);
+</pre>
+
+        <p>
+            If you want to remove cache entries matching the tags 'tagA' and 'tagC':
+        </p>
+
+        <pre class="programlisting">
+$cache-&gt;clean(
+    Zend_Cache::CLEANING_MODE_MATCHING_TAG,
+    array('tagA', 'tagC')
+);
+</pre>
+
+        <p>
+            If you want to remove cache entries not matching the tags 'tagA' or 'tagC':
+        </p>
+
+        <pre class="programlisting">
+$cache-&gt;clean(
+    Zend_Cache::CLEANING_MODE_NOT_MATCHING_TAG,
+    array('tagA', 'tagC')
+);
+</pre>
+
+        <p>
+            If you want to remove cache entries matching the tags 'tagA' or 'tagC':
+        </p>
+
+        <pre class="programlisting">
+$cache-&gt;clean(
+    Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+    array('tagA', 'tagC')
+);
+</pre>
+
+        <p>
+            Available cleaning modes are: <code class="constant">CLEANING_MODE_ALL</code>,
+            <code class="constant">CLEANING_MODE_OLD</code>, <code class="constant">CLEANING_MODE_MATCHING_TAG</code>,
+            <code class="constant">CLEANING_MODE_NOT_MATCHING_TAG</code> and
+            <code class="constant">CLEANING_MODE_MATCHING_ANY_TAG</code>. The latter are, as their names
+            suggest, combined with an array of tags in cleaning operations.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.cache.introduction.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.cache.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.cache.frontends.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_Cache Frontends</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

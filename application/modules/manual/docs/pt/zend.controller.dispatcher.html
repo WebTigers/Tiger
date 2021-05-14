@@ -1,0 +1,343 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The Dispatcher</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.router.html" title="The Standard Router">
+<link rel="next" href="zend.controller.action.html" title="Action Controllers">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">The Dispatcher</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.router.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.action.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.dispatcher"></a>The Dispatcher</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.dispatcher.overview"></a>Overview</h3></div></div></div>
+        
+
+        <p>
+            Dispatching is the process of taking the request object,
+            <code class="classname">Zend_Controller_Request_Abstract</code>, extracting the module
+            name, controller name, action name, and optional parameters
+            contained in it, and then instantiating a controller and calling an
+            action of that controller. If any of the module, controller, or
+            action are not found, it will use default values for them.
+            <code class="classname">Zend_Controller_Dispatcher_Standard</code> specifies
+            <span class="emphasis"><em>index</em></span> for each of the controller and action defaults
+            and <span class="emphasis"><em>default</em></span> for the module default value, but allows
+            the developer to change the default values for each using the
+            <code class="methodname">setDefaultController()</code>,
+            <code class="methodname">setDefaultAction()</code>, and
+            <code class="methodname">setDefaultModule()</code> methods, respectively.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Default Module">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Default Module</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                When creating modular applications, you may find that you want
+                your default module namespaced as well (the default
+                configuration is that the default module is
+                <span class="emphasis"><em>not</em></span> namespaced). As of 1.5.0, you can now
+                do so by specifying the <span class="property">prefixDefaultModule</span> as
+                <code class="constant">TRUE</code> in either the front controller or your dispatcher:
+            </p>
+
+            <pre class="programlisting">
+// In your front controller:
+$front-&gt;setParam('prefixDefaultModule', true);
+
+// In your dispatcher:
+$dispatcher-&gt;setParam('prefixDefaultModule', true);
+</pre>
+
+            <p>
+                This allows you to re-purpose an existing module to be the
+                default module for an application.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Dispatching happens in a loop in the front controller. Before
+            dispatching occurs, the front controller routes the request to find
+            user specified values for the module, controller, action, and optional
+            parameters. It then enters a dispatch loop, dispatching the request.
+        </p>
+
+        <p>
+            At the beginning of each iteration, it sets a flag in the request
+            object indicating that the action has been dispatched. If an action
+            or pre or postDispatch plugin resets that flag, the dispatch loop will
+            continue and attempt to dispatch the new request. By changing the
+            controller and/or action in the request and resetting the dispatched
+            flag, the developer may define a chain of requests to perform.
+        </p>
+
+        <p>
+            The action controller method that controls such dispatching is
+            <code class="methodname">_forward()</code>; call this method from any of the
+            <code class="methodname">preDispatch()</code>, <code class="methodname">postDispatch()</code> or
+            action methods, providing an action, controller,
+            module, and optionally any additional parameters you may wish to
+            send to the new action:
+        </p>
+
+        <pre class="programlisting">
+public function fooAction()
+{
+    // forward to another action in the current controller and module:
+    $this-&gt;_forward('bar', null, null, array('baz' =&gt; 'bogus'));
+}
+
+public function barAction()
+{
+    // forward to an action in another controller:
+    // FooController::bazAction(),
+    // in the current module:
+    $this-&gt;_forward('baz', 'foo', null, array('baz' =&gt; 'bogus'));
+}
+
+public function bazAction()
+{
+    // forward to an action in another controller in another module,
+    // Foo_BarController::bazAction():
+    $this-&gt;_forward('baz', 'bar', 'foo', array('baz' =&gt; 'bogus'));
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.dispatcher.subclassing"></a>Subclassing the Dispatcher</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Controller_Front</code> will first call the router to
+            determine the first action in the request. It then enters a dispatch
+            loop, which calls on the dispatcher to dispatch the action.
+        </p>
+
+        <p>
+            The dispatcher needs a variety of data in order to do its work - it
+            needs to know how to format controller and action names, where to
+            look for controller class files, whether or not a provided module
+            name is valid, and an <acronym class="acronym">API</acronym> for determining if a given request is even
+            dispatchable based on the other information available.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Controller_Dispatcher_Interface</code> defines the
+            following methods as required for any dispatcher implementation:
+        </p>
+
+        <pre class="programlisting">
+interface Zend_Controller_Dispatcher_Interface
+{
+    /**
+     * Format a string into a controller class name.
+     *
+     * @param string $unformatted
+     * @return string
+     */
+    public function formatControllerName($unformatted);
+
+    /**
+     * Format a string into an action method name.
+     *
+     * @param string $unformatted
+     * @return string
+     */
+    public function formatActionName($unformatted);
+
+    /**
+     * Determine if a request is dispatchable
+     *
+     * @param  Zend_Controller_Request_Abstract $request
+     * @return boolean
+     */
+    public function isDispatchable(
+        Zend_Controller_Request_Abstract $request
+    );
+
+    /**
+     * Set a user parameter (via front controller, or for local use)
+     *
+     * @param string $name
+     * @param mixed $value
+     * @return Zend_Controller_Dispatcher_Interface
+     */
+    public function setParam($name, $value);
+
+    /**
+     * Set an array of user parameters
+     *
+     * @param array $params
+     * @return Zend_Controller_Dispatcher_Interface
+     */
+    public function setParams(array $params);
+
+    /**
+     * Retrieve a single user parameter
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public function getParam($name);
+
+    /**
+     * Retrieve all user parameters
+     *
+     * @return array
+     */
+    public function getParams();
+
+    /**
+     * Clear the user parameter stack, or a single user parameter
+     *
+     * @param null|string|array single key or array of keys for
+     *        params to clear
+     * @return Zend_Controller_Dispatcher_Interface
+     */
+    public function clearParams($name = null);
+
+    /**
+     * Set the response object to use, if any
+     *
+     * @param Zend_Controller_Response_Abstract|null $response
+     * @return void
+     */
+    public function setResponse(
+        Zend_Controller_Response_Abstract $response = null
+    );
+
+    /**
+     * Retrieve the response object, if any
+     *
+     * @return Zend_Controller_Response_Abstract|null
+     */
+    public function getResponse();
+
+    /**
+     * Add a controller directory to the controller directory stack
+     *
+     * @param string $path
+     * @param string $args
+     * @return Zend_Controller_Dispatcher_Interface
+     */
+    public function addControllerDirectory($path, $args = null);
+
+    /**
+     * Set the directory (or directories) where controller files are
+     * stored
+     *
+     * @param string|array $dir
+     * @return Zend_Controller_Dispatcher_Interface
+     */
+    public function setControllerDirectory($path);
+
+    /**
+     * Return the currently set directory(ies) for controller file
+     * lookup
+     *
+     * @return array
+     */
+    public function getControllerDirectory();
+
+    /**
+     * Dispatch a request to a (module/)controller/action.
+     *
+     * @param  Zend_Controller_Request_Abstract $request
+     * @param  Zend_Controller_Response_Abstract $response
+     * @return Zend_Controller_Request_Abstract|boolean
+     */
+    public function dispatch(
+        Zend_Controller_Request_Abstract $request,
+        Zend_Controller_Response_Abstract $response
+    );
+
+    /**
+     * Whether or not a given module is valid
+     *
+     * @param string $module
+     * @return boolean
+     */
+    public function isValidModule($module);
+
+    /**
+     * Retrieve the default module name
+     *
+     * @return string
+     */
+    public function getDefaultModule();
+
+    /**
+     * Retrieve the default controller name
+     *
+     * @return string
+     */
+    public function getDefaultControllerName();
+
+    /**
+     * Retrieve the default action
+     *
+     * @return string
+     */
+    public function getDefaultAction();
+}
+</pre>
+
+        <p>
+            In most cases, however, you should simply extend the abstract class
+            <code class="classname">Zend_Controller_Dispatcher_Abstract</code>, in which each of
+            these have already been defined, or
+            <code class="classname">Zend_Controller_Dispatcher_Standard</code> to modify
+            functionality of the standard dispatcher.
+        </p>
+
+        <p>
+            Possible reasons to subclass the dispatcher include a desire to
+            use a different class or method naming schema in your action
+            controllers, or a desire to use a different dispatching paradigm
+            such as dispatching to action files under controller directories
+            (instead of dispatching to class methods).
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.router.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.action.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">The Standard Router </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Action Controllers</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

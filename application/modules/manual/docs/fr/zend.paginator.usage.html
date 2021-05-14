@@ -1,0 +1,695 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Utilisation</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.paginator.html" title="Zend_Paginator">
+<link rel="prev" href="zend.paginator.introduction.html" title="Introduction">
+<link rel="next" href="zend.paginator.configuration.html" title="Configuration">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Utilisation</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.paginator.introduction.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Paginator</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.paginator.configuration.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.paginator.usage"></a>Utilisation</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.paginator.usage.paginating"></a>Paginer des collections de données</h3></div></div></div>
+        
+
+        <p>
+            Afin de pouvoir paginer des éléments, <code class="classname">Zend_Paginator</code> doit
+            posséder une manière générique d'accéder aux sources de données. De ce fait, tous les
+            accès aux données se font via des adaptateurs de sources. Plusieurs adaptateurs existent
+            par défaut :
+        </p>
+
+        <div class="table">
+<a name="zend.paginator.usage.paginating.adapters"></a><p class="title"><b>Tableau 126. Adaptateurs pour <code class="classname">Zend_Paginator</code></b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="Adaptateurs pour Zend_Paginator" border="1">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Adaptateur</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code class="code">Array</code></td>
+<td>Utilise un tableau <acronym class="acronym">PHP</acronym>
+</td>
+</tr>
+<tr>
+<td><code class="code">DbSelect</code></td>
+<td>Utilise une instance de <a class="link" href="zend.db.select.html" title="Zend_Db_Select"><code class="classname">Zend_Db_Select</code></a>
+                        qui retourne un tableau</td>
+</tr>
+<tr>
+<td><code class="code">DbTableSelect</code></td>
+<td>Utilise une instance <a class="link" href="zend.db.table.html#zend.db.table.fetch-all" title="Requêter pour plusieurs enregistrements"><code class="classname">Zend_Db_Table_Select</code></a>,
+                        qui retournera une instance de
+                        <code class="classname">Zend_Db_Table_Rowset_Abstract</code>. Ceci fournit aussi
+                        des informations supplémentaires sur le jeu de résultats, tel que les
+                        noms de colonne.</td>
+</tr>
+<tr>
+<td><code class="code">Iterator</code></td>
+<td>Utilise une instance implémentant <a class="ulink" href="http://www.php.net/~helly/php/ext/spl/interfaceIterator.html" target="_top"><code class="code">Iterator</code></a>
+</td>
+</tr>
+<tr>
+<td><code class="constant">NULL</code></td>
+<td>N'utilise pas <code class="classname">Zend_Paginator</code> pour la
+                        pagination. En revanche, les options et capacités de contrôle de la
+                        pagination restent disponibles.</td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Plutôt que de sélectionner chaque ligne correspondant à une requête fournie,
+                les adaptateurs <code class="code">DbSelect</code> et <code class="code">DbTableSelect</code> récupèrent
+                seulement la quantité de données nécessaire pour l'affichage de la page
+                courante.
+            </p>
+
+            <p>
+                A cause de ceci, une seconde requête est générée dynamiquement pour déterminer
+                le nombre total de lignes correspondantes. Cependant, il est possible de directement
+                fournir un nombre ou un requête de dénombrement vous-même. Regardez la méthode
+                <code class="methodname">setRowCount()</code> de l'adaptateur <code class="code">DbSelect</code> pour de plus amples
+                informations.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Pour créer une instance de <code class="classname">Zend_Paginator</code>, vous devez
+            spécifier un adaptateur à son constructeur:
+        </p>
+
+        <p>
+            </p>
+<pre class="programlisting">
+$paginator = new Zend_Paginator(new Zend_Paginator_Adapter_Array($array));
+</pre>
+
+        <p>
+            Pour une meilleure intégration, vous pouvez utiliser la fabrique
+            <code class="methodname">factory()</code>:
+        </p>
+
+        <p>
+            </p>
+<pre class="programlisting">
+$paginator = Zend_Paginator::factory($array);
+</pre>
+
+            <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Pour l'adaptateur <code class="constant">NULL</code>, il faut spécifier un chiffre à son
+                constructeur en lieu et place de la collection de données.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Bien que l'instance soit techniquement utilisable dans l'état, dans votre
+            contrôleur d'action vous devrez informer le paginateur du numéro de page demandé par
+            l'utilisateur. Ceci lui permet d'avancer à travers les données paginées.
+        </p>
+
+        <p>
+            </p>
+<pre class="programlisting">
+$paginator-&gt;setCurrentPageNumber($page);
+</pre>
+
+        <p>
+            La manière la plus simple de suivre et scruter cette valeur est via l'URL. Nous
+            recommandons l'utilisation d'un routeur compatible avec
+            <code class="classname">Zend_Controller_Router_Interface</code>, mais ceci n'est pas
+            nécessaire.
+        </p>
+
+        <p>
+            Voici une route que vous pourriez définir dans un fichier de configuration
+            <acronym class="acronym">INI</acronym>:
+        </p>
+
+        <p>
+            </p>
+<pre class="programlisting">
+routes.example.route = articles/:articleName/:page
+routes.example.defaults.controller = articles
+routes.example.defaults.action = view
+routes.example.defaults.page = 1
+routes.example.reqs.articleName = \w+
+routes.example.reqs.page = \d+
+</pre>
+
+        <p>
+            Avec une telle route (et en utilisant les composants <acronym class="acronym">MVC</acronym> de Zend Framework), vous
+            pourriez spécifier le numéro de la page de cette manière :
+        </p>
+
+        <p>
+            </p>
+<pre class="programlisting">
+$paginator-&gt;setCurrentPageNumber($this-&gt;_getParam('page'));
+</pre>
+
+        <p>
+            Il y a d'autres options disponibles, voyez <a class="link" href="zend.paginator.configuration.html" title="Configuration">la configuration</a> pour plus de
+            détails.
+        </p>
+
+        <p>
+            Enfin, il faut passer l'instance du paginateur à votre vue. Si vous utilisez
+            <code class="classname">Zend_View</code> avec l'aide d'action <code class="code">ViewRenderer</code>, ceci
+            fonctionnera :
+        </p>
+
+        <p>
+            </p>
+<pre class="programlisting">
+$this-&gt;view-&gt;paginator = $paginator;
+</pre>
+<p>
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.paginator.usage.dbselect"></a>The DbSelect and DbTableSelect adapter</h3></div></div></div>
+        
+        <p>
+            The usage of most adapters is pretty straight-forward. However, the
+            database adapters require a more detailed explanation regarding
+            the retrieval and count of the data from the database.
+        </p>
+
+        <p>
+            To use the DbSelect and DbTableSelect adapters you don't have to retrieve the data upfront from
+            the database. Both adapters do the retrieval for you, aswell as the counting of the total pages.
+            If additional work has to be done on the database results the adapter <code class="methodname">getItems()</code> method
+            has to be extended in your application.
+        </p>
+
+        <p>
+            Additionally these adapters do <span class="emphasis"><em>not</em></span> fetch all records from the database
+            Instead, the adapters manipulates the original query to produce the corresponding
+            COUNT query. Paginator then executes that COUNT query to get the number of rows.
+            This does require an extra round-trip to the database, but this is many times
+            faster than fetching an entire result set and using count(). Especially with
+            large collections of data.
+        </p>
+
+        <p>
+            The database adapters will try and build the most efficient query that will execute
+            on pretty much all modern databases. However, depending on your database or even your
+            own schema setup, there might be more efficient ways to get a rowcount. For this scenario
+            the database adapters allow you to set a custom COUNT query. For example,
+            if you keep track of the count of blog posts in a separate table, you could achieve a
+            faster count query with the following setup:
+        </p>
+
+            <pre class="programlisting">
+$adapter = new Zend_Paginator_Adapter_DbSelect($db-&gt;select()-&gt;from('posts'));
+$adapter-&gt;setRowCount(
+    $db-&gt;select()-&gt;from('item_counts', array(Zend_Paginator_Adapter_DbSelect::ROW_COUNT_COLUMN =&gt; 'post_count'))
+)
+
+$paginator = new Zend_Paginator($adapter);
+</pre>
+
+        <p>
+            This approach will probably not give you a huge performance gain on
+            small collections and/or simple select queries. However, with complex
+            queries and large collections, a similar approach could give you a
+            significant performance boost.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.paginator.rendering"></a>Rendre des pages avec les scripts de vue</h3></div></div></div>
+        
+
+        <p>
+            Le script de vue va être utilisé pour rendre les éléments de la page (bien sûr si
+            <code class="classname">Zend_Paginator</code> est utilisé à cet effet), et pour afficher les
+            éléments relatifs au contrôle de la pagination.
+        </p>
+
+        <p>
+            Comme <code class="classname">Zend_Paginator</code> implémente l'interface SPL <a class="ulink" href="http://www.php.net/~helly/php/ext/spl/interfaceIteratorAggregate.html" target="_top"><code class="code">IteratorAggregate</code></a>,
+            boucler sur les éléments et les afficher est très simple.
+        </p>
+
+        <p>
+            </p>
+<pre class="programlisting">
+&lt;html&gt;
+&lt;body&gt;
+&lt;h1&gt;Example&lt;/h1&gt;
+&lt;?php if (count($this-&gt;paginator)): ?&gt;
+&lt;ul&gt;
+&lt;?php foreach ($this-&gt;paginator as $item): ?&gt;
+  &lt;li&gt;&lt;?php echo $item; ?&gt;&lt;/li&gt;
+&lt;?php endforeach; ?&gt;
+&lt;/ul&gt;
+&lt;?php endif; ?&gt;
+
+&lt;?php echo $this-&gt;paginationControl($this-&gt;paginator,
+                                    'Sliding',
+                                    'my_pagination_control.phtml'); ?&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+        <p>
+            Notez l'appel à l'aide de vue en fin de script. <code class="code">PaginationControl</code>
+            accepte jusqu'à quatre paramètres : l'instance du paginateur, un type de défilement
+            (optionnel), un partial de vue (optionnel) et un tableau de paramètres
+            additionnels.
+        </p>
+
+        <p>
+            Les second et troisième paramètres sont très importants. Alors que le partial est
+            utiliser pour déterminer comment <span class="emphasis"><em>présenter</em></span> les données, le type de
+            défilement définira la manière dont ils se <span class="emphasis"><em>comportent</em></span>. Disons que
+            le partial ressemble à un contrôle de recherche, comme ce qui suit :
+        </p>
+
+        <p>
+            <img src="figures/zend.paginator.usage.rendering.control.png" align="middle">
+        </p>
+
+        <p>
+            Que se passe-t-il lorsque l'utilisateur clique sur le lien "next" quelques fois?
+            Plusieurs choses peuvent arriver. Le numéro de la page courante pourrait rester au
+            milieu (comme c'est le cas sur Yahoo!), ou il pourrait aussi bien avancer à la fin de la
+            fourchette des pages et apparaître encore à gauche lorsque l'utilisateur clique alors
+            sur "next". Le nombre de pages pourrait alors s'étendre ou se comprimer alors que
+            l'utilisateur avance ("scroll") à travers (comme chez Google).
+        </p>
+
+        <p>Il existe 4 types de défilement intégrés dans Zend Framework :</p>
+
+        <div class="table">
+<a name="zend.paginator.usage.rendering.scrolling-styles"></a><p class="title"><b>Tableau 127. Types de défilement pour <code class="classname">Zend_Paginator</code></b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="Types de défilement pour Zend_Paginator" border="1">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Type de défilement</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>All</td>
+<td>Retourne toutes les pages. Très pratique lorsqu'il y a peu de
+                        pages totales.</td>
+</tr>
+<tr>
+<td>Elastic</td>
+<td>Un défilement de type Google qui s'étend et se contracte au fur
+                        et à mesure que l'utilisateur avance dans les pages de
+                        résultats.</td>
+</tr>
+<tr>
+<td>Jumping</td>
+<td>Alors que l'utilisateur défile, le nombre de pages avance à la
+                        fin d'une échelle donnée, puis recommence au début de l'échelle
+                        suivante.</td>
+</tr>
+<tr>
+<td>Sliding</td>
+<td>Un défilement de type Yahoo! qui positionne la page en cours au
+                        centre d'une échelle de pages, le plus justement et près possible. Ce
+                        type de défilement est le type par défaut.</td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <p>
+            Le quatrième et dernier paramètre est réservé pour un tableau associatif optionnel
+            de variables supplémentaires que vous voulez rendre disponible dans vos partiels de vues
+            (disponible via <code class="varname">$this</code>). Par exemple, ces valeurs permettent d'inclure des
+            paramètres d'URL supplémentaires pour les liens de pagination.
+        </p>
+
+        <p>
+            En spécifiant le partial de vue par défaut, le défilement et l'instance de vue,
+            vous pouvez alors vous affranchir totalement des appels à <code class="code">PaginationControl</code>
+            :
+        </p>
+
+        <p>
+            </p>
+<pre class="programlisting">
+Zend_Paginator::setDefaultScrollingStyle('Sliding');
+Zend_View_Helper_PaginationControl::setDefaultViewPartial(
+    'my_pagination_control.phtml'
+);
+$paginator-&gt;setView($view);
+</pre>
+
+        <p>
+            Utilisez dès lors un simple <code class="code">echo</code> dans le script de vue pour le rendu
+            du paginateur complet:
+        </p>
+
+        <p>
+            </p>
+<pre class="programlisting">
+&lt;?php echo $this-&gt;paginator; ?&gt;
+</pre>
+
+            <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Bien sûr, il est possible d'utiliser Zend_paginator avec d'autres moteurs de
+                templates. Par exemple, avec Smarty vous pourriez faire ceci :
+            </p>
+
+            <p>
+                </p>
+<pre class="programlisting">
+$smarty-&gt;assign('pages', $paginator-&gt;getPages());
+</pre>
+
+            <p>
+                Vous pouvez ainsi accéder aux valeurs du paginateur grâce à un template comme
+                ceci :
+            </p>
+
+            <p>
+                </p>
+<pre class="programlisting">
+{$pages-&gt;pageCount}
+</pre>
+            </td></tr>
+</table></div>
+
+            <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.paginator.usage.rendering.example-controls"></a>Exemples de contrôles de pagination</h4></div></div></div>
+                
+
+            <p>
+                Voici quelques exemples qui vous aideront à démarrer avec le
+                paginateur:
+            </p>
+
+            <p>
+                Pagination de recherche :</p>
+<pre class="programlisting">
+&lt;!--
+Voir http://developer.yahoo.com/ypatterns/pattern.php?pattern=searchpagination
+--&gt;
+
+&lt;?php if ($this-&gt;pageCount): ?&gt;
+&lt;div class="paginationControl"&gt;
+&lt;!-- Previous page link --&gt;
+&lt;?php if (isset($this-&gt;previous)): ?&gt;
+  &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $this-&gt;previous)); ?&gt;"&gt;
+    &amp;lt; Previous
+  &lt;/a&gt; |
+&lt;?php else: ?&gt;
+  &lt;span class="disabled"&gt;&amp;lt; Previous&lt;/span&gt; |
+&lt;?php endif; ?&gt;
+
+&lt;!-- Numbered page links --&gt;
+&lt;?php foreach ($this-&gt;pagesInRange as $page): ?&gt;
+  &lt;?php if ($page != $this-&gt;current): ?&gt;
+    &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $page)); ?&gt;"&gt;
+        &lt;?php echo $page; ?&gt;
+    &lt;/a&gt; |
+  &lt;?php else: ?&gt;
+    &lt;?php echo $page; ?&gt; |
+  &lt;?php endif; ?&gt;
+&lt;?php endforeach; ?&gt;
+
+&lt;!-- Next page link --&gt;
+&lt;?php if (isset($this-&gt;next)): ?&gt;
+  &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $this-&gt;next)); ?&gt;"&gt;
+    Next &amp;gt;
+  &lt;/a&gt;
+&lt;?php else: ?&gt;
+  &lt;span class="disabled"&gt;Next &amp;gt;&lt;/span&gt;
+&lt;?php endif; ?&gt;
+&lt;/div&gt;
+&lt;?php endif; ?&gt;
+</pre>
+
+            <p>
+                Pagination d'objets :</p>
+<pre class="programlisting">
+&lt;!--
+Voir http://developer.yahoo.com/ypatterns/pattern.php?pattern=itempagination
+--&gt;
+
+&lt;?php if ($this-&gt;pageCount): ?&gt;
+&lt;div class="paginationControl"&gt;
+&lt;?php echo $this-&gt;firstItemNumber; ?&gt; - &lt;?php echo $this-&gt;lastItemNumber; ?&gt;
+of &lt;?php echo $this-&gt;totalItemCount; ?&gt;
+
+&lt;!-- First page link --&gt;
+&lt;?php if (isset($this-&gt;previous)): ?&gt;
+  &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $this-&gt;first)); ?&gt;"&gt;
+    First
+  &lt;/a&gt; |
+&lt;?php else: ?&gt;
+  &lt;span class="disabled"&gt;First&lt;/span&gt; |
+&lt;?php endif; ?&gt;
+
+&lt;!-- Previous page link --&gt;
+&lt;?php if (isset($this-&gt;previous)): ?&gt;
+  &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $this-&gt;previous)); ?&gt;"&gt;
+    &amp;lt; Previous
+  &lt;/a&gt; |
+&lt;?php else: ?&gt;
+  &lt;span class="disabled"&gt;&amp;lt; Previous&lt;/span&gt; |
+&lt;?php endif; ?&gt;
+
+&lt;!-- Next page link --&gt;
+&lt;?php if (isset($this-&gt;next)): ?&gt;
+  &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $this-&gt;next)); ?&gt;"&gt;
+    Next &amp;gt;
+  &lt;/a&gt; |
+&lt;?php else: ?&gt;
+  &lt;span class="disabled"&gt;Next &amp;gt;&lt;/span&gt; |
+&lt;?php endif; ?&gt;
+
+&lt;!-- Last page link --&gt;
+&lt;?php if (isset($this-&gt;next)): ?&gt;
+  &lt;a href="&lt;?php echo $this-&gt;url(array('page' =&gt; $this-&gt;last)); ?&gt;"&gt;Last&lt;/a&gt;
+&lt;?php else: ?&gt;
+  &lt;span class="disabled"&gt;Last&lt;/span&gt;
+&lt;?php endif; ?&gt;
+
+&lt;/div&gt;
+&lt;?php endif; ?&gt;
+</pre>
+<p>
+            </p>
+
+            <p>
+                Pagination Dropdown :</p>
+<pre class="programlisting">
+&lt;?php if ($this-&gt;pageCount): ?&gt;
+&lt;select id="paginationControl" size="1"&gt;
+&lt;?php foreach ($this-&gt;pagesInRange as $page): ?&gt;
+  &lt;?php $selected = ($page == $this-&gt;current) ? ' selected="selected"' : ''; ?&gt;
+  &lt;option value="&lt;?php echo $this-&gt;url(array('page' =&gt; $page)); ?&gt;"
+          &lt;?php echo $selected ?&gt;&gt;
+    &lt;?php echo $page; ?&gt;
+  &lt;/option&gt;
+&lt;?php endforeach; ?&gt;
+&lt;/select&gt;
+&lt;?php endif; ?&gt;
+
+&lt;script type="text/javascript"
+    src="http://ajax.googleapis.com/ajax/libs/prototype/1.6.0.2/prototype.js"&gt;
+&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+$('paginationControl').observe('change', function() {
+    window.location = this.options[this.selectedIndex].value;
+})
+&lt;/script&gt;
+</pre>
+<p>
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.paginator.usage.rendering.properties"></a>Liste des propriétés</h4></div></div></div>
+            
+
+            <p>
+                Les options suivantes sont disponibles pour contrôler la pagination dans les
+                partials de vue :
+            </p>
+
+            <div class="table">
+<a name="zend.paginator.usage.rendering.properties.table"></a><p class="title"><b>Tableau 128. Propriétés disponibles aux partials de vue</b></p>
+<div class="table-contents">
+                
+
+                <table class="table" summary="Propriétés disponibles aux partials de vue" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Propriété</th>
+<th>Type</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>first</td>
+<td>entier</td>
+<td>Numéro de la première page</td>
+</tr>
+<tr>
+<td>firstItemNumber</td>
+<td>entier</td>
+<td>Numéro absolu du premier objet(item) dans cette page</td>
+</tr>
+<tr>
+<td>firstPageInRange</td>
+<td>entier</td>
+<td>Première page dans l'échelle retournée par le type de
+                            défilement</td>
+</tr>
+<tr>
+<td>current</td>
+<td>entier</td>
+<td>Numéro de la page en cours</td>
+</tr>
+<tr>
+<td>currentItemCount</td>
+<td>entier</td>
+<td>Nombre d'objets sur cette page</td>
+</tr>
+<tr>
+<td>itemCountPerPage</td>
+<td>integer</td>
+<td>Nombre d'objets maximum à afficher par page</td>
+</tr>
+<tr>
+<td>last</td>
+<td>entier</td>
+<td>Numéro de la dernière page</td>
+</tr>
+<tr>
+<td>lastItemNumber</td>
+<td>entier</td>
+<td>Numéro absolu du dernier objet sur cette page</td>
+</tr>
+<tr>
+<td>lastPageInRange</td>
+<td>entier</td>
+<td>Dernière page dans l'échelle retournée par le type de
+                            défilement</td>
+</tr>
+<tr>
+<td>next</td>
+<td>entier</td>
+<td>Numéro de la page suivante</td>
+</tr>
+<tr>
+<td>pageCount</td>
+<td>entier</td>
+<td>Nombre de pages</td>
+</tr>
+<tr>
+<td>pagesInRange</td>
+<td>tableau (array)</td>
+<td>Tableau des pages retournées par le type de
+                            défilement</td>
+</tr>
+<tr>
+<td>previous</td>
+<td>entier</td>
+<td>Numéro de la page précédente</td>
+</tr>
+<tr>
+<td>totalItemCount</td>
+<td>entier</td>
+<td>Nombre total d'objets</td>
+</tr>
+</tbody>
+</table>
+            </div>
+</div>
+<br class="table-break">
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.paginator.introduction.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.paginator.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.paginator.configuration.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Configuration</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

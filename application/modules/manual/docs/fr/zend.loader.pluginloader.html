@@ -1,0 +1,319 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Chargeur de Plugins</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.loader.html" title="Zend_Loader">
+<link rel="prev" href="zend.loader.autoloader-resource.html" title="Autoloaders de ressources">
+<link rel="next" href="zend.loader.spl-autoloader.html" title="The SplAutoloader Interface">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Chargeur de Plugins</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.loader.autoloader-resource.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Loader</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.loader.spl-autoloader.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.loader.pluginloader"></a>Chargeur de Plugins</h2></div></div></div>
+    
+
+    <p>
+        Zend Framework vous propose l'utilisation de composants "pluggables", que vous créez
+        vous même. Ceux-ci ne sont pas forcément dans l'include_path. De même, ils ne suivent pas
+        forcément les mêmes règles de nommage que les composants de Zend
+        Framework.<code class="classname">Zend_Loader_PluginLoader</code> propose une solution à ce
+        problème.
+    </p>
+
+    <p>
+        <code class="code">PluginLoader</code> suit la convention "une classe par fichier" et les tirets
+        bas sont utilisés comme séparateurs de dossiers. Il accepte aussi qu'un préfixe optionnel
+        lui soit passé, afin de charger une classe. Tous les chemins sont analysés en ordre LIFO.
+        Grâce à ces deux spécificités, vous pouvez "namespacer" vos plugins, et écraser les plugins
+        enregistrés plus tôt.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.pluginloader.usage"></a>Utilisation basique</h3></div></div></div>
+        
+
+        <p>
+            Même si nous parlons de "plugins", ce n'est pas réservé aux plugins de contrôleur
+            frontal, mais bien à toute classe étant utilisée avec Zend Framework. Imaginons une
+            structure de répertoires comme suit, dans laquelle les dossiers "application" et
+            "library" sont dans l'include_path :
+        </p>
+
+        <pre class="programlisting">
+application/
+    modules/
+        foo/
+            views/
+                helpers/
+                    FormLabel.php
+                    FormSubmit.php
+        bar/
+            views/
+                helpers/
+                    FormSubmit.php
+library/
+    Zend/
+        View/
+            Helper/
+                FormLabel.php
+                FormSubmit.php
+                FormText.php
+</pre>
+
+        <p>
+            Maintenant créons un chargeur de plugins pour utiliser les différentes classes
+            d'aides de vue :
+        </p>
+
+        <pre class="programlisting">
+$loader = new Zend_Loader_PluginLoader();
+$loader-&gt;addPrefixPath('Zend_View_Helper',
+                       'Zend/View/Helper/')
+       -&gt;addPrefixPath('Foo_View_Helper',
+                       'application/modules/foo/views/helpers')
+       -&gt;addPrefixPath('Bar_View_Helper',
+                       'application/modules/bar/views/helpers');
+</pre>
+
+        <p>
+            Il devient alors possible de charger une aide de vue en spécifiant juste le nom de
+            sa classe :
+        </p>
+
+        <pre class="programlisting">
+// charge l'aide 'FormText' :
+$formTextClass = $loader-&gt;load('FormText');
+// 'Zend_View_Helper_FormText'
+
+// charge l'aide 'FormLabel' :
+$formLabelClass = $loader-&gt;load('FormLabel');
+// 'Foo_View_Helper_FormLabel'
+
+// charge l'aide 'FormSubmit' :
+$formSubmitClass = $loader-&gt;load('FormSubmit');
+// 'Bar_View_Helper_FormSubmit'
+</pre>
+
+        <p>Une fois chargée, la classe devient instanciable.</p>
+
+        <div class="note"><table border="0" summary="Note: Plusieurs dossiers peuvent être assignés à un même préfixe">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Plusieurs dossiers peuvent être assignés à un même préfixe</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Vous pouvez "namespacer" vos composants en enregistrant plusieurs chemins pour
+                un même préfixe.<code class="classname">Zend_Loader_PluginLoader</code> cherchera alors en
+                ordre LIFO (dernier arrivé, premier sorti). Ceci est pratique pour court-circuiter
+                ses composants et utiliser ceux en incubateur, par exemple.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="note"><table border="0" summary="Note: Paramétrage des chemins dans le constructeur">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Paramétrage des chemins dans le constructeur</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                En constructeur, passez un tableau de paires prefix / path ou prefix / paths
+                -- plusieurs dossiers par préfixe :
+            </p>
+
+            <pre class="programlisting">
+$loader = new Zend_Loader_PluginLoader(array(
+    'Zend_View_Helper' =&gt; 'Zend/View/Helper/',
+    'Foo_View_Helper'  =&gt; 'application/modules/foo/views/helpers',
+    'Bar_View_Helper'  =&gt; 'application/modules/bar/views/helpers'
+));
+</pre>
+        </td></tr>
+</table></div>
+
+        <p>
+            <code class="classname">Zend_Loader_PluginLoader</code> peut aussi permettre de partager
+            des plugins grâce au registre. Indiquez le nom du registre de cette manière :
+        </p>
+
+        <pre class="programlisting">
+// Stocke les plugins dans le registre à l'index 'foobar':
+$loader = new Zend_Loader_PluginLoader(array(), 'foobar');
+</pre>
+
+        <p>
+            Si un autre composant instancie le <code class="code">PluginLoader</code> en utilisant le même
+            nom de registre, alors tous les chemins et plugins déjà chargés seront
+            disponibles.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.pluginloader.paths"></a>Manipulation des chemins des Plugins</h3></div></div></div>
+        
+
+        <p>
+            Pour afficher ou supprimer des chemins déjà enregistrés, utilisez l'une des
+            méthodes suivantes :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">getPaths($prefix = null)</code> retourne les chemin sous la forme
+                    prefix / path si <code class="varname">$prefix</code> n'est pas renseigné. Sinon, ce sont les
+                    chemins enregistrés pour le préfixe en question qui sont renvoyés.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearPaths($prefix = null)</code> va effacer tous les chemins. Si
+                    <code class="varname">$prefix</code> est passé, ce sont les chemins correspondants à ce préfixe
+                    qui seront supprimés.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removePrefixPath($prefix, $path = null)</code> permet de supprimer
+                    un chemin précis, d'un préfixe spécifié. Si <code class="varname">$path</code> n'est pas
+                    renseigné, tous les chemins du préfixe seront effacés.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.pluginloader.checks"></a>Test des Plugins et récupération des noms de classe</h3></div></div></div>
+        
+
+        <p>
+            Lorsque vous voulez savoir si une classe de plugin a été chargée,
+            <code class="methodname">isLoaded()</code> prend en paramètre le nom du plugin, et retourne sont
+            statut.
+        </p>
+
+        <p>
+            Une autre utilisation de <code class="code">PluginLoader</code> peut être de récupérer le nom
+            des classes des plugins chargés.<code class="methodname">getClassName()</code> vous le permet. Utilisée en
+            conjonction avec <code class="methodname">isLoaded()</code>, vous pouvez écrire par exemple ceci :
+        </p>
+
+        <pre class="programlisting">
+if ($loader-&gt;isLoaded('Adapter')) {
+    $class   = $loader-&gt;getClassName('Adapter');
+    $adapter = call_user_func(array($class, 'getInstance'));
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.loader.pluginloader.performance"></a>Obtenir de meilleures performances avec les Plugins</h3></div></div></div>
+        
+
+        <p>
+            Le chargement des plugins peut être une opération consommatrice en ressources. En
+            interne, il doit parcourir chaque préfixe, ainsi que chaque chemin dans ce préfixe
+            jusqu'à ce qu'il trouve un fichier qui correspond - et qui définit de plus la classe
+            voulue. Dans le cas où le fichier existe mais ne défini pas la classe, une erreur sera
+            ajouté à la pile d'erreur <acronym class="acronym">PHP</acronym>, opération qui est elle aussi consommatrice. La question
+            qui vient à l'esprit est : comment maintenir la flexibilité des plugins et la
+            performance ?
+        </p>
+
+        <p>
+            <code class="classname">Zend_Loader_PluginLoader</code> offre une fonctionnalité intégrée
+            pour ce cas, un fichier de cache des inclusions de classe. Quand il est activé, ceci
+            crée un fichier qui contient toutes les inclusions qui ont fonctionnées et qui peuvent
+            donc être appelées dans votre fichier d'initialisation. En utilisant ceci, vous pouvez
+            considérablement accroître les performances de vos serveurs de production.
+        </p>
+
+        <div class="example">
+<a name="zend.loader.pluginloader.performance.example"></a><p class="title"><b>Exemple 511. Utilisation du fichier de cache des inclusions de classe de
+            PluginLoader</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                Pour utiliser le fichier de cache des inclusions de classe, collez simplement
+                le code suivant dans votre fichier d'initialisation :
+            </p>
+
+            <pre class="programlisting">
+$classFileIncCache = APPLICATION_PATH .  '/../data/pluginLoaderCache.php';
+if (file_exists($classFileIncCache)) {
+    include_once $classFileIncCache;
+}
+Zend_Loader_PluginLoader::setIncludeFileCache($classFileIncCache);
+</pre>
+
+            <p>
+                Évidemment, le chemin et le fichier varieront en fonction de vos besoins. Ce
+                code doit intervenir aussi vite que possible, pour s'assurer que tous les composants
+                à base de plugins pourront l'utiliser.
+            </p>
+
+            <p>
+                En cours du développement, vous pouvez souhaiter désactiver le cache. Une
+                méthode permettant ceci est d'utiliser une clé de configuration pour déterminer ou
+                non si le chargeur de plugins doit mettre les informations en cache.
+            </p>
+
+            <pre class="programlisting">
+$classFileIncCache = APPLICATION_PATH .  '/../data/pluginLoaderCache.php';
+if (file_exists($classFileIncCache)) {
+    include_once $classFileIncCache;
+}
+if ($config-&gt;enablePluginLoaderCache) {
+    Zend_Loader_PluginLoader::setIncludeFileCache($classFileIncCache);
+}
+</pre>
+
+            <p>
+                Cette technique vous permet de restreindre les modifications au seul fichier
+                de configuration plutôt que dans votre code.
+            </p>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.loader.autoloader-resource.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.loader.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.loader.spl-autoloader.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Autoloaders de ressources </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> The SplAutoloader Interface</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Aspect théorique</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.cache.html" title="Zend_Cache">
+<link rel="prev" href="zend.cache.introduction.html" title="Introduction">
+<link rel="next" href="zend.cache.frontends.html" title="Les frontends Zend_Cache">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Aspect théorique</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.cache.introduction.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Cache</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.cache.frontends.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.cache.theory"></a>Aspect théorique</h2></div></div></div>
+    
+
+    <p>
+        Il y a trois concepts clés dans <code class="classname">Zend_Cache</code>. Le premier est
+        l'identifiant unique (une chaîne) qui est utilisé pour identifier les enregistrements de
+        cache. Le second est la directive <span class="emphasis"><em>"lifeTime"</em></span> vue dans les
+        exemples ; elle définit combien de temps la ressource de cache est considérée comme à
+        jour. Le troisième est l'exécution conditionnelle, ainsi chaque partie de votre code peut
+        être évitée entièrement, pour améliorer les performances. La fonction principale du
+        frontend (<code class="methodname">Zend_Cache_Core::get()</code>) est toujours faite pour retourner
+        <code class="constant">FALSE</code> en cas de cache manquant, si cela donne du sens à la nature d'un
+        frontend. Cela permet aux utilisateurs d'entourer des parties de code qu'ils veulent mettre
+        en cache (et éviter) dans une instruction
+        <span class="emphasis"><em><code class="methodname">if()</code>{ ... }</em></span> où la condition est une
+        méthode <code class="classname">Zend_Cache</code>. A la fin de ces blocs, vous devez sauvegarder ce
+        que vous avez généré (par exemple <code class="methodname">Zend_Cache_Core::save()</code>).
+    </p>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            Le design de l'exécution conditionnelle de votre code généré n'est pas forcément
+            dans des frontends (<span class="emphasis"><em>Function</em></span>, par exemple) quand toute la logique
+            est implémentée à l'intérieur du frontend.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            Le "Cache hit" est un terme pour une condition quand l'enregistrement de cache
+            est trouvé, valide, et à jour (en d'autres mots, qu'il n'a pas encore expiré). Le
+            "Cache miss" est tout le reste. Lorsque un "Cache miss" survient, vous devez générer
+            vos données (comme vous le feriez normalement) et les mettre en cache. Lorsque vous
+            avez un "Cache hit", le backend récupère pour vous et de façon transparente, les
+            enregistrements.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cache.factory"></a>La méthode de fabrique de Zend_Cache</h3></div></div></div>
+        
+
+        <p>
+            Une bonne manière de construire une instance utilisable d'un frontend
+            <code class="classname">Zend_Cache</code> est donnée dans l'exemple suivant :
+        </p>
+
+        <pre class="programlisting">
+// Nous choisissons un backend (par exemple 'File' ou 'Sqlite')
+$backendName = '[...]';
+
+// Nous choisissons un frontend (par exemple: 'Core', 'Output',
+// 'Page'...)
+$frontendName = '[...]';
+
+// Nous définissons un tableau d'options pour le frontend choisit
+$frontendOptions = array([...]);
+
+// Nous définissons un tableau d'options pour le banckend choisit
+$backendOptions = array([...]);
+
+// Nous créons la bonne instance
+// Bien sur, les deux derniers arguments sont optionnels
+$cache = Zend_Cache::factory($frontendName,
+                             $backendName,
+                             $frontendOptions,
+                             $backendOptions);
+</pre>
+
+        <p>
+            Dans les exemples suivants, nous nous assurerons que la variable
+            <code class="varname">$cache</code> utilise une instance de frontend valide, et que vous
+            comprenez comment passer des paramètres à vos backends.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Utilisez toujours <code class="methodname">Zend_Cache::factory()</code> pour obtenir des
+                instances de frontend. Instancier des frontends et des backends par vous-même ne
+                fonctionnera pas comme prévu.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cache.tags"></a>Baliser les enregistrements</h3></div></div></div>
+        
+
+        <p>
+            Les balises sont un moyen de catégoriser les enregistrements de cache. Quand vous
+            sauvegardez un cache avec la méthode <code class="methodname">save()</code> vous pouvez
+            définir un tableau de balises qui s'appliqueront à cet enregistrement. Ensuite vous
+            serez en mesure de nettoyer tous les enregistrements de cache identifiés par
+            une balise (ou plusieurs) donnée :
+        </p>
+
+        <pre class="programlisting">
+$cache-&gt;save($grande_donnees,
+             'monIDUnique',
+             array('tagA', 'tagB', 'tagC'));
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Notez que la méthode <code class="methodname">save()</code> accepte un quatrième paramètre
+                optionnel : <code class="varname">$specificLifetime</code> (si différent de
+                <code class="constant">FALSE</code>, il affecte un "lifeTime" spécifique pour
+                cet enregistrement de cache particulier).
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.cache.clean"></a>Nettoyer le cache</h3></div></div></div>
+        
+
+        <p>
+            Pour supprimer / invalider un identifiant de cache particulier, vous pouvez
+            utiliser la méthode <code class="methodname">remove()</code> :
+        </p>
+
+        <pre class="programlisting">
+$cache-&gt;remove('idAEffacer');
+</pre>
+
+        <p>
+            Pour effacer / invalider plusieurs identifiants de caches en une seule
+            opération, vous pouvez utiliser la méthode <code class="methodname">clean()</code>. Par
+            exemple, pour supprimer tous les caches :
+        </p>
+
+        <pre class="programlisting">
+// nettoie tous les enregistrements
+$cache-&gt;clean(Zend_Cache::CLEANING_MODE_ALL);
+
+// nettoie uniquement les caches obsolètes
+$cache-&gt;clean(Zend_Cache::CLEANING_MODE_OLD);
+</pre>
+
+        <p>
+            Si vous voulez effacer les caches correspondant aux balises "tagA" et "tagC" :
+        </p>
+
+        <pre class="programlisting">
+$cache-&gt;clean(Zend_Cache::CLEANING_MODE_MATCHING_TAG,
+              array('tagA', 'tagC'));
+</pre>
+
+        <p>
+            Si vous voulez effacer les caches ne correspondant pas aux balises "tagA" et
+            "tagC" :
+        </p>
+
+        <pre class="programlisting">
+$cache-&gt;clean(Zend_Cache::CLEANING_MODE_NOT_MATCHING_TAG,
+              array('tagA', 'tagC'));
+</pre>
+
+        <p>
+            Si vous voulez effacer les caches correspondant aux balises "tagA" ou "tagC" :
+        </p>
+
+        <pre class="programlisting">
+$cache-&gt;clean(Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+              array('tagA', 'tagC'));
+</pre>
+
+        <p>
+            Les modes disponibles de nettoyage sont <code class="constant">CLEANING_MODE_ALL</code>,
+            <code class="constant">CLEANING_MODE_OLD</code>, <code class="constant">CLEANING_MODE_MATCHING_TAG</code>,
+            <code class="constant">CLEANING_MODE_NOT_MATCHING_TAG</code> et
+            <code class="constant">CLEANING_MODE_MATCHING_ANY_TAG</code>. Les derniers, comme leur nom
+            l'indique, sont à combiner avec un tableau de balises pour réaliser les opérations de
+            nettoyage.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.cache.introduction.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.cache.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.cache.frontends.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Les frontends Zend_Cache</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

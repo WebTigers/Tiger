@@ -1,0 +1,218 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Scripts Controladores</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.view.html" title="Zend_View">
+<link rel="prev" href="zend.view.introduction.html" title="Introdução">
+<link rel="next" href="zend.view.scripts.html" title="Scripts de Visualização">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Scripts Controladores</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.view.introduction.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_View</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.view.scripts.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.view.controllers"></a>Scripts Controladores</h2></div></div></div>
+    
+
+    <p>
+        O controlador é onde você instancia e configura o <code class="classname">Zend_View</code>. Você
+        atribui variáveis ao visualizador, instruindo-o a renderizar a saída usando um script
+        particular.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.controllers.assign"></a>Atribuindo Variáveis</h3></div></div></div>
+        
+
+        <p>
+            Seu script controlador deverá atribuir as variáveis necessárias ao visualizador antes de
+            passar o controle para ele. Normalmente, você pode fazer isso atribuindo valores aos
+            nomes de propriedades da instância do visualizador:
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+$view-&gt;a = "Hay";
+$view-&gt;b = "Bee";
+$view-&gt;c = "Sea";
+</pre>
+
+        <p>
+            Porém, isto pode ser tedioso quando você coletar os valores a serem atribuídos a partir
+            de uma matriz ou objeto.
+        </p>
+
+        <p>
+            O método assign() permite a atribuições a partir de uma matriz ou objeto "a granel". O
+            exemplo seguinte tem o mesmo efeito que o exemplo de atribuição de propriedades uma a
+            uma.
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+
+// atribui uma matriz associativa onde a chave é nome da variável
+// e o valor é proprio valor atribuído.
+$array = array(
+    'a' =&gt; "Hay",
+    'b' =&gt; "Bee",
+    'c' =&gt; "Sea",
+);
+$view-&gt;assign($array);
+
+// faz o mesmo com as propriedades públicas do objeto;
+// note a forma a conversão ao tipo matriz na atribuição.
+$obj = new StdClass;
+$obj-&gt;a = "Hay";
+$obj-&gt;b = "Bee";
+$obj-&gt;c = "Sea";
+$view-&gt;assign((array) $obj);
+</pre>
+
+        <p>
+            Alternativamente, você pode usar o método assign para fazer atribuições uma a uma
+            passando a string contendo o nome da variável, e logo em seguida o valor a ser
+            atribuído.
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+$view-&gt;assign('a', "Hay");
+$view-&gt;assign('b', "Bee");
+$view-&gt;assign('c', "Sea");
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.controllers.render"></a>Renderizando um Script de Visualização</h3></div></div></div>
+        
+
+        <p>
+            Uma vez que tenhamos atribuído todas as variáveis necessárias, o controlador irá
+            instruir o <code class="classname">Zend_View</code> a renderizar um script de visualização
+            particular. Ele fará isso chamando o método render(). Note que o método irá retornar a
+            visualização renderizada, mas não irá imprimí-la, ficando ao seu encargo fazê-lo
+            (echo() ou print()) no momento apropriado.
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+$view-&gt;a = "Hay";
+$view-&gt;b = "Bee";
+$view-&gt;c = "Sea";
+echo $view-&gt;render('someView.php');
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.controllers.script-paths"></a>Caminhos do Script de Visualização</h3></div></div></div>
+        
+
+        <p>
+            Por padrão, <code class="classname">Zend_View</code> espera encontrar os scripts de visualização
+            localizados no mesmo diretório onde reside o script controlador. Por exemplo, se o seu
+            script controlador estiver em "/path/to/app/controllers" e chamar
+            $view-&gt;render('someView.php'), <code class="classname">Zend_View</code> irá procurar por ele em
+            "/path/to/app/controllers/someView.php".
+        </p>
+
+        <p>
+            Obviamente, os seus scripts de visualização estarão provavelmente situados em outro
+            lugar. Para informar ao <code class="classname">Zend_View</code> onde procurar pelos referidos
+            scripts, use o método setScriptPath().
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+$view-&gt;setScriptPath('/path/to/app/views');
+</pre>
+
+        <p>
+            Agora quando você chamar $view-&gt;render('someView.php'), ele irá procurar em
+            "/path/to/app/views/someView.php".
+        </p>
+
+        <p>
+            De fato, você pode "empilhar" caminhos usando o método addScriptPath(). A medida que
+            você acrescenta caminhos à pilha, <code class="classname">Zend_View</code> irá procurar pela
+            visão no caminho mais recentemente adicionado à pilha. Isto permite sobrepor visões
+            padronizadas por visões customizadas, permitindo a criação de "temas" e "peles" para
+            algumas visões, deixando outras intocadas.
+        </p>
+
+        <pre class="programlisting">
+$view = new Zend_View();
+$view-&gt;addScriptPath('/path/to/app/views');
+$view-&gt;addScriptPath('/path/to/custom/');
+
+// agora quando você chamar $view-&gt;render('booklist.php'),
+// Zend_View procurará primeiro em "/path/to/custom/booklist.php",
+// depois em "/path/to/app/views/booklist.php", e finalmente no
+// diretório corrente, por "booklist.php".
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Nunca utilize uma entrada do usuário para definir caminhos de script">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nunca utilize uma entrada do usuário para definir caminhos de script</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                <code class="classname">Zend_View</code> utiliza caminhos de script para pesquisar e
+                renderizar os scripts de visualização. Como tal, estes diretórios devem ser
+                conhecidos de antemão, e estarem sob seu controle. <span class="emphasis"><em>Nunca</em></span> defina
+                caminhos de script de visualização com base em entradas do usuário, pois você pode
+                se abrir potencialmente para a vulnerabilidade de Inclusão Local de Arquivo se o
+                caminho especificado incluir percursos ao diretório pai. Por exemplo, a seguinte
+                entrada pode desencadear o problema:
+            </p>
+
+            <pre class="programlisting">
+// $_GET['foo'] == '../../../etc'
+$view-&gt;addScriptPath($_GET['foo']);
+$view-&gt;render('passwd');
+</pre>
+
+            <p>
+                Embora este exemplo seja artificial, ele mostra claramente o problema em potencial.
+                Se você <span class="emphasis"><em>deve</em></span> contar com a entrada do usuário para definir o
+                caminho do script, filtre a entrada de forma apropriada e certifique-se de que os
+                caminhos sejam controlados por sua aplicação.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.view.introduction.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.view.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.view.scripts.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introdução </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Scripts de Visualização</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

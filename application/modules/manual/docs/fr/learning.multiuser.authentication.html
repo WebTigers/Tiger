@@ -1,0 +1,214 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Authentification d'utilisateurs dans Zend Framework</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.multiuser.html" title="Bien démarrer avec Zend_Session, Zend_Auth, et Zend_Acl">
+<link rel="prev" href="learning.multiuser.sessions.html" title="Gérer les sessions dans ZF">
+<link rel="next" href="learning.multiuser.authorization.html" title="Fabriquer un système de gestion d'autorisations avec Zend Framework">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Authentification d'utilisateurs dans Zend Framework</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.multiuser.sessions.html">Précédent</a> </td>
+<th width="60%" align="center">Bien démarrer avec Zend_Session, Zend_Auth, et Zend_Acl</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.multiuser.authorization.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.multiuser.authentication"></a>Authentification d'utilisateurs dans Zend Framework</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.multiuser.authentication.intro"></a>Introduction à l'authentification</h3></div></div></div>
+        
+
+        <p>
+            Une fois que l'application a récupéré les informations d'un utilisateur, elle doit
+            vérifier leur "authenticité", c'est l'authentification. Pour celà, deux informations
+            sont nécessaires : l'identifiant et un ensemble de règles régissant cet identifiant,
+            aujourd'hui typiquement une chaine de caractères servant de mot de passe est très
+            classique, mais d'autres procédés existent (reconnaissances digitales, occulaires...)
+        </p>
+
+        <p>
+            Un identifiant peut lui aussi être un "login" tout banal, mais pourquoi pas un
+            numéro de membre, une adresse email... le secret, lui, est donc souvent un mot de passe
+            sous forme de chaine de caractères.
+        </p>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.multiuser.authentication.basic-usage"></a>Utilisation de base de Zend_Auth</h3></div></div></div>
+        
+
+        <p>
+            Dans l'exemple suivant, nous utiliserons <code class="classname">Zend_Auth</code> afin d'effectuer
+            une authentification des plus classiques: champ login et password puis vérification en
+            base de données. Cet exemple suppose que vous utilisez
+            <code class="classname">Zend_Application</code> afin de configurer une connexion à une base de
+            données.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Auth</code> effectue deux tâches. D'abord elle doit récupérer un
+            adaptateur d'authentification afin de déclencher le processus d'authentification, puis
+            si celui-ci est correct, elle doit faire persister ces informations entre requêtes.
+            Pour assurer cette persistance, <code class="classname">Zend_Auth</code> utilise un
+            <code class="classname">Zend_Session_Namespace</code>, mais en général vous n'aurez pas besoin
+            d'agir sur cet objet.
+        </p>
+
+        <p>
+            Supposant une table de base de données suivante:
+        </p>
+
+        <pre class="programlisting">
+CREATE TABLE users (
+    id INTEGER  NOT NULL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(32) NULL,
+    password_salt VARCHAR(32) NULL,
+    real_name VARCHAR(150) NULL
+)
+</pre>
+
+        <p>
+            C'est une table qui inclue des champs nom, password et aussi grain de sel. Le grain de
+            sel est utilisé pour améliorer la sécurité contre les attaques par force brute qui
+            cibleraient l'alogithme de hashage du mot de passe. <a class="ulink" href="http://en.wikipedia.org/wiki/Salting_%28cryptography%29" target="_top">Plus
+                d'informations</a> sur le grain de sel.
+        </p>
+
+        <p>
+            Créons un formulaire de login simple. Nous utiliserons <code class="classname">Zend_Form</code>.
+        </p>
+
+        <pre class="programlisting">
+// localisé à application/forms/Auth/Login.php
+
+class Default_Form_Auth_Login extends Zend_Form
+{
+    public function init()
+    {
+        $this-&gt;setMethod('post');
+
+        $this-&gt;addElement(
+            'text', 'username', array(
+                'label' =&gt; 'Username:',
+                'required' =&gt; true,
+                'filters'    =&gt; array('StringTrim'),
+            ));
+
+        $this-&gt;addElement('password', 'password', array(
+            'label' =&gt; 'Password:',
+            'required' =&gt; true,
+            ));
+
+        $this-&gt;addElement('submit', 'submit', array(
+            'ignore'   =&gt; true,
+            'label'    =&gt; 'Login',
+            ));
+
+    }
+}
+</pre>
+
+        <p>
+            Ce formulaire nous mène vers la création du contrôleur de traitement. Nous l'appellerons
+            "<code class="classname">AuthController</code>", et le logerons dans
+            <code class="filename">application/controllers/AuthController.php</code>. Il possèdera une seule méthode
+            "<code class="methodname">loginAction()</code>" vers laquelle le formulaire enverra, la méthode
+            va donc réagir à GET et à POST, elle encapsule toute la logique.
+        </p>
+
+        <p>
+            Le code suivant montre comment construire l'adaptateur d'authentification et l'intégration du
+            formulaire:
+        </p>
+
+        <pre class="programlisting">
+class AuthController extends Zend_Controller_Action
+{
+
+    public function loginAction()
+    {
+        $db = $this-&gt;_getParam('db');
+
+        $loginForm = new Default_Form_Auth_Login();
+
+        if ($loginForm-&gt;isValid($_POST)) {
+
+            $adapter = new Zend_Auth_Adapter_DbTable(
+                $db,
+                'users',
+                'username',
+                'password',
+                'MD5(CONCAT(?, password_salt))'
+                );
+
+            $adapter-&gt;setIdentity($loginForm-&gt;getValue('username'));
+            $adapter-&gt;setCredential($loginForm-&gt;getValue('password'));
+
+            $auth   = Zend_Auth::getInstance();
+            $result = $auth-&gt;authenticate($adapter);
+
+            if ($result-&gt;isValid()) {
+                $this-&gt;_helper-&gt;FlashMessenger('Successful Login');
+                $this-&gt;_redirect('/');
+                return;
+            }
+
+        }
+
+        $this-&gt;view-&gt;loginForm = $loginForm;
+
+    }
+
+}
+</pre>
+
+        <p>
+            Le script de vue est quant à lui enfantin, il sera logé dans
+            <code class="filename">application/views/scripts/auth/login.phtml</code>:
+        </p>
+
+        <pre class="programlisting">
+$this-&gt;form-&gt;setAction($this-&gt;url());
+echo $this-&gt;form;
+</pre>
+
+        <p>
+            Et voila! Avec ce scénario de base, vous pouvez étendre les possibilités et répondre
+            à vos besoins précis. Tous les adaptateurs
+            <code class="classname">Zend_Auth</code> se trouvent décrits dans
+            <a class="link" href="zend.auth.html" title="Zend_Auth">le guide de réference</a>.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.multiuser.sessions.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.multiuser.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.multiuser.authorization.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Gérer les sessions dans ZF </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Fabriquer un système de gestion d'autorisations avec Zend Framework</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

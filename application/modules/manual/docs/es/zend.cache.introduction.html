@@ -1,0 +1,215 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Introducción</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.cache.html" title="Zend_Cache">
+<link rel="prev" href="zend.cache.html" title="Zend_Cache">
+<link rel="next" href="zend.cache.theory.html" title="The Theory of Caching">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Introducción</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.cache.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Cache</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.cache.theory.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.cache.introduction"></a>Introducción</h2></div></div></div>
+    
+    <p>
+        <code class="classname">Zend_Cache</code> provee una forma genérica para
+        cualquier caché de datos. </p>
+    <p> El almacenamiento en caché en Zend Framework se opera por interfaces,
+        mientras que los registros de caché son almacenados a través de
+        adapatadores del backend ( <span class="emphasis"><em>Archivo</em></span> ,
+            <span class="emphasis"><em>Sqlite</em></span> , <span class="emphasis"><em>Memcache</em></span> ...)
+        mediante un sistema flexible de documentos de identidad y etiquetas.
+        Utilizando éstas, es fácil en el futuro eliminar determinados tipos de
+        registro.(Ejemplo: "eliminar todos los registros caché de determinada
+        etiqueta"). </p>
+    <p> El módulo principal ( <code class="classname">Zend_Cache_Core</code> ) es
+        genérico, flexible y configurable. Aun para sus necesidades específicas
+        existen frontends de caché que extienden
+            <code class="classname">Zend_Cache_Core</code> a conveniencia:
+            <span class="emphasis"><em>Output</em></span> , <span class="emphasis"><em>File</em></span> ,
+            <span class="emphasis"><em>Function</em></span> y <span class="emphasis"><em>Class</em></span> . </p>
+    <div class="example">
+<a name="zend.cache.introduction.example-1"></a><p class="title"><b>Ejemplo 63.  Obtener un frontend con Zend_Cache::factory() </b></p>
+<div class="example-contents">
+        
+        <p>
+            <code class="methodname">Zend_Cache::factory()</code> ejemplifica objetos
+            correctos y los une. En este primer ejemplo, usaremos el frontend
+                <span class="emphasis"><em>Core</em></span> junto con el backend
+                <span class="emphasis"><em>File</em></span> . </p>
+
+        <pre class="programlisting">
+$frontendOptions = array(
+   'lifetime' =&gt; 7200, // tiempo de vida de caché de 2 horas
+   'automatic_serialization' =&gt; true
+);
+
+$backendOptions = array(
+    'cache_dir' =&gt; './tmp/' // Carpeta donde alojar los archivos de caché
+);
+
+// getting a Zend_Cache_Core object
+$cache = Zend_Cache::factory('Core',
+                             'File',
+                             $frontendOptions,
+                             $backendOptions);
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="note"><table border="0" summary="Note:  Frontends y Backends Compuestos de Múltiples Palabras ">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left"> Frontends y Backends Compuestos de Múltiples Palabras </th>
+</tr>
+<tr><td align="left" valign="top">
+        
+        <p> Algunos frontends y backends se nombran usando varias palabras,
+            tal como 'ZenPlatform'. Al fabricarlas las especificamos, las
+            separamos usando un separador de palabras, como un espacio (' '),
+            guión ('-'), o punto ('.'). </p>
+    </td></tr>
+</table></div>
+
+    <div class="example">
+<a name="zend.cache.introduction.example-2"></a><p class="title"><b>Ejemplo 64. Almacenando en caché un resultado de consulta a una base de
+            datos</b></p>
+<div class="example-contents">
+        
+
+        <p> Ahora que tenemos un frontend, podemos almacenar en caché
+            cualquier tipo de dato (hemos activado la serialización). Por
+            ejemplo, podemos almacenar en caché un resultado de una consulta de
+            base de datos muy costosa. Después de ser almacenada en caché, no es
+            necesario ni conectar la base de datos; los registros se obtienen
+            del caché de forma no serializada. </p>
+
+        <pre class="programlisting">
+// $cache initializada en el ejemplo anterior
+
+// Verificar si la cahce existe:
+if(!$result = $cache-&gt;load('myresult')) {
+
+    // no existe cache; conectar a la base de datos
+
+    $db = Zend_Db::factory( [...] );
+
+    $result = $db-&gt;fetchAll('SELECT * FROM huge_table');
+
+    $cache-&gt;save($result, 'myresult');
+
+} else {
+
+    // cache existosa!, darlo a conocer
+    echo "Éste es de caché!\n\n";
+
+}
+
+print_r($result);
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="example">
+<a name="zend.cache.introduction.example-3"></a><p class="title"><b>Ejemplo 65.  El almacenamiento en caché de salida con la interfaz de salida
+            Zend_Cache </b></p>
+<div class="example-contents">
+        
+        <p> 'Resaltamos' las secciones en las que deseamos almacenar en caché
+            la salida, mediante la adición de algunas condiciones lógicas,
+            encapsulamos la sección dentro de los métodos
+                <code class="methodname">start()</code> y
+                <code class="methodname">end()</code> (esto se parece al primer ejemplo
+            y es la estrategia fundamental para el almacenamiento en caché). </p>
+        <p> Dentro, los datos de salida, como siempre – todas las salidas
+            serán almacenadas en caché cuando se ordene la ejecución del método
+                <code class="methodname">end()</code> . En la siguiente ejecución, toda
+            la sección se saltará a favor de la búsqueda de datos del caché
+            (tanto tiempo como el registro del caché sea válido). </p>
+        <pre class="programlisting">
+$frontendOptions = array(
+   'lifetime' =&gt; 30,                   // tiempo de vida de caché de 30 segundos
+   'automatic_serialization' =&gt; false  // éste es el valor por defecto
+);
+
+$backendOptions = array('cache_dir' =&gt; './tmp/');
+
+$cache = Zend_Cache::factory('Output',
+                             'File',
+                             $frontendOptions,
+                             $backendOptions);
+
+// Pasamos un identificador único al método start()
+if(!$cache-&gt;start('mypage')) {
+    // salida como de costumbre:
+
+    echo 'Hola mundo! ';
+    echo 'Esto está en caché ('.time().') ';
+
+    $cache-&gt;end(); // la salida es guardada y enviada al navegador
+}
+
+echo 'Esto no estará en caché nunca ('.time().').';
+</pre>
+        <p> Note que delineamos el resultado de
+                <code class="methodname">time()</code> dos veces; esto es algo dinámico
+            para los propósitos de la demostración. Trate de ejecutarlo y
+            entonces regenérelo muchas veces; notará que el primer número no
+            cambia mientras que el segundo cambia a medida que pasa el tiempo.
+            Esto es porque el primer número esta delineado en la sección caché y
+            esta guardado en medio de otras salidas. Después de medio minuto
+            (habremos establecido el tiempo de vida de 30 segundos) los números
+            deben acoplarse nuevamente porque el registro caché ha expirado --
+            sólo para ser almacenado en caché nuevamente. Deberá probarlo en su
+            visualizador o consola. </p>
+    </div>
+</div>
+<br class="example-break">
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p> Cuando usamos <code class="classname">Zend_Cache</code> , ponemos
+            atención a la importación del identificador caché (pasado a
+                <code class="methodname">save()</code> y
+                <code class="methodname">start()</code> ). Éste deberá ser único para
+            cada recurso que se almacene en caché, de otra manera los registros
+            almacenados en caché que no se vinculan podrían borrarse unos a
+            otros, o peor aún, mostrarse uno en lugar del otro. </p>
+    </td></tr>
+</table></div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.cache.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.cache.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.cache.theory.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Cache </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> The Theory of Caching</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

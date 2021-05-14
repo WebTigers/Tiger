@@ -1,0 +1,104 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Validator Chains</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.validate.html" title="Zend_Validate">
+<link rel="prev" href="zend.validate.set.html" title="Standard Validation Classes">
+<link rel="next" href="zend.validate.writing_validators.html" title="Writing Validators">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Validator Chains</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.validate.set.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Validate</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.validate.writing_validators.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.validate.validator_chains"></a>Validator Chains</h2></div></div></div>
+    
+
+    <p>
+        Often multiple validations should be applied to some value in a particular order. The
+        following code demonstrates a way to solve the example from the
+        <a class="link" href="zend.validate.introduction.html" title="Introduction">introduction</a>, where a username must be
+        between 6 and 12 alphanumeric characters:
+    </p>
+
+    <pre class="programlisting">
+// Create a validator chain and add validators to it
+$validatorChain = new Zend_Validate();
+$validatorChain-&gt;addValidator(
+                    new Zend_Validate_StringLength(array('min' =&gt; 6,
+                                                         'max' =&gt; 12)))
+               -&gt;addValidator(new Zend_Validate_Alnum());
+
+// Validate the username
+if ($validatorChain-&gt;isValid($username)) {
+    // username passed validation
+} else {
+    // username failed validation; print reasons
+    foreach ($validatorChain-&gt;getMessages() as $message) {
+        echo "$message\n";
+    }
+}
+</pre>
+
+    <p>
+        Validators are run in the order they were added to <code class="classname">Zend_Validate</code>. In
+        the above example, the username is first checked to ensure that its length is between 6 and
+        12 characters, and then it is checked to ensure that it contains only alphanumeric
+        characters. The second validation, for alphanumeric characters, is performed regardless of
+        whether the first validation, for length between 6 and 12 characters, succeeds. This means
+        that if both validations fail, <code class="methodname">getMessages()</code> will return failure
+        messages from both validators.
+    </p>
+
+    <p>
+        In some cases it makes sense to have a validator break the chain if its validation process
+        fails. <code class="classname">Zend_Validate</code> supports such use cases with the second
+        parameter to the <code class="methodname">addValidator()</code> method. By setting
+        <code class="varname">$breakChainOnFailure</code> to <code class="constant">TRUE</code>, the added validator
+        will break the chain execution upon failure, which avoids running any other validations that
+        are determined to be unnecessary or inappropriate for the situation. If the above example
+        were written as follows, then the alphanumeric validation would not occur if the string
+        length validation fails:
+    </p>
+
+    <pre class="programlisting">
+$validatorChain-&gt;addValidator(
+                    new Zend_Validate_StringLength(array('min' =&gt; 6,
+                                                         'max' =&gt; 12)),
+                    true)
+               -&gt;addValidator(new Zend_Validate_Alnum());
+</pre>
+
+    <p>
+        Any object that implements <code class="classname">Zend_Validate_Interface</code> may be used in a
+        validator chain.
+    </p>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.validate.set.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.validate.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.validate.writing_validators.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Standard Validation Classes </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Writing Validators</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

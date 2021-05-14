@@ -1,0 +1,265 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Fetching Options and Arguments</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.console.getopt.html" title="Zend_Console_Getopt">
+<link rel="prev" href="zend.console.getopt.rules.html" title="Declaring Getopt Rules">
+<link rel="next" href="zend.console.getopt.configuration.html" title="Configuring Zend_Console_Getopt">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Fetching Options and Arguments</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.console.getopt.rules.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Console_Getopt</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.console.getopt.configuration.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.console.getopt.fetching"></a>Fetching Options and Arguments</h2></div></div></div>
+    
+
+    <p>
+        After you have declared the options that the
+        <code class="classname">Zend_Console_Getopt</code> object should recognize, and supply
+        arguments from the command-line or an array, you can
+        query the object to find out which options were specified by a user in
+        a given command-line invocation of your program. The class implements
+        magic methods so you can query for options by name.
+    </p>
+
+    <p>
+        The parsing of the data is deferred until the first query you make
+        against the <code class="classname">Zend_Console_Getopt</code> object to find out if an
+        option was given, the object performs its parsing. This allows you to
+        use several method calls to configure the options, arguments, help
+        strings, and configuration options before parsing takes place.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.console.getopt.fetching.exceptions"></a>Handling Getopt Exceptions</h3></div></div></div>
+        
+
+        <p>
+            If the user gave any invalid options on the command-line,
+            the parsing function throws a <code class="classname">Zend_Console_Getopt_Exception</code>.
+            You should catch this exception in your application code.
+            You can use the <code class="methodname">parse()</code> method to force the object
+            to parse the arguments. This is useful because you can invoke
+            <code class="methodname">parse()</code> in a <span class="emphasis"><em>try</em></span> block. If it passes,
+            you can be sure that the parsing won't throw an exception again.
+            The exception thrown has a custom method <code class="methodname">getUsageMessage()</code>,
+            which returns as a string the formatted set of usage messages for
+            all declared options.
+        </p>
+
+        <div class="example">
+<a name="zend.console.getopt.fetching.exceptions.example"></a><p class="title"><b>Ejemplo 125. Catching Getopt Exceptions</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+try {
+    $opts = new Zend_Console_Getopt('abp:');
+    $opts-&gt;parse();
+} catch (Zend_Console_Getopt_Exception $e) {
+    echo $e-&gt;getUsageMessage();
+    exit;
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Cases where parsing throws an exception include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Option given is not recognized.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Option requires a parameter but none was given.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Option parameter is of the wrong type.
+                    E.g. a non-numeric string when an integer
+                    was required.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.console.getopt.fetching.byname"></a>Fetching Options by Name</h3></div></div></div>
+        
+
+        <p>
+            You can use the <code class="methodname">getOption()</code> method to query the value
+            of an option. If the option had a parameter, this method returns
+            the value of the parameter. If the option had no parameter but
+            the user did specify it on the command-line, the method returns
+            <code class="constant">TRUE</code>. Otherwise the method returns <code class="constant">NULL</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.console.getopt.fetching.byname.example.setoption"></a><p class="title"><b>Ejemplo 126. Using getOption()</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$opts = new Zend_Console_Getopt('abp:');
+$b = $opts-&gt;getOption('b');
+$p_parameter = $opts-&gt;getOption('p');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Alternatively, you can use the magic <code class="methodname">__get()</code> function
+            to retrieve the value of an option as if it were a class member
+            variable. The <code class="methodname">__isset()</code> magic method is also
+            implemented.
+        </p>
+
+        <div class="example">
+<a name="zend.console.getopt.fetching.byname.example.magic"></a><p class="title"><b>Ejemplo 127. Using __get() and __isset() Magic Methods</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$opts = new Zend_Console_Getopt('abp:');
+if (isset($opts-&gt;b)) {
+    echo "I got the b option.\n";
+}
+$p_parameter = $opts-&gt;p; // null if not set
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            If your options are declared with aliases, you may use any of the
+            aliases for an option in the methods above.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.console.getopt.fetching.reporting"></a>Reporting Options</h3></div></div></div>
+        
+
+        <p>
+            There are several methods to report the full set of
+            options given by the user on the current command-line.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    As a string: use the <code class="methodname">toString()</code> method. The options
+                    are returned as a space-separated string of <span class="command"><strong>flag=value</strong></span>
+                    pairs. The value of an option that does not have a parameter
+                    is the literal string "<code class="constant">TRUE</code>".
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    As an array: use the <code class="methodname">toArray()</code> method. The options
+                    are returned in a simple integer-indexed array of strings, the flag
+                    strings followed by parameter strings, if any.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    As a string containing <acronym class="acronym">JSON</acronym> data: use the
+                    <code class="methodname">toJson()</code> method.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    As a string containing <acronym class="acronym">XML</acronym> data: use the
+                    <code class="methodname">toXml()</code> method.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            In all of the above dumping methods, the flag string is the
+            first string in the corresponding list of aliases. For example,
+            if the option aliases were declared like <span class="command"><strong>verbose|v</strong></span>,
+            then the first string, <span class="command"><strong>verbose</strong></span>, is used as the
+            canonical name of the option. The name of the option flag does not
+            include any preceding dashes.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.console.getopt.fetching.remainingargs"></a>Fetching Non-option Arguments</h3></div></div></div>
+        
+
+        <p>
+            After option arguments and their parameters have been
+            parsed from the command-line, there may be additional arguments
+            remaining. You can query these arguments using the
+            <code class="methodname">getRemainingArgs()</code> method. This method returns
+            an array of the strings that were not part of any options.
+        </p>
+
+        <div class="example">
+<a name="zend.console.getopt.fetching.remainingargs.example"></a><p class="title"><b>Ejemplo 128. Using getRemainingArgs()</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$opts = new Zend_Console_Getopt('abp:');
+$opts-&gt;setArguments(array('-p', 'p_parameter', 'filename'));
+$args = $opts-&gt;getRemainingArgs(); // returns array('filename')
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            <code class="classname">Zend_Console_Getopt</code> supports the <acronym class="acronym">GNU</acronym>
+            convention that an argument consisting of a double-dash signifies the end of
+            options. Any arguments following this signifier must be treated as
+            non-option arguments. This is useful if you might have a non-option
+            argument that begins with a dash.
+            For example: "<span class="command"><strong>rm -- -filename-with-dash</strong></span>".
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.console.getopt.rules.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.console.getopt.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.console.getopt.configuration.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Declaring Getopt Rules </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Configuring Zend_Console_Getopt</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

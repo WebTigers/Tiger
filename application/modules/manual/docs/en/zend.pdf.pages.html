@@ -1,0 +1,232 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Working with Pages</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.pdf.html" title="Zend_Pdf">
+<link rel="prev" href="zend.pdf.save.html" title="Save Changes to PDF Documents">
+<link rel="next" href="zend.pdf.drawing.html" title="Drawing">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Working with Pages</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.pdf.save.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Pdf</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.pdf.drawing.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.pdf.pages"></a>Working with Pages</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.pdf.pages.creation"></a>Page Creation</h3></div></div></div>
+        
+
+        <p>
+            The pages in a <acronym class="acronym">PDF</acronym> document are represented as
+            <code class="classname">Zend_Pdf_Page</code> instances in <code class="classname">Zend_Pdf</code>.
+        </p>
+
+        <p>
+            <acronym class="acronym">PDF</acronym> pages either are loaded from an existing <acronym class="acronym">PDF</acronym>
+            or created using the <code class="classname">Zend_Pdf</code> <acronym class="acronym">API</acronym>.
+        </p>
+
+        <p>
+            New pages can be created by instantiating new <code class="classname">Zend_Pdf_Page</code>
+            objects directly or by calling the <code class="methodname">Zend_Pdf::newPage()</code> method,
+            which returns a <code class="classname">Zend_Pdf_Page</code> object.
+            <code class="methodname">Zend_Pdf::newPage()</code> creates a page that is already attached to
+            a document. Attached pages can't be used with another <acronym class="acronym">PDF</acronym>
+            documents until it's not cloned. See <a class="link" href="zend.pdf.pages.html#zend.pdf.pages.cloning" title="Page cloning">Page
+            cloning</a> section for the details.
+        </p>
+
+        <p>
+            The <code class="methodname">Zend_Pdf::newPage()</code> method and the
+            <code class="classname">Zend_Pdf_Page</code> constructor take the same parameters specifying
+            page size. They can take either the size of page ($x, $y) in points (1/72 inch) or a
+            predefined constant representing a page type:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem"><p>Zend_Pdf_Page::SIZE_A4</p></li>
+<li class="listitem"><p>Zend_Pdf_Page::SIZE_A4_LANDSCAPE</p></li>
+<li class="listitem"><p>Zend_Pdf_Page::SIZE_LETTER</p></li>
+<li class="listitem"><p>Zend_Pdf_Page::SIZE_LETTER_LANDSCAPE</p></li>
+</ul></div>
+<p>
+        </p>
+
+        <p>
+            Document pages are stored in the <code class="varname">$pages</code> public attribute of the
+            <code class="classname">Zend_Pdf</code> class. The attribute holds an array of
+            <code class="classname">Zend_Pdf_Page</code> objects and completely defines the instances and
+            order of pages. This array can be manipulated like any other <acronym class="acronym">PHP</acronym>
+            array:
+        </p>
+
+        <div class="example">
+<a name="zend.pdf.pages.example-1"></a><p class="title"><b>Example 641. PDF document pages management</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+...
+// Reverse page order
+$pdf-&gt;pages = array_reverse($pdf-&gt;pages);
+...
+// Add new page
+$pdf-&gt;pages[] = new Zend_Pdf_Page(Zend_Pdf_Page::SIZE_A4);
+// Add new page
+$pdf-&gt;pages[] = $pdf-&gt;newPage(Zend_Pdf_Page::SIZE_A4);
+
+// Remove specified page.
+unset($pdf-&gt;pages[$id]);
+
+...
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.pdf.pages.cloning"></a>Page cloning</h3></div></div></div>
+        
+
+        <p>
+            Existing <acronym class="acronym">PDF</acronym> page can be duplicated by creating new
+            <code class="classname">Zend_Pdf_Page</code> object with existing page as a parameter:
+        </p>
+
+        <div class="example">
+<a name="zend.pdf.pages.example-2"></a><p class="title"><b>Example 642. Duplicating existing page</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+...
+// Store template page in a separate variable
+$template = $pdf-&gt;pages[$templatePageIndex];
+...
+// Add new page
+$page1 = new Zend_Pdf_Page($template);
+$page1-&gt;drawText('Some text...', $x, $y);
+$pdf-&gt;pages[] = $page1;
+...
+
+// Add another page
+$page2 = new Zend_Pdf_Page($template);
+$page2-&gt;drawText('Another text...', $x, $y);
+$pdf-&gt;pages[] = $page2;
+...
+
+// Remove source template page from the documents.
+unset($pdf-&gt;pages[$templatePageIndex]);
+
+...
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            It's useful if you need several pages to be created using one template.
+        </p>
+
+        <div class="caution"><table border="0" summary="Caution">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Caution]" src="/assets/manual/img/caution.png"></td>
+<th align="left">Caution</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Important! Duplicated page shares some <acronym class="acronym">PDF</acronym> resources with
+                a template page, so it can be used only within the same document as a template page.
+                Modified document can be saved as new one.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            <code class="code">clone</code> operator may be used to create page which is not attached to any document.
+            It takes more time than duplicating page since it needs to copy all dependent objects
+            (used fonts, images and other resources), but it allows to use pages from different source
+            documents to create new one:
+        </p>
+
+        <div class="example">
+<a name="zend.pdf.pages.example-3"></a><p class="title"><b>Example 643. Cloning existing page</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$page1 = clone $pdf1-&gt;pages[$templatePageIndex1];
+$page2 = clone $pdf2-&gt;pages[$templatePageIndex2];
+$page1-&gt;drawText('Some text...', $x, $y);
+$page2-&gt;drawText('Another text...', $x, $y);
+...
+$pdf = new Zend_Pdf();
+$pdf-&gt;pages[] = $page1;
+$pdf-&gt;pages[] = $page2;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            If several template pages are planned to be used as templates then it could be more efficient
+            to utilize <code class="classname">Zend_Pdf_Resource_Extractor</code> class which gives an ability
+            to share resources between cloned pages - fonts, images, etc. (otherwise new resource copy
+            will be created for each cloned page):
+        </p>
+
+        <div class="example">
+<a name="zend.pdf.pages.example-4"></a><p class="title"><b>Example 644. Cloning existing page using Zend_Pdf_Resource_Extractor class</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$extractor = new Zend_Pdf_Resource_Extractor();
+....
+$page1 = $extractor-&gt;clonePage($pdf-&gt;pages[$templatePageIndex1]);
+$page2 = $extractor-&gt;clonePage($pdf-&gt;pages[$templatePageIndex2]);
+$page1-&gt;drawText('Some text...', $x, $y);
+$page2-&gt;drawText('Another text...', $x, $y);
+...
+$pdf = new Zend_Pdf();
+$pdf-&gt;pages[] = $page1;
+$pdf-&gt;pages[] = $page2;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.pdf.save.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.pdf.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.pdf.drawing.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Save Changes to PDF Documents </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Drawing</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

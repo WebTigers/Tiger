@@ -1,0 +1,368 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Using Translation Adapters</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.translate.html" title="Zend_Translate">
+<link rel="prev" href="zend.translate.adapter.html" title="Adapters for Zend_Translate">
+<link rel="next" href="zend.translate.sourcecreation.html" title="Creating source files">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Using Translation Adapters</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.translate.adapter.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Translate</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.translate.sourcecreation.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.translate.using"></a>Using Translation Adapters</h2></div></div></div>
+    
+
+    <p>
+        The next step is to use the adapter within your code.
+    </p>
+
+    <div class="example">
+<a name="zend.translate.using.example1"></a><p class="title"><b>Ejemplo 905. Example of single-language PHP code</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+print "Example\n";
+print "=======\n";
+print "Here is line one\n";
+print "Today is the " . date("d.m.Y") . "\n";
+print "\n";
+print "Here is line two\n";
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <p>
+        The example above shows some output with no support for translation.
+        You probably write your code in your native language.
+        Generally you need to translate not only the output,
+        but also error and log messages.
+    </p>
+
+    <p>
+        The next step is to integrate <code class="classname">Zend_Translate</code> into your existing code.
+        Of course it is much easier if you had already written your code with
+        translation in mind, than changing your code afterwards.
+    </p>
+
+    <div class="example">
+<a name="zend.translate.using.example2"></a><p class="title"><b>Ejemplo 906. Example of multi-lingual PHP code</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+$translate = new Zend_Translate(
+    array(
+        'adapter' =&gt; 'gettext',
+        'content' =&gt; '/my/path/source-de.mo',
+        'locale'  =&gt; 'de'
+    )
+);
+$translate-&gt;addTranslation(
+    array(
+        'content' =&gt; '/path/to/translation/fr-source.mo',
+        'locale'  =&gt; 'fr'
+    )
+);
+
+print $translate-&gt;_("Example") . "\n";
+print "=======\n";
+print $translate-&gt;_("Here is line one") . "\n";
+printf($translate-&gt;_("Today is the %1\$s") . "\n", date('d.m.Y'));
+print "\n";
+
+$translate-&gt;setLocale('fr');
+print $translate-&gt;_("Here is line two") . "\n";
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <p>
+        Now let's take a deeper look into what has been done and how to
+        integrate <code class="classname">Zend_Translate</code> into your own code.
+    </p>
+
+    <p>
+        Create a new <code class="classname">Zend_Translate</code> object and define the base adapter:
+    </p>
+
+    <pre class="programlisting">
+$translate = new Zend_Translate
+    array(
+        'adapter' =&gt; 'gettext',
+        'content' =&gt; '/path/to/translation/source-de.mo',
+        'locale'  =&gt; 'de'
+    )
+);
+</pre>
+
+    <p>
+        In this example we chose the
+        <span class="emphasis"><em>Gettext Adapter</em></span>.
+        We place our file <span class="emphasis"><em>source-de.mo</em></span>
+        into the directory <span class="emphasis"><em>/path/to/translation</em></span>.
+        The gettext file will have German translation included,
+        and we also added another language source for French.
+    </p>
+
+    <p>
+        The next step is to wrap all strings which are to be translated.
+        The simplest approach is to have only simple strings or sentences
+        like this:
+    </p>
+
+    <pre class="programlisting">
+print $translate-&gt;_("Example") . "\n";
+print "=======\n";
+print $translate-&gt;_("Here is line one") . "\n";
+</pre>
+
+    <p>
+        Some strings do not needed to be translated.
+        The separating line is always a separating line,
+        even in other languages.
+    </p>
+
+    <p>
+        Having data values integrated into a translation string is also
+        supported through the use of embedded parameters.
+    </p>
+
+    <pre class="programlisting">
+printf($translate-&gt;_("Today is the %1\$s") . "\n", date("d.m.Y"));
+</pre>
+
+    <p>
+        Instead of <code class="methodname">print()</code>, use the <code class="methodname">printf()</code>
+        function and replace all parameters with <span class="emphasis"><em>%1\$s</em></span> parts.
+        The first is <span class="emphasis"><em>%1\$s</em></span>, the second is <span class="emphasis"><em>%2\$s</em></span>,
+        and so on. This way a translation can be done without knowing
+        the exact value. In our example, the date is always the actual day,
+        but the string can be translated without the knowledge of the actual
+        day.
+    </p>
+
+    <p>
+        Each string is identified in the translation storage by a message ID.
+        You can use message IDs instead of strings in your code, like this:
+    </p>
+
+    <pre class="programlisting">
+print $translate-&gt;_(1) . "\n";
+print "=======\n";
+print $translate-&gt;_(2) . "\n";
+</pre>
+
+    <p>
+        But doing this has several disadvantages:
+    </p>
+
+    <p>
+        You can not see what your code should output just by viewing your code.
+    </p>
+
+    <p>
+        Also you will have problems if some strings are not translated.
+        You must always keep in mind how translation works.
+        First <code class="classname">Zend_Translate</code> checks whether the specified language has a
+        translation for the given message ID or string.
+        If no translation string has been found it refers to the next lower
+        level language as defined within <code class="classname">Zend_Locale</code>.
+        So "<span class="emphasis"><em>de_AT</em></span>" becomes
+        "<span class="emphasis"><em>de</em></span>" only.
+        If there is no translation found for
+        "<span class="emphasis"><em>de</em></span>" either,
+        then the original message is returned.
+        This way you always have an output, even in case the message translation
+        does not exist in your message storage.
+        <code class="classname">Zend_Translate</code> never throws an error or exception when translating
+        strings.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.translate.using.structure"></a>Translation Source Structures</h3></div></div></div>
+        
+
+        <p>
+            Your next step is to create the translation sources for the
+            languages you want to translate.
+            Every adapter is created its own way as described here,
+            but there are common features applicable for all adapters.
+        </p>
+
+        <p>
+            You have to decide where to store your translation source files.
+            Using <code class="classname">Zend_Translate</code> you are not restricted in any way.
+            The following structures are preferable:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Single structured source
+                </p>
+
+                <pre class="programlisting">
+/application/
+/languages/
+/languages/lang.en
+/languages/lang.de
+/library/
+</pre>
+
+                <p>
+                    Positive: all source files for every languages are stored
+                    in one directory. No splitting of related files.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Language structured source
+                </p>
+
+                <pre class="programlisting">
+/application/
+/languages/
+/languages/en/
+/languages/en/first.en
+/languages/en/second.en
+/languages/de/
+/languages/de/first.de
+/languages/de/second.de
+/library
+</pre>
+
+                <p>
+                    Positive: Every language is stored in their own directories.
+                    Easy translation, as every language team has to translate
+                    only one directory. Also the usage of multiple files is transparent.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Application structured source
+                </p>
+
+                <pre class="programlisting">
+/application/
+/application/languages/
+/application/languages/first.en
+/application/languages/first.de
+/application/languages/second.en
+/application/languages/second.de
+/library/
+</pre>
+
+                <p>
+                    Positive: all source files for every language are stored
+                    in one directory. No splitting of related files.
+                </p>
+
+                <p>
+                    Negative: having multiple files for the same language can be
+                    problematic.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Gettext structured source
+                </p>
+
+                <pre class="programlisting">
+/application/
+/languages/
+/languages/de/
+/languages/de/LC_MESSAGES/
+/languages/de/LC_MESSAGES/first.mo
+/languages/de/LC_MESSAGES/second.mo
+/languages/en/
+/languages/en/LC_MESSAGES/
+/languages/en/LC_MESSAGES/first.mo
+/languages/en/LC_MESSAGES/second.mo
+/library/
+</pre>
+
+                <p>
+                    Positive: existing gettext sources can be used without changing
+                    structure.
+                </p>
+
+                <p>
+                    Negative: having sub-sub directories may be confusing
+                    for people who have not used gettext before.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                   File structured source
+                </p>
+
+                <pre class="programlisting">
+/application/
+/application/models/
+/application/models/MyModel.php
+/application/models/MyModel.de
+/application/models/MyModel.en
+/application/controllers/
+/application/controllers/MyController.php
+/application/controllers/MyController.de
+/application/controllers/MyController.en
+/library/
+</pre>
+
+                <p>
+                    Positive: translation files are localted near their source.
+                </p>
+
+                <p>
+                    Negative: too many and also small translation files result in
+                    being tedious to translate.
+                    Also every file has to be added as translation source.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Single structured and language structured source files are most
+            usable for <code class="classname">Zend_Translate</code>.
+        </p>
+
+        <p>
+            So now, that we know which structure we want to have,
+            we should create our translation source files.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.translate.adapter.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.translate.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.translate.sourcecreation.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Adapters for Zend_Translate </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Creating source files</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

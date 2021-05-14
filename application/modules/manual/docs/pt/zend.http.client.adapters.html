@@ -1,0 +1,890 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Http_Client - Connection Adapters</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.http.html" title="Zend_Http">
+<link rel="prev" href="zend.http.client.advanced.html" title="Zend_Http_Client - Advanced Usage">
+<link rel="next" href="zend.http.cookies.html" title="Zend_Http_Cookie and Zend_Http_CookieJar">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Http_Client - Connection Adapters</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.http.client.advanced.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Http</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.http.cookies.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.http.client.adapters"></a>Zend_Http_Client - Connection Adapters</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.adapters.overview"></a>Overview</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Http_Client</code> is based on a connection adapter design. The
+            connection adapter is the object in charge of performing the
+            actual connection to the server, as well as writing requests
+            and reading responses.
+            This connection adapter can be replaced, and you can create and
+            extend the default connection adapters to suite your special needs,
+            without the need to extend or replace the entire <acronym class="acronym">HTTP</acronym> client
+            class, and with the same interface.
+        </p>
+
+        <p>
+            Currently, the <code class="classname">Zend_Http_Client</code> class provides four built-in
+            connection adapters:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="classname">Zend_Http_Client_Adapter_Socket</code> (default)
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="classname">Zend_Http_Client_Adapter_Proxy</code>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="classname">Zend_Http_Client_Adapter_Curl</code>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="classname">Zend_Http_Client_Adapter_Test</code>
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+
+        <p>
+            The <code class="classname">Zend_Http_Client</code> object's adapter connection adapter is set
+            using the 'adapter' configuration option. When instantiating the
+            client object, you can set the 'adapter' configuration option to
+            a string containing the adapter's name (eg. 'Zend_Http_Client_Adapter_Socket')
+            or to a variable holding an adapter object (eg.
+            <span class="command"><strong>new Zend_Http_Client_Adapter_Test</strong></span>). You can also set the
+            adapter later, using the <code class="classname">Zend_Http_Client-&gt;setConfig()</code> method.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.adapters.socket"></a>The Socket Adapter</h3></div></div></div>
+        
+
+        <p>
+            The default connection adapter is the
+            <code class="classname">Zend_Http_Client_Adapter_Socket</code> adapter - this adapter will be
+            used unless you explicitly set the connection adapter. The Socket adapter is based on
+            <acronym class="acronym">PHP</acronym>'s built-in fsockopen() function, and does not require any special
+            extensions or compilation flags.
+        </p>
+
+        <p>
+            The Socket adapter allows several extra configuration options that
+            can be set using <code class="classname">Zend_Http_Client-&gt;setConfig()</code> or
+            passed to the client constructor.
+
+            </p>
+<div class="table">
+<a name="zend.http.client.adapter.socket.configuration.table"></a><p class="title"><b>Tabela 77. Zend_Http_Client_Adapter_Socket configuration parameters</b></p>
+<div class="table-contents">
+                
+
+                <table class="table" summary="Zend_Http_Client_Adapter_Socket configuration parameters" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Expected Type</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>persistent</td>
+<td>
+                                Whether to use persistent <acronym class="acronym">TCP</acronym> connections
+                            </td>
+<td>boolean</td>
+<td><code class="constant">FALSE</code></td>
+</tr>
+<tr>
+<td>ssltransport</td>
+<td>SSL transport layer (eg. 'sslv2', 'tls')</td>
+<td>string</td>
+<td>ssl</td>
+</tr>
+<tr>
+<td>sslcert</td>
+<td>
+                                Path to a <acronym class="acronym">PEM</acronym> encoded <acronym class="acronym">SSL</acronym>
+                                certificate
+                            </td>
+<td>string</td>
+<td><code class="constant">NULL</code></td>
+</tr>
+<tr>
+<td>sslpassphrase</td>
+<td>
+                                Passphrase for the <acronym class="acronym">SSL</acronym> certificate file
+                            </td>
+<td>string</td>
+<td><code class="constant">NULL</code></td>
+</tr>
+<tr>
+<td>sslusecontext</td>
+<td>
+                                Enables proxied connections to use SSL even if
+                                the proxy connection itself does not.
+                            </td>
+<td>boolean</td>
+<td><code class="constant">FALSE</code></td>
+</tr>
+</tbody>
+</table>
+            </div>
+</div>
+<p><br class="table-break">
+
+            </p>
+<div class="note"><table border="0" summary="Note: Persistent TCP Connections">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Persistent TCP Connections</th>
+</tr>
+<tr><td align="left" valign="top">
+                
+
+                <p>
+                    Using persistent <acronym class="acronym">TCP</acronym> connections can potentially speed up
+                    <acronym class="acronym">HTTP</acronym> requests - but in most use cases, will have little
+                    positive effect and might overload the <acronym class="acronym">HTTP</acronym> server you are
+                    connecting to.
+                </p>
+
+                <p>
+                    It is recommended to use persistent <acronym class="acronym">TCP</acronym> connections only if
+                    you connect to the same server very frequently, and are
+                    sure that the server is capable of handling a large number
+                    of concurrent connections. In any case you are encouraged
+                    to benchmark the effect of persistent connections on both
+                    the client speed and server load before using this option.
+                </p>
+
+                <p>
+                    Additionally, when using persistent connections it is recommended to enable
+                    Keep-Alive <acronym class="acronym">HTTP</acronym> requests as described in <a class="link" href="zend.http.client.html#zend.http.client.configuration" title="Configuration Parameters">the configuration section</a> -
+                    otherwise persistent connections might have little or no effect.
+                </p>
+            </td></tr>
+</table></div>
+<p>
+
+            </p>
+<div class="note"><table border="0" summary="Note: HTTPS SSL Stream Parameters">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">HTTPS SSL Stream Parameters</th>
+</tr>
+<tr><td align="left" valign="top">
+                
+
+                <p>
+                    <span class="property">ssltransport</span>, <span class="property">sslcert</span> and
+                    <span class="property">sslpassphrase</span> are only relevant when connecting using
+                    <acronym class="acronym">HTTPS</acronym>.
+                </p>
+
+                <p>
+                    While the default <acronym class="acronym">SSL</acronym> settings should work for most
+                    applications, you might need to change them if the server
+                    you are connecting to requires special client setup. If so,
+                    you should read the sections about <acronym class="acronym">SSL</acronym> transport layers and
+                    options <a class="ulink" href="http://www.php.net/manual/en/transports.php#transports.inet" target="_top">here</a>.
+                </p>
+            </td></tr>
+</table></div>
+<p>
+        </p>
+
+        <div class="example">
+<a name="zend.http.client.adapters.socket.example-1"></a><p class="title"><b>Exemplo 470. Changing the HTTPS transport layer</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// Set the configuration parameters
+$config = array(
+    'adapter'      =&gt; 'Zend_Http_Client_Adapter_Socket',
+    'ssltransport' =&gt; 'tls'
+);
+
+// Instantiate a client object
+$client = new Zend_Http_Client('https://www.example.com', $config);
+
+// The following request will be sent over a TLS secure connection.
+$response = $client-&gt;request();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The result of the example above will be similar to opening a <acronym class="acronym">TCP</acronym>
+            connection using the following <acronym class="acronym">PHP</acronym> command:
+        </p>
+
+        <p>
+            <code class="methodname">fsockopen('tls://www.example.com', 443)</code>
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.http.client.adapters.socket.streamcontext"></a>Customizing and accessing the Socket adapter stream context</h4></div></div></div>
+            
+
+            <p>
+                Starting from Zend Framework 1.9,
+                <code class="classname">Zend_Http_Client_Adapter_Socket</code> provides direct access to the
+                underlying <a class="ulink" href="http://php.net/manual/en/stream.contexts.php" target="_top">stream context</a> used
+                to connect to the remote server. This allows the user to pass specific options and
+                parameters to the <acronym class="acronym">TCP</acronym> stream, and to the <acronym class="acronym">SSL</acronym>
+                wrapper in case of <acronym class="acronym">HTTPS</acronym> connections.
+            </p>
+
+            <p>
+                You can access the stream context using the following methods of
+                <code class="classname">Zend_Http_Client_Adapter_Socket</code>:
+
+                </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                        <p>
+                            <em class="firstterm"><code class="methodname">setStreamContext($context)</code></em>
+                            Sets the stream context to be used by the adapter. Can accept either
+                            a stream context resource created using the <a class="ulink" href="http://php.net/manual/en/function.stream-context-create.php" target="_top"><code class="methodname">stream_context_create()</code></a>
+                            <acronym class="acronym">PHP</acronym> function, or an array of stream context options,
+                            in the same format provided to this function. Providing an array will
+                            create a new stream context using these options, and set it.
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <em class="firstterm"><code class="methodname">getStreamContext()</code></em>
+                            Get the stream context of the adapter. If no stream context was set,
+                            will create a default stream context and return it. You can then set
+                            or get the value of different context options using regular
+                            <acronym class="acronym">PHP</acronym> stream context functions.
+                        </p>
+                    </li>
+</ul></div>
+<p>
+            </p>
+
+            <div class="example">
+<a name="zend.http.client.adapters.socket.streamcontext.example-1"></a><p class="title"><b>Exemplo 471. Setting stream context options for the Socket adapter</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+// Array of options
+$options = array(
+    'socket' =&gt; array(
+        // Bind local socket side to a specific interface
+        'bindto' =&gt; '10.1.2.3:50505'
+    ),
+    'ssl' =&gt; array(
+        // Verify server side certificate,
+        // do not accept invalid or self-signed SSL certificates
+        'verify_peer' =&gt; true,
+        'allow_self_signed' =&gt; false,
+
+        // Capture the peer's certificate
+        'capture_peer_cert' =&gt; true
+    )
+);
+
+// Create an adapter object and attach it to the HTTP client
+$adapter = new Zend_Http_Client_Adapter_Socket();
+$client = new Zend_Http_Client();
+$client-&gt;setAdapter($adapter);
+
+// Method 1: pass the options array to setStreamContext()
+$adapter-&gt;setStreamContext($options);
+
+// Method 2: create a stream context and pass it to setStreamContext()
+$context = stream_context_create($options);
+$adapter-&gt;setStreamContext($context);
+
+// Method 3: get the default stream context and set the options on it
+$context = $adapter-&gt;getStreamContext();
+stream_context_set_option($context, $options);
+
+// Now, preform the request
+$response = $client-&gt;request();
+
+// If everything went well, you can now access the context again
+$opts = stream_context_get_options($adapter-&gt;getStreamContext());
+echo $opts['ssl']['peer_certificate'];
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    Note that you must set any stream context options before using the adapter
+                    to preform actual requests. If no context is set before preforming
+                    <acronym class="acronym">HTTP</acronym> requests with the Socket adapter, a default stream
+                    context will be created. This context resource could be accessed after
+                    preforming any requests using the <code class="methodname">getStreamContext()</code>
+                    method.
+                </p>
+            </td></tr>
+</table></div>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.adapters.proxy"></a>The Proxy Adapter</h3></div></div></div>
+        
+
+        <p>
+            The <code class="classname">Zend_Http_Client_Adapter_Proxy</code> adapter is similar to the
+            default Socket adapter - only the connection is made through an <acronym class="acronym">HTTP</acronym>
+            proxy server instead of a direct connection to the target server. This
+            allows usage of <code class="classname">Zend_Http_Client</code> behind proxy servers - which is
+            sometimes needed for security or performance reasons.
+        </p>
+
+        <p>
+            Using the Proxy adapter requires several additional configuration
+            parameters to be set, in addition to the default 'adapter' option:
+
+            </p>
+<div class="table">
+<a name="zend.http.client.adapters.proxy.table"></a><p class="title"><b>Tabela 78. Zend_Http_Client configuration parameters</b></p>
+<div class="table-contents">
+                
+
+                <table class="table" summary="Zend_Http_Client configuration parameters" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Expected Type</th>
+<th>Example Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>proxy_host</td>
+<td>Proxy server address</td>
+<td>string</td>
+<td>'proxy.myhost.com' or '10.1.2.3'</td>
+</tr>
+<tr>
+<td>proxy_port</td>
+<td>Proxy server <acronym class="acronym">TCP</acronym> port</td>
+<td>integer</td>
+<td>8080 (default) or 81</td>
+</tr>
+<tr>
+<td>proxy_user</td>
+<td>Proxy user name, if required</td>
+<td>string</td>
+<td>'shahar' or '' for none (default)</td>
+</tr>
+<tr>
+<td>proxy_pass</td>
+<td>Proxy password, if required</td>
+<td>string</td>
+<td>'secret' or '' for none (default)</td>
+</tr>
+<tr>
+<td>proxy_auth</td>
+<td>Proxy <acronym class="acronym">HTTP</acronym> authentication type</td>
+<td>string</td>
+<td>Zend_Http_Client::AUTH_BASIC (default)</td>
+</tr>
+</tbody>
+</table>
+            </div>
+</div>
+<p><br class="table-break">
+        </p>
+
+        <p>
+            proxy_host should always be set - if it is not set, the client will
+            fall back to a direct connection using
+            <code class="classname">Zend_Http_Client_Adapter_Socket</code>. proxy_port defaults to '8080' -
+            if your proxy listens on a different port you must set this one as well.
+        </p>
+
+        <p>
+            proxy_user and proxy_pass are only required if your proxy server
+            requires you to authenticate. Providing these will add a 'Proxy-Authentication'
+            header to the request. If your proxy does not require authentication,
+            you can leave these two options out.
+        </p>
+
+        <p>
+            proxy_auth sets the proxy authentication type, if your proxy server
+            requires authentication. Possibly values are similar to the ones
+            accepted by the Zend_Http_Client::setAuth() method. Currently, only
+            basic authentication (Zend_Http_Client::AUTH_BASIC) is supported.
+        </p>
+
+        <div class="example">
+<a name="zend.http.client.adapters.proxy.example-1"></a><p class="title"><b>Exemplo 472. Using Zend_Http_Client behind a proxy server</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// Set the configuration parameters
+$config = array(
+    'adapter'    =&gt; 'Zend_Http_Client_Adapter_Proxy',
+    'proxy_host' =&gt; 'proxy.int.zend.com',
+    'proxy_port' =&gt; 8000,
+    'proxy_user' =&gt; 'shahar.e',
+    'proxy_pass' =&gt; 'bananashaped'
+);
+
+// Instantiate a client object
+$client = new Zend_Http_Client('http://www.example.com', $config);
+
+// Continue working...
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            As mentioned, if proxy_host is not set or is set to a blank string,
+            the connection will fall back to a regular direct connection. This
+            allows you to easily write your application in a way that allows a
+            proxy to be used optionally, according to a configuration parameter.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Since the proxy adapter inherits from
+                <code class="classname">Zend_Http_Client_Adapter_Socket</code>, you can use the stream
+                context access method (see <a class="link" href="zend.http.client.adapters.html#zend.http.client.adapters.socket.streamcontext" title="Customizing and accessing the Socket adapter stream context">this section</a>)
+                to set stream context options on Proxy connections as demonstrated above.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.adapters.curl"></a>The cURL Adapter</h3></div></div></div>
+        
+
+        <p>
+            cURL is a standard <acronym class="acronym">HTTP</acronym> client library that is distributed with many
+            operating systems and can be used in <acronym class="acronym">PHP</acronym> via the cURL extension. It
+            offers functionality for many special cases which can occur for a
+            <acronym class="acronym">HTTP</acronym> client and make it a perfect choice for a
+            <acronym class="acronym">HTTP</acronym> adapter. It supports secure connections, proxy, all sorts of
+            authentication mechanisms and shines in applications that move large files around
+            between servers.
+        </p>
+
+        <div class="example">
+<a name="zend.http.client.adapters.curl.example-1"></a><p class="title"><b>Exemplo 473. Setting cURL options</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$config = array(
+    'adapter'   =&gt; 'Zend_Http_Client_Adapter_Curl',
+    'curloptions' =&gt; array(CURLOPT_FOLLOWLOCATION =&gt; true),
+);
+$client = new Zend_Http_Client($uri, $config);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            By default the cURL adapter is configured to behave exactly like
+            the Socket Adapter and it also accepts the same configuration parameters
+            as the Socket and Proxy adapters. You can also change the cURL options by either
+            specifying the 'curloptions' key in the constructor of the adapter or by calling
+            <code class="methodname">setCurlOption($name, $value)</code>. The <code class="varname">$name</code> key
+            corresponds to the CURL_* constants of the cURL extension. You can
+            get access to the Curl handle by calling <span class="command"><strong>$adapter-&gt;getHandle();</strong></span>
+        </p>
+
+        <div class="example">
+<a name="zend.http.client.adapters.curl.example-2"></a><p class="title"><b>Exemplo 474. Transfering Files by Handle</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                You can use cURL to transfer very large files over <acronym class="acronym">HTTP</acronym> by
+                filehandle.
+            </p>
+
+            <pre class="programlisting">
+$putFileSize   = filesize("filepath");
+$putFileHandle = fopen("filepath", "r");
+
+$adapter = new Zend_Http_Client_Adapter_Curl();
+$client = new Zend_Http_Client();
+$client-&gt;setAdapter($adapter);
+$adapter-&gt;setConfig(array(
+    'curloptions' =&gt; array(
+        CURLOPT_INFILE =&gt; $putFileHandle,
+        CURLOPT_INFILESIZE =&gt; $putFileSize
+    )
+));
+$client-&gt;request("PUT");
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.adapters.test"></a>The Test Adapter</h3></div></div></div>
+        
+
+        <p>
+            Sometimes, it is very hard to test code that relies on <acronym class="acronym">HTTP</acronym>
+            connections. For example, testing an application that pulls an <acronym class="acronym">RSS</acronym>
+            feed from a remote server will require a network connection, which is not always
+            available.
+        </p>
+
+        <p>
+            For this reason, the <code class="classname">Zend_Http_Client_Adapter_Test</code> adapter is
+            provided. You can write your application to use <code class="classname">Zend_Http_Client</code>,
+            and just for testing purposes, for example in your unit testing
+            suite, you can replace the default adapter with a Test adapter (a
+            mock object), allowing you to run tests without actually
+            performing server connections.
+        </p>
+
+        <p>
+            The <code class="classname">Zend_Http_Client_Adapter_Test</code> adapter provides an additional
+            method, setResponse() method. This method takes one parameter,
+            which represents an <acronym class="acronym">HTTP</acronym> response as either text or a
+            <code class="classname">Zend_Http_Response</code> object. Once set, your Test adapter will
+            always return this response, without even performing an actual <acronym class="acronym">HTTP</acronym>
+            request.
+        </p>
+
+        <div class="example">
+<a name="zend.http.client.adapters.test.example-1"></a><p class="title"><b>Exemplo 475. Testing Against a Single HTTP Response Stub</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// Instantiate a new adapter and client
+$adapter = new Zend_Http_Client_Adapter_Test();
+$client = new Zend_Http_Client('http://www.example.com', array(
+    'adapter' =&gt; $adapter
+));
+
+// Set the expected response
+$adapter-&gt;setResponse(
+    "HTTP/1.1 200 OK"        . "\r\n" .
+    "Content-type: text/xml" . "\r\n" .
+                               "\r\n" .
+    '&lt;?xml version="1.0" encoding="UTF-8"?&gt;' .
+    '&lt;rss version="2.0" ' .
+    '     xmlns:content="http://purl.org/rss/1.0/modules/content/"' .
+    '     xmlns:wfw="http://wellformedweb.org/CommentAPI/"' .
+    '     xmlns:dc="http://purl.org/dc/elements/1.1/"&gt;' .
+    '  &lt;channel&gt;' .
+    '    &lt;title&gt;Premature Optimization&lt;/title&gt;' .
+    // and so on...
+    '&lt;/rss&gt;');
+
+$response = $client-&gt;request('GET');
+// .. continue parsing $response..
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The above example shows how you can preset your <acronym class="acronym">HTTP</acronym> client to
+            return the response you need. Then, you can continue testing your
+            own code, without being dependent on a network connection, the server's
+            response, etc. In this case, the test would continue to check how
+            the application parses the <acronym class="acronym">XML</acronym> in the response body.
+        </p>
+
+        <p>
+            Sometimes, a single method call to an object can result in that
+            object performing multiple <acronym class="acronym">HTTP</acronym> transactions. In this case, it's
+            not possible to use setResponse() alone because there's no
+            opportunity to set the next response(s) your program might need
+            before returning to the caller.
+        </p>
+
+        <div class="example">
+<a name="zend.http.client.adapters.test.example-2"></a><p class="title"><b>Exemplo 476. Testing Against Multiple HTTP Response Stubs</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// Instantiate a new adapter and client
+$adapter = new Zend_Http_Client_Adapter_Test();
+$client = new Zend_Http_Client('http://www.example.com', array(
+    'adapter' =&gt; $adapter
+));
+
+// Set the first expected response
+$adapter-&gt;setResponse(
+    "HTTP/1.1 302 Found"      . "\r\n" .
+    "Location: /"             . "\r\n" .
+    "Content-Type: text/html" . "\r\n" .
+                                "\r\n" .
+    '&lt;html&gt;' .
+    '  &lt;head&gt;&lt;title&gt;Moved&lt;/title&gt;&lt;/head&gt;' .
+    '  &lt;body&gt;&lt;p&gt;This page has moved.&lt;/p&gt;&lt;/body&gt;' .
+    '&lt;/html&gt;');
+
+// Set the next successive response
+$adapter-&gt;addResponse(
+    "HTTP/1.1 200 OK"         . "\r\n" .
+    "Content-Type: text/html" . "\r\n" .
+                                "\r\n" .
+    '&lt;html&gt;' .
+    '  &lt;head&gt;&lt;title&gt;My Pet Store Home Page&lt;/title&gt;&lt;/head&gt;' .
+    '  &lt;body&gt;&lt;p&gt;...&lt;/p&gt;&lt;/body&gt;' .
+    '&lt;/html&gt;');
+
+// inject the http client object ($client) into your object
+// being tested and then test your object's behavior below
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The setResponse() method clears any responses in the
+            <code class="classname">Zend_Http_Client_Adapter_Test</code>'s buffer and sets the
+            first response that will be returned. The addResponse()
+            method will add successive responses.
+        </p>
+
+        <p>
+            The responses will be replayed in the order that they
+            were added. If more requests are made than the number
+            of responses stored, the responses will cycle again
+            in order.
+        </p>
+
+        <p>
+            In the example above, the adapter is configured to test your
+            object's behavior when it encounters a 302 redirect. Depending on
+            your application, following a redirect may or may not be desired
+            behavior. In our example, we expect that the redirect will be
+            followed and we configure the test adapter to help us test this.
+            The initial 302 response is set up with the setResponse() method
+            and the 200 response to be returned next is added with the
+            addResponse() method. After configuring the test adapter, inject
+            the <acronym class="acronym">HTTP</acronym> client containing the adapter into your object under test
+            and test its behavior.
+        </p>
+
+        <p>
+            If you need the adapter to fail on demand you can use
+            <code class="methodname">setNextRequestWillFail($flag)</code>. The method will cause the next
+            call to <code class="methodname">connect()</code> to throw an
+            <code class="classname">Zend_Http_Client_Adapter_Exception</code> exception. This can be useful
+            when your application caches content from an external site (in case the site goes down)
+            and you want to test this feature.
+        </p>
+
+        <div class="example">
+<a name="zend.http.client.adapters.test.example-3"></a><p class="title"><b>Exemplo 477. Forcing the adapter to fail</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// Instantiate a new adapter and client
+$adapter = new Zend_Http_Client_Adapter_Test();
+$client = new Zend_Http_Client('http://www.example.com', array(
+    'adapter' =&gt; $adapter
+));
+
+// Force the next request to fail with an exception
+$adapter-&gt;setNextRequestWillFail(true);
+
+try {
+    // This call will result in a Zend_Http_Client_Adapter_Exception
+    $client-&gt;request();
+} catch (Zend_Http_Client_Adapter_Exception $e) {
+    // ...
+}
+
+// Further requests will work as expected until
+// you call setNextRequestWillFail(true) again
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.client.adapters.extending"></a>Creating your own connection adapters</h3></div></div></div>
+        
+
+        <p>
+            You can create your own connection adapters and use them. You could, for
+            example, create a connection adapter that uses persistent sockets,
+            or a connection adapter with caching abilities, and use them as
+            needed in your application.
+        </p>
+
+        <p>
+            In order to do so, you must create your own adapter class that implements
+            the <code class="classname">Zend_Http_Client_Adapter_Interface</code> interface. The following
+            example shows the skeleton of a user-implemented adapter class. All the public
+            functions defined in this example must be defined in your adapter as well:
+        </p>
+
+        <div class="example">
+<a name="zend.http.client.adapters.extending.example-1"></a><p class="title"><b>Exemplo 478. Creating your own connection adapter</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+class MyApp_Http_Client_Adapter_BananaProtocol
+    implements Zend_Http_Client_Adapter_Interface
+{
+    /**
+     * Set the configuration array for the adapter
+     *
+     * @param array $config
+     */
+    public function setConfig($config = array())
+    {
+        // This rarely changes - you should usually copy the
+        // implementation in Zend_Http_Client_Adapter_Socket.
+    }
+
+    /**
+     * Connect to the remote server
+     *
+     * @param string  $host
+     * @param int     $port
+     * @param boolean $secure
+     */
+    public function connect($host, $port = 80, $secure = false)
+    {
+        // Set up the connection to the remote server
+    }
+
+    /**
+     * Send request to the remote server
+     *
+     * @param string        $method
+     * @param Zend_Uri_Http $url
+     * @param string        $http_ver
+     * @param array         $headers
+     * @param string        $body
+     * @return string Request as text
+     */
+    public function write($method,
+                          $url,
+                          $http_ver = '1.1',
+                          $headers = array(),
+                          $body = '')
+    {
+        // Send request to the remote server.
+        // This function is expected to return the full request
+        // (headers and body) as a string
+    }
+
+    /**
+     * Read response from server
+     *
+     * @return string
+     */
+    public function read()
+    {
+        // Read response from remote server and return it as a string
+    }
+
+    /**
+     * Close the connection to the server
+     *
+     */
+    public function close()
+    {
+        // Close the connection to the remote server - called last.
+    }
+}
+
+// Then, you could use this adapter:
+$client = new Zend_Http_Client(array(
+    'adapter' =&gt; 'MyApp_Http_Client_Adapter_BananaProtocol'
+));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.http.client.advanced.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.http.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.http.cookies.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Http_Client - Advanced Usage </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_Http_Cookie and Zend_Http_CookieJar</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

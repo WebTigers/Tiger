@@ -1,0 +1,319 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Dom_Query</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.dom.html" title="Zend_Dom">
+<link rel="prev" href="zend.dom.introduction.html" title="Introduction">
+<link rel="next" href="zend.event-manager.html" title="Zend_EventManager">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Dom_Query</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.dom.introduction.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Dom</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.event-manager.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.dom.query"></a>Zend_Dom_Query</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Dom_Query</code> fournit des mécanismes pour requêter dans les
+        documents <acronym class="acronym">XML</acronym> et (X)HTML en utilisant soit XPath ou les sélecteurs <acronym class="acronym">CSS</acronym>. Il a été développé
+        pour faciliter les tests fonctionnels des applications <acronym class="acronym">MVC</acronym>, mais pourrait également être
+        employé pour le développement rapide de "screen scrapers".
+    </p>
+
+    <p>
+        La notation de type sélecteur <acronym class="acronym">CSS</acronym> est fournie comme notation plus simple et plus
+        familière pour les développeurs Web à utiliser lors de la requête de documents ayant une
+        structure de type <acronym class="acronym">XML</acronym>. La notation devrait être familière pour n'importe qui ayant écrit
+        des feuilles de styles <acronym class="acronym">CSS</acronym> ou ayant utiliser des librairies Javascript qui fournissent pour
+        sélectionner des noeuds en utilisant des sélecteurs <acronym class="acronym">CSS</acronym> (
+        <a class="ulink" href="http://prototypejs.org/api/utility/dollar-dollar" target="_top">Prototype's $$()</a>et
+        <a class="ulink" href="http://api.dojotoolkit.org/jsdoc/dojo/HEAD/dojo.query" target="_top">Dojo's
+        dojo.query</a>ont tous les deux inspirer ce composant).
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.dom.query.operation"></a>Aspect théorique</h3></div></div></div>
+        
+
+        <p>
+            Pour utiliser <code class="classname">Zend_Dom_Query</code>, vous instanciez un objet
+            <code class="classname">Zend_Dom_Query</code>, en fournissant optionnellement un document à
+            analyser (sous la forme d'une chaîne). Une fois que vous avez un document, vous pouvez
+            utiliser indifféremment les méthodes <code class="methodname">query()</code> ou
+            <code class="methodname">queryXpath()</code> ; chaque méthode retournera un objet
+            <code class="classname">Zend_Dom_Query_Result</code> avec tout noeud trouvé.
+        </p>
+
+        <p>
+            La différence principale entre <code class="classname">Zend_Dom_Query</code> et
+            l'utilisation de DOMDocument + DOMXPath est la possibilité de requêter avec les
+            sélecteurs <acronym class="acronym">CSS</acronym>. Vous pouvez utiliser n'importe quel élément suivant, dans n'importe
+            quelle combinaison :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>types de l'élément</em></span> : fourni un type d'élément à
+                    rechercher : "div", "a", "span", "h2", etc.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>attributs de style</em></span> : les classes <acronym class="acronym">CSS</acronym> à
+                    rechercher : ".error", "div.error", "label.required", etc. Si un élément
+                    défini plus qu'une classe, la correspondance sera trouvé si la classe est
+                    présente quelque part dans la déclaration de l'attribut.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>attribut id</em></span> : ID de l'élément à rechercher :
+                    "#content", "div#nav", etc.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>attributs arbitraires</em></span> : tout attribut arbitraire de
+                    l'élément à rechercher. Trois types de recherche sont possibles :
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; ">
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>correspondance exacte</em></span> : l'attribut vaut
+                            exactement la chaîne fournie : "div[bar="baz"]" trouvera un élément div
+                            qui possède un attribut "bar" dont la valeur vaut exactement
+                            "baz".
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>correspondance de mot</em></span> : l'attribut contient
+                            un mot correspondant à la chaîne fournie : "div[bar~="baz"]"
+                            trouvera un élément div qui possède un attribut "bar" dont la valeur
+                            contient le mot "baz". "&lt;div bar="foo baz"&gt;" trouvera, mais pas
+                            "&lt;div bar="foo bazbat"&gt;".
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <span class="emphasis"><em>correspondance de parties de chaînes</em></span> :
+                            l'attribut contient la chaîne fournie : "div[bar*="baz"]" trouvera
+                            un élément div qui possède un attribut "bar" dont la valeur contient la
+                            chaîne "baz".
+                        </p>
+                    </li>
+</ul></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Descendants directs</em></span> : utilise "&gt;" entre les
+                    sélecteurs pour représenter une descendance direct. "div &gt; span" trouvera
+                    seulement les éléments "span" qui sont des descendants directs d'un élément
+                    "div". Peut aussi être utilisé avec chacun des sélecteurs ci-dessus.
+                </p>
+
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Descendants</em></span> : une chaîne avec des sélecteurs
+                    multiples ensemble pour indiquer hiérarchie à rechercher. "div .foo span #one"
+                    trouvera un élément avec un id "one" qui est un descendant avec un profondeur
+                    arbitraire d'un élément "span", qui est lui-même un descendant avec un
+                    profondeur arbitraire d'un élément ayant une classe "foo", qui est un
+                    descendant avec un profondeur arbitraire d'un élément "div". Par exemple, il
+                    trouvera le lien vers le mot "One" dans le code ci-dessous :
+                </p>
+
+                <pre class="programlisting">
+&lt;div&gt;
+    &lt;table&gt;
+        &lt;tr&gt;
+            &lt;td class="foo"&gt;
+                &lt;div&gt;
+                    Lorem ipsum &lt;span class="bar"&gt;
+                        &lt;a href="/foo/bar" id="one"&gt;One&lt;/a&gt;
+                        &lt;a href="/foo/baz" id="two"&gt;Two&lt;/a&gt;
+                        &lt;a href="/foo/bat" id="three"&gt;Three&lt;/a&gt;
+                        &lt;a href="/foo/bla" id="four"&gt;Four&lt;/a&gt;
+                    &lt;/span&gt;
+                &lt;/div&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+&lt;/div&gt;
+</pre>
+
+            </li>
+</ul></div>
+
+        <p>
+            Une fois que vous avez réalisé votre recherche, vous pouvez ensuite travailler
+            avec l'objet de résultat pour déterminer les informations sur les noeuds, ainsi que
+            pour les récupérer eux et/ou leurs contenus directement afin de les examiner et les
+            manipuler. <code class="classname">Zend_Dom_Query_Result</code> implémente
+            <code class="code">Countable</code> and <code class="code">Iterator</code>, et stocke le résultat en interne sous
+            la forme DOMNodes/DOMElements. En exemple, considérons l'appel suivant sur l'HTML
+            ci-dessus :
+        </p>
+
+        <pre class="programlisting">
+$dom = new Zend_Dom_Query($html);
+$results = $dom-&gt;query('.foo .bar a');
+
+$count = count($results);    // trouvera 4 correspondances
+foreach ($results as $result) {
+    // $result is a DOMElement
+}
+</pre>
+
+        <p>
+            <code class="classname">Zend_Dom_Query</code> permet aussi de faire directement des
+            recherches de type XPath en utilisant la méthode <code class="methodname">queryXpath()</code> ; vous
+            pouvez fournir toute requête XPath valide à cette méthode, et elle retournera un objet
+            <code class="classname">Zend_Dom_Query_Result</code>.
+        </p>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.dom.query.methods"></a>Méthodes disponibles</h3></div></div></div>
+        
+
+        <p>
+            La famille des classes <code class="classname">Zend_Dom_Query</code> possèdent les
+            méthodes suivantes.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dom.query.methods.zenddomquery"></a>Zend_Dom_Query</h4></div></div></div>
+            
+
+            <p>
+                Ces méthodes sont disponibles pour <code class="classname">Zend_Dom_Query</code> :
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">setDocumentXml($document)</code> : spécifie une chaîne <acronym class="acronym">XML</acronym> dans
+                        laquelle requêter.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">setDocumentXhtml($document)</code> : spécifie une chaîne <acronym class="acronym">XHTML</acronym>
+                        dans laquelle requêter.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">setDocumentHtml($document)</code> : spécifie une chaîne HTML
+                        dans laquelle requêter.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">setDocument($document)</code> : spécifie une chaîne dans
+                        laquelle requêter ; <code class="classname">Zend_Dom_Query</code> tentera
+                        alors de détecter automatiquement le type de document.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getDocument()</code> : récupère le document original fourni à
+                        l'objet.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getDocumentType()</code> : récupère le type de document fourni à
+                        l'objet ; sera une des constantes de classe :
+                        <code class="constant">DOC_XML</code>, <code class="constant">DOC_XHTML</code>, ou <code class="constant">DOC_HTML</code>.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">query($query)</code> : recherche dans le document en utilisant
+                        la notation de type sélecteur <acronym class="acronym">CSS</acronym>.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">queryXpath($xPathQuery)</code> : recherche dans le document en
+                        utilisant la notation XPath.
+                    </p>
+                </li>
+</ul></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dom.query.methods.zenddomqueryresult"></a>Zend_Dom_Query_Result</h4></div></div></div>
+            
+
+            <p>
+                Comme mentionné auparavant, <code class="classname">Zend_Dom_Query_Result</code>
+                implémente à la fois <code class="code">Iterator</code> et <code class="code">Countable</code>, et en tant
+                que tel peut être utilisé dans une boucle <code class="code">foreach</code> ainsi qu'avec la
+                fonction <code class="methodname">count()</code>. De plus il expose les méthodes suivantes :
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getCssQuery()</code> : retourne le sélecteur <acronym class="acronym">CSS</acronym> utilisé pour
+                        produire le résultat (si fourni).
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getXpathQuery()</code> : retourne la requête XPath utilisé pour
+                        produire le résultat, <code class="classname">Zend_Dom_Query</code> convertit les
+                        recherches de type sélecteur <acronym class="acronym">CSS</acronym> en notation XPath, donc cette valeur sera
+                        toujours présente.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getDocument()</code> : récupère l'élément DOMDocument dans
+                        lequel la recherche à été effectuée.
+                    </p>
+                </li>
+</ul></div>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.dom.introduction.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.dom.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.event-manager.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_EventManager</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

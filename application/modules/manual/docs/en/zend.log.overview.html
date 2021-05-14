@@ -1,0 +1,375 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Overview</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.log.html" title="Zend_Log">
+<link rel="prev" href="zend.log.html" title="Zend_Log">
+<link rel="next" href="zend.log.writers.html" title="Writers">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Overview</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.log.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Log</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.log.writers.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.log.overview"></a>Overview</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Log</code> is a component for general purpose logging.
+        It supports multiple log backends, formatting messages sent to the log,
+        and filtering messages from being logged. These functions are divided
+        into the following objects:
+
+        </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    A Log (instance of <code class="classname">Zend_Log</code>) is the object that your
+                    application uses the most. You can have as many Log objects as you
+                    like; they do not interact. A Log object must contain at
+                    least one Writer, and can optionally contain one or more Filters.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    A Writer (inherits from <code class="classname">Zend_Log_Writer_Abstract</code>) is
+                    responsible for saving data to storage.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    A Filter (implements <code class="classname">Zend_Log_Filter_Interface</code>)
+                    blocks log data from being saved. A filter may be applied to an
+                    individual Writer, or to a Log where it is applied before all
+                    Writers. In either case, filters may be chained.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    A Formatter (implements <code class="classname">Zend_Log_Formatter_Interface</code>)
+                    can format the log data before it is written by a Writer. Each
+                    Writer has exactly one Formatter.
+                </p>
+            </li>
+</ul></div>
+<p>
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.overview.creating-a-logger"></a>Creating a Log</h3></div></div></div>
+        
+
+        <p>
+            To get started logging, instantiate a Writer and then pass it to a Log instance:
+        </p>
+
+        <pre class="programlisting">
+$logger = new Zend_Log();
+$writer = new Zend_Log_Writer_Stream('php://output');
+
+$logger-&gt;addWriter($writer);
+</pre>
+
+        <p>
+            It is important to note that the Log must
+            have at least one Writer. You can add any number of Writers using the
+            Log's <code class="methodname">addWriter()</code> method.
+        </p>
+
+        <p>
+            Alternatively, you can pass a Writer directly to constructor of Log as
+            a shortcut:
+        </p>
+
+        <pre class="programlisting">
+$writer = new Zend_Log_Writer_Stream('php://output');
+$logger = new Zend_Log($writer);
+</pre>
+
+        <p>
+            The Log is now ready to use.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.overview.logging-messages"></a>Logging Messages</h3></div></div></div>
+        
+
+        <p>
+            To log a message, call the <code class="methodname">log()</code> method of a Log instance
+            and pass it the message with a corresponding priority:
+        </p>
+
+        <pre class="programlisting">
+$logger-&gt;log('Informational message', Zend_Log::INFO);
+</pre>
+
+        <p>
+            The first parameter of the <code class="methodname">log()</code> method is a string
+            <span class="property">message</span> and the second parameter is an integer
+            <span class="property">priority</span>. The priority must be one of the priorities recognized by
+            the Log instance. This is explained in the next section.
+        </p>
+
+        <p>
+            A shortcut is also available. Instead of calling the <code class="methodname">log()</code>
+            method, you can call a method by the same name as the priority:
+        </p>
+
+        <pre class="programlisting">
+$logger-&gt;log('Informational message', Zend_Log::INFO);
+$logger-&gt;info('Informational message');
+
+$logger-&gt;log('Emergency message', Zend_Log::EMERG);
+$logger-&gt;emerg('Emergency message');
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.overview.destroying-a-logger"></a>Destroying a Log</h3></div></div></div>
+        
+
+        <p>
+            If the Log object is no longer needed, set the variable containing it to
+            <code class="constant">NULL</code> to destroy it. This will automatically call the
+            <code class="methodname">shutdown()</code> instance method of each attached Writer before
+            the Log object is destroyed:
+        </p>
+
+        <pre class="programlisting">
+$logger = null;
+</pre>
+
+        <p>
+            Explicitly destroying the log in this way is optional and is performed
+            automatically at <acronym class="acronym">PHP</acronym> shutdown.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.overview.builtin-priorities"></a>Using Built-in Priorities</h3></div></div></div>
+        
+
+        <p>
+            The <code class="classname">Zend_Log</code> class defines the following priorities:
+        </p>
+
+        <pre class="programlisting">
+EMERG   = 0;  // Emergency: system is unusable
+ALERT   = 1;  // Alert: action must be taken immediately
+CRIT    = 2;  // Critical: critical conditions
+ERR     = 3;  // Error: error conditions
+WARN    = 4;  // Warning: warning conditions
+NOTICE  = 5;  // Notice: normal but significant condition
+INFO    = 6;  // Informational: informational messages
+DEBUG   = 7;  // Debug: debug messages
+</pre>
+
+        <p>
+            These priorities are always available, and a convenience method of the same name
+            is available for each one.
+        </p>
+
+        <p>
+            The priorities are not arbitrary. They come from the BSD syslog protocol,
+            which is described in <a class="ulink" href="http://tools.ietf.org/html/rfc3164" target="_top">RFC-3164</a>.
+            The names and corresponding priority numbers are also
+            compatible with another <acronym class="acronym">PHP</acronym> logging system,
+            <a class="ulink" href="http://pear.php.net/package/log" target="_top">PEAR Log</a>,
+            which perhaps promotes interoperability between it and <code class="classname">Zend_Log</code>.
+        </p>
+
+        <p>
+            Priority numbers descend in order of importance. <code class="constant">EMERG</code> (0)
+            is the most important priority. <code class="constant">DEBUG</code> (7) is the least
+            important priority of the built-in priorities. You may define priorities
+            of lower importance than <code class="constant">DEBUG</code>. When
+            selecting the priority for your log message, be aware of this priority
+            hierarchy and choose appropriately.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.overview.user-defined-priorities"></a>Adding User-defined Priorities</h3></div></div></div>
+        
+
+        <p>
+            User-defined priorities can be added at runtime using the Log's
+            <code class="methodname">addPriority()</code> method:
+        </p>
+
+        <pre class="programlisting">
+$logger-&gt;addPriority('FOO', 8);
+</pre>
+
+        <p>
+            The snippet above creates a new priority, <code class="constant">FOO</code>, whose
+            value is '8'. The new priority is then available for logging:
+        </p>
+
+        <pre class="programlisting">
+$logger-&gt;log('Foo message', 8);
+$logger-&gt;foo('Foo Message');
+</pre>
+
+        <p>
+            New priorities cannot overwrite existing ones.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.overview.understanding-fields"></a>Understanding Log Events</h3></div></div></div>
+        
+
+        <p>
+            When you call the <code class="methodname">log()</code> method or one of its shortcuts, a
+            log event is created. This is simply an associative array with data
+            describing the event that is passed to the writers. The following keys
+            are always created in this array: <span class="property">timestamp</span>,
+            <span class="property">message</span>, <span class="property">priority</span>, and
+            <span class="property">priorityName</span>.
+        </p>
+
+        <p>
+            The creation of the <span class="property">event</span> array is completely transparent.
+            However, knowledge of the <span class="property">event</span> array is required for adding an
+            item that does not exist in the default set above.
+        </p>
+
+        <p>
+            To add a new item to every future event, call the
+            <code class="methodname">setEventItem()</code> method giving a key and a value:
+        </p>
+
+        <pre class="programlisting">
+$logger-&gt;setEventItem('pid', getmypid());
+</pre>
+
+        <p>
+            The example above sets a new item named <span class="property">pid</span> and populates
+            it with the PID of the current process. Once a new item has been
+            set, it is available automatically to all writers along with all of the
+            other data event data during logging. An item can be overwritten at any
+            time by calling the <code class="methodname">setEventItem()</code> method again.
+        </p>
+
+        <p>
+            Setting a new event item with <code class="methodname">setEventItem()</code> causes the
+            new item to be sent to all writers of the logger. However, this does
+            not guarantee that the writers actually record the item. This is
+            because the writers won't know what to do with it unless a formatter
+            object is informed of the new item. Please see the section on Formatters
+            to learn more.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.overview.as-errorHandler"></a>Log PHP Errors</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Log</code> can also be used to log <acronym class="acronym">PHP</acronym> errors.
+            Calling <code class="methodname">registerErrorHandler()</code> will add
+            <code class="classname">Zend_Log</code> before the current error handler, and will pass the
+            error along as well.
+        </p>
+
+        <p>
+            Zend_Log events from PHP errors have the additional fields matching
+            <code class="methodname">handler  ( int $errno  , string $errstr  [, string $errfile  [, int
+                $errline  [, array $errcontext  ]]] )</code> from <a class="ulink" href="http://us3.php.net/manual/en/function.set-error-handler.php" target="_top">set_error_handler</a>
+        </p>
+
+        <div class="table">
+<a name="zend.log.overview.as-errorHandler.properties.table-1"></a><p class="title"><b>Table 111. Additional fields for Zend_Log events from PHP errors</b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="Additional fields for Zend_Log events from PHP errors" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Name</th>
+<th>Error Handler Parameter</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>message</td>
+<td>errstr</td>
+<td>Contains the error message, as a string.</td>
+</tr>
+<tr>
+<td>errno</td>
+<td>errno</td>
+<td>Contains the level of the error raised, as an integer.</td>
+</tr>
+<tr>
+<td>file</td>
+<td>errfile</td>
+<td>
+                            Contains the filename that the error was raised in, as a string.
+                        </td>
+</tr>
+<tr>
+<td>line</td>
+<td>errline</td>
+<td>
+                            Contains the line number the error was raised at, as an integer.
+                        </td>
+</tr>
+<tr>
+<td>context</td>
+<td>errcontext</td>
+<td>
+                            (optional) An array that points to the active symbol table at the point
+                            the error occurred. In other words, errcontext  will contain an array of
+                            every variable that existed in the scope the error was triggered in.
+                            User error handler must not modify error context.
+                        </td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.log.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.log.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.log.writers.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Log </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Writers</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

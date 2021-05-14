@@ -1,0 +1,3319 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Action Helpers</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.action.html" title="Action Controllers">
+<link rel="next" href="zend.controller.response.html" title="The Response Object">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Action Helpers</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.action.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.response.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.actionhelpers"></a>Action Helpers</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.actionhelper.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            Action Helpers allow developers to inject runtime and/or on-demand
+            functionality into any Action Controllers that extend
+            <code class="classname">Zend_Controller_Action</code>. Action Helpers aim to minimize the
+            necessity to extend the abstract Action Controller in order to
+            inject common Action Controller functionality.
+        </p>
+
+        <p>
+            There are a number of ways to use Action Helpers. Action Helpers
+            employ the use of a brokerage system, similar to the types of
+            brokerage you see in <a class="link" href="zend.view.helpers.html" title="Assistentes de Visualização">Zend_View_Helper</a>, and that
+            of <a class="link" href="zend.controller.plugins.html" title="Plugins">Zend_Controller_Plugin</a>.
+            Action Helpers (like <code class="classname">Zend_View_Helper</code>) may be
+            loaded and called on demand, or they may be instantiated at
+            request time (bootstrap) or action controller creation time
+            (<code class="methodname">init()</code>). To understand this more fully, please see the usage
+            section below.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.actionhelper.initialization"></a>Helper Initialization</h3></div></div></div>
+        
+
+        <p>
+            A helper can be initialized in several different ways, based on
+            your needs as well as the functionality of that helper.
+        </p>
+
+        <p>
+            The helper broker is stored as the <code class="varname">$_helper</code> member of
+            <code class="classname">Zend_Controller_Action</code>; use the broker to retrieve or
+            call on helpers. Some methods for doing so include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Explicitly using <code class="methodname">getHelper()</code>. Simply pass it a
+                    name, and a helper object is returned:
+                </p>
+
+                <pre class="programlisting">
+$flashMessenger = $this-&gt;_helper-&gt;getHelper('FlashMessenger');
+$flashMessenger-&gt;addMessage('We did something in the last request');
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    Use the helper broker's <code class="methodname">__get()</code> functionality
+                    and retrieve the helper as if it were a member property of
+                    the broker:
+                </p>
+
+                <pre class="programlisting">
+$flashMessenger = $this-&gt;_helper-&gt;FlashMessenger;
+$flashMessenger-&gt;addMessage('We did something in the last request');
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    Finally, most action helpers implement the method
+                    <code class="methodname">direct()</code> which will call a specific, default
+                    method in the helper. In the example of the
+                    <span class="emphasis"><em>FlashMessenger</em></span>, it calls
+                    <code class="methodname">addMessage()</code>:
+                </p>
+
+                <pre class="programlisting">
+$this-&gt;_helper-&gt;FlashMessenger('We did something in the last request');
+</pre>
+            </li>
+</ul></div>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>All of the above examples are functionally equivalent.</p>
+        </td></tr>
+</table></div>
+
+        <p>
+            You may also instantiate helpers explicitly. You may wish to do this
+            if using the helper outside of an action controller, or if you wish
+            to pass a helper to the helper broker for use by any action.
+            Instantiation is as per any other <acronym class="acronym">PHP</acronym> class.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.actionhelper.broker"></a>The Helper Broker</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Controller_Action_HelperBroker</code> handles the details
+            of registering helper objects and helper paths, as well as
+            retrieving helpers on-demand.
+        </p>
+
+        <p>
+            To register a helper with the broker, use <code class="methodname">addHelper()</code>:
+        </p>
+
+        <pre class="programlisting">
+Zend_Controller_Action_HelperBroker::addHelper($helper);
+</pre>
+
+        <p>
+            Of course, instantiating and passing helpers to the broker is a bit
+            time and resource intensive, so two methods exists to automate
+            things slightly: <code class="methodname">addPrefix()</code> and
+            <code class="methodname">addPath()</code>.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">addPrefix()</code> takes a class prefix and uses it
+                    to determine a path where helper classes have been defined.
+                    It assumes the prefix follows Zend Framework class naming
+                    conventions.
+                </p>
+
+                <pre class="programlisting">
+// Add helpers prefixed with My_Action_Helpers in My/Action/Helpers/
+Zend_Controller_Action_HelperBroker::addPrefix('My_Action_Helpers');
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addPath()</code> takes a directory as its first
+                    argument and a class prefix as the second argument
+                    (defaulting to '<code class="classname">Zend_Controller_Action_Helper</code>').
+                    This allows you to map your own class prefixes to specific directories.
+                </p>
+
+                <pre class="programlisting">
+// Add helpers prefixed with Helper in Plugins/Helpers/
+Zend_Controller_Action_HelperBroker::addPath('./Plugins/Helpers',
+                                             'Helper');
+</pre>
+            </li>
+</ul></div>
+
+        <p>
+            Since these methods are static, they may be called at any point in
+            the controller chain in order to dynamically add helpers as needed.
+        </p>
+
+        <p>
+            Internally, the helper broker uses <a class="link" href="zend.loader.pluginloader.html" title="Loading Plugins">a PluginLoader
+                instance</a> to maintain paths. You can retrieve the
+            PluginLoader using the static method <code class="methodname">getPluginLoader()</code>,
+            or, alternately, inject a custom PluginLoader instance using
+            <code class="methodname">setPluginLoader()</code>.
+        </p>
+
+        <p>
+            To determine if a helper exists in the helper broker, use
+            <code class="methodname">hasHelper($name)</code>, where <code class="varname">$name</code> is the short
+            name of the helper (minus the prefix):
+        </p>
+
+        <pre class="programlisting">
+// Check if 'redirector' helper is registered with the broker:
+if (Zend_Controller_Action_HelperBroker::hasHelper('redirector')) {
+    echo 'Redirector helper registered';
+}
+</pre>
+
+        <p>
+            There are also two static methods for retrieving helpers from the helper
+            broker: <code class="methodname">getExistingHelper()</code> and
+            <code class="methodname">getStaticHelper()</code>.
+            <code class="methodname">getExistingHelper()</code>
+            will retrieve a helper only if it has previously been invoked by or
+            explicitly registered with the helper broker; it will throw an
+            exception if not. <code class="methodname">getStaticHelper()</code> does the same as
+            <code class="methodname">getExistingHelper()</code>, but will attempt to instantiate
+            the helper if has not yet been registered with the helper stack.
+            <code class="methodname">getStaticHelper()</code> is a good choice for retrieving
+            helpers which you wish to configure.
+        </p>
+
+        <p>
+            Both methods take a single argument, <code class="varname">$name</code>, which is
+            the short name of the helper (minus the prefix).
+        </p>
+
+        <pre class="programlisting">
+// Check if 'redirector' helper is registered with the broker, and fetch:
+if (Zend_Controller_Action_HelperBroker::hasHelper('redirector')) {
+    $redirector =
+        Zend_Controller_Action_HelperBroker::getExistingHelper('redirector');
+}
+
+// Or, simply retrieve it, not worrying about whether or not it was
+// previously registered:
+$redirector =
+    Zend_Controller_Action_HelperBroker::getStaticHelper('redirector');
+}
+</pre>
+
+        <p>
+            Finally, to delete a registered helper from the broker, use
+            <code class="methodname">removeHelper($name)</code>, where <code class="varname">$name</code> is the
+            short name of the helper (minus the prefix):
+        </p>
+
+        <pre class="programlisting">
+// Conditionally remove the 'redirector' helper from the broker:
+if (Zend_Controller_Action_HelperBroker::hasHelper('redirector')) {
+    Zend_Controller_Action_HelperBroker::removeHelper('redirector')
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.actionhelper.stockhelpers"></a>Built-in Action Helpers</h3></div></div></div>
+        
+
+        <p>
+            Zend Framework includes several action helpers by default:
+            <span class="emphasis"><em>AutoComplete</em></span> for automating responses for <acronym class="acronym">AJAX</acronym>
+            autocompletion; <span class="emphasis"><em>ContextSwitch</em></span> and
+            <span class="emphasis"><em>AjaxContext</em></span> for serving alternate response formats for
+            your actions; a <span class="emphasis"><em>FlashMessenger</em></span> for handling session flash
+            messages; <span class="emphasis"><em>Json</em></span> for encoding and sending <acronym class="acronym">JSON</acronym>
+            responses; a <span class="emphasis"><em>Redirector</em></span>, to provide different
+            implementations for redirecting to internal and external pages from
+            your application; and a <span class="emphasis"><em>ViewRenderer</em></span> to automate the
+            process of setting up the view object in your controllers and
+            rendering views.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.actionhelpers.actionstack"></a>ActionStack</h4></div></div></div>
+    
+
+    <p>
+        The <span class="emphasis"><em>ActionStack</em></span> helper allows you to push requests to the
+        <a class="link" href="zend.controller.plugins.html#zend.controller.plugins.standard.actionstack" title="ActionStack">ActionStack</a>
+        front controller plugin, effectively helping you create a queue of
+        actions to execute during the request. The helper allows you to add
+        actions either by specifying new request objects or
+        action - controller - module sets.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Invoking ActionStack Helper Initializes the ActionStack Plugin">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Invoking ActionStack Helper Initializes the ActionStack Plugin</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Invoking the <span class="emphasis"><em>ActionStack</em></span> helper implicitly registers
+            the <span class="emphasis"><em>ActionStack</em></span> plugin -- which means you do not need
+            to explicitly register the <span class="emphasis"><em>ActionStack</em></span> plugin to use
+            this functionality.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="example">
+<a name="zend.controller.actionhelpers.actionstack.simple"></a><p class="title"><b>Exemplo 139. Adding a Task Using Action, Controller and Module Names</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Often, it's simplest to simply specify the action, controller, and
+            module (and optional request parameters), much as you would when
+            calling <code class="methodname">Zend_Controller_Action::_forward()</code>:
+        </p>
+
+        <pre class="programlisting">
+class FooController extends Zend_Controller_Action
+{
+    public function barAction()
+    {
+        // Add two actions to the stack
+        // Add call to /foo/baz/bar/baz
+        // (FooController::bazAction() with request var bar == baz)
+        $this-&gt;_helper-&gt;actionStack('baz',
+                                    'foo',
+                                    'default',
+                                    array('bar' =&gt; 'baz'));
+
+        // Add call to /bar/bat
+        // (BarController::batAction())
+        $this-&gt;_helper-&gt;actionStack('bat', 'bar');
+    }
+}
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="example">
+<a name="zend.controller.actionhelpers.actionstack.simple2"></a><p class="title"><b>Exemplo 140. Adding a Task Using a Request Object</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Sometimes the <acronym class="acronym">OOP</acronym> nature of a request object makes most sense; you
+            can pass such an object to the <span class="emphasis"><em>ActionStack</em></span> helper as
+            well.
+        </p>
+
+        <pre class="programlisting">
+class FooController extends Zend_Controller_Action
+{
+    public function barAction()
+    {
+        // Add two actions to the stack
+        // Add call to /foo/baz/bar/baz
+        // (FooController::bazAction() with request var bar == baz)
+        $request = clone $this-&gt;getRequest();
+        // Don't set controller or module; use current values
+        $request-&gt;setActionName('baz')
+                -&gt;setParams(array('bar' =&gt; 'baz'));
+        $this-&gt;_helper-&gt;actionStack($request);
+
+        // Add call to /bar/bat
+        // (BarController::batAction())
+        $request = clone $this-&gt;getRequest();
+        // don't set module; use current value
+        $request-&gt;setActionName('bat')
+                -&gt;setControllerName('bar');
+        $this-&gt;_helper-&gt;actionStack($request);
+    }
+}
+</pre>
+    </div>
+</div>
+<br class="example-break">
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.actionhelpers.autocomplete"></a>AutoComplete</h4></div></div></div>
+    
+
+    <p>
+        Many <acronym class="acronym">AJAX</acronym> javascript libraries offer functionality for providing
+        autocompletion whereby a selectlist of potentially matching results is
+        displayed as the user types. The <span class="emphasis"><em>AutoComplete</em></span> helper aims
+        to simplify returning acceptable responses to such methods.
+    </p>
+
+    <p>
+        Since not all JS libraries implement autocompletion in the same way, the
+        <span class="emphasis"><em>AutoComplete</em></span> helper provides some abstract base
+        functionality necessary to many libraries, and concrete implementations
+        for individual libraries. Return types are generally either <acronym class="acronym">JSON</acronym> arrays
+        of strings, <acronym class="acronym">JSON</acronym> arrays of arrays (with each member array being an
+        associative array of metadata used to create the selectlist), or <acronym class="acronym">HTML</acronym>.
+    </p>
+
+    <p>
+        Basic usage for each implementation is the same:
+    </p>
+
+   <pre class="programlisting">
+class FooController extends Zend_Controller_Action
+{
+    public function barAction()
+    {
+        // Perform some logic...
+
+        // Encode and send response;
+        $this-&gt;_helper-&gt;autoCompleteDojo($data);
+
+        // Or explicitly:
+        $response = $this-&gt;_helper-&gt;autoCompleteDojo
+                                  -&gt;sendAutoCompletion($data);
+
+        // Or simply prepare autocompletion response:
+        $response = $this-&gt;_helper-&gt;autoCompleteDojo
+                                  -&gt;prepareAutoCompletion($data);
+    }
+}
+</pre>
+
+    <p>
+        By default, autocompletion does the following:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem"><p>Disables layouts and ViewRenderer.</p></li>
+<li class="listitem"><p>Sets appropriate response headers.</p></li>
+<li class="listitem">
+            <p>Sets response body with encoded or formatted autocompletion data.</p>
+        </li>
+<li class="listitem"><p>Sends response.</p></li>
+</ul></div>
+
+    <p>
+        Available methods of the helper include:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <code class="methodname">disableLayouts()</code> can be used to disable layouts and
+                the ViewRenderer. Typically, this is called within
+                <code class="methodname">prepareAutoCompletion()</code>.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">encodeJson($data, $keepLayouts = false)</code> will encode
+                data to <acronym class="acronym">JSON</acronym>, optionally enabling or disabling layouts.
+                Typically, this is called within
+                <code class="methodname">prepareAutoCompletion()</code>.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">prepareAutoCompletion($data, $keepLayouts = false)</code>
+                is used to prepare data in the response format necessary for the
+                concrete implementation, optionally enabling or disabling
+                layouts. The return value will vary based on the implementation.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">sendAutoCompletion($data, $keepLayouts = false)</code>
+                is used to send data in the response format necessary for the
+                concrete implementation. It calls
+                <code class="methodname">prepareAutoCompletion()</code>, and then sends the
+                response.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">direct($data, $sendNow = true, $keepLayouts =
+                    false)</code> is used when calling the helper as a method of
+                the helper broker. The <code class="varname">$sendNow</code> flag is used to
+                determine whether to call <code class="methodname">sendAutoCompletion()</code> or
+                <code class="methodname">prepareAutoCompletion()</code>, respectively.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Currently, <span class="emphasis"><em>AutoComplete</em></span> supports the Dojo and Scriptaculous
+        <acronym class="acronym">AJAX</acronym> libraries.
+    </p>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelpers.autocomplete.dojo"></a>AutoCompletion with Dojo</h5></div></div></div>
+        
+
+        <p>
+            Dojo does not have an AutoCompletion widget per se, but has two
+            widgets that can perform AutoCompletion: ComboBox and
+            FilteringSelect. In both cases, they require a data store that
+            implements the QueryReadStore; for more information on these topics, see the <a class="ulink" href="http://dojotoolkit.org/reference-guide/dojo/data.html" target="_top">dojo.data</a>
+            documentation.
+        </p>
+
+        <p>
+            In Zend Framework, you can pass a simple indexed array to the
+            AutoCompleteDojo helper, and it will return a <acronym class="acronym">JSON</acronym> response suitable
+            for use with such a store:
+        </p>
+
+        <pre class="programlisting">
+// within a controller action:
+$this-&gt;_helper-&gt;autoCompleteDojo($data);
+</pre>
+
+        <div class="example">
+<a name="zend.controller.actionhelpers.autocomplete.dojo.example1"></a><p class="title"><b>Exemplo 141. AutoCompletion with Dojo Using Zend MVC</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                AutoCompletion with Dojo via the Zend <acronym class="acronym">MVC</acronym> requires several
+                things: generating a form object for the ComboBox on which you
+                want AutoCompletion, a controller action for serving the
+                AutoCompletion results, creating a custom QueryReadStore to connect
+                to the AutoCompletion action, and generation of the javascript
+                to use to initialize AutoCompletion on the server side.
+            </p>
+
+            <p>
+                First, let's look at the javascript necessary. Dojo offers a
+                complete framework for creating <acronym class="acronym">OOP</acronym> javascript, much as Zend
+                Framework does for <acronym class="acronym">PHP</acronym>. Part of that is the ability to create
+                pseudo-namespaces using the directory hierarchy. We'll create a
+                'custom' directory at the same level as the Dojo directory
+                that's part of the Dojo distribution. Inside that directory,
+                we'll create a javascript file, <code class="filename">TestNameReadStore.js</code>, with the
+                following contents:
+            </p>
+
+            <pre class="programlisting">
+dojo.provide("custom.TestNameReadStore");
+dojo.declare("custom.TestNameReadStore", dojox.data.QueryReadStore, {
+    fetch:function (request) {
+        request.serverQuery = { test:request.query.name };
+        return this.inherited("fetch", arguments);
+    }
+});
+</pre>
+
+            <p>
+                This class is simply an extension of Dojo's own QueryReadStore,
+                which is itself an abstract class. We simply define a method by
+                which to request, and assigning it to the 'test' element.
+            </p>
+
+            <p>
+                Next, let's create the form element for which we want
+                AutoCompletion:
+            </p>
+
+            <pre class="programlisting">
+class TestController extends Zend_Controller_Action
+{
+    protected $_form;
+
+    public function getForm()
+    {
+        if (null === $this-&gt;_form) {
+            $this-&gt;_form = new Zend_Form();
+            $this-&gt;_form-&gt;setMethod('get')
+                -&gt;setAction(
+                    $this-&gt;getRequest()-&gt;getBaseUrl() . '/test/process'
+                )
+                -&gt;addElements(array(
+                    'test' =&gt; array('type' =&gt; 'text', 'options' =&gt; array(
+                        'filters'        =&gt; array('StringTrim'),
+                        'dojoType'       =&gt; array('dijit.form.ComboBox'),
+                        'store'          =&gt; 'testStore',
+                        'autoComplete'   =&gt; 'false',
+                        'hasDownArrow'   =&gt; 'true',
+                        'label' =&gt; 'Your input:',
+                    )),
+                    'go' =&gt; array('type' =&gt; 'submit',
+                                  'options' =&gt; array('label' =&gt; 'Go!'))
+                ));
+        }
+        return $this-&gt;_form;
+    }
+}
+</pre>
+
+            <p>
+                Here, we simply create a form with 'test' and 'go' methods. The
+                'test' method adds several special, Dojo-specific attributes:
+                dojoType, store, autoComplete, and hasDownArrow. The dojoType is
+                used to indicate that we are creating a ComboBox, and we will
+                link it to a data store (key 'store') of 'testStore' -- more on
+                that later. Specifying 'autoComplete' as <code class="constant">FALSE</code> tells
+                Dojo not to automatically select the first match, but instead show a list of
+                matches. Finally, 'hasDownArrow' creates a down arrow similar to
+                a select box so we can show and hide the matches.
+            </p>
+
+            <p>
+                Let's add a method to display the form, as well as an end point
+                for processing AutoCompletion:
+            </p>
+
+            <pre class="programlisting">
+class TestController extends Zend_Controller_Action
+{
+    // ...
+
+    /**
+     * Landing page
+     */
+    public function indexAction()
+    {
+        $this-&gt;view-&gt;form = $this-&gt;getForm();
+    }
+
+    public function autocompleteAction()
+    {
+        if ('ajax' != $this-&gt;_getParam('format', false)) {
+            return $this-&gt;_helper-&gt;redirector('index');
+        }
+        if ($this-&gt;getRequest()-&gt;isPost()) {
+            return $this-&gt;_helper-&gt;redirector('index');
+        }
+
+        $match = trim($this-&gt;getRequest()-&gt;getQuery('test', ''));
+
+        $matches = array();
+        foreach ($this-&gt;getData() as $datum) {
+            if (0 === strpos($datum, $match)) {
+                $matches[] = $datum;
+            }
+        }
+        $this-&gt;_helper-&gt;autoCompleteDojo($matches);
+    }
+}
+</pre>
+
+            <p>
+                In our <code class="methodname">autocompleteAction()</code> we do a number of
+                things. First, we look to make sure we have a post request, and
+                that there is a 'format' parameter set to the value 'ajax';
+                these are simply to help reduce spurious queries to the action.
+                Next, we check for a 'test' parameter, and compare it against
+                our data. (I purposely leave out the implementation of
+                <code class="methodname">getData()</code> here -- it could be any sort of data
+                source.) Finally, we send our matches to our AutoCompletion
+                helper.
+            </p>
+
+            <p>
+                Now that we have all the pieces on the backend, let's look at
+                what we need to deliver in our view script for the landing page.
+                First, we need to setup our data store, then render our form,
+                and finally ensure that the appropriate Dojo libraries --
+                including our custom data store -- get loaded. Let's look at the
+                view script, which comments the steps:
+            </p>
+
+            <pre class="programlisting">
+&lt;?php // setup our data store: ?&gt;
+&lt;div dojoType="custom.TestNameReadStore" jsId="testStore"
+    url="&lt;?php echo $this-&gt;baseUrl() ?&gt;/unit-test/autocomplete/format/ajax"
+    requestMethod="get"&gt;&lt;/div&gt;
+
+&lt;?php // render our form: ?&gt;
+&lt;?php echo $this-&gt;form ?&gt;
+
+&lt;?php // setup Dojo-related CSS to load in HTML head: ?&gt;
+&lt;?php $this-&gt;headStyle()-&gt;captureStart() ?&gt;
+@import "&lt;?php echo $this-&gt;baseUrl()
+?&gt;/javascript/dijit/themes/tundra/tundra.css";
+@import "&lt;?php echo $this-&gt;baseUrl() ?&gt;/javascript/dojo/resources/dojo.css";
+&lt;?php $this-&gt;headStyle()-&gt;captureEnd() ?&gt;
+
+&lt;?php // setup javascript to load in HTML head, including all required
+   // Dojo libraries: ?&gt;
+&lt;?php $this-&gt;headScript()
+        -&gt;setAllowArbitraryAttributes(true)
+        -&gt;appendFile($this-&gt;baseUrl() . '/javascript/dojo/dojo.js',
+            'text/javascript',
+            array('djConfig' =&gt; 'parseOnLoad: true'))
+        -&gt;captureStart() ?&gt;
+djConfig.usePlainJson=true;
+dojo.registerModulePath("custom","../custom");
+dojo.require("dojo.parser");
+dojo.require("dojox.data.QueryReadStore");
+dojo.require("dijit.form.ComboBox");
+dojo.require("custom.TestNameReadStore");
+&lt;?php $this-&gt;headScript()-&gt;captureEnd() ?&gt;
+</pre>
+
+            <p>
+                Note the calls to view helpers such as headStyle and headScript;
+                these are placeholders, which we can then render in the <acronym class="acronym">HTML</acronym>
+                head section of our layout view script.
+            </p>
+
+            <p>
+                We now have all the pieces to get Dojo AutoCompletion working.
+            </p>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelpers.autocomplete.scriptaculous"></a>AutoCompletion with Scriptaculous</h5></div></div></div>
+        
+
+        <p>
+            <a class="ulink" href="http://wiki.script.aculo.us/scriptaculous/show/Ajax.Autocompleter" target="_top">Scriptaculous</a>
+            expects an <acronym class="acronym">HTML</acronym> response in a specific format.
+        </p>
+
+        <p>
+            The helper to use with this library is 'AutoCompleteScriptaculous'.
+            Simply provide it an array of data, and the helper will create an
+            <acronym class="acronym">HTML</acronym> response compatible with Ajax.Autocompleter.
+        </p>
+    </div>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.actionhelpers.contextswitch"></a>ContextSwitch and AjaxContext</h4></div></div></div>
+    
+
+    <p>
+        The <span class="emphasis"><em>ContextSwitch</em></span> action helper is intended for
+        facilitating returning different response formats on request.
+        The <span class="emphasis"><em>AjaxContext</em></span> helper is a specialized version of
+        <span class="emphasis"><em>ContextSwitch</em></span> that facilitates returning responses
+        to XmlHttpRequests.
+    </p>
+
+    <p>
+        To enable either one, you must provide hinting in your controller as to
+        what actions can respond to which contexts. If an incoming request
+        indicates a valid context for the given action, the helper will then:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                Disable layouts, if enabled.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Set an alternate view suffix, effectively requiring a separate
+                view script for the context.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Send appropriate response headers for the context desired.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Optionally, call specified callbacks to setup the context and/or
+                perform post-processing.
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        As an example, let's consider the following controller:
+    </p>
+
+    <pre class="programlisting">
+class NewsController extends Zend_Controller_Action
+{
+    /**
+     * Landing page; forwards to listAction()
+     */
+    public function indexAction()
+    {
+        $this-&gt;_forward('list');
+    }
+
+    /**
+     * List news items
+     */
+    public function listAction()
+    {
+    }
+
+    /**
+     * View a news item
+     */
+    public function viewAction()
+    {
+    }
+}
+</pre>
+
+    <p>
+        Let's say that we want the <code class="methodname">listAction()</code> to also be
+        available in an <acronym class="acronym">XML</acronym> format. Instead of creating a different action, we
+        can hint that it can return an <acronym class="acronym">XML</acronym> response:
+    </p>
+
+    <pre class="programlisting">
+class NewsController extends Zend_Controller_Action
+{
+    public function init()
+    {
+        $contextSwitch = $this-&gt;_helper-&gt;getHelper('contextSwitch');
+        $contextSwitch-&gt;addActionContext('list', 'xml')
+                      -&gt;initContext();
+    }
+
+    // ...
+}
+</pre>
+
+    <p>
+        What this will do is:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                Set the 'Content-Type' response header to '<code class="filename">application/xml</code>'.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Change the view suffix to '<code class="filename">xml.phtml</code>' (or, if you use an
+                alternate view suffix, 'xml.[your suffix]').
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Now, you'll need to create a new view script, '<code class="filename">news/list.xml.phtml</code>',
+        which will create and render the <acronym class="acronym">XML</acronym>.
+    </p>
+
+    <p>
+        To determine if a request should initiate a context switch, the helper
+        checks for a token in the request object. By default, it looks for the
+        'format' parameter, though this may be configured. This means that, in
+        most cases, to trigger a context switch, you can add a 'format'
+        parameter to your request:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                Via <acronym class="acronym">URL</acronym> parameter: <code class="filename">/news/list/format/xml</code>
+                (recall, the default routing schema allows for arbitrary key to value pairs
+                following the action)
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                Via <code class="constant">GET</code> parameter: <span class="command"><strong>/news/list?format=xml</strong></span>
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        <span class="emphasis"><em>ContextSwitch</em></span> allows you to specify arbitrary contexts,
+        including what suffix change will occur (if any), any response headers
+        that should be sent, and arbitrary callbacks for initialization and post
+        processing.
+    </p>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelpers.contextswitch.contexts"></a>Default Contexts Available</h5></div></div></div>
+        
+
+        <p>
+            By default, two contexts are available to the
+            <span class="emphasis"><em>ContextSwitch</em></span> helper: json and <acronym class="acronym">XML</acronym>.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><acronym class="acronym">JSON</acronym></em></span>. The <acronym class="acronym">JSON</acronym>
+                    context sets the 'Content-Type' response header to
+                    '<code class="filename">application/json</code>', and the view script suffix to
+                    '<code class="filename">json.phtml</code>'.
+                </p>
+
+                <p>
+                    By default, however, no view script is required. It will
+                    simply serialize all view variables, and emit the <acronym class="acronym">JSON</acronym>
+                    response immediately.
+                </p>
+
+                <p>
+                    This behaviour can be disabled by turning off the automatic
+                    <acronym class="acronym">JSON</acronym> serialization:
+                </p>
+
+                <pre class="programlisting">
+$this-&gt;_helper-&gt;contextSwitch()-&gt;setAutoJsonSerialization(false);
+</pre>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><acronym class="acronym">XML</acronym></em></span>. The <acronym class="acronym">XML</acronym> context
+                    sets the 'Content-Type' response header to '<code class="filename">application/xml</code>', and
+                    the view script suffix to '<code class="filename">xml.phtml</code>'. You will need to
+                    create a new view script for the context.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelpers.contextswitch.custom"></a>Creating Custom Contexts</h5></div></div></div>
+        
+
+        <p>
+            Sometimes, the default contexts are not enough. For instance, you may wish to return
+            <acronym class="acronym">YAML</acronym>, or serialized <acronym class="acronym">PHP</acronym>, an
+            <acronym class="acronym">RSS</acronym> or <acronym class="acronym">ATOM</acronym> feed, etc.
+            <span class="emphasis"><em>ContextSwitch</em></span> allows you to do so.
+        </p>
+
+        <p>
+            The easiest way to add a new context is via the
+            <code class="methodname">addContext()</code> method. This method takes two arguments,
+            the name of the context, and an array specification. The
+            specification should include one or more of the following:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>suffix</em></span>: the suffix to prepend to the
+                    default view suffix as registered in the ViewRenderer.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>headers</em></span>: an array of header to value
+                    pairs you wish sent as part of the response.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>callbacks</em></span>: an array containing one or
+                    more of the keys 'init' or 'post', pointing to valid <acronym class="acronym">PHP</acronym>
+                    callbacks that can be used for context initialization and post
+                    processing.
+                </p>
+
+                <p>
+                    Initialization callbacks occur when the context is
+                    detected by <span class="emphasis"><em>ContextSwitch</em></span>. You can use it to
+                    perform arbitrary logic that should occur. As an example,
+                    the <acronym class="acronym">JSON</acronym> context uses a callback to disable the ViewRenderer
+                    when the automatic <acronym class="acronym">JSON</acronym> serialization is on.
+                </p>
+
+                <p>
+                    Post processing occurs during the action's
+                    <code class="methodname">postDispatch()</code> routine, and can be used to perform
+                    arbitrary logic. As an example, the <acronym class="acronym">JSON</acronym> context uses a
+                    callback to determine if the automatic <acronym class="acronym">JSON</acronym> serialization is
+                    on; if so, it serializes the view variables to <acronym class="acronym">JSON</acronym> and sends
+                    the response, but if not, it re-enables the ViewRenderer.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            There are a variety of methods for interacting with contexts:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">addContext($context, array $spec)</code>: add a new
+                    context. Throws an exception if the context already exists.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setContext($context, array $spec)</code>: add a new
+                    context or overwrite an existing context. Uses the same
+                    specification as <code class="methodname">addContext()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addContexts(array $contexts)</code>: add many contexts at
+                    once. The <code class="varname">$contexts</code> array should be an array of
+                    context to specification pairs. If any of the contexts already
+                    exists, it will throw an exception.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setContexts(array $contexts)</code>: add new contexts and
+                overwrite existing ones. Uses the same specification as
+                <code class="methodname">addContexts()</code>.
+            </p>
+            </li>
+<li class="listitem">
+            <p>
+                <code class="methodname">hasContext($context)</code>: returns <code class="constant">TRUE</code> if
+                the context exists, <code class="constant">FALSE</code> otherwise.
+            </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getContext($context)</code>: retrieve a
+                    single context by name. Returns an array following the
+                    specification used in <code class="methodname">addContext()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getContexts()</code>: retrieve all contexts. Returns an
+                    array of context to specification pairs.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removeContext($context)</code>: remove a single context by
+                    name. Returns <code class="constant">TRUE</code> if successful,
+                    <code class="constant">FALSE</code> if the context was not found.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearContexts()</code>: remove all contexts.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelpers.contextswitch.actions"></a>Setting Contexts Per Action</h5></div></div></div>
+        
+
+        <p>
+            There are two mechanisms for setting available contexts. You can
+            either manually create arrays in your controller, or use several
+            methods in <span class="emphasis"><em>ContextSwitch</em></span> to assemble them.
+        </p>
+
+        <p>
+            The principle method for adding action to context relations is
+            <code class="methodname">addActionContext()</code>. It expects two arguments, the
+            action to which the context is being added, and either the name of a
+            context or an array of contexts. As an example, consider the
+            following controller class:
+        </p>
+
+        <pre class="programlisting">
+class FooController extends Zend_Controller_Action
+{
+    public function listAction()
+    {
+    }
+
+    public function viewAction()
+    {
+    }
+
+    public function commentsAction()
+    {
+    }
+
+    public function updateAction()
+    {
+    }
+}
+</pre>
+
+        <p>
+            Let's say we wanted to add an <acronym class="acronym">XML</acronym> context to the 'list' action, and
+            <acronym class="acronym">XML</acronym> and <acronym class="acronym">JSON</acronym> contexts to the 'comments' action.
+            We could do so in the <code class="methodname">init()</code> method:
+        </p>
+
+        <pre class="programlisting">
+class FooController extends Zend_Controller_Action
+{
+    public function init()
+    {
+        $this-&gt;_helper-&gt;contextSwitch()
+             -&gt;addActionContext('list', 'xml')
+             -&gt;addActionContext('comments', array('xml', 'json'))
+             -&gt;initContext();
+    }
+}
+</pre>
+
+        <p>
+            Alternately, you could simply define the array property
+            <code class="varname">$contexts</code>:
+        </p>
+
+        <pre class="programlisting">
+class FooController extends Zend_Controller_Action
+{
+    public $contexts = array(
+        'list'     =&gt; array('xml'),
+        'comments' =&gt; array('xml', 'json')
+    );
+
+    public function init()
+    {
+        $this-&gt;_helper-&gt;contextSwitch()-&gt;initContext();
+    }
+}
+</pre>
+
+        <p>
+            The above is less overhead, but also prone to potential errors.
+        </p>
+
+        <p>
+            The following methods can be used to build the context mappings:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">addActionContext($action, $context)</code>: marks one
+                    or more contexts as available to an action. If mappings
+                    already exists, simply appends to those mappings.
+                    <code class="varname">$context</code> may be a single context, or an array
+                    of contexts.
+                </p>
+
+                <p>
+                    A value of <code class="constant">TRUE</code> for the context will mark
+                    all available contexts as available for the action.
+                </p>
+
+                <p>
+                    An empty value for <code class="varname">$context</code> will disable all contexts for
+                    the given action.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setActionContext($action, $context)</code>: marks one
+                    or more contexts as available to an action. If mappings
+                    already exists, it replaces them with those specified.
+                    <code class="varname">$context</code> may be a single context, or an array
+                    of contexts.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addActionContexts(array $contexts)</code>: add several
+                    action to context pairings at once. <code class="varname">$contexts</code>
+                    should be an associative array of action to context pairs. It
+                    proxies to <code class="methodname">addActionContext()</code>, meaning that if
+                    pairings already exist, it appends to them.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setActionContexts(array $contexts)</code>: acts like
+                    <code class="methodname">addActionContexts()</code>, but overwrites existing
+                    action to context pairs.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">hasActionContext($action, $context)</code>: determine
+                    if a particular action has a given context.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getActionContexts($action = null)</code>: returns
+                    either all contexts for a given action, or all
+                    action to context pairs.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removeActionContext($action, $context)</code>: remove
+                    one or more contexts from a given action.
+                    <code class="varname">$context</code> may be a single context or an array of
+                    contexts.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearActionContexts($action = null)</code>: remove all
+                    contexts from a given action, or from all actions with
+                    contexts.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelpers.contextswitch.initcontext"></a>Initializing Context Switching</h5></div></div></div>
+        
+
+        <p>
+            To initialize context switching, you need to call
+            <code class="methodname">initContext()</code> in your action controller:
+        </p>
+
+        <pre class="programlisting">
+class NewsController extends Zend_Controller_Action
+{
+    public function init()
+    {
+        $this-&gt;_helper-&gt;contextSwitch()-&gt;initContext();
+    }
+}
+</pre>
+
+        <p>
+            In some cases, you may want to force the context used; for instance,
+            you may only want to allow the <acronym class="acronym">XML</acronym> context if context switching is
+            activated. You can do so by passing the context to
+            <code class="methodname">initContext()</code>:
+        </p>
+
+        <pre class="programlisting">
+$contextSwitch-&gt;initContext('xml');
+</pre>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelpers.contextswitch.misc"></a>Additional Functionality</h5></div></div></div>
+        
+
+        <p>
+            A variety of methods can be used to alter the behaviour of the
+            <span class="emphasis"><em>ContextSwitch</em></span> helper. These include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setAutoJsonSerialization($flag)</code>: By default,
+                    <acronym class="acronym">JSON</acronym> contexts will serialize any view variables to
+                    <acronym class="acronym">JSON</acronym> notation and return this as a response. If you wish to
+                    create your own response, you should turn this off; this
+                    needs to be done prior to the call to
+                    <code class="methodname">initContext()</code>.
+                </p>
+
+                <pre class="programlisting">
+$contextSwitch-&gt;setAutoJsonSerialization(false);
+$contextSwitch-&gt;initContext();
+</pre>
+
+                <p>
+                    You can retrieve the value of the flag with
+                    <code class="methodname">getAutoJsonSerialization()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setSuffix($context, $suffix,
+                        $prependViewRendererSuffix)</code>: With this method,
+                    you can specify a different suffix to use for a given
+                    context. The third argument is used to indicate whether or
+                    not to prepend the current ViewRenderer suffix with the new
+                    suffix; this flag is enabled by default.
+                </p>
+
+                <p>
+                    Passing an empty value to the suffix will cause only the
+                    ViewRenderer suffix to be used.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addHeader($context, $header, $content)</code>: Add a
+                    response header for a given context. <code class="varname">$header</code> is
+                    the header name, and <code class="varname">$content</code> is the value to
+                    pass for that header.
+                </p>
+
+                <p>
+                    Each context can have multiple headers;
+                    <code class="methodname">addHeader()</code> adds additional headers to the
+                    context's header stack.
+                </p>
+
+                <p>
+                    If the <code class="varname">$header</code> specified already exists for the
+                    context, an exception will be thrown.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setHeader($context, $header, $content)</code>:
+                    <code class="methodname">setHeader()</code> acts just like
+                    <code class="methodname">addHeader()</code>, except it allows you to overwrite
+                    existing context headers.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">addHeaders($context, array $headers)</code>: Add
+                    multiple headers at once to a given context. Proxies to
+                    <code class="methodname">addHeader()</code>, so if the header already exists,
+                    an exception will be thrown. <code class="varname">$headers</code> is an
+                    array of header to context pairs.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setHeaders($context, array $headers.)</code>: like
+                    <code class="methodname">addHeaders()</code>, except it proxies to
+                    <code class="methodname">setHeader()</code>, allowing you to overwrite existing
+                    headers.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getHeader($context, $header)</code>: retrieve the
+                    value of a header for a given context. Returns <code class="constant">NULL</code> if not
+                    found.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removeHeader($context, $header)</code>: remove a
+                    single header for a given context.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearHeaders($context, $header)</code>: remove all
+                    headers for a given context.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setCallback($context, $trigger, $callback)</code>: set
+                    a callback at a given trigger for a given context. Triggers
+                    may be either 'init' or 'post' (indicating callback will be
+                    called at either context initialization or postDispatch).
+                    <code class="varname">$callback</code> should be a valid <acronym class="acronym">PHP</acronym> callback.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setCallbacks($context, array $callbacks)</code>: set
+                    multiple callbacks for a given context. <code class="varname">$callbacks</code>
+                    should be trigger to callback pairs. In actuality, the most callbacks
+                    that can be registered are two, one for initialization and
+                    one for post processing.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getCallback($context, $trigger)</code>: retrieve a
+                    callback for a given trigger in a given context.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getCallbacks($context)</code>: retrieve all callbacks
+                    for a given context. Returns an array of trigger to callback
+                    pairs.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removeCallback($context, $trigger)</code>: remove a
+                    callback for a given trigger and context.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearCallbacks($context)</code>: remove all
+                    callbacks for a given context.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setContextParam($name)</code>: set the request
+                    parameter to check when determining if a context switch has
+                    been requested. The value defaults to 'format', but this
+                    accessor can be used to set an alternate value.
+                </p>
+
+                <p>
+                    <code class="methodname">getContextParam()</code> can be used to retrieve the
+                    current value.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setAutoDisableLayout($flag)</code>: By default,
+                    layouts are disabled when a context switch occurs; this is
+                    because typically layouts will only be used for returning
+                    normal responses, and have no meaning in alternate contexts.
+                    However, if you wish to use layouts (perhaps you may have a
+                    layout for the new context), you can change this behaviour
+                    by passing a <code class="constant">FALSE</code> value to
+                    <code class="methodname">setAutoDisableLayout()</code>. You should do this
+                    <span class="emphasis"><em>before</em></span> calling
+                    <code class="methodname">initContext()</code>.
+                </p>
+
+                <p>
+                    To get the value of this flag, use the accessor
+                    <code class="methodname">getAutoDisableLayout()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getCurrentContext()</code> can be used to determine
+                    what context was detected, if any. This returns <code class="constant">NULL</code> if no
+                    context switch occurred, or if called before
+                    <code class="methodname">initContext()</code> has been invoked.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelpers.contextswitch.ajaxcontext"></a>AjaxContext Functionality</h5></div></div></div>
+        
+
+        <p>
+            The <span class="emphasis"><em>AjaxContext</em></span> helper extends
+            <span class="emphasis"><em>ContextSwitch</em></span>, so all of the functionality listed for
+            <span class="emphasis"><em>ContextSwitch</em></span> is available to it. There are a few key
+            differences, however.
+        </p>
+
+        <p>
+            First, it uses a different action controller property for
+            determining contexts, <code class="varname">$ajaxable</code>. This is so you can
+            have different contexts used for <acronym class="acronym">AJAX</acronym> versus normal
+            <acronym class="acronym">HTTP</acronym> requests. The various
+            *<code class="methodname">ActionContext()</code>* methods of
+            <span class="emphasis"><em>AjaxContext</em></span> will write to this property.
+        </p>
+
+        <p>
+            Second, it will only trigger if an XmlHttpRequest has occurred, as
+            determined by the request object's <code class="methodname">isXmlHttpRequest()</code>
+            method. Thus, if the context parameter ('format') is passed in the
+            request, but the request was not made as an XmlHttpRequest, no
+            context switch will trigger.
+        </p>
+
+        <p>
+            Third, <span class="emphasis"><em>AjaxContext</em></span> adds an additional context,
+            <acronym class="acronym">HTML</acronym>. In this context, it sets the suffix to
+            '<code class="filename">ajax.phtml</code>' in order to differentiate the context from a normal
+            request. No additional headers are returned.
+        </p>
+
+        <div class="example">
+<a name="zend.controller.actionhelpers.contextswitch.ajaxcontext.example"></a><p class="title"><b>Exemplo 142. Allowing Actions to Respond To Ajax Requests</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                In this following example, we're allowing requests to the
+                actions 'view', 'form', and 'process' to respond to <acronym class="acronym">AJAX</acronym>
+                requests. In the first two cases, 'view' and 'form', we'll
+                return <acronym class="acronym">HTML</acronym> snippets with which to update the page; in the
+                latter, we'll return <acronym class="acronym">JSON</acronym>.
+            </p>
+
+            <pre class="programlisting">
+class CommentController extends Zend_Controller_Action
+{
+    public function init()
+    {
+        $ajaxContext = $this-&gt;_helper-&gt;getHelper('AjaxContext');
+        $ajaxContext-&gt;addActionContext('view', 'html')
+                    -&gt;addActionContext('form', 'html')
+                    -&gt;addActionContext('process', 'json')
+                    -&gt;initContext();
+    }
+
+    public function viewAction()
+    {
+        // Pull a single comment to view.
+        // When AjaxContext detected, uses the comment/view.ajax.phtml
+        // view script.
+    }
+
+    public function formAction()
+    {
+        // Render the "add new comment" form.
+        // When AjaxContext detected, uses the comment/form.ajax.phtml
+        // view script.
+    }
+
+    public function processAction()
+    {
+        // Process a new comment
+        // Return the results as JSON; simply assign the results as
+        // view variables, and JSON will be returned.
+    }
+}
+</pre>
+
+            <p>
+                On the client end, your <acronym class="acronym">AJAX</acronym> library will simply request the
+                endpoints '<code class="filename">/comment/view</code>',
+                '<code class="filename">/comment/form</code>', and
+                '<code class="filename">/comment/process</code>', and pass the 'format' parameter:
+                '<code class="filename">/comment/view/format/html</code>',
+                '<code class="filename">/comment/form/format/html</code>',
+                '<code class="filename">/comment/process/format/json</code>'. (Or you can pass the parameter
+                via query string: e.g., "?format=json".)
+            </p>
+
+            <p>
+                Assuming your library passes the 'X-Requested-With:
+                XmlHttpRequest' header, these actions will then return the
+                appropriate response format.
+            </p>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.actionhelpers.flashmessenger"></a>FlashMessenger</h4></div></div></div>
+    
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelper.flashmessenger.introduction"></a>Introduction</h5></div></div></div>
+        
+
+        <p>
+            The <span class="emphasis"><em>FlashMessenger</em></span> helper allows you to pass messages
+            that the user may need to see on the next request. To accomplish
+            this, <span class="emphasis"><em>FlashMessenger</em></span> uses
+            <code class="classname">Zend_Session_Namespace</code> to store messages for future or
+            next request retrieval. It is generally a good idea that if you
+            plan on using <code class="classname">Zend_Session</code> or
+            <code class="classname">Zend_Session_Namespace</code>, that you initialize with
+            <code class="methodname">Zend_Session::start()</code> in your bootstrap file. (See the
+            <a class="link" href="zend.session.advanced_usage.html#zend.session.advanced_usage.starting_a_session" title="Starting a Session">Zend_Session</a>
+            documentation for more details on its usage.)
+        </p>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelper.flashmessenger.api"></a>Available Methods</h5></div></div></div>
+        
+
+        <p>
+            General methods:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setNamespace($namespace='default')</code> is used to set the namespace
+                     into which messages are stored by default. 
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getNamespace()</code> is used to retrieve the name of the 
+                    default namespace.  The default namespace is 'default'.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">resetNamespace()</code> is used to reset the namespace name
+                    to the default value, 'default'.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Methods for manipulating messages set in the previous request:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">hasMessages($namespace=NULL)</code> is used to determine
+                    if messages have been carried from a previous request by the flash messenger.  The
+                    optional argument <code class="varname">$namespace</code> specifies which namespace to look in.
+                    If the <code class="varname">$namespace</code> argument is omitted, the value returned by
+                    <code class="methodname">getNamespace()</code> will be used.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getMessages($namespace=NULL)</code> is used to retrieve the
+                    messages which have been carried from a previous request by the flash messenger.  The
+                    optional argument <code class="varname">$namespace</code> specifies which namespace to pull from.
+                    If the <code class="varname">$namespace</code> argument is omitted, the value returned by
+                    <code class="methodname">getNamespace()</code> will be used.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getIterator($namespace=NULL)</code> wraps the return value of 
+                    <code class="methodname">getMessages()</code> in an instance of <code class="classname">ArrayObject</code>.
+                    If the <code class="varname">$namespace</code> argument is omitted, the value returned by
+                    <code class="methodname">getNamespace()</code> will be used.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">count($namespace=NULL)</code> returns the number of messages contained
+                    in the specified namespace.  If the <code class="varname">$namespace</code> argument is omitted, the 
+                    value returned by <code class="methodname">getNamespace()</code> will be used.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearMessages($namespace=NULL)</code> is used to clear all the
+                    messages which have been carried from a previous request by the flash messenger.  The
+                    optional argument <code class="varname">$namespace</code> specifies which namespace to clear out.
+                    If the <code class="varname">$namespace</code> argument is omitted, the value returned by
+                    <code class="methodname">getNamespace()</code> will be used.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Methods for manipulating messages set in the current request:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">addMessage($message, $namespace=NULL)</code> is used to add a new 
+                    message to the current request.  <code class="varname">$message</code> contains the message
+                    to be added, and the optional argument <code class="varname">$namespace</code> will specify
+                    the namespace.  If the <code class="varname">$namespace</code> argument is omitted, the value
+                    returned by <code class="methodname">getNamespace()</code> will be used.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">hasCurrentMessages($namespace=NULL)</code> is used to determine
+                    if messages have been added to the flash messenger during the current request.  The
+                    optional argument <code class="varname">$namespace</code> specifies which namespace to look in.
+                    If the <code class="varname">$namespace</code> argument is omitted, the value returned by
+                    <code class="methodname">getNamespace()</code> will be used.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getCurrentMessages($namespace=NULL)</code> is used to retrieve the
+                    messages which have been added to the flash messenger during the current request.  The
+                    optional argument <code class="varname">$namespace</code> specifies which namespace to pull from.
+                    If the <code class="varname">$namespace</code> argument is omitted, the value returned by
+                    <code class="methodname">getNamespace()</code> will be used.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearCurrentMessages($namespace=NULL)</code> is used to clear all the
+                    messages which have been added to the flash messenger during the current request.  The
+                    optional argument <code class="varname">$namespace</code> specifies which namespace to clear out.
+                    If the <code class="varname">$namespace</code> argument is omitted, the value returned by
+                    <code class="methodname">getNamespace()</code> will be used.
+                </p>
+            </li>
+</ul></div>
+
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelper.flashmessenger.basicusage"></a>Basic Usage Example</h5></div></div></div>
+        
+
+        <p>
+            The usage example below shows the use of the flash messenger at its
+            most basic. When the action <code class="filename">/some/my</code> is called, it adds
+            the flash message "Record Saved!" A subsequent request to the action
+            <code class="filename">/some/my-next-request</code> will retrieve it (and thus delete
+            it as well).
+        </p>
+
+        <pre class="programlisting">
+class SomeController extends Zend_Controller_Action
+{
+    /**
+     * FlashMessenger
+     *
+     * @var Zend_Controller_Action_Helper_FlashMessenger
+     */
+    protected $_flashMessenger = null;
+
+    public function init()
+    {
+        $this-&gt;_flashMessenger =
+            $this-&gt;_helper-&gt;getHelper('FlashMessenger');
+        $this-&gt;initView();
+    }
+
+    public function myAction()
+    {
+        /**
+         * default method of getting
+         * Zend_Controller_Action_Helper_FlashMessenger instance
+         * on-demand
+         */
+        $this-&gt;_flashMessenger-&gt;addMessage('Record Saved!');
+    }
+
+    public function myNextRequestAction()
+    {
+        $this-&gt;view-&gt;messages = $this-&gt;_flashMessenger-&gt;getMessages();
+        $this-&gt;render();
+    }
+}
+</pre>
+    </div>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.actionhelpers.json"></a>JSON</h4></div></div></div>
+    
+
+    <p>
+        <acronym class="acronym">JSON</acronym> responses are rapidly becoming the response of choice when dealing
+        with <acronym class="acronym">AJAX</acronym> requests that expect dataset responses;
+        <acronym class="acronym">JSON</acronym> can be immediately parsed on the client-side, leading to quick
+        execution.
+    </p>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelpers.json.usage"></a>Usage</h5></div></div></div>
+        
+
+        <p>
+            Usage is simple: either call it as a method of the helper broker, or
+            call one of the methods <code class="methodname">encodeJson()</code> or
+            <code class="methodname">sendJson()</code>:
+        </p>
+
+        <p>
+            direct($data, $sendNow = true, $keepLayouts = false, $encodeData = true)
+        </p>
+
+        <p>
+            sendJson($data, $keepLayouts = false, $encodeData = true)
+        </p>
+
+        <p>
+            encodeJson($data, $keepLayouts = false, $encodeData = true)
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>$data</em></span>: data to encode as JSON
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>$sendNow</em></span>: flag to define whether
+                    to send the JSON data immediately.  When true, the helper
+                    will immediately set the respose body and exit.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>$keepLayouts</em></span>: flag to define whether
+                    to enable or disable layours.  When false, all layouts
+                    are disabled.  Optionally, this can be an array of options
+                    to pass as the second argument to <code class="methodname">Zend_Json::encode()</code>.
+                    This array of options allows enabling layouts and encoding using
+                   <code class="classname">Zend_Json_Expr</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>$encodeData</em></span>: flag to define whether
+                    <span class="emphasis"><em>$data</em></span> is already JSON-encoded.  When
+                    true, this helper will not encode <span class="emphasis"><em>$data</em></span>
+                    to JSON before sending.
+                </p>
+            </li>
+</ul></div>
+
+        <div class="note"><table border="0" summary="Note: Keeping Layouts">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Keeping Layouts</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                If you have a separate layout for <acronym class="acronym">JSON</acronym> responses -- perhaps to wrap
+                the <acronym class="acronym">JSON</acronym> response in some sort of context -- each method in the
+                <acronym class="acronym">JSON</acronym> helper accepts an optional argument <span class="emphasis"><em>$keepLayouts</em></span>: a flag to enable or
+                disable layouts. Passing a boolean <code class="constant">TRUE</code> value will keep
+                layouts enabled:
+            </p>
+
+            <pre class="programlisting">
+$this-&gt;_helper-&gt;json($data, true);
+</pre>
+
+            <p>
+                Optionally, you can pass an array as the third parameter. This
+                array may contain a variety of options, including the
+                <span class="emphasis"><em>keepLayouts</em></span> option:
+            </p>
+
+            <pre class="programlisting">
+// Direct helper call
+$this-&gt;_helper-&gt;json($data, true, array('keepLayouts' =&gt; true);
+
+// ...or, call a method of the helper
+$this-&gt;_helper-&gt;sendJson($data, array('keepLayouts' =&gt; true));
+</pre>
+        </td></tr>
+</table></div>
+
+        <div class="note"><table border="0" summary="Note: Enabling encoding using Zend_Json_Expr">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Enabling encoding using Zend_Json_Expr</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                <code class="methodname">Zend_Json::encode()</code> allows the encoding of native
+                <acronym class="acronym">JSON</acronym> expressions using <code class="classname">Zend_Json_Expr</code>
+                objects. This option is disabled by default. To enable this option, pass a boolean
+                <code class="constant">TRUE</code> value to the <span class="emphasis"><em>enableJsonExprFinder</em></span>
+                option:
+            </p>
+
+            <pre class="programlisting">
+$this-&gt;_helper-&gt;json($data, true, array('enableJsonExprFinder' =&gt; true);
+</pre>
+
+            <p>
+                If you desire to do this, you <span class="emphasis"><em>must</em></span> pass an
+                array as the third argument. This also allows you to combine other
+                options, such as the <span class="emphasis"><em>keepLayouts</em></span> option. All such
+                options are then passed to <code class="methodname">Zend_Json::encode()</code>.
+            </p>
+
+            <pre class="programlisting">
+$this-&gt;_helper-&gt;json($data, true, array(
+'enableJsonExprFinder' =&gt; true,
+'keepLayouts'          =&gt; true,
+));
+</pre>
+        </td></tr>
+</table></div>
+    </div>    
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelpers.json.example"></a>Example</h5></div></div></div>
+        
+
+        <pre class="programlisting">
+class FooController extends Zend_Controller_Action
+{
+    public function barAction()
+    {
+        // do some processing...
+        // Send the JSON response:
+        $this-&gt;_helper-&gt;json($data);
+
+        // or...
+        $this-&gt;_helper-&gt;json-&gt;sendJson($data);
+
+        // or retrieve the json:
+        $json = $this-&gt;_helper-&gt;json-&gt;encodeJson($data);
+    }
+}
+</pre>
+    </div>
+    
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.actionhelpers.redirector"></a>Redirector</h4></div></div></div>
+    
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelper.redirector.introduction"></a>Introduction</h5></div></div></div>
+        
+
+        <p>
+            The <span class="emphasis"><em>Redirector</em></span> helper allows you to use a redirector
+            object to fulfill your application's needs for redirecting to a new
+            <acronym class="acronym">URL</acronym>. It provides numerous benefits over the
+            <code class="methodname">_redirect()</code> method, such as being able to preconfigure
+            sitewide behavior into the redirector object or using the built in
+            <code class="methodname">gotoSimple($action, $controller, $module, $params)</code> interface
+            similar to that of <code class="methodname">Zend_Controller_Action::_forward()</code>.
+        </p>
+
+        <p>
+            The <span class="emphasis"><em>Redirector</em></span> has a number of methods that can be used
+            to affect the behaviour at redirect:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setCode()</code> can be used to set the
+                    <acronym class="acronym">HTTP</acronym> response code to use during the redirect.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setExit()</code> can be used to force an
+                    <code class="methodname">exit()</code> following a redirect. By default this is
+                    <code class="constant">TRUE</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setGotoSimple()</code> can be used to set a default
+                    <acronym class="acronym">URL</acronym> to use if none is passed to
+                    <code class="methodname">gotoSimple()</code>. Uses the <acronym class="acronym">API</acronym>
+                    of <code class="methodname">Zend_Controller_Action::_forward()</code>:
+                    <code class="methodname">setGotoSimple($action, $controller = null, $module = null, array
+                    $params = array())</code>
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setGotoRoute()</code> can be used to set a
+                    <acronym class="acronym">URL</acronym> based on a registered route. Pass in an array of
+                    key / value pairs and a route name, and it will assemble the
+                    <acronym class="acronym">URL</acronym> according to the route type and definition.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setGotoUrl()</code> can be used to set a default
+                    <acronym class="acronym">URL</acronym> to
+                    use if none is passed to <code class="methodname">gotoUrl()</code>. Accepts a
+                    single <acronym class="acronym">URL</acronym> string.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setPrependBase()</code> can be used to prepend the
+                    request object's base <acronym class="acronym">URL</acronym> to a <acronym class="acronym">URL</acronym>
+                    specified with
+                    <code class="methodname">setGotoUrl()</code>, <code class="methodname">gotoUrl()</code>, or
+                    <code class="methodname">gotoUrlAndExit()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setUseAbsoluteUri()</code> can be used to force the
+                    <span class="emphasis"><em>Redirector</em></span> to use absolute <acronym class="acronym">URI</acronym>s when
+                    redirecting. When this option is set, it uses the value of
+                    <code class="varname">$_SERVER['HTTP_HOST']</code>,
+                    <code class="varname">$_SERVER['SERVER_PORT']</code>, and
+                    <code class="varname">$_SERVER['HTTPS']</code> to form a full <acronym class="acronym">URI</acronym>
+                    to the <acronym class="acronym">URL</acronym>
+                    specified by one of the redirect methods. This option is off
+                    by default, but may be enabled by default in later releases.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Additionally, there are a variety of methods in the redirector for
+            performing the actual redirects:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">gotoSimple()</code> uses
+                    <code class="methodname">setGotoSimple()</code>
+                    (<code class="methodname">_forward()</code>-like <acronym class="acronym">API</acronym>) to build a
+                    <acronym class="acronym">URL</acronym> and perform a redirect.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">gotoRoute()</code> uses
+                    <code class="methodname">setGotoRoute()</code>
+                    (<span class="emphasis"><em>route-assembly</em></span>) to build a <acronym class="acronym">URL</acronym> and
+                    perform a redirect.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">gotoUrl()</code> uses <code class="methodname">setGotoUrl()</code>
+                    (<span class="emphasis"><em><acronym class="acronym">URL</acronym> string</em></span>) to build a
+                    <acronym class="acronym">URL</acronym> and perform a redirect.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Finally, you can determine the current redirect <acronym class="acronym">URL</acronym> at any time
+            using <code class="methodname">getRedirectUrl()</code>.
+        </p>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelper.redirector.basicusage"></a>Basic Usage Examples</h5></div></div></div>
+        
+
+        <div class="example">
+<a name="zend.controller.actionhelper.redirector.basicusage.example-1"></a><p class="title"><b>Exemplo 143. Setting Options</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                This example overrides several options, including setting the
+                <acronym class="acronym">HTTP</acronym> status code to use in the redirect ('303'), not defaulting
+                to exit on redirect, and defining a default <acronym class="acronym">URL</acronym> to use when
+                redirecting.
+            </p>
+
+            <pre class="programlisting">
+class SomeController extends Zend_Controller_Action
+{
+    /**
+     * Redirector - defined for code completion
+     *
+     * @var Zend_Controller_Action_Helper_Redirector
+     */
+    protected $_redirector = null;
+
+    public function init()
+    {
+        $this-&gt;_redirector = $this-&gt;_helper-&gt;getHelper('Redirector');
+
+        // Set the default options for the redirector
+        // Since the object is registered in the helper broker, these
+        // become relevant for all actions from this point forward
+        $this-&gt;_redirector-&gt;setCode(303)
+                          -&gt;setExit(false)
+                          -&gt;setGotoSimple("this-action",
+                                          "some-controller");
+    }
+
+    public function myAction()
+    {
+        /* do some stuff */
+
+        // Redirect to a previously registered URL, and force an exit
+        // to occur when done:
+        $this-&gt;_redirector-&gt;redirectAndExit();
+        return; // never reached
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.controller.actionhelper.redirector.basicusage.example-2"></a><p class="title"><b>Exemplo 144. Using Defaults</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                This example assumes that the defaults are used, which means
+                that any redirect will result in an immediate
+                <code class="methodname">exit()</code>.
+            </p>
+
+            <pre class="programlisting">
+// ALTERNATIVE EXAMPLE
+class AlternativeController extends Zend_Controller_Action
+{
+    /**
+     * Redirector - defined for code completion
+     *
+     * @var Zend_Controller_Action_Helper_Redirector
+     */
+    protected $_redirector = null;
+
+    public function init()
+    {
+        $this-&gt;_redirector = $this-&gt;_helper-&gt;getHelper('Redirector');
+    }
+
+    public function myAction()
+    {
+        /* do some stuff */
+
+        $this-&gt;_redirector
+            -&gt;gotoUrl('/my-controller/my-action/param1/test/param2/test2');
+        return; // never reached since default is to goto and exit
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.controller.actionhelper.redirector.basicusage.example-3"></a><p class="title"><b>Exemplo 145. Using goto()'s _forward() API</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                <code class="methodname">gotoSimple()</code>'s <acronym class="acronym">API</acronym> mimics that of
+                <code class="methodname">Zend_Controller_Action::_forward()</code>. The primary
+                difference is that it builds a <acronym class="acronym">URL</acronym> from the parameters passed,
+                and using the default <code class="filename">:module/:controller/:action/*</code>
+                format of the default router. It then redirects instead of
+                chaining the action.
+            </p>
+
+            <pre class="programlisting">
+class ForwardController extends Zend_Controller_Action
+{
+    /**
+     * Redirector - defined for code completion
+     *
+     * @var Zend_Controller_Action_Helper_Redirector
+     */
+    protected $_redirector = null;
+
+    public function init()
+    {
+        $this-&gt;_redirector = $this-&gt;_helper-&gt;getHelper('Redirector');
+    }
+
+    public function myAction()
+    {
+        /* do some stuff */
+
+        // Redirect to 'my-action' of 'my-controller' in the current
+        // module, using the params param1 =&gt; test and param2 =&gt; test2
+        $this-&gt;_redirector-&gt;gotoSimple('my-action',
+                                       'my-controller',
+                                       null,
+                                       array('param1' =&gt; 'test',
+                                             'param2' =&gt; 'test2'
+                                             )
+                                       );
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.controller.actionhelper.redirector.basicusage.example-4"></a><p class="title"><b>Exemplo 146. Using Route Assembly with gotoRoute()</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                The following example uses the <a class="link" href="zend.controller.router.html" title="The Standard Router">router's</a>
+                <code class="methodname">assemble()</code> method to create a <acronym class="acronym">URL</acronym>
+                based on an associative array of parameters passed. It assumes the following
+                route has been registered:
+            </p>
+
+            <pre class="programlisting">
+$route = new Zend_Controller_Router_Route(
+    'blog/:year/:month/:day/:id',
+    array('controller' =&gt; 'archive',
+          'module' =&gt; 'blog',
+          'action' =&gt; 'view')
+);
+$router-&gt;addRoute('blogArchive', $route);
+</pre>
+
+            <p>
+                Given an array with year set to 2006, month to 4, day to 24, and
+                id to 42, it would then build the <acronym class="acronym">URL</acronym>
+                <code class="filename">/blog/2006/4/24/42</code>.
+            </p>
+
+            <pre class="programlisting">
+class BlogAdminController extends Zend_Controller_Action
+{
+    /**
+     * Redirector - defined for code completion
+     *
+     * @var Zend_Controller_Action_Helper_Redirector
+     */
+    protected $_redirector = null;
+
+    public function init()
+    {
+        $this-&gt;_redirector = $this-&gt;_helper-&gt;getHelper('Redirector');
+    }
+
+    public function returnAction()
+    {
+        /* do some stuff */
+
+        // Redirect to blog archive. Builds the following URL:
+        // /blog/2006/4/24/42
+        $this-&gt;_redirector-&gt;gotoRoute(
+            array('year' =&gt; 2006,
+                  'month' =&gt; 4,
+                  'day' =&gt; 24,
+                  'id' =&gt; 42),
+            'blogArchive'
+        );
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.actionhelpers.viewrenderer"></a>ViewRenderer</h4></div></div></div>
+    
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelper.viewrenderer.introduction"></a>Introduction</h5></div></div></div>
+        
+
+        <p>
+            The <span class="emphasis"><em>ViewRenderer</em></span> helper is designed to satisfy the
+            following goals:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Eliminate the need to instantiate view objects within
+                    controllers; view objects will be automatically registered
+                    with the controller.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Automatically set view script, helper, and filter paths
+                    based on the current module, and automatically associate
+                    the current module name as a class prefix for helper and
+                    filter classes.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Create a globally available view object for all dispatched
+                    controllers and actions.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Allow the developer to set default view rendering options
+                    for all controllers.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Add the ability to automatically render a view script with
+                    no intervention.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Allow the developer to create her own specifications for
+                    the view base path and for view script paths.
+                </p>
+            </li>
+</ul></div>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                If you perform a <code class="methodname">_forward()</code>,
+                <code class="methodname">redirect()</code>, or
+                <code class="methodname">render()</code> manually, autorendering will not occur, as
+                by performing any of these actions you are telling the
+                <span class="emphasis"><em>ViewRenderer</em></span> that you are determining your own
+                output.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                The <span class="emphasis"><em>ViewRenderer</em></span> is enabled by default. You may
+                disable it via the front controller <span class="emphasis"><em>noViewRenderer</em></span>
+                param (<span class="command"><strong>$front-&gt;setParam('noViewRenderer', true);</strong></span>) or
+                removing the helper from the helper broker stack
+                (<code class="methodname">Zend_Controller_Action_HelperBroker::removeHelper('viewRenderer')</code>).
+            </p>
+
+            <p>
+                If you wish to modify settings of the <span class="emphasis"><em>ViewRenderer</em></span>
+                prior to dispatching the front controller, you may do so in one
+                of two ways:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        Instantiate and register your own
+                        <span class="emphasis"><em>ViewRenderer</em></span> object and pass it to the
+                        helper broker:
+                    </p>
+
+                    <pre class="programlisting">
+$viewRenderer = new Zend_Controller_Action_Helper_ViewRenderer();
+$viewRenderer-&gt;setView($view)
+             -&gt;setViewSuffix('php');
+Zend_Controller_Action_HelperBroker::addHelper($viewRenderer);
+</pre>
+                </li>
+<li class="listitem">
+                    <p>
+                        Initialize and/or retrieve a <span class="emphasis"><em>ViewRenderer</em></span>
+                        object on demand via the helper broker:
+                    </p>
+
+                    <pre class="programlisting">
+$viewRenderer =
+    Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
+$viewRenderer-&gt;setView($view)
+             -&gt;setViewSuffix('php');
+</pre>
+                </li>
+</ul></div>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelper.viewrenderer.api"></a>API</h5></div></div></div>
+        
+
+        <p>
+            At its most basic usage, you simply instantiate the
+            <span class="emphasis"><em>ViewRenderer</em></span> and pass it to the action helper broker.
+            The easiest way to instantiate it and register in one go is to use
+            the helper broker's <code class="methodname">getStaticHelper()</code> method:
+        </p>
+
+        <pre class="programlisting">
+Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
+</pre>
+
+        <p>
+            The first time an action controller is instantiated, it will trigger
+            the <span class="emphasis"><em>ViewRenderer</em></span> to instantiate a view object. Each
+            time a controller is instantiated, the <span class="emphasis"><em>ViewRenderer</em></span>'s
+            <code class="methodname">init()</code> method is called, which will cause it to set the
+            view property of the action controller, and call
+            <code class="methodname">addScriptPath()</code> with a path relative to the current
+            module; this will be called with a class prefix named after the
+            current module, effectively namespacing all helper and filter
+            classes you define for the module.
+        </p>
+
+        <p>
+            Each time <code class="methodname">postDispatch()</code> is called, it will call
+            <code class="methodname">render()</code> for the current action.
+        </p>
+
+        <p>
+            As an example, consider the following class:
+        </p>
+
+        <pre class="programlisting">
+// A controller class, foo module:
+class Foo_BarController extends Zend_Controller_Action
+{
+    // Render bar/index.phtml by default; no action required
+    public function indexAction()
+    {
+    }
+
+    // Render bar/populate.phtml with variable 'foo' set to 'bar'.
+    // Since view object defined at preDispatch(), it's already available.
+    public function populateAction()
+    {
+        $this-&gt;view-&gt;foo = 'bar';
+    }
+}
+
+...
+
+// in one of your view scripts:
+$this-&gt;foo(); // call Foo_View_Helper_Foo::foo()
+</pre>
+
+        <p>
+            The <span class="emphasis"><em>ViewRenderer</em></span> also defines a number of accessors to
+            allow setting and retrieving view options:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setView($view)</code> allows you to set the view
+                    object for the <span class="emphasis"><em>ViewRenderer</em></span>. It gets set as
+                    the public class property <code class="varname">$view</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setNeverRender($flag = true)</code> can be used to
+                    disable or enable autorendering globally, i.e., for all
+                    controllers. If set to <code class="constant">TRUE</code>,
+                    <code class="methodname">postDispatch()</code>
+                    will not automatically call <code class="methodname">render()</code> in the
+                    current controller. <code class="methodname">getNeverRender()</code> retrieves
+                    the current value.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setNoRender($flag = true)</code> can be used to
+                    disable or enable autorendering. If set to <code class="constant">TRUE</code>,
+                    <code class="methodname">postDispatch()</code> will not automatically call
+                    <code class="methodname">render()</code> in the current controller. This
+                    setting is reset each time <code class="methodname">preDispatch()</code> is
+                    called (i.e., you need to set this flag for each controller
+                    for which you don't want autorenderering to occur).
+                    <code class="methodname">getNoRender()</code> retrieves the current value.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setNoController($flag = true)</code> can be used to
+                    tell <code class="methodname">render()</code> not to look for the action script
+                    in a subdirectory named after the controller (which is the
+                    default behaviour). <code class="methodname">getNoController()</code> retrieves
+                    the current value.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setNeverController($flag = true)</code> is analogous
+                    to <code class="methodname">setNoController()</code>, but works on a global
+                    level -- i.e., it will not be reset for each dispatched
+                    action. <code class="methodname">getNeverController()</code> retrieves
+                    the current value.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setScriptAction($name)</code> can be used to
+                    specify the action script to render. <code class="varname">$name</code>
+                    should be the name of the script minus the file suffix (and
+                    without the controller subdirectory, unless
+                    <span class="emphasis"><em>noController</em></span> has been turned on). If not
+                    specified, it looks for a view script named after the action
+                    in the request object. <code class="methodname">getScriptAction()</code>
+                    retrieves the current value.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setResponseSegment($name)</code> can be used to
+                    specify which response object named segment to render into.
+                    If not specified, it renders into the default segment.
+                    <code class="methodname">getResponseSegment()</code> retrieves the current
+                    value.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">initView($path, $prefix, $options)</code> may be called
+                    to specify the base view path, class prefix for helper and
+                    filter scripts, and <span class="emphasis"><em>ViewRenderer</em></span> options. You
+                    may pass any of the following flags:
+                    <span class="emphasis"><em>neverRender</em></span>, <span class="emphasis"><em>noRender</em></span>,
+                    <span class="emphasis"><em>noController</em></span>, <span class="emphasis"><em>scriptAction</em></span>, and
+                    <span class="emphasis"><em>responseSegment</em></span>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setRender($action = null, $name = null, $noController
+                        = false)</code> allows you to set any of
+                    <span class="emphasis"><em>scriptAction</em></span>, <span class="emphasis"><em>responseSegment</em></span>, and
+                    <span class="emphasis"><em>noController</em></span> in one pass. <code class="methodname">direct()</code>
+                    is an alias to this method, allowing you to call this method
+                    easily from your controller:
+                </p>
+
+                <pre class="programlisting">
+// Render 'foo' instead of current action script
+$this-&gt;_helper-&gt;viewRenderer('foo');
+
+// render form.phtml to the 'html' response segment, without using a
+// controller view script subdirectory:
+$this-&gt;_helper-&gt;viewRenderer('form', 'html', true);
+</pre>
+
+                <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                    <p>
+                        <code class="methodname">setRender()</code> and <code class="methodname">direct()</code>
+                        don't actually render the view script, but instead set hints
+                        that <code class="methodname">postDispatch()</code> and
+                        <code class="methodname">render()</code> will use to render the view.
+                    </p>
+                </td></tr>
+</table></div>
+            </li>
+</ul></div>
+
+        <p>
+            The constructor allows you to optionally pass the view object and
+            <span class="emphasis"><em>ViewRenderer</em></span> options; it accepts the same flags as
+            <code class="methodname">initView()</code>:
+        </p>
+
+        <pre class="programlisting">
+$view    = new Zend_View(array('encoding' =&gt; 'UTF-8'));
+$options = array('noController' =&gt; true, 'neverRender' =&gt; true);
+$viewRenderer =
+    new Zend_Controller_Action_Helper_ViewRenderer($view, $options);
+</pre>
+
+        <p>
+            There are several additional methods for customizing path
+            specifications used for determining the view base path to add to the
+            view object, and the view script path to use when autodetermining
+            the view script to render. These methods each take one or more of
+            the following placeholders:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>:moduleDir</em></span> refers to the current module's base
+                    directory (by convention, the parent directory of the
+                    module's controller directory).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>:module</em></span> refers to the current module name.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>:controller</em></span> refers to the current controller name.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>:action</em></span> refers to the current action name.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>:suffix</em></span> refers to the view script suffix (which
+                    may be set via <code class="methodname">setViewSuffix()</code>).
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            The methods for controlling path specifications are:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setViewBasePathSpec($spec)</code> allows you to change
+                    the path specification used to determine the base path to
+                    add to the view object. The default specification is
+                    <code class="filename">:moduleDir/views</code>. You may retrieve the current
+                    specification at any time using
+                    <code class="methodname">getViewBasePathSpec()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setViewScriptPathSpec($spec)</code> allows you to
+                    change the path specification used to determine the path to
+                    an individual view script (minus the base view script path).
+                    The default specification is
+                    <code class="filename">:controller/:action.:suffix</code>. You may retrieve
+                    the current specification at any time using
+                    <code class="methodname">getViewScriptPathSpec()</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setViewScriptPathNoControllerSpec($spec)</code> allows
+                    you to change the path specification used to determine the
+                    path to an individual view script when
+                    <span class="emphasis"><em>noController</em></span> is in effect (minus the base view
+                    script path). The default specification is
+                    <code class="filename">:action.:suffix</code>. You may retrieve the current
+                    specification at any time using
+                    <code class="methodname">getViewScriptPathNoControllerSpec()</code>.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            For fine-grained control over path specifications, you may use
+            <a class="link" href="zend.filter.inflector.html" title="Zend_Filter_Inflector">Zend_Filter_Inflector</a>.
+            Under the hood, the <span class="emphasis"><em>ViewRenderer</em></span> uses an inflector to
+            perform path mappings already. To interact with the inflector --
+            either to set your own for use, or to modify the default inflector,
+            the following methods may be used:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">getInflector()</code> will retrieve the inflector. If
+                    none exists yet in the <span class="emphasis"><em>ViewRenderer</em></span>, it creates
+                    one using the default rules.
+                </p>
+
+                <p>
+                    By default, it uses static rule references for the suffix
+                    and module directory, as well as a static target; this
+                    allows various <span class="emphasis"><em>ViewRenderer</em></span> properties the
+                    ability to dynamically modify the inflector.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setInflector($inflector, $reference)</code> allows you
+                    to set a custom inflector for use with the
+                    <span class="emphasis"><em>ViewRenderer</em></span>. If <code class="varname">$reference</code> is
+                    <code class="constant">TRUE</code>, it will set the suffix and module directory as static
+                    references to <span class="emphasis"><em>ViewRenderer</em></span> properties, as well
+                    as the target.
+                </p>
+            </li>
+</ul></div>
+
+        <div class="note"><table border="0" summary="Note: Default Lookup Conventions">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Default Lookup Conventions</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                The <span class="emphasis"><em>ViewRenderer</em></span> does some path normalization to
+                make view script lookups easier. The default rules are as
+                follows:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>:module</em></span>: MixedCase and camelCasedWords are separated by
+                        dashes, and the entire string cast to lowercase. E.g.:
+                        "FooBarBaz" becomes "foo-bar-baz".
+                    </p>
+
+                    <p>
+                        Internally, the inflector uses the filters
+                        <code class="classname">Zend_Filter_Word_CamelCaseToDash</code> and
+                        <code class="classname">Zend_Filter_StringToLower</code>.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>:controller</em></span>: MixedCase and camelCasedWords are
+                        separated by dashes; underscores are converted to directory
+                        separators, and the entire string cast to lower case.
+                        Examples: "<code class="classname">FooBar</code>" becomes "foo-bar";
+                        "<code class="classname">FooBar_Admin</code>" becomes
+                        "<code class="filename">foo-bar/admin</code>".
+                    </p>
+
+                    <p>
+                        Internally, the inflector uses the filters
+                        <code class="classname">Zend_Filter_Word_CamelCaseToDash</code>,
+                        <code class="classname">Zend_Filter_Word_UnderscoreToSeparator</code>, and
+                        <code class="classname">Zend_Filter_StringToLower</code>.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>:action</em></span>: MixedCase and camelCasedWords are separated
+                        by dashes; non-alphanumeric characters are translated to
+                        dashes, and the entire string cast to lower case.
+                        Examples: "fooBar" becomes "foo-bar"; "foo-barBaz"
+                        becomes "foo-bar-baz".
+                    </p>
+
+                    <p>
+                        Internally, the inflector uses the filters
+                        <code class="classname">Zend_Filter_Word_CamelCaseToDash</code>,
+                        <code class="classname">Zend_Filter_PregReplace</code>, and
+                        <code class="classname">Zend_Filter_StringToLower</code>.
+                    </p>
+                </li>
+</ul></div>
+        </td></tr>
+</table></div>
+
+        <p>
+            The final items in the <span class="emphasis"><em>ViewRenderer</em></span> <acronym class="acronym">API</acronym> are the
+            methods for actually determining view script paths and rendering views.
+            These include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">renderScript($script, $name)</code> allows you to
+                    render a script with a path you specify, optionally to a
+                    named path segment. When using this method, the
+                    <span class="emphasis"><em>ViewRenderer</em></span> does no autodetermination of the
+                    script name, but instead directly passes the
+                    <code class="varname">$script</code> argument directly to the view object's
+                    <code class="methodname">render()</code> method.
+                </p>
+
+                <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                    <p>
+                        Once the view has been rendered to the response object, it
+                        sets the <span class="emphasis"><em>noRender</em></span> to prevent accidentally
+                        rendering the same view script multiple times.
+                    </p>
+                </td></tr>
+</table></div>
+
+                <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                    <p>
+                        By default,
+                        <code class="methodname">Zend_Controller_Action::renderScript()</code>
+                        proxies to the <span class="emphasis"><em>ViewRenderer</em></span>'s
+                        <code class="methodname">renderScript()</code> method.
+                    </p>
+                </td></tr>
+</table></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getViewScript($action, $vars)</code> creates the path
+                    to a view script based on the action passed and/or any
+                    variables passed in <code class="varname">$vars</code>. Keys for this array
+                    may include any of the path specification keys ('moduleDir',
+                    'module', 'controller', 'action', and 'suffix'). Any
+                    variables passed will be used; otherwise, values based on
+                    the current request will be utlized.
+                </p>
+
+                <p>
+                    <code class="methodname">getViewScript()</code> will use either the
+                    <span class="emphasis"><em>viewScriptPathSpec</em></span> or
+                    <span class="emphasis"><em>viewScriptPathNoControllerSpec</em></span> based on the
+                    setting of the <span class="emphasis"><em>noController</em></span> flag.
+                </p>
+
+                <p>
+                    Word delimiters occurring in module, controller, or action names will be
+                    replaced with dashes ('-'). Thus, if you have the controller name
+                    '<span class="command"><strong>foo.bar</strong></span>' and the action '<span class="command"><strong>baz:bat</strong></span>', using
+                    the default path specification will result in a view script path of
+                    '<code class="filename">foo-bar/baz-bat.phtml</code>'.
+                </p>
+
+                <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                    <p>
+                        By default,
+                        <code class="methodname">Zend_Controller_Action::getViewScript()</code>
+                        proxies to the <span class="emphasis"><em>ViewRenderer</em></span>'s
+                        <code class="methodname">getViewScript()</code> method.
+                    </p>
+                </td></tr>
+</table></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">render($action, $name, $noController)</code> checks
+                    first to see if either <code class="varname">$name</code> or
+                    <code class="varname">$noController</code> have been passed, and if so, sets
+                    the appropriate flags (responseSegment and noController,
+                    respectively) in the ViewRenderer. It then passes the
+                    <code class="varname">$action</code> argument, if any, on to
+                    <code class="methodname">getViewScript()</code>. Finally, it passes the
+                    calculated view script path to <code class="methodname">renderScript()</code>.
+                </p>
+
+                <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                    <p>
+                        Be aware of the side-effects of using <code class="methodname">render()</code>: the
+                        values you pass for the response segment name and for
+                        the noController flag will persist in the object.
+                        Additionally, noRender will be set after rendering is
+                        completed.
+                    </p>
+                </td></tr>
+</table></div>
+
+                <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                    <p>
+                        By default,
+                        <code class="methodname">Zend_Controller_Action::render()</code> proxies to
+                        the <span class="emphasis"><em>ViewRenderer</em></span>'s <code class="methodname">render()</code>
+                        method.
+                    </p>
+                </td></tr>
+</table></div>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">renderBySpec($action, $vars, $name)</code> allows you
+                    to pass path specification variables in order to determine
+                    the view script path to create. It passes
+                    <code class="varname">$action</code> and <code class="varname">$vars</code> to
+                    <code class="methodname">getScriptPath()</code>, and then passes the resulting
+                    script path and <code class="varname">$name</code> on to
+                    <code class="methodname">renderScript()</code>.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelper.viewrenderer.basicusage"></a>Basic Usage Examples</h5></div></div></div>
+        
+
+        <div class="example">
+<a name="zend.controller.actionhelper.viewrenderer.basicusage.example-1"></a><p class="title"><b>Exemplo 147. Basic Usage</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                At its most basic, you simply initialize and register the
+                <span class="emphasis"><em>ViewRenderer</em></span> helper with the helper broker in your
+                bootstrap, and then set variables in your action methods.
+            </p>
+
+            <pre class="programlisting">
+// In your bootstrap:
+Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
+
+...
+
+// 'foo' module, 'bar' controller:
+class Foo_BarController extends Zend_Controller_Action
+{
+    // Render bar/index.phtml by default; no action required
+    public function indexAction()
+    {
+    }
+
+    // Render bar/populate.phtml with variable 'foo' set to 'bar'.
+    // Since view object defined at preDispatch(), it's already available.
+    public function populateAction()
+    {
+        $this-&gt;view-&gt;foo = 'bar';
+    }
+
+    // Renders nothing as it forwards to another action; the new action
+    // will perform any rendering
+    public function bazAction()
+    {
+        $this-&gt;_forward('index');
+    }
+
+    // Renders nothing as it redirects to another location
+    public function batAction()
+    {
+        $this-&gt;_redirect('/index');
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note: Naming Conventions: Word Delimiters in Controller and Action Names">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Naming Conventions: Word Delimiters in Controller and Action Names</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                If your controller or action name is composed of several
+                words, the dispatcher requires that these are separated on
+                the <acronym class="acronym">URL</acronym> by specific path and word delimiter characters. The
+                <span class="emphasis"><em>ViewRenderer</em></span> replaces any path delimiter found
+                in the controller name with an actual path delimiter ('/'),
+                and any word delimiter found with a dash ('-') when creating
+                paths. Thus, a call to the action
+                <code class="filename">/foo.bar/baz.bat</code> would dispatch to
+                <code class="methodname">FooBarController::bazBatAction()</code> in
+                <code class="filename">FooBarController.php</code>, which would render
+                <code class="filename">foo-bar/baz-bat.phtml</code>; a call to the action
+                <code class="filename">/bar_baz/baz-bat</code> would dispatch to
+                <code class="methodname">Bar_BazController::bazBatAction()</code> in
+                <code class="filename">Bar/BazController.php</code> (note the path
+                separation) and render <code class="filename">bar/baz/baz-bat.phtml</code>.
+            </p>
+
+            <p>
+                Note that the in the second example, the module is still the
+                default module, but that, because of the existence of a path
+                separator, the controller receives the name
+                <code class="classname">Bar_BazController</code>, in
+                <code class="filename">Bar/BazController.php</code>. The ViewRenderer mimics
+                the controller directory hierarchy.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="example">
+<a name="zend.controller.actionhelper.viewrenderer.basicusage.example-2"></a><p class="title"><b>Exemplo 148. Disabling Autorender</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                For some actions or controllers, you may want to turn off the
+                autorendering -- for instance, if you're wanting to emit a
+                different type of output (<acronym class="acronym">XML</acronym>, <acronym class="acronym">JSON</acronym>, etc),
+                or if you simply want
+                to emit nothing. You have two options: turn off all cases of
+                autorendering (<code class="methodname">setNeverRender()</code>), or simply turn it
+                off for the current action (<code class="methodname">setNoRender()</code>).
+            </p>
+
+            <pre class="programlisting">
+// Baz controller class, bar module:
+class Bar_BazController extends Zend_Controller_Action
+{
+    public function fooAction()
+    {
+        // Don't auto render this action
+        $this-&gt;_helper-&gt;viewRenderer-&gt;setNoRender();
+    }
+}
+
+// Bat controller class, bar module:
+class Bar_BatController extends Zend_Controller_Action
+{
+    public function preDispatch()
+    {
+        // Never auto render this controller's actions
+        $this-&gt;_helper-&gt;viewRenderer-&gt;setNoRender();
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                In most cases, it makes no sense to turn off autorendering
+                globally (ala <code class="methodname">setNeverRender()</code>), as the only thing
+                you then gain from <span class="emphasis"><em>ViewRenderer</em></span> is the autosetup of
+                the view object.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="example">
+<a name="zend.controller.actionhelper.viewrenderer.basicusage.example-3"></a><p class="title"><b>Exemplo 149. Choosing a Different View Script</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                Some situations require that you render a different script than
+                one named after the action. For instance, if you have a
+                controller that has both add and edit actions, they may both
+                display the same 'form' view, albeit with different values set.
+                You can easily change the script name used with either
+                <code class="methodname">setScriptAction()</code>, <code class="methodname">setRender()</code>,
+                or calling the helper as a method, which will invoke
+                <code class="methodname">setRender()</code>.
+            </p>
+
+            <pre class="programlisting">
+// Bar controller class, foo module:
+class Foo_BarController extends Zend_Controller_Action
+{
+    public function addAction()
+    {
+        // Render 'bar/form.phtml' instead of 'bar/add.phtml'
+        $this-&gt;_helper-&gt;viewRenderer('form');
+    }
+
+    public function editAction()
+    {
+        // Render 'bar/form.phtml' instead of 'bar/edit.phtml'
+        $this-&gt;_helper-&gt;viewRenderer-&gt;setScriptAction('form');
+    }
+
+    public function processAction()
+    {
+        // do some validation...
+        if (!$valid) {
+            // Render 'bar/form.phtml' instead of 'bar/process.phtml'
+            $this-&gt;_helper-&gt;viewRenderer-&gt;setRender('form');
+            return;
+        }
+
+        // otherwise continue processing...
+    }
+
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.controller.actionhelper.viewrenderer.basicusage.example-4"></a><p class="title"><b>Exemplo 150. Modifying the Registered View</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                What if you need to modify the view object -- for instance,
+                change the helper paths, or the encoding? You can do so either
+                by modifying the view object set in your controller, or by
+                grabbing the view object out of the <span class="emphasis"><em>ViewRenderer</em></span>;
+                both are references to the same object.
+            </p>
+
+            <pre class="programlisting">
+// Bar controller class, foo module:
+class Foo_BarController extends Zend_Controller_Action
+{
+    public function preDispatch()
+    {
+        // change view encoding
+        $this-&gt;view-&gt;setEncoding('UTF-8');
+    }
+
+    public function bazAction()
+    {
+        // Get view object and set escape callback to 'htmlspecialchars'
+        $view = $this-&gt;_helper-&gt;viewRenderer-&gt;view;
+        $view-&gt;setEscape('htmlspecialchars');
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.actionhelper.viewrenderer.advancedusage"></a>Advanced Usage Examples</h5></div></div></div>
+        
+
+        <div class="example">
+<a name="zend.controller.actionhelper.viewrenderer.advancedusage.example-1"></a><p class="title"><b>Exemplo 151. Changing the Path Specifications</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                In some circumstances, you may decide that the default path
+                specifications do not fit your site's needs. For instance, you
+                may want to have a single template tree to which you may then
+                give access to your designers (this is very typical when using
+                <a class="ulink" href="http://smarty.php.net/" target="_top">Smarty</a>, for
+                instance). In such a case, you may want to hardcode the view
+                base path specification, and create an alternate specification
+                for the action view script paths themselves.
+            </p>
+
+            <p>
+                For purposes of this example, let's assume that the base path to
+                views should be '<code class="filename">/opt/vendor/templates</code>', and that you wish for
+                view scripts to be referenced by
+                '<code class="filename">:moduleDir/:controller/:action.:suffix</code>'; if the
+                <span class="emphasis"><em>noController</em></span>
+                flag has been set, you want to render out of the top level
+                instead of in a subdirectory ('<code class="filename">:action.:suffix</code>'). Finally, you
+                want to use 'tpl' as the view script filename suffix.
+            </p>
+
+            <pre class="programlisting">
+/**
+ * In your bootstrap:
+ */
+
+// Different view implementation
+$view = new ZF_Smarty();
+
+$viewRenderer = new Zend_Controller_Action_Helper_ViewRenderer($view);
+$viewRenderer-&gt;setViewBasePathSpec('/opt/vendor/templates')
+             -&gt;setViewScriptPathSpec(':module/:controller/:action.:suffix')
+             -&gt;setViewScriptPathNoControllerSpec(':action.:suffix')
+             -&gt;setViewSuffix('tpl');
+Zend_Controller_Action_HelperBroker::addHelper($viewRenderer);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.controller.actionhelper.viewrenderer.advancedusage.example-2"></a><p class="title"><b>Exemplo 152. Rendering Multiple View Scripts from a Single Action</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                At times, you may need to render multiple view scripts from a
+                single action. This is very straightforward -- simply make
+                multiple calls to <code class="methodname">render()</code>:
+            </p>
+
+            <pre class="programlisting">
+class SearchController extends Zend_Controller_Action
+{
+    public function resultsAction()
+    {
+        // Assume $this-&gt;model is the current model
+        $this-&gt;view-&gt;results =
+            $this-&gt;model-&gt;find($this-&gt;_getParam('query', '');
+
+        // render() by default proxies to the ViewRenderer
+        // Render first the search form and then the results
+        $this-&gt;render('form');
+        $this-&gt;render('results');
+    }
+
+    public function formAction()
+    {
+        // do nothing; ViewRenderer autorenders the view script
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.actionhelper.writingyourown"></a>Writing Your Own Helpers</h3></div></div></div>
+        
+
+        <p>
+            Action helpers extend
+            <code class="classname">Zend_Controller_Action_Helper_Abstract</code>, an abstract
+            class that provides the basic interface and functionality required
+            by the helper broker. These include the following methods:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setActionController()</code> is used to set the current
+                    action controller.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">init()</code>, triggered by the helper broker at
+                    instantiation, can be used to trigger initialization in the
+                    helper; this can be useful for resetting state when multiple
+                    controllers use the same helper in chained actions.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">preDispatch()</code>, is triggered prior to a
+                    dispatched action.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">postDispatch()</code> is triggered when a dispatched
+                    action is done -- even if a <code class="methodname">preDispatch()</code>
+                    plugin has skipped the action. Mainly useful for cleanup.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getRequest()</code> retrieves the current request
+                    object.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getResponse()</code> retrieves the current response
+                    object.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getName()</code> retrieves the helper name. It
+                    retrieves the portion of the class name following the last
+                    underscore character, or the full class name otherwise. As
+                    an example, if the class is named
+                    <code class="classname">Zend_Controller_Action_Helper_Redirector</code>, it
+                    will return <span class="emphasis"><em>Redirector</em></span>; a class named
+                    <span class="emphasis"><em>FooMessage</em></span> will simply return itself.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            You may optionally include a <code class="methodname">direct()</code> method in your
+            helper class. If defined, it allows you to treat the helper as a
+            method of the helper broker, in order to allow easy, one-off usage
+            of the helper. As an example, the <a class="link" href="zend.controller.actionhelpers.html#zend.controller.actionhelpers.redirector" title="Redirector">redirector</a>
+            defines <code class="methodname">direct()</code> as an alias of
+            <code class="methodname">goto()</code>, allowing use of the helper like this:
+        </p>
+
+        <pre class="programlisting">
+// Redirect to /blog/view/item/id/42
+$this-&gt;_helper-&gt;redirector('item', 'view', 'blog', array('id' =&gt; 42));
+</pre>
+
+        <p>
+            Internally, the helper broker's <code class="methodname">__call()</code> method looks
+            for a helper named <span class="emphasis"><em>redirector</em></span>, then checks to see if
+            that helper has a defined <code class="methodname">direct()</code> method, and calls it
+            with the arguments provided.
+        </p>
+
+        <p>
+            Once you have created your own helper class, you may provide access
+            to it as described in the sections above.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.action.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.response.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Action Controllers </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> The Response Object</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

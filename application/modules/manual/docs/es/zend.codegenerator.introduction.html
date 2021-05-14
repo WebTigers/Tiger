@@ -1,0 +1,195 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Introducción</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.codegenerator.html" title="Zend_CodeGenerator">
+<link rel="prev" href="zend.codegenerator.html" title="Zend_CodeGenerator">
+<link rel="next" href="zend.codegenerator.examples.html" title="Ejemplos de Zend_CodeGenerator">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Introducción</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.codegenerator.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_CodeGenerator</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.codegenerator.examples.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.codegenerator.introduction"></a>Introducción</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_CodeGenerator</code>
+        ofrece facilidades para
+        generar código arbitrario usando una interfaz orientada a objetos,
+        tanto
+        para crear código nuevo como para actualizar código existente.
+        Mientras que la
+        implementación actual se limita a generar código
+        <acronym class="acronym">PHP</acronym>
+        ,
+        usted fácilmente puede extender la clase base a fin de proveer
+        generación de código para
+        otras tareas como: JavaScript, archivos de
+        configuración, apache vhost, etc.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.codegenerator.introduction.theory"></a>Teoría de Operación</h3></div></div></div>
+        
+
+        <p>
+            En el caso de uso más típico, simplemente instanciará una clase de
+            generación de código y
+            podrá pasarle tanto la configuración adecuada
+            o configurarla después de la instanciación.
+            Para generar el código,
+            simplemente haga "echo" del objeto o llame a su método
+            <code class="methodname">generate()</code>
+            .
+        </p>
+
+        <pre class="programlisting">
+// Pasando la configuración al constructor:
+$file = new Zend_CodeGenerator_Php_File(array(
+    'classes' =&gt; array(
+        new Zend_CodeGenerator_Php_Class(array(
+            'name'    =&gt; 'World',
+            'methods' =&gt; array(
+                new Zend_CodeGenerator_Php_Method(array(
+                    'name' =&gt; 'hello',
+                    'body' =&gt; 'echo \'Hello world!\';',
+                )),
+            ),
+        )),
+    )
+));
+
+// Configurando después de la instanciación
+$method = new Zend_CodeGenerator_Php_Method();
+$method-&gt;setName('hello')
+       -&gt;setBody('echo \'Hello world!\';');
+
+$class = new Zend_CodeGenerator_Php_Class();
+$class-&gt;setName('World')
+      -&gt;setMethod($method);
+
+$file = new Zend_CodeGenerator_Php_File();
+$file-&gt;setClass($class);
+
+// Mostrar el archivo generado
+echo $file;
+
+// o grabarlo a un archivo:
+file_put_contents('World.php', $file-&gt;generate());
+</pre>
+
+        <p>
+            Ambos ejemplos anteriores mostrarán el mismo resultado:
+       </p>
+
+        <pre class="programlisting">
+&lt;?php
+
+class World
+{
+
+    public function hello()
+    {
+        echo 'Hello world!';
+    }
+
+}
+</pre>
+
+        <p>
+            Otro caso de uso común es actualizar el código actual -- por ejemplo,
+            para añadir un
+            método a una clase. En ese caso, primero debe
+            inspeccionar el código actual utilizando
+            reflexión, y entonces
+            añadir su nuevo método.
+            <code class="classname">Zend_CodeGenerator</code>
+            lo hace trivialmente simple,
+            aprovechando
+            <a class="link" href="zend.reflection.html" title="Zend_Reflection">Zend_Reflection</a>
+            .
+        </p>
+
+        <p>
+            Como ejemplo, digamos que hemos grabado lo anterior al archivo
+            "
+            <code class="filename">World.php</code>
+            ", y que ya está incluído. Podríamos entonces hacer lo
+            siguiente:
+        </p>
+
+        <pre class="programlisting">
+$class = Zend_CodeGenerator_Php_Class::fromReflection(
+    new Zend_Reflection_Class('World')
+);
+
+$method = new Zend_CodeGenerator_Php_Method();
+$method-&gt;setName('mrMcFeeley')
+       -&gt;setBody('echo \'Hello, Mr. McFeeley!\';');
+$class-&gt;setMethod($method);
+
+$file = new Zend_CodeGenerator_Php_File();
+$file-&gt;setClass($class);
+
+// Mostrar el archivo generado
+echo $file;
+
+// O mejor aún, volver a grabarlo al archivo original:
+file_put_contents('World.php', $file-&gt;generate());
+</pre>
+
+        <p>
+            El archivo de la clase resultante se vería así:
+       </p>
+
+        <pre class="programlisting">
+&lt;?php
+
+class World
+{
+
+    public function hello()
+    {
+        echo 'Hello world!';
+    }
+
+    public function mrMcFeeley()
+    {
+        echo 'Hellow Mr. McFeeley!';
+    }
+
+}
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.codegenerator.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.codegenerator.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.codegenerator.examples.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_CodeGenerator </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Ejemplos de Zend_CodeGenerator</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

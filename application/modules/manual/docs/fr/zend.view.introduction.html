@@ -1,0 +1,381 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Introduction</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.view.html" title="Zend_View">
+<link rel="prev" href="zend.view.html" title="Zend_View">
+<link rel="next" href="zend.view.controllers.html" title="Scripts de contrôleur">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Introduction</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.view.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_View</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.view.controllers.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.view.introduction"></a>Introduction</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_View</code> est une classe qui permet de travailler avec la
+        partie "Vue" du motif de conception Modèle-Vue-Contrôleur. Elle existe pour aider à garder
+        la vue séparée du modèle et des scripts du contrôleur. Elle fournie un système d'aide, de
+        filtres d'affichage, et d'échappement de variables.
+    </p>
+
+    <p>
+        <code class="classname">Zend_View</code> est un système de template agnostique ; vous pouvez
+        utiliser <acronym class="acronym">PHP</acronym> comme langage de template, ou créer des instances d'autres systèmes de
+        templates, et les manipuler à travers les scripts de vue.
+    </p>
+
+    <p>
+        L'utilisation de <code class="classname">Zend_View</code> se déroule en deux étapes
+        principales : 1. Votre script de contrôleur crée une instance de
+        <code class="classname">Zend_View</code> et assigne des variables à cette instance. 2. Le contrôleur
+        dit à <code class="classname">Zend_View</code> d'effectuer le rendu d'une vue particulière, et de ce
+        fait va donner le contrôle au script de vue, qui va générer l'affichage.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.introduction.controller"></a>Script du Contrôleur</h3></div></div></div>
+        
+
+        <p>
+            Comme exemple simple, imaginons que votre contrôleur aie une liste de données sur
+            des livres qu'il veut afficher en passant par une vue. Le contrôleur pourrait alors
+            ressembler à ceci :
+        </p>
+
+        <pre class="programlisting">
+// utilise un modèle pour obtenir les données sur les livres :
+// auteurs et titres
+$data = array(
+    array(
+        'auteur' =&gt; 'Hernando de Soto',
+        'titre' =&gt; 'Le mystère du capitalisme'
+    ),
+    array(
+        'auteur' =&gt; 'Henry Hazlitt',
+        'titre' =&gt; 'Les sciences économique en un cours'
+    ),
+    array(
+        'auteur' =&gt; 'Milton Friedman',
+        'titre' =&gt; 'Libre de choisir'
+    )
+);
+
+// assigniation des données du livre à une instance Zend_View
+Zend_Loader::loadClass('Zend_View');
+$view = new Zend_View();
+$view-&gt;books = $data;
+
+// et appel du script de rendu d'affichage appelé "booklist.php"
+echo $view-&gt;render('booklist.php');
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.introduction.view"></a>Script de vue</h3></div></div></div>
+        
+
+        <p>
+            Maintenant, nous avons besoin d'associer le script de vue
+            "<code class="filename">booklist.php</code>". C'est un script <acronym class="acronym">PHP</acronym> comme les autres, à une
+            exception près : il s'exécute dans la portée de l'instance
+            <code class="classname">Zend_View</code>, ce qui veut dire que les référence à
+            <code class="varname">$this</code> pointent vers les attributs et les méthodes de
+            <code class="classname">Zend_View</code>. (Les variables assignées à l'instance par le
+            contrôleur sont des propriétés publiques de l'instance
+            <code class="classname">Zend_View</code>). Ainsi un script de vue de base pourrait ressembler à
+            ceci :
+        </p>
+
+        <pre class="programlisting">
+&lt;?php if ($this-&gt;books): ?&gt;
+
+    &lt;!-- La table des livres --&gt;
+    &lt;table&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Auteur&lt;/th&gt;
+            &lt;th&gt;Titre&lt;/th&gt;
+        &lt;/tr&gt;
+
+        &lt;?php foreach ($this-&gt;books as $key =&gt; $val): ?&gt;
+        &lt;tr&gt;
+            &lt;td&gt;&lt;?php echo $this-&gt;escape($val['auteur']) ?&gt;&lt;/td&gt;
+            &lt;td&gt;&lt;?php echo $this-&gt;escape($val['titre']) ?&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;?php endforeach; ?&gt;
+
+    &lt;/table&gt;
+
+&lt;?php else: ?&gt;
+
+    &lt;p&gt;Aucun livre à afficher&lt;/p&gt;
+
+&lt;?php endif; ?&gt;
+</pre>
+
+        <p>
+            Notez l'utilisation de la méthode <code class="code">escape</code> pour échapper les variables
+            à afficher.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.introduction.options"></a>Options</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_View</code> possède plusieurs options qui peuvent être
+            réglées pour changer le comportement de vos scripts de vues.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="code">basePath</code> : indique le chemin de base où peuvent être trouvés
+                    les dossiers de scripts, d'aides et de filtres. Il considère une structure de
+                    dossiers de ce type :
+                </p>
+
+                <pre class="programlisting">
+chemin/vers/
+    helpers/
+    filters/
+    scripts/
+</pre>
+
+                <p>
+                    Ceci peut être paramétré via les méthodes <code class="methodname">setBasePath()</code>,
+                    <code class="methodname">addBasePath()</code>, ou l'option <code class="code">basePath</code> du
+                    constructeur.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">encoding</code> : indique l'encodage de caractère à utiliser avec
+                    <code class="methodname">htmlentities()</code>, <code class="methodname">htmlspecialchars()</code>, et tout autre
+                    opération. La valeur par défaut est UTF-8. Il peut être paramétré
+                    avec la méthode <code class="methodname">setEncoding()</code> ou l'option <code class="code">encoding</code> du
+                    constructeur.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">escape</code> : indique le callback que doit utiliser
+                    <code class="methodname">escape()</code>. Ceci pet être paramétré avec la méthode
+                    <code class="methodname">setEscape()</code> ou l'option <code class="code">escape</code> du constructeur.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">filter</code> : indique un filtre à utiliser avant d'effectuer le
+                    rendu d'un script de vue. Ceci peut être paramétré avec les méthodes
+                    <code class="methodname">setFilter()</code>, <code class="methodname">addFilter()</code>, ou l'option
+                    <code class="code">filter</code> du constructeur.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="code">strictVars</code> : force <code class="classname">Zend_View</code> à émettre
+                    des "notices" et des "warnings" quand des variables non initialisées sont lues.
+                    Ceci peut être activé en appelant <code class="methodname">strictVars(true)</code> ou en passant
+                    l'option <code class="code">strictVars</code> au constructeur.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.introduction.shortTags"></a>Balises courtes dans les scripts de vue</h3></div></div></div>
+        
+
+        <p>
+            Dans nos exemples et notre documentation, nous utilisons les balises longues <acronym class="acronym">PHP</acronym> :
+            <span class="emphasis"><em>&lt;?php</em></span>. De plus, nous utilisons parfois <a class="ulink" href="http://us.php.net/manual/en/control-structures.alternative-syntax.php" target="_top">la syntaxe
+            alternative des structures de contrôle</a>. Ce sont des éléments pratiques à
+            utiliser lors de la rédaction de vos scripts de vue, car elles rendent les constructions
+            plus laconiques, maintiennent les instructions sur des lignes uniques et éliminent la chasse aux
+            accolades à l'intérieur de l'HTML.
+        </p>
+
+        <p>
+            Dans les versions précédentes, nous recommandions souvent l'utilisation des balises
+            courtes (<span class="emphasis"><em>&lt;?</em></span> et <span class="emphasis"><em>&lt;?=</em></span>), car elles rendent
+            les scripts de vues moins verbeux. Cependant, la valeur par défaut du fichier
+            <code class="filename">php.ini</code> pour le réglage <code class="constant">short_open_tag</code> est
+            désactivé par défaut en production ou en hébergement mutualisé ; rendant ainsi
+            vos scripts peu portables. De plus, si vous modélisez du <acronym class="acronym">XML</acronym> dans
+            vos scripts, la présence des balises courtes entrainera l'échec de la validation.
+            Enfin, si vous utilisez les balises courtes et que <code class="constant">short_open_tag</code>
+            est désactivé, le script retournera soit des erreurs, soit votre code PHP à
+            l'utilisateur.
+        </p>
+
+        <p>
+            Ceci étant dit, de nombreux développeurs préfère utiliser la forme complète pour
+            des questions de validation ou de portabilité. Par exemple, <code class="code">short_open_tag</code>
+            est désactivé dans le <em class="firstterm">php.ini.recommended</em>, et si vous avez du <acronym class="acronym">XML</acronym>
+            dans vos scripts de vue, alors les balises courtes entraîneront un échec de validation
+            du modèle.
+        </p>
+
+        <p>
+            De plus, si vous utilisez les balises courtes avec un réglage du paramètre à
+            "off", alors les scripts de vue vont soit entraîner des erreurs, soit simplement
+            afficher le code à l'utilisateur.
+        </p>
+
+        <p>
+            Si malgré ces avertissements, vous souhaitez utiliser les balises courtes mais
+            qu'elles sont désactivées, vous avez deux options :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>Activer les dans votre fichier <code class="code">.htaccess</code> :</p>
+
+                <pre class="programlisting">
+php_value "short_open_tag" "on"
+</pre>
+
+                <p>
+                    Ceci est seulement possible si vous êtes autorisé à créer et utiliser les
+                    fichiers <code class="code">.htaccess</code>. Cette directive peut aussi être ajoutée à votre
+                    fichier <code class="code">httpd.conf</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Activer une enveloppe de flux ("stream wrapper") optionnelle pour
+                    convertir les balises courtes en balises longues à la volée :
+                </p>
+
+                <pre class="programlisting">
+$view-&gt;setUseStreamWrapper(true);
+</pre>
+
+                <p>
+                    Ceci enregistre <code class="classname">Zend_View_Stream</code> en tant que
+                    enveloppe de flux pour les scripts de vue, et permet de s'assurer que votre code
+                    continue à fonctionner comme si les balises courtes étaient activées.
+                </p>
+            </li>
+</ul></div>
+
+        <div class="warning"><table border="0" summary="Warning: Les enveloppes de flux de vue dégradent les performances">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Avertissement]" src="images/warning.png"></td>
+<th align="left">Les enveloppes de flux de vue dégradent les performances</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                L'utilisation d'enveloppe de flux <span class="emphasis"><em>dégradera</em></span> les
+                performances de votre application, bien que les tests de performance réels sont
+                indisponibles pour quantifier le niveau de dégradation. Nous recommandons donc soit
+                d'activer les balises courtes, soit de convertir vos scripts pour utiliser la forme
+                longue, ou d'avoir une bonne stratégie de mise en cache partielle ou totale du
+                contenu de vos pages.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.view.introduction.accessors"></a>Accesseurs utiles</h3></div></div></div>
+        
+
+        <p>
+            Typiquement, vous ne devriez seulement avoir besoin d'appeler les méthodes
+            <code class="methodname">assign()</code>, <code class="methodname">render()</code>, ou une des méthodes pour le
+            paramétrage/l'ajout de chemins de filtre, d'aide et de script de vues. Cependant, si
+            vous souhaitez étendre <code class="classname">Zend_View</code> vous-même, ou avez besoin
+            d'accéder à quelques unes de ces méthodes internes, un certain nombre d'accesseurs
+            existent :
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p><code class="methodname">getVars()</code> retournera toutes les variables assignées.</p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearVars()</code> effacera toutes les variables assignées ; utile
+                    si vous souhaitez ré-utiliser un objet de vue, ou contrôler les variables qui
+                    sont disponibles.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getScriptPath($script)</code> récupérera le chemin résolu vers un
+                    script donné..
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getScriptPaths()</code> récupérera tous les chemins vers les scripts
+                    de vues enregistrés.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getHelperPath($helper)</code> récupérera le chemin résolu vers une
+                    classe d'aide nommée.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getHelperPaths()</code> récupérera tous les chemins vers les aides
+                    enregistrés.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getFilterPath($filter)</code> récupérera le chemin résolu vers une
+                    classe de filtre nommée.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getFilterPaths()</code> récupérera tous les chemins vers les filtres
+                    enregistrés.
+                </p>
+            </li>
+</ul></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.view.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.view.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.view.controllers.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_View </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Scripts de contrôleur</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

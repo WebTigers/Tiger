@@ -1,0 +1,218 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Config_Ini</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.config.html" title="Zend_Config">
+<link rel="prev" href="zend.config.theory_of_operation.html" title="Aspectos Teóricos">
+<link rel="next" href="zend.config.adapters.json.html" title="Zend_Config_Json">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Config_Ini</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.config.theory_of_operation.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Config</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.config.adapters.json.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.config.adapters.ini"></a>Zend_Config_Ini</h2></div></div></div>
+    
+    <p>
+        <code class="classname">Zend_Config_Ini</code> permite a los desarrolladores
+        almacenar datos de configuración en un formato de datos
+            <acronym class="acronym">INI</acronym> familiar, y leer de ellos en la aplicación
+        usando una sintáxis de propiedades de objetos anidados. El formato
+            <acronym class="acronym">INI</acronym> se especializa en proveer tanto la habilidad
+        de mantener una jerarquía de claves de datos (data keys) de
+        configuración como la de mantener una jerarquía entre secciones de datos
+        de configuración. Las jerarquías de datos de configuración son provistas
+        separando las claves mediante el carácter punto ( "
+            <span class="emphasis"><em>.</em></span> " ). Una sección puede extender o heredar de
+        otra sección indicando el nombre de la sección seguido de dos puntos ( "
+            <span class="emphasis"><em>:</em></span> " ) y el nombre de la sección desde la cual
+        se quieren heredar los datos. </p>
+    <div class="note"><table border="0" summary="Note: parse_ini_file">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">parse_ini_file</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+        <p>
+            <code class="classname">Zend_Config_Ini</code> utiliza la función <a class="ulink" href="http://php.net/parse_ini_file" target="_top">
+                <code class="methodname">parse_ini_file()</code>
+            </a> de <acronym class="acronym">PHP</acronym> . Por favor, revise esta
+            documentación para observar sus comportamientos específicos, que se
+            propagan a <code class="classname">Zend_Config_Ini</code> , tales como la
+            forma en que los valores especiales: " <code class="constant">TRUE</code> " ,
+            " <code class="constant">FALSE</code> " , "yes" , "no" , y
+                <code class="constant">NULL</code> son manejados. </p>
+    </td></tr>
+</table></div>
+    <div class="note"><table border="0" summary="Note: Separador de clave">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Separador de clave</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+        <p> Por defecto, el carácter separador de clave es el punto ( "
+                <span class="emphasis"><em>.</em></span> " ). Puede ser reemplazado, no
+            obstante,cambiando la clave de <code class="varname">$options</code> llamada
+                <span class="property">nestSeparator</span> al construir el objeto
+                <code class="classname">Zend_Config_Ini</code> . Por ejemplo:
+        </p>
+            <pre class="programlisting">
+$options['nestSeparator'] = ':';
+$config = new Zend_Config_Ini('/path/to/config.ini',
+                              'pruebas',
+                              $options);
+</pre>
+
+    </td></tr>
+</table></div>
+    <div class="example">
+<a name="zend.config.adapters.ini.example.using"></a><p class="title"><b>Ejemplo 117. Utilizando Zend_Config_Ini</b></p>
+<div class="example-contents">
+        
+        <p> Este ejemplo muestra una forma de uso básica de
+                <code class="classname">Zend_Config_Ini</code> para cargar datos de
+            configuración de un archivo <acronym class="acronym">INI</acronym> . En este ejemplo
+            hay datos de configuración tanto para un sistema de producción como
+            para un sistema en fase de pruebas. Debido a que los datos de la
+            fase de pruebas son muy parecidos a los de producción, la sección de
+            pruebas hereda de la sección de producción. En este caso, la
+            decisión es arbitraria y podría haberse escrito a la inversa, con la
+            sección de producción heredando de la sección de pruebas, a pesar de
+            que éste no sería el caso para situaciones más complejas.
+            Supongamos, entonces, que los siguientes datos de configuración
+            están contenidos en <code class="filename">/path/to/config.ini</code> : : </p>
+        <pre class="programlisting">
+; Datos de configuración de la web de producción
+[produccion]
+webhost                  = www.example.com
+database.adapter         = pdo_mysql
+database.params.host     = db.example.com
+database.params.username = dbuser
+database.params.password = secret
+database.params.dbname   = dbname
+
+; Los datos de configuración de la fase de pruebas heredan de la producción
+; y sobreescribren valores si es necesario
+[pruebas : produccion]
+database.params.host     = dev.example.com
+database.params.username = devuser
+database.params.password = devsecret
+</pre>
+        <p> Ahora, asuma que el desarrollador de aplicaciones necesita los
+            datos de configuración de la etapa de pruebas del archivo
+                <acronym class="acronym">INI</acronym> . Resulta fácil cargar estos datos
+            especificando el archivo <acronym class="acronym">INI</acronym> en la sección de la
+            etapa de pruebas: </p>
+        <pre class="programlisting">
+$config = new Zend_Config_Ini('/path/to/config.ini', 'pruebas');
+
+echo $config-&gt;database-&gt;params-&gt;host;   // muestra "dev.example.com"
+echo $config-&gt;database-&gt;params-&gt;dbname; // muestra "dbname"
+</pre>
+    </div>
+</div>
+<br class="example-break">
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+        <div class="table">
+<a name="zend.config.adapters.ini.table"></a><p class="title"><b>Tabla 41. Parámetros del constructor Zend_Config_Ini</b></p>
+<div class="table-contents">
+            
+            <table class="table" summary="Parámetros del constructor Zend_Config_Ini" border="1">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Parámetros</th>
+<th>Notas</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+                            <code class="varname">$filename</code>
+                        </td>
+<td> El archivo <acronym class="acronym">INI</acronym> que se va a
+                            cargar. </td>
+</tr>
+<tr>
+<td>
+                            <code class="varname">$section</code>
+                        </td>
+<td> La [sección] contenida en el archivo
+                                <acronym class="acronym">INI</acronym> que se va a cargar. Fijar
+                            este parámetro a <code class="constant">NULL</code> cargará
+                            todas las secciones. Alternativamente, se puede
+                            introducir un array de nombres de sección para
+                            cargar multiples secciones. </td>
+</tr>
+<tr>
+<td>
+                            <code class="varname">$options</code> (default
+                                <code class="constant">FALSE</code> ) </td>
+<td> Array de opciones. Las siguientes claves están
+                            aceptadas: <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                                    <p>
+                                        <span class="emphasis"><em>
+                                        <span class="property">allowModifications</span>
+                                        </em></span> : : Fijar a
+                                        <code class="constant">TRUE</code> para permitir
+                                        modificaciones subsiguientes del archivo
+                                        cargado. Por defecto es
+                                        <code class="constant">NULL</code>
+                                    </p>
+                                </li>
+<li class="listitem">
+                                    <p>
+                                        <span class="emphasis"><em>
+                                        <span class="property">nestSeparator</span>
+                                        </em></span> : Carácter que utilizar como
+                                        separador de anidamiento. Por defecto es
+                                        "." </p>
+                                </li>
+</ul></div>
+                        </td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+    </td></tr>
+</table></div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.config.theory_of_operation.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.config.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.config.adapters.json.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Aspectos Teóricos </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Zend_Config_Json</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

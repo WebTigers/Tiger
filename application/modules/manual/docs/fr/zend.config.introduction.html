@@ -1,0 +1,162 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Introduction</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.config.html" title="Zend_Config">
+<link rel="prev" href="zend.config.html" title="Zend_Config">
+<link rel="next" href="zend.config.theory_of_operation.html" title="Aspect théorique">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Introduction</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.config.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Config</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.config.theory_of_operation.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.config.introduction"></a>Introduction</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Config</code> est conçu pour simplifier l'accès et l'utilisation des
+        données de configuration dans les applications. Il fournit une interface utilisateur basée
+        sur des propriétés d'objets imbriquées. Les données de configuration peuvent venir de
+        sources variées supportant une organisation hiérarchique des données. Actuellement
+        <code class="classname">Zend_Config</code> fournit des adaptateurs pour les données de
+        configuration qui sont stockées dans des fichier textes avec
+        <a class="link" href="zend.config.adapters.ini.html" title="Zend_Config_Ini"><code class="classname">Zend_Config_Ini</code></a> et
+        <a class="link" href="zend.config.adapters.xml.html" title="Zend_Config_Xml"><code class="classname">Zend_Config_Xml</code></a>.
+    </p>
+
+    <div class="example">
+<a name="zend.config.introduction.example.using"></a><p class="title"><b>Exemple 118. Utilisation native de Zend_Config</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Normalement on s'attend à ce que les utilisateurs emploient une des classes
+            d'adaptateur telles que
+            <a class="link" href="zend.config.adapters.ini.html" title="Zend_Config_Ini"><code class="classname">Zend_Config_Ini</code></a>
+            ou
+            <a class="link" href="zend.config.adapters.xml.html" title="Zend_Config_Xml"><code class="classname">Zend_Config_Xml</code></a>,
+            mais si les données de configuration sont disponibles dans un tableau
+            <acronym class="acronym">PHP</acronym>, on peut
+            simplement passer les données au constructeur de <code class="classname">Zend_Config</code>
+            afin d'utiliser une interface orientée objet simple :
+        </p>
+
+        <pre class="programlisting">
+// Fourni un tableau de configuration
+$configArray = array(
+    'webhost' =&gt; 'www.example.com',
+    'database' =&gt; array(
+        'adapter' =&gt; 'pdo_mysql',
+        'params'  =&gt; array(
+            'host'     =&gt; 'db.example.com',
+            'username' =&gt; 'dbuser',
+            'password' =&gt; 'secret',
+            'dbname'   =&gt; 'mydatabase'
+        )
+    )
+);
+
+// Crée un objet à partir des données de configuration
+$config = new Zend_Config($configArray);
+
+// Affiche une donnée de configuration en particulier
+// (résultat : 'www.example.com')
+echo $config-&gt;webhost;
+
+// Utilise les données de configuration pour se connecter
+// à une base de données
+$db = Zend_Db::factory($config-&gt;database-&gt;adapter,
+                       $config-&gt;database-&gt;params-&gt;toArray());
+
+// Autre possibilité : fournir simplement l'objet Zend_Config.
+// Zend_Db factory sait comment l'interpréter.
+$db = Zend_Db::factory($config-&gt;database);
+</pre>
+
+    </div>
+</div>
+<br class="example-break">
+
+    <p>
+        Comme illustré dans l'exemple ci-dessus, <code class="classname">Zend_Config</code> fournit une
+        syntaxe de propriétés d'objets imbriquées pour accéder aux données de configuration passées
+        à son constructeur.
+    </p>
+
+    <p>
+        Avec l'accès de type orienté-objet aux données, <code class="classname">Zend_Config</code> a aussi
+        la méthode <code class="methodname">get()</code> qui retournera la valeur par défaut si l'élément
+        n'existe pas. Par exemple :
+    </p>
+
+    <pre class="programlisting">
+$host = $config-&gt;database-&gt;get('host', 'localhost');
+</pre>
+
+    <div class="example">
+<a name="zend.config.introduction.example.file.php"></a><p class="title"><b>Exemple 119. Utilisez Zend_Config avec un fichier de configuration en PHP</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Il est souvent souhaitable d'utiliser une fichier de configuration en pur
+            <acronym class="acronym">PHP</acronym>. Le code
+            suivant illustre comment ceci peut être facilement réalisé :
+        </p>
+
+        <pre class="programlisting">
+// config.php
+return array(
+    'webhost'  =&gt; 'www.example.com',
+    'database' =&gt; array(
+        'adapter' =&gt; 'pdo_mysql',
+        'params'  =&gt; array(
+            'host'     =&gt; 'db.example.com',
+            'username' =&gt; 'dbuser',
+            'password' =&gt; 'secret',
+            'dbname'   =&gt; 'mydatabase'
+        )
+    )
+);
+</pre>
+
+        <pre class="programlisting">
+// Lecture de la configuration
+$config = new Zend_Config(require 'config.php');
+
+// Affiche une donnée de configuration ('www.example.com')
+echo $config-&gt;webhost;
+</pre>
+    </div>
+</div>
+<br class="example-break">
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.config.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.config.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.config.theory_of_operation.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Config </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Aspect théorique</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

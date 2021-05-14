@@ -1,0 +1,412 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Http_Response</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.http.html" title="Zend_Http">
+<link rel="prev" href="zend.http.cookies.html" title="Zend_Http_Cookie and Zend_Http_CookieJar">
+<link rel="next" href="zend.http.user-agent.html" title="Zend_Http_UserAgent">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Http_Response</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.http.cookies.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Http</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.http.user-agent.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.http.response"></a>Zend_Http_Response</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.response.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Http_Response</code> provides easy access to an
+            <acronym class="acronym">HTTP</acronym> responses message, as well as a set of static methods for
+            parsing <acronym class="acronym">HTTP</acronym> response messages. Usually,
+            <code class="classname">Zend_Http_Response</code> is used as an object returned by a
+            <code class="classname">Zend_Http_Client</code> request.
+        </p>
+
+        <p>
+            In most cases, a <code class="classname">Zend_Http_Response</code> object will be instantiated
+            using the fromString() method, which reads a string containing a
+            <acronym class="acronym">HTTP</acronym> response message, and returns a new
+            <code class="classname">Zend_Http_Response</code> object:
+            </p>
+<div class="example">
+<a name="zend.http.response.introduction.example-1"></a><p class="title"><b>Example 483. Instantiating a Zend_Http_Response Object Using the Factory Method</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$str = '';
+$sock = fsockopen('www.example.com', 80);
+$req =     "GET / HTTP/1.1\r\n" .
+        "Host: www.example.com\r\n" .
+        "Connection: close\r\n" .
+        "\r\n";
+
+fwrite($sock, $req);
+while ($buff = fread($sock, 1024))
+    $str .= $sock;
+
+$response = Zend_Http_Response::fromString($str);
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+        </p>
+
+        <p>
+            You can also use the contractor method to create a new response
+            object, by specifying all the parameters of the response:
+        </p>
+
+        <p>
+            <span class="command"><strong>public function __construct($code, $headers, $body = null, $version = '1.1',
+                $message = null)</strong></span>
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="varname">$code</code>: The <acronym class="acronym">HTTP</acronym> response code (eg. 200,
+                    404, etc.)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="varname">$headers</code>: An associative array of <acronym class="acronym">HTTP</acronym>
+                    response headers (eg. 'Host' =&gt; 'example.com')
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="varname">$body</code>: The response body as a string
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="varname">$version</code>: The <acronym class="acronym">HTTP</acronym> response version
+                    (usually 1.0 or 1.1)
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="varname">$message</code>: The <acronym class="acronym">HTTP</acronym> response message (eg
+                    'OK', 'Internal Server Error'). If not specified, the message will be set
+                    according to the response code
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.response.testers"></a>Boolean Tester Methods</h3></div></div></div>
+        
+
+        <p>
+            Once a <code class="classname">Zend_Http_Response</code> object is instantiated, it provides
+            several methods that can be used to test the type of the response. These all
+            return Boolean <code class="constant">TRUE</code> or <code class="constant">FALSE</code>:
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">isSuccessful()</code>: Whether the request was successful
+                        or not. Returns <code class="constant">TRUE</code> for <acronym class="acronym">HTTP</acronym> 1xx
+                        and 2xx response codes
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">isError()</code>: Whether the response code implies an
+                        error or not. Returns <code class="constant">TRUE</code> for <acronym class="acronym">HTTP</acronym>
+                        4xx (client errors) and 5xx (server errors) response codes
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">isRedirect()</code>: Whether the response is a redirection
+                        response or not. Returns <code class="constant">TRUE</code> for
+                        <acronym class="acronym">HTTP</acronym> 3xx response codes
+                    </p>
+                </li>
+</ul></div>
+<p>
+
+            </p>
+<div class="example">
+<a name="zend.http.response.testers.example-1"></a><p class="title"><b>Example 484. Using the isError() method to validate a response</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+if ($response-&gt;isError()) {
+  echo "Error transmitting data.\n"
+  echo "Server reply was: " . $response-&gt;getStatus() .
+       " " . $response-&gt;getMessage() . "\n";
+}
+// .. process the response here...
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.response.acessors"></a>Accessor Methods</h3></div></div></div>
+        
+
+        <p>
+            The main goal of the response object is to provide easy access to
+            various response parameters.
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getStatus()</code>: Get the <acronym class="acronym">HTTP</acronym>
+                        response status code (eg. 200, 504, etc.)
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getMessage()</code>: Get the <acronym class="acronym">HTTP</acronym>
+                        response status message (eg. "Not Found", "Authorization Required")
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getBody()</code>: Get the fully decoded
+                        <acronym class="acronym">HTTP</acronym> response body
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getRawBody()</code>: Get the raw, possibly encoded
+                        <acronym class="acronym">HTTP</acronym> response body. if the body was decoded using GZIP
+                        encoding for example, it will not be decoded.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getHeaders()</code>: Get the <acronym class="acronym">HTTP</acronym>
+                        response headers as an associative array (eg. 'Content-type' =&gt; 'text/html')
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getHeader($header)</code>: Get a specific
+                        <acronym class="acronym">HTTP</acronym> response header, specified by $header
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">getHeadersAsString($status_line, $br)</code>: Get
+                        the entire set of headers as a string. If <code class="varname">$status_line</code> is
+                        <code class="constant">TRUE</code> (default), the first status line (eg. "HTTP/1.1
+                        200 OK") will also be returned. Lines are broken with the
+                        <code class="varname">$br</code> parameter (Can be, for example, "&lt;br /&gt;".
+                        Default "\n")
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">asString($br)</code>: Get the entire response message as
+                        a string. Lines are broken with the $br parameter (Can be, for example,
+                        "&lt;br /&gt;". Default "\n"). You can also use the magic method
+                        <code class="methodname">__toString()</code> when casting the object as a string.
+                        It will then proxy to <code class="methodname">asString()</code>.
+                    </p>
+                </li>
+</ul></div>
+<p>
+
+            </p>
+<div class="example">
+<a name="zend.http.response.acessors.example-1"></a><p class="title"><b>Example 485. Using Zend_Http_Response Accessor Methods</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+if ($response-&gt;getStatus() == 200) {
+  echo "The request returned the following information:&lt;br /&gt;";
+  echo $response-&gt;getBody();
+} else {
+  echo "An error occurred while fetching data:&lt;br /&gt;";
+  echo $response-&gt;getStatus() . ": " . $response-&gt;getMessage();
+}
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+
+            </p>
+<div class="note"><table border="0" summary="Note: Always check return value">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Always check return value</th>
+</tr>
+<tr><td align="left" valign="top">
+                
+
+                <p>
+                    Since a response can contain several instances of the same header,
+                    the getHeader() method and getHeaders() method may return either a
+                    single string, or an array of strings for each header. You should
+                    always check whether the returned value is a string or array.
+                </p>
+            </td></tr>
+</table></div>
+<p>
+
+            </p>
+<div class="example">
+<a name="zend.http.response.acessors.example-2"></a><p class="title"><b>Example 486. Accessing Response Headers</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$ctype = $response-&gt;getHeader('Content-type');
+if (is_array($ctype)) $ctype = $ctype[0];
+
+$body = $response-&gt;getBody();
+if ($ctype == 'text/html' || $ctype == 'text/xml') {
+  $body = htmlentities($body);
+}
+
+echo $body;
+</pre>
+            </div>
+</div>
+<p><br class="example-break">
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.http.response.static_parsers"></a>Static HTTP Response Parsers</h3></div></div></div>
+        
+
+        <p>
+            The <code class="classname">Zend_Http_Response</code> class also includes several
+            internally-used methods for processing and parsing <acronym class="acronym">HTTP</acronym> response
+            messages. These methods are all exposed as static methods, which means they can be
+            used externally, even if you do not need to instantiate a response
+            object, and just want to extract a specific part of the response.
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">Zend_Http_Response::extractCode($response_str)</code>:
+                        Extract and return the <acronym class="acronym">HTTP</acronym> response code (eg. 200 or
+                        404) from <code class="varname">$response_str</code>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">Zend_Http_Response::extractMessage($response_str)</code>:
+                        Extract and return the <acronym class="acronym">HTTP</acronym> response message (eg. "OK" or
+                        "File Not Found") from <code class="varname">$response_str</code>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">Zend_Http_Response::extractVersion($response_str)</code>:
+                        Extract and return the <acronym class="acronym">HTTP</acronym> version (eg. 1.1 or 1.0) from
+                        <code class="varname">$response_str</code>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">Zend_Http_Response::extractHeaders($response_str)</code>:
+                        Extract and return the <acronym class="acronym">HTTP</acronym> response headers from
+                        <code class="varname">$response_str</code> as an array
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">Zend_Http_Response::extractBody($response_str)</code>:
+                        Extract and return the <acronym class="acronym">HTTP</acronym> response body from
+                        <code class="varname">$response_str</code>
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">Zend_Http_Response::responseCodeAsText($code,
+                            $http11)</code>: Get the standard <acronym class="acronym">HTTP</acronym> response
+                        message for a response code $code. For example, will return "Internal Server
+                        Error" if <code class="varname">$code</code> is 500. If <code class="varname">$http11</code> is
+                        <code class="constant">TRUE</code> (default), will return
+                        <acronym class="acronym">HTTP</acronym>/1.1 standard messages - otherwise
+                        <acronym class="acronym">HTTP</acronym>/1.0 messages will be returned. If
+                        <code class="varname">$code</code> is not specified, this method will return all known
+                        <acronym class="acronym">HTTP</acronym> response codes as an associative (code =&gt; message)
+                        array.
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+
+        <p>
+            Apart from parser methods, the class also includes a set of decoders for common
+            <acronym class="acronym">HTTP</acronym> response transfer encodings:
+
+            </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">Zend_Http_Response::decodeChunkedBody($body)</code>:
+                        Decode a complete "Content-Transfer-Encoding: Chunked" body
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">Zend_Http_Response::decodeGzip($body)</code>: Decode
+                        a "Content-Encoding: gzip" body
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">Zend_Http_Response::decodeDeflate($body)</code>: Decode
+                        a "Content-Encoding: deflate" body
+                    </p>
+                </li>
+</ul></div>
+<p>
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.http.cookies.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.http.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.http.user-agent.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Http_Cookie and Zend_Http_CookieJar </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend_Http_UserAgent</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,378 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Uri</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.uri.html" title="Zend_Uri">
+<link rel="prev" href="zend.uri.html" title="Zend_Uri">
+<link rel="next" href="zend.validate.html" title="Zend_Validate">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Uri</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.uri.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Uri</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.validate.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.uri.chapter"></a>Zend_Uri</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.uri.overview"></a>Overview</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Uri</code> is a component that aids in manipulating and validating
+            <a class="ulink" href="http://www.w3.org/Addressing/" target="_top">Uniform Resource Identifiers</a> (URIs).
+            <code class="classname">Zend_Uri</code> exists primarily to service other components, such as
+            <code class="classname">Zend_Http_Client</code>, but is also useful as a standalone utility.
+        </p>
+
+        <p>
+            <acronym class="acronym">URI</acronym>s always begin with a scheme, followed by a colon. The
+            construction of the many different schemes varies significantly. The
+            <code class="classname">Zend_Uri</code> class provides a factory that returns a subclass
+            of itself which specializes in each scheme. The subclass will be named
+            <code class="classname">Zend_Uri_&lt;scheme&gt;</code>, where
+            <span class="emphasis"><em>&lt;scheme&gt;</em></span> is the scheme, lowercased with the first letter
+            capitalized. An exception to this rule is <acronym class="acronym">HTTPS</acronym>, which is also
+            handled by <code class="classname">Zend_Uri_Http</code>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.uri.creation"></a>Creating a New URI</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Uri</code> will build a new <acronym class="acronym">URI</acronym> from scratch
+            if only a scheme is passed to <code class="methodname">Zend_Uri::factory()</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.uri.creation.example-1"></a><p class="title"><b>Exemplo 933. Creating a New URI with Zend_Uri::factory()</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// To create a new URI from scratch, pass only the scheme.
+$uri = Zend_Uri::factory('http');
+
+// $uri instanceof Zend_Uri_Http
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            To create a new <acronym class="acronym">URI</acronym> from scratch, pass only the scheme to
+            <code class="methodname">Zend_Uri::factory()</code><a href="#ftn.idm205650396336" class="footnote" name="idm205650396336"><sup class="footnote">[30]</sup></a>. If an unsupported scheme is
+            passed and no scheme-specific class is specified, a <code class="classname">Zend_Uri_Exception</code>
+            will be thrown.
+        </p>
+
+        <p>
+            If the scheme or <acronym class="acronym">URI</acronym> passed is supported,
+            <code class="methodname">Zend_Uri::factory()</code> will return a subclass of itself that
+            specializes in the scheme to be created.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="idm205650392512"></a>Creating a New Custom-Class URI</h4></div></div></div>
+            
+
+            <p>
+                Starting from Zend Framework 1.10.5, you can specify a custom class to be
+                used when creating the Zend_Uri instance, as a second parameter to the
+                <code class="methodname">Zend_Uri::factory()</code> method.
+                This enables you to subclass Zend_Uri and create your own custom URI classes,
+                and instantiate new URI objects based on your own custom classes.
+            </p>
+
+            <p>
+                The 2nd parameter passed to <code class="methodname">Zend_Uri::factory()</code> must
+                be a string with the name of a class extending <code class="classname">Zend_Uri</code>.
+                The class must either be alredy-loaded, or loadable using <code class="methodname">Zend_Loader::loadClass()</code> -
+                that is, it must follow the Zend Framework class and file naming conventions, and
+                must be in your include_path.
+            </p>
+
+            <div class="example">
+<a name="zend.uri.creation.custom.example-1"></a><p class="title"><b>Exemplo 934. Creating a URI using a custom class</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+// Create a new 'ftp' URI based on a custom class
+$ftpUri = Zend_Uri::factory(
+    'ftp://user@ftp.example.com/path/file',
+    'MyLibrary_Uri_Ftp'
+);
+
+// $ftpUri is an instance of MyLibrary_Uri_Ftp, which is a subclass of Zend_Uri
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.uri.manipulation"></a>Manipulating an Existing URI</h3></div></div></div>
+        
+
+        <p>
+            To manipulate an existing <acronym class="acronym">URI</acronym>, pass the entire <acronym class="acronym">URI</acronym>
+            to <code class="methodname">Zend_Uri::factory()</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.uri.manipulation.example-1"></a><p class="title"><b>Exemplo 935. Manipulating an Existing URI with Zend_Uri::factory()</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// To manipulate an existing URI, pass it in.
+$uri = Zend_Uri::factory('http://www.zend.com');
+
+// $uri instanceof Zend_Uri_Http
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The <acronym class="acronym">URI</acronym> will be parsed and validated. If it is found to be invalid,
+            a <code class="classname">Zend_Uri_Exception</code> will be thrown immediately. Otherwise,
+            <code class="methodname">Zend_Uri::factory()</code> will return a subclass of itself that
+            specializes in the scheme to be manipulated.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.uri.validation"></a>URI Validation</h3></div></div></div>
+        
+
+        <p>
+            The <code class="methodname">Zend_Uri::check()</code> method can only be used if validation
+            of an existing <acronym class="acronym">URI</acronym> is needed.
+        </p>
+
+        <div class="example">
+<a name="zend.uri.validation.example-1"></a><p class="title"><b>Exemplo 936. URI Validation with Zend_Uri::check()</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+// Validate whether a given URI is well formed
+$valid = Zend_Uri::check('http://uri.in.question');
+
+// $valid is TRUE for a valid URI, or FALSE otherwise.
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            <code class="methodname">Zend_Uri::check()</code> returns a boolean, which is more convenient
+            than using <code class="methodname">Zend_Uri::factory()</code> and catching the exception.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.uri.validation.allowunwise"></a>Allowing "Unwise" characters in URIs</h4></div></div></div>
+            
+
+            <p>
+                By default, <code class="classname">Zend_Uri</code> will not accept the following
+                characters: <span class="emphasis"><em>"{", "}", "|", "\", "^", "`"</em></span>. These characters are
+                defined by the <acronym class="acronym">RFC</acronym> as "unwise" and invalid; however, many
+                implementations do accept these characters as valid.
+            </p>
+
+            <p>
+                <code class="classname">Zend_Uri</code> can be set to accept these "unwise" characters by
+                setting the 'allow_unwise' option to boolean <code class="constant">TRUE</code> using
+                <code class="methodname">Zend_Uri::setConfig()</code>:
+            </p>
+
+            <div class="example">
+<a name="zend.uri.validation.allowunwise.example-1"></a><p class="title"><b>Exemplo 937. Allowing special characters in URIs</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+// Contains '|' symbol
+// Normally, this would return false:
+$valid = Zend_Uri::check('http://example.com/?q=this|that');
+
+// However, you can allow "unwise" characters
+Zend_Uri::setConfig(array('allow_unwise' =&gt; true));
+
+// will return 'true'
+$valid = Zend_Uri::check('http://example.com/?q=this|that');
+
+// Reset the 'allow_unwise' value to the default FALSE
+Zend_Uri::setConfig(array('allow_unwise' =&gt; false));
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    <code class="methodname">Zend_Uri::setConfig()</code> sets configuration options
+                    globally. It is recommended to reset the 'allow_unwise' option to
+                    '<code class="constant">FALSE</code>', like in the example above, unless you are certain
+                    you want to always allow unwise characters globally.
+                </p>
+            </td></tr>
+</table></div>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.uri.instance-methods"></a>Common Instance Methods</h3></div></div></div>
+        
+
+        <p>
+            Every instance of a <code class="classname">Zend_Uri</code> subclass (e.g.
+            <code class="classname">Zend_Uri_Http</code>) has several instance methods that are useful for
+            working with any kind of <acronym class="acronym">URI</acronym>.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.uri.instance-methods.getscheme"></a>Getting the Scheme of the URI</h4></div></div></div>
+            
+
+            <p>
+                The scheme of the <acronym class="acronym">URI</acronym> is the part of the <acronym class="acronym">URI</acronym>
+                that precedes the colon. For example, the scheme of
+                <code class="filename">http://www.zend.com</code> is 'http'.
+            </p>
+
+            <div class="example">
+<a name="zend.uri.instance-methods.getscheme.example-1"></a><p class="title"><b>Exemplo 938. Getting the Scheme from a Zend_Uri_* Object</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$uri = Zend_Uri::factory('http://www.zend.com');
+
+$scheme = $uri-&gt;getScheme();  // "http"
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                The <code class="methodname">getScheme()</code> instance method returns only the scheme
+                part of the <acronym class="acronym">URI</acronym> object.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.uri.instance-methods.geturi"></a>Getting the Entire URI</h4></div></div></div>
+            
+
+            <div class="example">
+<a name="zend.uri.instance-methods.geturi.example-1"></a><p class="title"><b>Exemplo 939. Getting the Entire URI from a Zend_Uri_* Object</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$uri = Zend_Uri::factory('http://www.zend.com');
+
+echo $uri-&gt;getUri();  // "http://www.zend.com"
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                The <code class="methodname">getUri()</code> method returns the string representation
+                of the entire <acronym class="acronym">URI</acronym>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.uri.instance-methods.valid"></a>Validating the URI</h4></div></div></div>
+            
+
+            <p>
+                <code class="methodname">Zend_Uri::factory()</code> will always validate any
+                <acronym class="acronym">URI</acronym> passed to it and will not instantiate a new
+                <code class="classname">Zend_Uri</code> subclass if the given <acronym class="acronym">URI</acronym> is
+                found to be invalid. However, after the <code class="classname">Zend_Uri</code> subclass is
+                instantiated for a new <acronym class="acronym">URI</acronym> or an existing valid one, it is
+                possible that the <acronym class="acronym">URI</acronym> can later become invalid after it
+                is manipulated.
+            </p>
+
+            <div class="example">
+<a name="zend.uri.instance-methods.valid.example-1"></a><p class="title"><b>Exemplo 940. Validating a Zend_Uri_* Object</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$uri = Zend_Uri::factory('http://www.zend.com');
+
+$isValid = $uri-&gt;valid();  // TRUE
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                The <code class="methodname">valid()</code> instance method provides a means to check that
+                the <acronym class="acronym">URI</acronym> object is still valid.
+            </p>
+        </div>
+    </div>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm205650396336" class="footnote"><p><a href="#idm205650396336" class="para"><sup class="para">[30] </sup></a>At the time of writing,
+            <code class="classname">Zend_Uri</code> only provides built-in support for the <acronym class="acronym">HTTP</acronym>
+            and <acronym class="acronym">HTTPS</acronym> schemes.</p></div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.uri.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.uri.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.validate.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Uri </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_Validate</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

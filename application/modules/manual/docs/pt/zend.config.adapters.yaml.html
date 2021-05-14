@@ -1,0 +1,298 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Config_Yaml</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.config.html" title="Zend_Config">
+<link rel="prev" href="zend.config.adapters.xml.html" title="Zend_Config_Xml">
+<link rel="next" href="zend.config.writer.html" title="Zend_Config_Writer">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Config_Yaml</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.config.adapters.xml.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Config</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.config.writer.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.config.adapters.yaml"></a>Zend_Config_Yaml</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.config.adapters.yaml.intro"></a>Overview</h3></div></div></div>
+        
+
+        <p>
+            <a class="ulink" href="http://www.yaml.org/" target="_top">YAML</a> is a recursive acronym meaning "YAML
+            Ain't Markup Language", and is intended as a "human friendly data serialization
+            standard for all programming languages." It is often used for application configuration.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Config_Yaml</code> is a lightweight
+            <code class="classname">Zend_Config</code> extension. It includes a parser capable of
+            recognizing most common YAML syntax used for purposes of configuration, and allows
+            specifying other parsers should you want more complex syntax (e.g., ext/syck, spyc,
+            sfYaml, etc.).
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.config.adapters.yaml.quick-start"></a>Quick Start</h3></div></div></div>
+        
+
+        <p>
+            The following is a YAML version of a standard application configuration.
+        </p>
+
+        <pre class="programlisting">
+production:
+  phpSettings:
+    display_startup_errors: false
+    display_errors: false
+  includePaths:
+    library: APPLICATION_PATH/../library
+  bootstrap:
+    path: APPLICATION_PATH/Bootstrap.php
+    class: "Bootstrap"
+  appnamespace: "Application"
+  resources:
+    frontController:
+      controllerDirectory: APPLICATION_PATH/controllers
+      moduleDirectory: APPLICATION_PATH/modules
+      params:
+        displayExceptions: false
+    modules:
+    db:
+      adapter: "pdo_sqlite"
+      params:
+        dbname: APPLICATION_PATH/../data/db/application.db
+    layout:
+      layoutPath: APPLICATION_PATH/layouts/scripts/
+
+staging:
+  _extends: production
+
+testing:
+  _extends: production
+  phpSettings:
+    display_startup_errors: true
+    display_errors: true
+
+development:
+  _extends: production
+  phpSettings:
+    display_startup_errors: true
+    display_errors: true
+  resources:
+    frontController:
+      params:
+        displayExceptions: true
+</pre>
+
+        <p>
+            To utilize it, you simply instantiate <code class="classname">Zend_Config_Yaml</code>, pointing
+            it to the location of this file and indicating the section of the file to load. By
+            default, constant names found in values will be substituted with their appropriate
+            values.
+        </p>
+
+        <pre class="programlisting">
+$config = new Zend_Config_Yaml(
+    APPLICATION_PATH . '/configs/application.yaml',
+    APPLICATION_ENV
+);
+</pre>
+
+        <p>
+            Once instantiated, you use it as you would any other configuration object.
+        </p>
+
+        <pre class="programlisting">
+$db = Zend_Db::factory($config-&gt;resources-&gt;db);
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.config.adapters.yaml.options"></a>Configuration Options</h3></div></div></div>
+        
+
+        <p>
+            The following options may be passed as keys to the third, <code class="varname">$options</code>
+            argument of the constructor.
+        </p>
+
+        <div class="variablelist">
+<p class="title"><b>Zend_Config_Yaml Options</b></p>
+<dl class="variablelist">
+<dt><span class="term">allow_modifications</span></dt>
+<dd>
+                    <p>
+                        The default behavior of <code class="classname">Zend_Config</code> is to mark the
+                        object as immutable once loaded. Passing this flag with a boolean
+                        <code class="constant">true</code> will enable modifications to the object.
+                    </p>
+                </dd>
+<dt><span class="term">skip_extends</span></dt>
+<dd>
+                    <p>
+                        By default, any time a section extends another,
+                        <code class="classname">Zend_Config</code> will merge the section with the section
+                        it extends. Speciying a boolean <code class="constant">true</code> value to this
+                        option will disable this feature, giving you only the configuration defined
+                        explicitly in that section.
+                    </p>
+                </dd>
+<dt><span class="term">ignore_constants</span></dt>
+<dd>
+                    <p>
+                        By default, <code class="classname">Zend_Config_Yaml</code> will replace constant
+                        names found in values with the defined constant value. You map pass a
+                        boolean <code class="constant">true</code> to this option to disable this
+                        functionality.
+                    </p>
+                </dd>
+<dt><span class="term">yaml_decoder</span></dt>
+<dd>
+                    <p>
+                        By default, <code class="classname">Zend_Config_Yaml</code> uses a built in decoder,
+                        <code class="methodname">Zend_Config_Yaml::decode()</code>, to parse and process
+                        YAML files. You may specify an alternate callback to use in place of the
+                        built-in one using this option.
+                    </p>
+                </dd>
+</dl>
+</div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.config.adapters.yaml.methods"></a>Available Methods</h3></div></div></div>
+        
+
+        <div class="variablelist"><dl class="variablelist">
+<dt>
+<a name="zend.config.adapters.yaml.methods.constructor"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">__construct</span>(<span class="methodparam">
+                            $yaml, $section = null, $options = false
+                        </span>);</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Constructor. <code class="varname">$yaml</code> should refer to a valid filesystem
+                        location containing a YAML configuration file. <code class="varname">$section</code>,
+                        if specified, indicates a specific section of the configuration file to use.
+                        <code class="varname">$options</code> is discussed in the <a class="link" href="zend.config.adapters.yaml.html#zend.config.adapters.yaml.options" title="Configuration Options">options section</a>.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.config.adapters.yaml.methods.decode"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">decode</span>(<span class="methodparam">
+                            $yaml
+                        </span>);</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        Parses a YAML string into a PHP array.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.config.adapters.yaml.methods.set-ignore-constants"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">setIgnoreConstants</span>(<span class="methodparam">
+                            $flag
+                        </span>);</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        This <span class="emphasis"><em>static</em></span> function may be used to globally override
+                        the default settings for how constants found in YAML strings are handled. By
+                        default, constant names are replaced with the appropriate constant values;
+                        passing a boolean <code class="constant">true</code> value to this method will
+                        override that behavior. (You can override it per-instance via the
+                        <code class="varname">ignore_constants</code> option as well.)
+                    </p>
+                </dd>
+<dt>
+<a name="zend.config.adapters.yaml.methods.ignore-constants"></a><span class="term">
+                    <code class="methodsynopsis"><span class="methodname">ignoreConstants</span>(<span class="methodparam">
+                            
+                        </span>);</code>
+                </span>
+</dt>
+<dd>
+                    <p>
+                        This <span class="emphasis"><em>static</em></span> method gives you the current setting for
+                        the <code class="varname">ignore_constants</code> flag.
+                    </p>
+                </dd>
+</dl></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.config.adapters.yaml.examples"></a>Examples</h3></div></div></div>
+        
+
+        <div class="example">
+<a name="zend.config.adapters.yaml.examples.sf-yaml"></a><p class="title"><b>Exemplo 123. Using Zend_Config_Yaml with sfYaml</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                As noted in the <a class="link" href="zend.config.adapters.yaml.html#zend.config.adapters.yaml.options" title="Configuration Options">options
+                    section</a>, <code class="classname">Zend_Config_Yaml</code> allows you to specify an
+                alternate YAML parser at instantiation.
+            </p>
+
+            <p>
+                <a class="ulink" href="http://components.symfony-project.org/yaml/" target="_top">sfYaml</a> is a <a class="ulink" href="http://components.symfony-project.org/" target="_top">Symfony component</a> that
+                implements a complete YAML parser in PHP, and includes a number of additional
+                features including the ability to parse PHP expressions embedded in the YAML. In
+                this example, we use the <code class="methodname">sfYaml::load()</code> method as our YAML
+                decoder callback. <span class="emphasis"><em>(Note: this assumes that the
+                    <code class="classname">sfYaml</code> class is either already loaded or available via
+                    autoloading.)</em></span>
+            </p>
+
+            <pre class="programlisting">
+$config = new Zend_Config_Yaml(
+    APPLICATION_PATH . '/configs/application.yaml',
+    APPLICATION_ENV,
+    array('yaml_decoder' =&gt; array('sfYaml', 'load'))
+);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.config.adapters.xml.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.config.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.config.writer.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Config_Xml </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_Config_Writer</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

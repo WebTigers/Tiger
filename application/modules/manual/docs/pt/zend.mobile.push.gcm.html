@@ -1,0 +1,266 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Mobile_Push_Gcm</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.mobile.push.html" title="Zend_Mobile_Push">
+<link rel="prev" href="zend.mobile.push.apns.html" title="Zend_Mobile_Push_Apns">
+<link rel="next" href="zend.mobile.push.mpns.html" title="Zend_Mobile_Push_Mpns">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Mobile_Push_Gcm</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.mobile.push.apns.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Mobile_Push</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.mobile.push.mpns.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.mobile.push.gcm"></a>Zend_Mobile_Push_Gcm</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Mobile_Push_Gcm</code> provides the ability to
+        send push notifications to Android devices that contain Google Services. 
+        A message will always be constructed with
+        <code class="classname">Zend_Mobile_Push_Message_Gcm</code>.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mobile.push.gcm.server"></a>Pushing Messages</h3></div></div></div>
+        
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>Prior to pushing and receiving messages; you will need to create a Google
+                API Project and setup your Android app to listen to GCM
+                messages..  If you have not done this, follow the <a class="ulink" href="http://developer.android.com/guide/google/gcm/gs.html" target="_top">
+                GCM: Getting Started</a> document.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            When implementing GCM; you have a few components that
+            you will utilize.  <code class="classname">Zend_Mobile_Push_Gcm</code>
+            which contains the server components,
+            <code class="classname">Zend_Mobile_Push_Message_Gcm</code> which contains
+            the message that you would like to send, and
+            <code class="classname">Zend_Mobile_Push_Response_Gcm</code> which contains
+            the response from GCM. Each message sent must do an HTTP request; so
+            remember this when sending in large batches.
+        </p>
+
+        <p>
+            The actual implementation of the code is fairly minimal; however,
+            considerations to error handling must be taken.
+        </p>
+
+        <pre class="programlisting">
+$message = new Zend_Mobile_Push_Message_Gcm();
+$message-&gt;addToken('ABCDEF0123456789');
+$message-&gt;setData(array(
+    'foo' =&gt; 'bar',
+    'bar' =&gt; 'foo',
+));
+
+$gcm = new Zend_Mobile_Push_Gcm();
+$gcm-&gt;setApiKey('YOUR_API_KEY');
+
+try {
+    $response = $gcm-&gt;send($message);
+} catch (Zend_Mobile_Push_Exception $e) {
+    // exceptions require action or implementation of exponential backoff.
+    die($e-&gt;getMessage());
+}
+
+// handle all errors and registration_id's
+foreach ($response-&gt;getResults() as $k =&gt; $v) {
+    if ($v['registration_id']) {
+        printf("%s has a new registration id of: %s\r\n", $k, $v['registration_id']);
+    }
+    if ($v['error']) {
+        printf("%s had an error of: %s\r\n", $k, $v['error']);
+    }
+    if ($v['message_id']) {
+        printf("%s was successfully sent the message, message id is: %s", $k, $v['message_id']);
+    }
+}
+</pre>
+
+        <div class="table">
+<a name="zend.mobile.push.gcm.server.exceptions"></a><p class="title"><b>Tabela 121. Exceptions and Remediation Techniques</b></p>
+<div class="table-contents">
+            
+            <table class="table" summary="Exceptions and Remediation Techniques" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th align="left">Exception</th>
+<th align="left">Meaning</th>
+<th align="left">Handling</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left">Zend_Mobile_Push_Exception</td>
+<td align="left">These types of exceptions are more generic in nature
+                        and are thrown either from gcm when there was an unknown exception
+                        or internally on input validation.</td>
+<td align="left">Read the message and determine remediation steps.</td>
+</tr>
+<tr>
+<td align="left">Zend_Mobile_Push_Exception_InvalidAuthToken</td>
+<td align="left">Your API key was likely typed in wrong or does
+                        not have rights to the GCM service.</td>
+<td align="left">Check your project on the <a class="ulink" href="https://code.google.com/apis/console" target="_top">Google APIs Console
+                        page</a>.</td>
+</tr>
+<tr>
+<td align="left">Zend_Mobile_Push_Exception_ServerUnavailable</td>
+<td align="left">This exception means there was either an internal
+                        server error OR that the server denied your request and
+                        you should look at the Retry-After header.</td>
+<td align="left">Read the exception message and utilize
+                        Exponential Backoff</td>
+</tr>
+<tr>
+<td align="left">Zend_Mobile_Push_Exception_InvalidPayload</td>
+<td align="left">Generally the payload will not throw an exception
+                        unless the size of the payload is too large or the JSON
+                        is too large.</td>
+<td align="left">Check the size of the payload is within the
+                        requirements of GCM, currently it is 4K.</td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mobile.push.gcm.message"></a>Advanced Messages</h3></div></div></div>
+
+        
+
+        <p>
+            GCM provides the ability for sending more advanced messages; for
+            instance the examples above show the most basic implementation of a
+            message.  <code class="classname">Zend_Mobile_Push_Message_Gcm</code>
+            allows you to do far more advanced messaging outlined below.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.mobile.push.gcm.message.delay-while-idle"></a>Delay While Idle</h4></div></div></div>
+
+            
+
+            <p>
+                If included, indicates that the message should not be sent
+                immediately if the device is idle. The server will wait for the
+                device to become active, and then only the last message for each
+                collapse_key value will be sent.
+            </p>
+
+            <pre class="programlisting">
+    $message = new Zend_Mobile_Push_Message_Gcm();
+    $message-&gt;setDelayWhileIdle(true);
+    </pre>
+
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.mobile.push.gcm.message.ttl"></a>Time to Live</h4></div></div></div>
+
+            
+
+            <p>
+                You may set the time to live in seconds, by default GCM will
+                save it for 4 weeks.  Additionally if you specify a Time to
+                Live, you must also set an ID (the collapse key).  Generally it
+                is best by using the message data so that you know it is a
+                unique message.
+            </p>
+
+            <pre class="programlisting">
+    $message = new Zend_Mobile_Push_Message_Gcm();
+    $message-&gt;setTtl(86400);
+    $message-&gt;addData('key', 'value');
+    $message-&gt;setId(md5(json_encode($message-&gt;getData())));
+            </pre>
+
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mobile.push.gcm.response"></a>Response</h3></div></div></div>
+
+        
+
+        <p>
+            GCM gives a response back that contains detail that needs to be
+            understood.  Most of the time you can just send a message but the
+            server may come back telling you any the message id, any errors and
+            potentially new registration ids.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.mobile.push.gcm.response.result"></a>Results</h4></div></div></div>
+
+            
+
+            <p>
+                The results are most commonly retrieved by calling the
+                getResults() method.  However, you may prefer to just get
+                certain results by using the getResult() method.  The getResult
+                method utilizes the constants RESULT_* correlating to message
+                id, error or registration id.
+            </p>
+
+            <p>
+                Several utility methods exist to give you a better idea of what
+                happened during your send.  Methods getSuccessCount(),
+                getFailureCount() and getCanonicalCount() let you know how many
+                where successful, how many failures and how many updates to
+                registration ids you have.
+            </p>
+
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.mobile.push.apns.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.mobile.push.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.mobile.push.mpns.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Mobile_Push_Apns </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_Mobile_Push_Mpns</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

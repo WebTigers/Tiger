@@ -1,0 +1,248 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Tag_Cloud</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.tag.html" title="Zend_Tag">
+<link rel="prev" href="zend.tag.introduction.html" title="Introduction">
+<link rel="next" href="zend.test.html" title="Zend_Test">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Tag_Cloud</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.tag.introduction.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Tag</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.test.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.tag.cloud"></a>Zend_Tag_Cloud</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Tag_Cloud</code> est la partie qui s'occupe du rendu dans
+        <code class="classname">Zend_Tag</code>. par défaut, elle utilise un ensemble de décorateurs HTML ,
+        ce qui permet de créer des nuages de tags pour un site, mais elle met aussi à votre
+        disposition 2 classes abstraites vous permettant de créer vos propres rendus, par exemple
+        pour créer des tags rendus en <acronym class="acronym">PDF</acronym>.
+    </p>
+
+    <p>
+        Vous pouvez instancier et configurer <code class="classname">Zend_Tag_Cloud</code> de manière
+        classique, ou via un tableau ou un objet <code class="classname">Zend_Config</code>. Voici les
+        options disponibles:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <code class="code">cloudDecorator</code> : défini le décorateur du nuage. Ceci peut être un
+                objet, un nom de classe qui sera chargée par pluginloader, une instance de
+                <code class="classname">Zend_Tag_Cloud_Decorator_Cloud</code> ou un tableau contenant les
+                clés <code class="code">decorator</code> et optionnellement <code class="code">options</code>, qui est
+                elle-même un tableau passé comme options au constructeur du décorateur.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="code">tagDecorator</code> : le décorateur d'un tag individuel. Ceci peut être
+                un objet, un nom de classe qui sera chargée par pluginloader, une instance de
+                <code class="classname">Zend_Tag_Cloud_Decorator_Cloud</code> ou un tableau contenant les
+                clés <code class="code">decorator</code> et optionnellement <code class="code">options</code>, qui est
+                elle-même un tableau passé comme options au constructeur du décorateur.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="code">pluginLoader</code> : un chargeur de classe à utiliser. Doit implémenter
+                l'interface <code class="classname">Zend_Loader_PluginLoader_Interface</code>.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="code">prefixPath</code> : préfixes de chemins à ajouter au chargeur de classes.
+                Doit être un tableau contenant les préfixes et les chemins. Les éléments invalides
+                seront ignorés.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="code">itemList</code> : une liste d'entités à utiliser. Doit être une instance
+                de <code class="classname">Zend_Tag_ItemList</code>.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="code">tags</code> : une liste de tags à assigner au nuage. Chacun doit
+                implémenter <code class="classname">Zend_Tag_Taggable</code> ou être un tableau qui pourra
+                être utilisé pour instancier <code class="classname">Zend_Tag_Item</code>.
+            </p>
+        </li>
+</ul></div>
+
+    <div class="example">
+<a name="zend.tag.cloud.example.using"></a><p class="title"><b>Exemple 897. Utiliser Zend_Tag_Cloud</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Cet exemple illustre les manipulations de base pour créer un nuage de tags,
+            ajouter des tags et afficher le rendu.
+        </p>
+
+        <pre class="programlisting">
+// Crée un nuage et assigne des tags statiques
+$cloud = new Zend_Tag_Cloud(array(
+    'tags' =&gt; array(
+        array('title' =&gt; 'Code', 'weight' =&gt; 50,
+              'params' =&gt; array('url' =&gt; '/tag/code')),
+        array('title' =&gt; 'Zend Framework', 'weight' =&gt; 1,
+              'params' =&gt; array('url' =&gt; '/tag/zend-framework')),
+        array('title' =&gt; 'PHP', 'weight' =&gt; 5,
+              'params' =&gt; array('url' =&gt; '/tag/php')),
+    )
+));
+
+// Rendu du nuage
+echo $cloud;
+</pre>
+
+        <p>Ceci affichera le nuage de tags, avec les polices par défaut.</p>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.tag.cloud.decorators"></a>Decorateurs</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Tag_Cloud</code> a besoin de 2 types de décorateurs afin de
+            rendre le nuage. Un décorateur pour rendre chacun des tags, et un décorateur pour rendre
+            le nuage lui-même. <code class="classname">Zend_Tag_Cloud</code> propose un décorateur par
+            défaut qui formate le nuage en HTML. Il utilise par défaut des listes ul/li et des
+            tailles de polices différentes selon les poids des tags.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.tag.cloud.decorators.htmltag"></a>Décorateur HTML</h4></div></div></div>
+            
+
+            <p>
+                Le décorateur HTML va rendre chaque tag dans un élément ancré, entouré d'un
+                élément li. L'ancre est fixe et ne peut être changée, mais l'élément peut lui
+                l'être.
+            </p>
+
+            <div class="note"><table border="0" summary="Note: Paramètre d'URL">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Paramètre d'URL</th>
+</tr>
+<tr><td align="left" valign="top">
+                
+
+                <p>
+                    Une ancre étant ajoutée à chaque tag, vous devez spécifier une <acronym class="acronym">URL</acronym> pour
+                    chacun d'eux.
+                </p>
+            </td></tr>
+</table></div>
+
+            <p>
+                Le décorateur de tags peut utiliser des tailles de police différentes pour
+                chaque ancre, ou pour chaque classe de liste. Les options suivantes sont
+                disponibles:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="code">fontSizeUnit</code> : définit l'unité utilisée dans la taille des
+                        polices. em, ex, px, in, cm, mm, pt, pc et %.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="code">minFontSize</code> : Taille minimale de la police (poids le plus
+                        faible) (doit être un entier).
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="code">maxFontSize</code> : Taille maximale de la police (poids le plus
+                        fort) (doit être un entier).
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="code">classList</code> : un tableau de classes utilisées dans les
+                        tags.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="code">htmlTags</code> : un tableau de tags HTML entourant l'ancre.
+                        Chaque élément peut être une chaîne de caractères, utilisée comme type
+                        d'élément, ou un tableau contenant une liste d'attributs pour l'élément. La
+                        clé du tableau est alors utilisée pour définir le type de l'élément.
+                    </p>
+                </li>
+</ul></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.tag.cloud.decorators.htmlcloud"></a>Décorateur HTML de nuage</h4></div></div></div>
+            
+
+            <p>
+                Le décorateur HTML de nuage va entourer les tags avec une balise ul. Vous
+                pouvez changer la balise, en utiliser plusieurs, utiliser un séparateur. Voici les
+                options:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="code">separator</code> : définit le séparateur utilisé entre chaque
+                        tag.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="code">htmlTags</code> : un tableau de balises HTML entourant chaque
+                        tag. Chaque élément peut être une chaîne de caractères, utilisée comme type
+                        d'élément, ou un tableau contenant une liste d'attributs pour l'élément. La
+                        clé du tableau est alors utilisée pour définir le type de l'élément.
+                    </p>
+                </li>
+</ul></div>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.tag.introduction.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.tag.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.test.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_Test</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

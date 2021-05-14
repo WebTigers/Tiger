@@ -1,0 +1,591 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Using the Book Search Data API</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.gdata.html" title="Zend_Gdata">
+<link rel="prev" href="zend.gdata.authsub.html" title="Authenticating with AuthSub">
+<link rel="next" href="zend.gdata.clientlogin.html" title="Authenticating with ClientLogin">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Using the Book Search Data API</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.gdata.authsub.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Gdata</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.gdata.clientlogin.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.gdata.books"></a>Using the Book Search Data API</h2></div></div></div>
+    
+
+    <p>
+        The Google Book Search Data <acronym class="acronym">API</acronym> allows client applications to view
+        and update Book Search content in the form of Google Data <acronym class="acronym">API</acronym> feeds.
+    </p>
+
+    <p>
+        Your client application can use the Book Search Data <acronym class="acronym">API</acronym> to issue
+        full-text searches for books and to retrieve standard book information,
+        ratings, and reviews. You can also access individual users'
+        <a class="ulink" href="http://books.google.com/googlebooks/mylibrary/" target="_top">library collections and
+            public reviews</a>. Finally, your application can submit authenticated requests
+        to enable users to create and modify library collections, ratings, labels,
+        reviews, and other account-specific entities.
+    </p>
+
+    <p>
+        For more information on the Book Search Data <acronym class="acronym">API</acronym>, please refer to the
+        official <a class="ulink" href="http://code.google.com/apis/books/gdata/developers_guide_php.html" target="_top">PHP
+            Developer's Guide</a> on code.google.com.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.books.authentication"></a>Authenticating to the Book Search service</h3></div></div></div>
+        
+
+        <p>
+            You can access both public and private feeds using the Book Search
+            Data <acronym class="acronym">API</acronym>. Public feeds don't require any authentication, but they are
+            read-only. If you want to modify user libraries, submit reviews or
+            ratings, or add labels, then your client needs to authenticate before
+            requesting private feeds. It can authenticate using either of two
+            approaches: AuthSub proxy authentication or ClientLogin username/password
+            authentication. Please refer to the <a class="ulink" href="http://code.google.com/apis/books/gdata/developers_guide_php.html#Authentication" target="_top">Authentication
+                section in the <acronym class="acronym">PHP</acronym> Developer's Guide</a> for more detail.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.books.searching_for_books"></a>Searching for books</h3></div></div></div>
+        
+
+        <p>
+            The Book Search Data <acronym class="acronym">API</acronym> provides a number of feeds that list
+            collections of books.
+        </p>
+
+        <p>
+            The most common action is to retrieve a list of books that match a
+            search query. To do so you create a <code class="classname">VolumeQuery</code> object
+            and pass it to the <code class="methodname">Books::getVolumeFeed()</code> method.
+        </p>
+
+        <p>
+            For example, to perform a keyword query, with a filter on
+            viewability to restrict the results to partial or full view books, use
+            the <code class="methodname">setMinViewability()</code> and <code class="methodname">setQuery()</code>
+            methods of the <code class="classname">VolumeQuery</code> object. The following code snippet
+            prints the title and viewability of all volumes whose metadata or text matches
+            the query term "domino":
+        </p>
+
+        <pre class="programlisting">
+$books = new Zend_Gdata_Books();
+$query = $books-&gt;newVolumeQuery();
+
+$query-&gt;setQuery('domino');
+$query-&gt;setMinViewability('partial_view');
+
+$feed = $books-&gt;getVolumeFeed($query);
+
+foreach ($feed as $entry) {
+    echo $entry-&gt;getVolumeId();
+    echo $entry-&gt;getTitle();
+    echo $entry-&gt;getViewability();
+}
+</pre>
+
+        <p>
+            The <code class="classname">Query</code> class, and subclasses like
+            <code class="classname">VolumeQuery</code>, are responsible for constructing feed
+            <acronym class="acronym">URL</acronym>s. The VolumeQuery shown above constructs a <acronym class="acronym">URL</acronym>
+            equivalent to the following:
+        </p>
+
+        <pre class="programlisting">
+http://www.google.com/books/feeds/volumes?q=keyword&amp;amp;min-viewability=partial
+</pre>
+
+        <p>
+            Note: Since Book Search results are
+            public, you can issue a Book Search query without authentication.
+        </p>
+
+        <p>
+            Here are some of the most common <code class="classname">VolumeQuery</code>
+            methods for setting search parameters:
+        </p>
+
+        <p>
+            <code class="methodname">setQuery()</code>: Specifies a search
+            query term. Book Search searches all book metadata and full text for
+            books matching the term. Book metadata includes titles, keywords,
+            descriptions, author names, and subjects.
+            Note that any spaces, quotes or other punctuation in the parameter
+            value must be <acronym class="acronym">URL</acronym>-escaped (Use a plus (<span class="emphasis"><em>+</em></span>) for a
+            space). To search for an exact phrase, enclose the phrase in quotation marks.
+            For example, to search for books matching the phrase "spy plane", set
+            the <span class="property">q</span> parameter to <span class="command"><strong>%22spy+plane%22</strong></span>.
+            You can also use any of the <a class="ulink" href="http://books.google.com/advanced_book_search" target="_top">
+            advanced search operators</a> supported by Book Search. For example,
+            <span class="command"><strong>jane+austen+-inauthor:austen</strong></span> returns matches that mention
+            (but are not authored by) Jane Austen.
+        </p>
+
+        <p>
+            <code class="methodname">setStartIndex()</code>: Specifies
+            the index of the first matching result that should be included in the
+            result set. This parameter uses a one-based index, meaning the first
+            result is 1, the second result is 2 and so forth. This parameter works
+            in conjunction with the max-results
+            parameter to determine which results to return. For example, to
+            request the third set of 10 results—results 21-30—set
+            the <span class="property">start-index</span> parameter to <span class="emphasis"><em>21</em></span> and the
+            max-results parameter to <span class="emphasis"><em>10</em></span>.
+            Note: This isn't a general cursoring
+            mechanism. If you first send a query with
+            <span class="command"><strong>?start-index=1&amp;max-results=10</strong></span> and then send another
+            query with <span class="command"><strong>?start-index=11&amp;max-results=10</strong></span>, the
+            service cannot guarantee that the results are equivalent to
+            <span class="command"><strong>?start-index=1&amp;max-results=20</strong></span>, because insertions and
+            deletions could have taken place in between the two queries.
+        </p>
+
+        <p>
+            <code class="methodname">setMaxResults()</code>:
+            Specifies the maximum number of results that should be included
+            in the result set. This parameter works in conjunction with the
+            start-index parameter to determine which
+            results to return. The default value of this parameter is
+            <span class="emphasis"><em>10</em></span> and the maximum value is <span class="emphasis"><em>20</em></span>.
+        </p>
+
+        <p>
+            <code class="methodname">setMinViewability()</code>: Allows you to filter the results according
+            to the books' <a class="ulink" href="http://code.google.com/apis/books/docs/dynamic-links.html#terminology" target="_top">viewability
+                status</a>. This parameter accepts one of three values:
+            <span class="emphasis"><em>'none'</em></span> (the default, returning all matching books regardless of
+            viewability), <span class="emphasis"><em>'partial_view'</em></span> (returning only books
+            that the user can preview or view in their entirety), or
+            <span class="emphasis"><em>'full_view'</em></span> (returning only books that the user can
+            view in their entirety).
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.books.partner_restrict"></a>Partner Co-Branded Search</h4></div></div></div>
+            
+
+            <p>
+                Google Book Search provides <a class="ulink" href="http://books.google.com/support/partner/bin/answer.py?hl=en&amp;answer=65113" target="_top">Co-Branded
+                    Search</a>, which lets content partners provide full-text search of
+                their books from their own websites.
+            </p>
+
+            <p>
+                If you are a partner who wants to do Co-Branded Search using the
+                Book Search Data <acronym class="acronym">API</acronym>, you may do so by modifying the feed
+                <acronym class="acronym">URL</acronym> above to point to your Co-Branded Search implementation. if,
+                for example, a Co-Branded Search is available at the following
+                <acronym class="acronym">URL</acronym>:
+            </p>
+
+            <pre class="programlisting">
+http://www.google.com/books/p/PARTNER_COBRAND_ID?q=ball
+</pre>
+
+            <p>
+                then you can obtain the same results using the Book Search Data
+                <acronym class="acronym">API</acronym> at the following <acronym class="acronym">URL</acronym>:
+            </p>
+
+            <pre class="programlisting">
+http://www.google.com/books/feeds/p/PARTNER_COBRAND_ID/volumes?q=ball+-soccer
+</pre>
+
+            <p>
+                To specify an alternate <acronym class="acronym">URL</acronym> when querying a volume feed, you can
+                provide an extra parameter to <code class="methodname">newVolumeQuery()</code>
+            </p>
+
+            <pre class="programlisting">
+$query =
+    $books-&gt;newVolumeQuery('http://www.google.com/books/p/PARTNER_COBRAND_ID');
+</pre>
+
+            <p>
+                For additional information or support, visit our
+                <a class="ulink" href="http://books.google.com/support/partner/" target="_top">Partner help center</a>.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.books.community_features"></a>Using community features</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.books.adding_ratings"></a>Adding a rating</h4></div></div></div>
+            
+
+            <p>
+                A user can add a rating to a book. Book Search uses a 1-5
+                rating system in which 1 is the lowest rating. Users cannot
+                update or delete ratings.
+            </p>
+
+            <p>
+                To add a rating, add a <code class="classname">Rating</code> object to a
+                <code class="classname">VolumeEntry</code> and post it to the annotation feed. In the
+                example below, we start from an empty <code class="classname">VolumeEntry</code> object.
+            </p>
+
+            <pre class="programlisting">
+$entry = new Zend_Gdata_Books_VolumeEntry();
+$entry-&gt;setId(new Zend_Gdata_App_Extension_Id(VOLUME_ID));
+$entry-&gt;setRating(new Zend_Gdata_Extension_Rating(3, 1, 5, 1));
+$books-&gt;insertVolume($entry, Zend_Gdata_Books::MY_ANNOTATION_FEED_URI);
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.books.reviews"></a>Reviews</h4></div></div></div>
+            
+
+            <p>
+                In addition to ratings, authenticated users can submit reviews or
+                edit their reviews. For information on how to request previously
+                submitted reviews, see <a class="ulink" href="#zend.gdata.books.retrieving_annotations" target="_top">Retrieving annotations</a>.
+            </p>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.books.adding_review"></a>Adding a review</h5></div></div></div>
+                
+
+                <p>
+                    To add a review, add a <code class="classname">Review</code> object to a
+                    <code class="classname">VolumeEntry</code> and post it to the annotation
+                    feed. In the example below, we start from an existing
+                    <code class="classname">VolumeEntry</code> object.
+                </p>
+
+                <pre class="programlisting">
+$annotationUrl = $entry-&gt;getAnnotationLink()-&gt;href;
+$review        = new Zend_Gdata_Books_Extension_Review();
+
+$review-&gt;setText("This book is amazing!");
+$entry-&gt;setReview($review);
+$books-&gt;insertVolume($entry, $annotationUrl);
+</pre>
+            </div>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.books.editing_review"></a>Editing a review</h5></div></div></div>
+                
+
+                <p>
+                    To update an existing review, first you retrieve the
+                    review you want to update, then you modify it, and
+                    then you submit it to the annotation feed.
+                </p>
+
+                <pre class="programlisting">
+$entryUrl = $entry-&gt;getId()-&gt;getText();
+$review   = new Zend_Gdata_Books_Extension_Review();
+
+$review-&gt;setText("This book is actually not that good!");
+$entry-&gt;setReview($review);
+$books-&gt;updateVolume($entry, $entryUrl);
+</pre>
+            </div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.books.labels"></a>Labels</h4></div></div></div>
+            
+
+            <p>
+                You can use the Book Search Data <acronym class="acronym">API</acronym> to label volumes with
+                keywords. A user can submit, retrieve and modify labels. See
+                <a class="ulink" href="#zend.gdata.books.retrieving_annotations" target="_top">Retrieving
+                    annotations</a> for how to read previously submitted labels.
+            </p>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.books.submitting_labels"></a>Submitting a set of labels</h5></div></div></div>
+                
+
+                <p>
+                    To submit labels, add a <code class="classname">Category</code> object
+                    with the scheme <code class="constant">LABELS_SCHEME</code> to a
+                    <code class="classname">VolumeEntry</code> and post it to the annotation feed.
+                </p>
+
+                <pre class="programlisting">
+$annotationUrl = $entry-&gt;getAnnotationLink()-&gt;href;
+$category      = new Zend_Gdata_App_Extension_Category(
+    'rated',
+    'http://schemas.google.com/books/2008/labels');
+$entry-&gt;setCategory(array($category));
+$books-&gt;insertVolume($entry, Zend_Gdata_Books::MY_ANNOTATION_FEED_URI);
+</pre>
+            </div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.books.retrieving_annotations"></a>Retrieving annotations: reviews, ratings, and labels</h4></div></div></div>
+            
+
+            <p>
+                You can use the Book Search Data <acronym class="acronym">API</acronym> to retrieve annotations
+                submitted by a given user. Annotations include reviews, ratings, and
+                labels. To retrieve any user's annotations, you can send an
+                unauthenticated request that includes the user's user ID. To retrieve the
+                authenticated user's annotations, use the value <span class="emphasis"><em>me</em></span> as the user
+                ID.
+            </p>
+
+            <pre class="programlisting">
+$feed = $books-&gt;getVolumeFeed(
+            'http://www.google.com/books/feeds/users/USER_ID/volumes');
+&lt;i&gt;(or)&lt;/i&gt;
+$feed = $books-&gt;getUserAnnotationFeed();
+
+// print title(s) and rating value
+foreach ($feed as $entry) {
+    foreach ($feed-&gt;getTitles() as $title) {
+        echo $title;
+    }
+    if ($entry-&gt;getRating()) {
+        echo 'Rating: ' . $entry-&gt;getRating()-&gt;getAverage();
+    }
+}
+</pre>
+
+            <p>
+                For a list of the supported query parameters, see the
+                <a class="ulink" href="#zend.gdata.books.query_parameters" target="_top">query parameters</a>
+                section.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.books.deleting_annotations"></a>Deleting Annotations</h4></div></div></div>
+            
+
+            <p>
+                If you retrieved an annotation entry containing ratings,
+                reviews, and/or labels, you can remove all annotations
+                by calling <code class="methodname">deleteVolume()</code> on that entry.
+            </p>
+
+            <pre class="programlisting">
+$books-&gt;deleteVolume($entry);
+</pre>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.gdata.books.sharing_with_my_library"></a>Book collections and My Library</h3></div></div></div>
+        
+
+        <p>
+            Google Book Search provides a number of user-specific
+            book collections, each of which has its own feed.
+        </p>
+
+        <p>
+            The most important collection is the user's My Library, which
+            represents the books the user would like to remember, organize, and
+            share with others. This is the collection the user sees when accessing
+            his or her <a class="ulink" href="http://books.google.com/books?op=library" target="_top">My Library
+                page</a>.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.books.retrieving_books_in_library"></a>Retrieving books in a user's library</h4></div></div></div>
+            
+
+            <p>
+                The following sections describe how to retrieve a list
+                of books from a user's library, with or without query
+                parameters.
+            </p>
+
+            <p>
+                You can query a Book Search public feed without authentication.
+            </p>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.books.retrieving_all_books_in_library"></a>Retrieving all books in a user's library</h5></div></div></div>
+                
+
+                <p>
+                    To retrieve the user's books, send a query to the
+                    My Library feed. To get the library of the authenticated
+                    user, use <span class="emphasis"><em>me</em></span> in place of <code class="constant">USER_ID</code>.
+                </p>
+
+                <pre class="programlisting">
+$feed = $books-&gt;getUserLibraryFeed();
+</pre>
+
+                <p>
+                    Note: The feed may not contain all of the user's books, because
+                    there's a default limit on the number of results returned. For
+                    more information, see the <span class="property">max-results</span> query parameter in
+                    <a class="ulink" href="#zend.gdata.books.searching_for_books" target="_top">Searching for books</a>.
+                </p>
+            </div>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.books.retrieving_books_in_library_with_query"></a>Searching for books in a user's library</h5></div></div></div>
+                
+
+                <p>
+                    Just as you can <a class="ulink" href="#zend.gdata.books.searching_for_books" target="_top">search across all books</a>,
+                    you can do a full-text search over just the books in a
+                    user's library. To do this, just set the appropriate
+                    paramters on the <code class="classname">VolumeQuery</code> object.
+                </p>
+
+                <p>
+                    For example, the following query returns all the books in
+                    your library that contain the word "bear":
+                </p>
+
+                <pre class="programlisting">
+$query = $books-&gt;newVolumeQuery(
+    'http://www.google.com/books/feeds/users' .
+    '/USER_ID/collections/library/volumes');
+$query-&gt;setQuery('bear');
+$feed = $books-&gt;getVolumeFeed($query);
+</pre>
+
+                <p>
+                    For a list of the supported query parameters, see the
+                    <a class="ulink" href="#zend.gdata.books.query_pParameters" target="_top">query parameters</a>
+                    section. In addition, you can search for books that have been
+                    <a class="ulink" href="#zend.gdata.books.labels" target="_top">labeled by the user</a>:
+                </p>
+
+                <pre class="programlisting">
+$query = $books-&gt;newVolumeQuery(
+    'http://www.google.com/books/feeds/users/' .
+    'USER_ID/collections/library/volumes');
+$query-&gt;setCategory(
+$query-&gt;setCategory('favorites');
+$feed = $books-&gt;getVolumeFeed($query);
+</pre>
+            </div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.gdata.books.updating_library"></a>Updating books in a user's library</h4></div></div></div>
+            
+
+            <p>
+                You can use the Book Search Data <acronym class="acronym">API</acronym> to add a book to, or remove
+                a book from, a user's library. Ratings, reviews, and labels are valid
+                across all the collections of a user, and are thus edited using the
+                annotation feed (see <a class="ulink" href="#zend.gdata.books.community_features" target="_top">Using community features</a>).
+            </p>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.books.library_book_add"></a>Adding a book to a library</h5></div></div></div>
+                
+
+                <p>
+                    After authenticating, you can add books to the current user's library.
+                </p>
+
+                <p>
+                    You can either create an entry from scratch if you
+                    know the volume ID, or insert an entry read from any feed.
+                </p>
+
+                <p>
+                    The following example creates a new entry and adds it to the library:
+                </p>
+
+                <pre class="programlisting">
+$entry = new Zend_Gdata_Books_VolumeEntry();
+$entry-&gt;setId(new Zend_Gdata_App_Extension_Id(VOLUME_ID));
+$books-&gt;insertVolume(
+    $entry,
+    Zend_Gdata_Books::MY_LIBRARY_FEED_URI
+);
+</pre>
+
+                <p>
+                    The following example adds an existing
+                    <code class="classname">VolumeEntry</code> object to the library:
+                </p>
+
+                <pre class="programlisting">
+$books-&gt;insertVolume(
+    $entry,
+    Zend_Gdata_Books::MY_LIBRARY_FEED_URI
+);
+</pre>
+            </div>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.gdata.books.library_book_remove"></a>Removing a book from a library</h5></div></div></div>
+                
+
+                <p>
+                    To remove a book from a user's library, call
+                    <code class="methodname">deleteVolume()</code> on the
+                    <code class="classname">VolumeEntry</code> object.
+                </p>
+
+                <pre class="programlisting">
+$books-&gt;deleteVolume($entry);
+</pre>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.gdata.authsub.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.gdata.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.gdata.clientlogin.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Authenticating with AuthSub </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Authenticating with ClientLogin</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,796 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Rédacteurs (Writers)</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.log.html" title="Zend_Log">
+<link rel="prev" href="zend.log.overview.html" title="Présentation">
+<link rel="next" href="zend.log.formatters.html" title="Formateurs (mise en forme)">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Rédacteurs (Writers)</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.log.overview.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Log</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.log.formatters.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.log.writers"></a>Rédacteurs (Writers)</h2></div></div></div>
+    
+
+    <p>
+        Un rédacteur est un objet qui hérite de
+        <code class="classname">Zend_Log_Writer_Abstract</code>. La responsabilité d'un rédacteur est
+        d'enregistrer des données de log dans un stockage particulier.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.writers.stream"></a>Écrire vers un flux (stream)</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Log_Writer_Stream</code> envoie des données de log à un
+            <a class="ulink" href="http://www.php.net/stream" target="_top">flux de <acronym class="acronym">PHP</acronym></a>.
+        </p>
+
+        <p>
+            Pour écrire des données de log dans le buffer d'affichage de PHP, il faut utiliser
+            l'URL <code class="code">php://output</code>. Alternativement, vous pouvez préférer envoyer des
+            données de log directement à un flux comme <code class="constant">STDERR</code>
+            (<code class="code">php://stderr</code>). </p>
+<pre class="programlisting">
+$redacteur = new Zend_Log_Writer_Stream('php://output');
+$logger = new Zend_Log($redacteur);
+
+$logger-&gt;info("Message d'information");
+</pre>
+
+        <p>
+            Pour écrire des données dans un fichier, employer un des <a class="ulink" href="http://www.php.net/manual/fr/wrappers.php#wrappers.file" target="_top">Filesystem URLs</a>:
+            </p>
+<pre class="programlisting">
+$redacteur = new Zend_Log_Writer_Stream('/chemin/vers/fichierdelog');
+$logger = new Zend_Log($redacteur);
+
+$logger-&gt;info("Message d'information");
+</pre>
+<p> Par défaut, le flux s'ouvre en mode d'ajout (<code class="code">"a"</code>). Pour
+            l'ouvrir avec un mode différent, le constructeur de
+            <code class="classname">Zend_Log_Writer_Stream</code> accepte un deuxième paramètre facultatif
+            pour le mode.
+        </p>
+
+        <p>
+            Le constructeur de <code class="classname">Zend_Log_Writer_Stream</code> accepte également
+            une ressource existante de flux : </p>
+<pre class="programlisting">
+$flux = @fopen('/chemin/vers/fichierdelog', 'a', false);
+if (! $flux) {
+    throw new Exception('Impossible d\'ouvrir le flux');
+}
+
+$redacteur = new Zend_Log_Writer_Stream($flux);
+$logger = new Zend_Log($redacteur);
+
+$logger-&gt;info("Message d'information");
+</pre>
+<p> Vous ne pouvez pas indiquer le mode pour des ressources existantes de flux.
+            Le faire entraînera une <code class="classname">Zend_Log_Exception</code>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.writers.database"></a>Écrire dans des bases de données</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Log_Writer_Db</code> écrit les informations de log dans une
+            table de base de données en utilisant <code class="classname">Zend_Db</code>. Le constructeur de
+            <code class="classname">Zend_Log_Writer_Db</code> reçoit une instance de
+            <code class="classname">Zend_Db_Adapter</code>, un nom de table, et un plan de correspondance
+            entre les colonnes de la base de données et les données élémentaires d'événement :
+            </p>
+<pre class="programlisting">
+$parametres = array ('host'     =&gt; '127.0.0.1',
+                 'username' =&gt; 'malory',
+                 'password' =&gt; '******',
+                 'dbname'   =&gt; 'camelot');
+$db = Zend_Db::factory('PDO_MYSQL', $parametres);
+
+$planDeCorrespondance = array('niveau' =&gt; 'priority', 'msg' =&gt; 'message');
+$redacteur = new Zend_Log_Writer_Db($db,
+                                    'nom_de_la_table_de_log',
+                                    $planDeCorrespondance);
+
+$logger = new Zend_Log($redacteur);
+
+$logger-&gt;info("Message d'information");
+</pre>
+<p> L'exemple ci-dessus écrit une ligne unique de données de log dans la table
+            appelée <code class="code">nom_de_la_table_de_log</code>. La colonne de base de données appelée
+            <code class="code">niveau</code> reçoit le niveau de priorité et la colonne appelée <code class="code">msg</code>
+            reçoit le message de log.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.writers.firebug"></a>Écrire vers Firebug</h3></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Log_Writer_Firebug</code> envoie des données d'historisation vers
+        la <a class="ulink" href="http://www.getfirebug.com/" target="_top">console Firebug</a>.
+    </p>
+
+    <p>
+        <img src="figures/zend.wildfire.firebug.console.png">
+    </p>
+
+    <p>
+        Toutes les données sont envoyées via le composant
+        <code class="classname">Zend_Wildfire_Channel_HttpHeaders</code> qui utilise les en-têtes <acronym class="acronym">HTTP</acronym> pour
+        s'assurer que le contenu de la page n'est pas perturbé. Déboguer les requêtes <acronym class="acronym">AJAX</acronym> qui
+        requière du <acronym class="acronym">JSON</acronym> "propre" ou un réponse <acronym class="acronym">XML</acronym> est possible avec cette approche.
+    </p>
+
+    <p>Éléments requis :</p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                Navigateur Firefox idéalement en version 3 mais la version 2 est aussi
+                supportée.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                L'extension Firefox nommée Firebug qui peut être téléchargée à cette adresse
+                <a class="ulink" href="https://addons.mozilla.org/en-US/firefox/addon/1843" target="_top">https://addons.mozilla.org/en-US/firefox/addon/1843</a>.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                L'extension Firefox nommée FirePHP ui peut être téléchargée à cette adresse
+                <a class="ulink" href="https://addons.mozilla.org/en-US/firefox/addon/6149" target="_top">https://addons.mozilla.org/en-US/firefox/addon/6149</a>.
+            </p>
+        </li>
+</ul></div>
+
+    <div class="example">
+<a name="zend.log.writers.firebug.example.with_front_controller"></a><p class="title"><b>Exemple 565. Journaliser avec Zend_Controller_Front</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+// Placez ceci dans votre fichier d'amorçage
+// avant de distribuer votre contrôleur frontal
+$writer = new Zend_Log_Writer_Firebug();
+$logger = new Zend_Log($writer);
+
+// Utiliser ceci dans vos fichiers de modèles, vues et contrôleurs
+$logger-&gt;log('Ceci est un message de log !', Zend_Log::INFO);
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="example">
+<a name="zend.log.writers.firebug.example.without_front_controller"></a><p class="title"><b>Exemple 566. Journaliser sans Zend_Controller_Front</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+$writer = new Zend_Log_Writer_Firebug();
+$logger = new Zend_Log($writer);
+
+$request = new Zend_Controller_Request_Http();
+$response = new Zend_Controller_Response_Http();
+$channel = Zend_Wildfire_Channel_HttpHeaders::getInstance();
+$channel-&gt;setRequest($request);
+$channel-&gt;setResponse($response);
+
+// Démarrer l'output buffering
+ob_start();
+
+// Maintenant vous pouvez appeler le logguer
+$logger-&gt;log('Ceci est un message de log !', Zend_Log::INFO);
+
+// Envoi des données d'historisation vers le navigateur
+$channel-&gt;flush();
+$response-&gt;sendHeaders();
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.writers.firebug.priority-styles"></a>Paramétrer les styles pour les priorités</h4></div></div></div>
+        
+
+        <p>
+            Les priorités incorporées et celles définies par l'utilisateur peuvent être
+            stylisées avec la méthode <code class="methodname">setPriorityStyle()</code>.
+        </p>
+
+        <pre class="programlisting">
+$logger-&gt;addPriority('FOO', 8);
+$writer-&gt;setPriorityStyle(8, 'TRACE');
+$logger-&gt;foo('Foo Message');
+</pre>
+
+        <p>
+            Le style par défaut pour les priorités définies par l'utilisateur peut être
+            paramétrer avec la méthode <code class="methodname">setDefaultPriorityStyle()</code>.
+        </p>
+
+        <pre class="programlisting">
+$writer-&gt;setDefaultPriorityStyle('TRACE');
+</pre>
+
+        <p>
+            Les styles supportés sont les suivants : </p>
+<div class="table">
+<a name="zend.log.writers.firebug.priority-styles.table"></a><p class="title"><b>Tableau 112. Styles d'historisation de Firebug</b></p>
+<div class="table-contents">
+                    
+
+                    <table class="table" summary="Styles d'historisation de Firebug" border="1">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Style</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code class="constant">LOG</code></td>
+<td>Affiche un message d'historisation basique</td>
+</tr>
+<tr>
+<td><code class="constant">INFO</code></td>
+<td>Affiche un message d'historisation de type
+                                information</td>
+</tr>
+<tr>
+<td><code class="constant">WARN</code></td>
+<td>Affiche un message d'historisation de type
+                                avertissement</td>
+</tr>
+<tr>
+<td><code class="constant">ERROR</code></td>
+<td>Affiche un message d'historisation de type erreur (celui-ci
+                                incrémente le compteur d'erreur de Firebug)</td>
+</tr>
+<tr>
+<td><code class="constant">TRACE</code></td>
+<td>Affiche un message d'historisation avec une trace
+                                extensible</td>
+</tr>
+<tr>
+<td><code class="constant">EXCEPTION</code></td>
+<td>Affiche un message d'historisation de type erreur avec une
+                                trace extensible</td>
+</tr>
+<tr>
+<td><code class="constant">TABLE</code></td>
+<td>Affiche un message d'historisation avec une table
+                                extensible</td>
+</tr>
+</tbody>
+</table>
+                </div>
+</div>
+<p><br class="table-break">
+            </p>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.writers.firebug.preparing-data"></a>Préparer les données pour l'historisation</h4></div></div></div>
+        
+
+        <p>
+            Toute variable <acronym class="acronym">PHP</acronym> peut être journalisée avec les priorités incorporées, un
+            formatage spécial est requis si vous utilisez des styles d'historisation un peu plus
+            spécialisé.
+        </p>
+
+        <p>
+            Les styles <code class="constant">LOG</code>, <code class="constant">INFO</code>, <code class="constant">WARN</code>,
+            <code class="constant">ERROR</code> et <code class="constant">TRACE</code> ne requièrent pas de formatage spécial.
+        </p>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.writers.firebug.preparing-data.exception"></a>Historisation des exceptions</h4></div></div></div>
+        
+
+        <p>
+            Pour journaliser une <code class="classname">Zend_Exception</code>, fournissez simplement
+            l'objet exception au logguer. Il n'y a pas d'importance sur la priorité ou le style que
+            vous avez fourni puisque l'exception est automatiquement reconnue.
+        </p>
+
+        <pre class="programlisting">
+$exception = new Zend_Exception('Test d\'exception');
+$logger-&gt;err($exception);
+</pre>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.writers.firebug.preparing-data.table"></a>Historisation sous forme de tableau</h4></div></div></div>
+        
+
+        <p>
+            Vous pouvez aussi journaliser des données en les formatant comme un tableau. Les
+            colonnes sont automatiquement reconnues et la première ligne de données devient
+            automatiquement la ligne d'en-têtes.
+        </p>
+
+        <pre class="programlisting">
+$writer-&gt;setPriorityStyle(8, 'TABLE');
+$logger-&gt;addPriority('TABLE', 8);
+
+$table = array('Ligne de résumé pour la table',
+               array(
+                   array('Colonne 1', 'Colonne 2'),
+                   array('Ligne 1 c 1',' Ligne 1 c 2'),
+                   array('Ligne 2 c 1',' Ligne 2 c 2')
+               )
+              );
+$logger-&gt;table($table);
+</pre>
+    </div>
+</div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.writers.mail"></a>Écrire vers un courriel</h3></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Log_Writer_Mail</code> va écrire les entrées du log dans un message
+        courriel en utilisant <code class="classname">Zend_Mail</code>. Le constructeur de
+        <code class="classname">Zend_Log_Writer_Mail</code> requière un objet
+        <code class="classname">Zend_Mail</code> et optionnellement un objet
+        <code class="classname">Zend_Layout</code>.
+    </p>
+
+    <p>
+        Le cas d'utilisation principal de <code class="classname">Zend_Log_Writer_Mail</code> est
+        la notification les développeurs, les administrateurs ou toute personne concernée,
+        d'une erreur qui peut survenir dans des scripts.
+        <code class="classname">Zend_Log_Writer_Mail</code> a été crée avec l'idée que si quelque chose
+        ne tourne pas rond, une intervention humaine est nécessaire.
+    </p>
+
+    <p>
+        Voici un exemple d'utilisation basique :
+    </p>
+
+    <pre class="programlisting">
+$mail = new Zend_Mail();
+$mail-&gt;setFrom('errors@example.org')
+     -&gt;addTo('project_developers@example.org');
+
+$writer = new Zend_Log_Writer_Mail($mail);
+
+// Ecrit le sujet. Un résumé des erreurs est ajouté à la suite
+$writer-&gt;setSubjectPrependText('Errors with script foo.php');
+
+// Limite uniquement au niveau Warning ou supérieur
+$writer-&gt;addFilter(Zend_Log::WARN);
+
+$log = new Zend_Log();
+$log-&gt;addWriter($writer);
+
+// Essai
+$log-&gt;error('unable to connect to database');
+
+// A la fermeture, Zend_Mail::send() est inviqué et concernera
+// tous les logs passés dans le filtre.
+</pre>
+
+    <p>
+        <code class="classname">Zend_Log_Writer_Mail</code> utilisera un corps de message
+        en texte plein (plain text) par défaut.
+    </p>
+
+    <p>
+        Le filtre est géré. Par exemple si le filtre est réglé sur Warnings, et que
+        2 évènements warnings et 5 évènements erreurs se produisent, alors 7
+        évènements seront envoyés.
+    </p>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.writers.mail.layoutusage"></a>Utilisation avec Zend_Layout</h4></div></div></div>
+        
+
+        <p>
+            Une instance de <code class="classname">Zend_Layout</code> peut être utilisée pour générer
+            du HTML qui fera partie du courriel multipart. Si <code class="classname">Zend_Layout</code>
+            est utilisé, <code class="classname">Zend_Log_Writer_Mail</code> considérera que le corps HTML
+            du message sera la valeur du rendu de <code class="classname">Zend_Layout</code>.
+        </p>
+
+        <p>
+            En utilisant <code class="classname">Zend_Log_Writer_Mail</code> avec un objet
+            <code class="classname">Zend_Layout</code> vous pouvez utiliser un formateur
+            personnalisé grâce à <code class="methodname">setLayoutFormatter()</code>. Si aucun formateur spécifique
+            <code class="classname">Zend_Layout</code> n'est indiqué, le formateur en cours d'utilisation
+            sera appelé. Voici un exemple :
+        </p>
+
+        <pre class="programlisting">
+$mail = new Zend_Mail();
+$mail-&gt;setFrom('errors@example.org')
+     -&gt;addTo('project_developers@example.org');
+// Nous ne spécifions pas le sujet du message dans l'objet Zend_Mail !
+
+// Utilisons un simple objet Zend_Layout
+$layout = new Zend_Layout();
+
+// Créons un formateur à base de listes
+$layoutFormatter = new Zend_Log_Formatter_Simple(
+    '&lt;li&gt;' . Zend_Log_Formatter_Simple::DEFAULT_FORMAT . '&lt;/li&gt;'
+);
+
+$writer = new Zend_Log_Writer_Mail($mail, $layout);
+
+// Appliquons le formateur sur le rendu de Zend_Layout.
+$writer-&gt;setLayoutFormatter($layoutFormatter);
+$writer-&gt;setSubjectPrependText('Errors with script foo.php');
+$writer-&gt;addFilter(Zend_Log::WARN);
+
+$log = new Zend_Log();
+$log-&gt;addWriter($writer);
+
+// essai
+$log-&gt;error('unable to connect to database');
+
+// A la fermeture, Zend_Mail::send() est inviqué et concernera
+// tous les logs passés dans le filtre.
+// l'email contiendra une partie "plain text", et une partie HTML
+</pre>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.writers.mail.dynamicsubjectline"></a>Ligne du sujet dynamique</h4></div></div></div>
+        
+
+        <p>
+            La méthode <code class="methodname">setSubjectPrependText()</code> est utilisée à la place de
+            <code class="methodname">Zend_Mail::setSubject()</code> pour que la ligne de sujet dans le courriel
+            soit générée dynamiquement avant l'envoi de ce dernier. Par exemple, si le texte indiqué
+            est "Erreurs depuis ce script", le sujet du courriel généré par
+            <code class="classname">Zend_Log_Writer_Mail</code> avec 2 warnings et 5 errors sera alors
+            "Erreurs depuis ce script (warn = 2; error = 5)". Si le sujet n'est pas indiqué
+            via <code class="classname">Zend_Log_Writer_Mail</code>, la ligne de sujet
+            de <code class="classname">Zend_Mail</code>, si il y en a une, sera utilisée.
+        </p>
+    </div>
+
+    <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.writers.mail.caveats"></a>Attention</h4></div></div></div>
+        
+
+        <p>
+            Envoyer des rapports d'erreurs par emails peut être dangereux.
+            Si votre système de surveillance d'erreurs n'est pas correct ou a un problème,
+            vous risquez de vous retrouver inondé de tonnes d'emails en provenance de
+            votre application.
+        </p>
+
+        <p>
+            A l'heure actuelle, il n'existe dans <code class="classname">Zend_Log_Writer_Mail</code>
+            aucun système de limitation ou de contrôle du nombre ou de la fréquence d'envoi
+            des emails. Si vous nécessitez un tel système, vous devrez l'implémenter vous-même.
+        </p>
+
+        <p>
+            Encore une fois, l'unique but de <code class="classname">Zend_Log_Writer_Mail</code>
+            est la notification d'un humain au sujet d'une erreur. Si ce système est
+            clairement contrôlé, alors il peut devenir un avantage très appréciable.
+        </p>
+    </div>
+</div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.writers.syslog"></a>Ecrire dans lee journal du système</h3></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Log_Writer_Syslog</code> écrit les rapports de log dans le
+        journal système (syslog). En interne, il utilise les fonctions <acronym class="acronym">PHP</acronym>
+        <code class="methodname">openlog()</code>,
+        <code class="methodname">closelog()</code>, et
+        <code class="methodname">syslog()</code>.
+    </p>
+
+    <p>
+        Un cas d'utilisation intéressant de <code class="classname">Zend_Log_Writer_Syslog</code>
+        est le cluster de machines. La fonctionnalité de journal système permet de
+        faire en sorte que chaque machine enregistre dans un fichier de journal centralisé,
+        ce qui simplifie l'administration.
+    </p>
+
+    <p>
+        Par défaut, tous les messages gérés sont préfixés par "Zend_Log". Si vous souhaitez
+        changer ce nom, utilisez le constructeur ou l'accesseur:
+    </p>
+
+    <pre class="programlisting">
+// A l'instanciation
+$writer = new Zend_Log_Writer_Syslog(array('application' =&gt; 'FooBar'));
+
+// Plus tard:
+$writer-&gt;setApplicationName('BarBaz');
+</pre>
+
+    <p>
+        Le journal système vous aidera aussi à identifier les messages
+        par types d'application ("facility"), les programmes de journalisation système
+        vont générer des fichiers journaux différents en fonction des types
+        d'application, ce qui là encore, peut aider dans l'administration.
+    </p>
+
+    <p>
+        Pour spécifier le type d'application, utilisez le constructeur ou l'accesseur.
+        Cette option peut être l'une des constantes utilisées par
+        <code class="methodname">openlog()</code>, définies dans la page
+        <a class="ulink" href="http://php.net/openlog" target="_top">du manuel de openlog()</a>.
+    </p>
+
+    <pre class="programlisting">
+// A l'instanciation
+$writer = new Zend_Log_Writer_Syslog(array('facility' =&gt; LOG_AUTH));
+
+// Plus tard
+$writer-&gt;setFacility(LOG_USER);
+</pre>
+
+    <p>
+        En utilisant l'objet de log, continuez d'utiliser les constantes de
+        <code class="classname">Zend_Log</code>, elles vont être converties en leurs valeurs
+        par <code class="methodname">syslog()</code>.
+    </p>
+</div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.writers.zendmonitor"></a>Ecrire vers le moniteur Zend Server</h3></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Log_Writer_ZendMonitor</code> vous permet de journaliser des évènements
+        via l'API de Zend Server. Vous pouvez alors aggréger des messages de journal pour l'application
+        et tout son environnement, ceci vers un seul endroit. En interne, cet objet utilise simplement la
+        fonction <code class="methodname">monitor_custom_event()</code> issue de Zend Monitor.
+    </p>
+
+    <p>
+        Une caractéristique particulière de l'API Monitor est que vous pouvez spécifier n'importe quelle
+        information dans le journal. Par exemple, journaliser une exception est possible en journalisant
+        tout l'objet Exception d'un coup et pas juste son message. L'objet sera alors visible et analysable
+        via le moniteur d'évènement de Zend Server.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Zend Monitor doit être installé et activé">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Zend Monitor doit être installé et activé</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Pour utiliser cet objet d'écriture, Zend Monitor doit petre installé et activé.
+            Si ce n'est pas le cas, alors l'objet d'écriture agira de manière transparente et ne fera
+            rien du tout.
+        </p>
+    </td></tr>
+</table></div>
+
+    <p>
+        Instancier l'objet d'écriture <code class="classname">ZendMonitor</code> est très simple:
+    </p>
+
+    <pre class="programlisting">
+$writer = new Zend_Log_Writer_ZendMonitor();
+$log    = new Zend_Log($writer);
+</pre>
+
+    <p>
+        Ensuite, journalisez vos évènements comme d'habitude:
+    </p>
+
+    <pre class="programlisting">
+$log-&gt;info('Voici un message');
+</pre>
+
+    <p>
+        Vous pouvez ajouter des informations à journaliser, passez les comme second paramètre:
+    </p>
+
+    <pre class="programlisting">
+$log-&gt;info('Exception rencontrée', $e);
+</pre>
+
+    <p>
+        Ce deuxième paramètre peut être de type scalaire, objet, ou tableau; si vous souhaitez
+        passer plusieurs informations d'un seul coup, utilisez un tableau.
+    </p>
+
+    <pre class="programlisting">
+$log-&gt;info('Exception rencontrée', array(
+    'request'   =&gt; $request,
+    'exception' =&gt; $e,
+));
+</pre>
+
+    <p>
+        Au sein de Zend Server, votre évènement est enregistré comme un "évènement personnalisé" (custom event).
+        Depuis l'onglet "Monitor", sélectionnez le sous menu "Evènements"(Events), et utilisez ensuite le filtre
+        "Personnalisé"(Custom).
+    </p>
+
+    <p>
+        <img src="figures/zend.log.writers.zendmonitor-events.png">
+    </p>
+
+    <p>
+        Evènements dans le récapitulatif Zend Server Monitor
+    </p>
+
+    <p>
+        Sur cette image, les deux premiers évènements listés sont des évènements personnalisés enregistré via
+        l'objet d'écriture <code class="classname">ZendMonitor</code>. Cliquez alors sur un évènement pour voir toutes ses
+        informations.
+    </p>
+
+    <p>
+        <img src="figures/zend.log.writers.zendmonitor-event.png">
+    </p>
+
+    <p>
+        Détails de l'évènement dans Zend Server Monitor
+    </p>
+
+    <p>
+        Cliquer sur le sous menu "Personnalisé"(Custom) montre les détails, c'est à dire ce que vous avez passé
+        comme deuxième argument à la méthode de journalisation. Cet information est enregistrée sous la clé
+        <code class="varname">info</code>; et vous pouvez voir que l'objet de requête a été enregistré dans cet exemple.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Intégration avec Zend_Application">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Intégration avec Zend_Application</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Par défaut, les commandes <span class="command"><strong>zf.sh</strong></span> et <span class="command"><strong>zf.bat</strong></span> ajoute une
+            configuration pour la ressource 'log' de<a class="link" href="zend.application.available-resources.html#zend.application.available-resources.log" title="Zend_Application_Resource_Log"><code class="classname">Zend_Application</code>
+                </a>, elle inclut la configuration pour l'objet d'écriture du journal
+            <code class="classname">ZendMonitor</code>. Aussi, le
+            <code class="classname">ErrorController</code> utilise ce journal pour journaliser les exceptions de
+            l'application.
+        </p>
+
+        <p>
+            Comme dit précedemment, si l'API de Zend Monitor API n'est pas détectée sur votre installation de PHP,
+            alors le journal ne fera rien du tout.
+        </p>
+    </td></tr>
+</table></div>
+</div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.writers.null"></a>Déraciner les rédacteurs</h3></div></div></div>
+        
+
+        <p>
+            Le <code class="classname">Zend_Log_Writer_Null</code> est une souche qui écrit des
+            données de log nulle part. Il est utile pour neutraliser le log ou déraciner le log
+            pendant les essais :</p>
+<pre class="programlisting">
+$redacteur = new Zend_Log_Writer_Null;
+$logger = new Zend_Log($redacteur);
+
+// va nulle part
+$logger-&gt;info("Message d'information");
+</pre>
+        </div>
+
+        <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.writers.mock"></a>Tester avec un simulacre</h3></div></div></div>
+            
+
+        <p>
+            Le <code class="classname">Zend_Log_Writer_Mock</code> est un rédacteur très simple qui
+            enregistre les données brutes qu'il reçoit dans un tableau exposé comme propriété
+            publique. </p>
+<pre class="programlisting">
+$simulacre = new Zend_Log_Writer_Mock;
+$logger = new Zend_Log($simulacre);
+
+$logger-&gt;info("Message d'information");
+
+var_dump($mock-&gt;events[0]);
+
+// Array
+// (
+//    [timestamp] =&gt; 2007-04-06T07:16:37-07:00
+//    [message] =&gt; Message d'information
+//    [priority] =&gt; 6
+//    [priorityName] =&gt; INFO
+// )
+</pre>
+
+        <p>
+            Pour effacer les événements notés dans le simulacre, il faut simplement réaliser
+            <code class="code">$simulacre-&gt;events = array()</code>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.writers.compositing"></a>Additionner les rédacteurs</h3></div></div></div>
+        
+
+        <p>
+            Il n'y a aucun objet composite de rédacteurs. Cependant, une instance
+            d'enregistreur peut écrire vers tout nombre de rédacteurs. Pour faire ceci, employer la
+            méthode <code class="methodname">addWriter()</code> : </p>
+<pre class="programlisting">
+$redacteur1 =
+    new Zend_Log_Writer_Stream('/chemin/vers/premier/fichierdelog');
+$redacteur2 =
+    new Zend_Log_Writer_Stream('/chemin/vers/second/fichierdelog');
+
+$logger = new Zend_Log();
+$logger-&gt;addWriter($redacteur1);
+$logger-&gt;addWriter($redacteur2);
+
+// va dans les 2 rédacteurs
+$logger-&gt;info("Message d'information");
+</pre>
+        </div>
+    </div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.log.overview.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.log.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.log.formatters.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Présentation </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Formateurs (mise en forme)</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

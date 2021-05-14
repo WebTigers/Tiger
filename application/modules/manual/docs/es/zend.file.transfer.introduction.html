@@ -1,0 +1,720 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_File_Transfer</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.file.html" title="Zend_File">
+<link rel="prev" href="zend.file.html" title="Zend_File">
+<link rel="next" href="zend.file.transfer.validators.html" title="Validators for Zend_File_Transfer">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_File_Transfer</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.file.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_File</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.file.transfer.validators.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.file.transfer.introduction"></a>Zend_File_Transfer</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_File_Transfer</code> provides extensive support for file uploads and
+        downloads. It comes with built-in validators for files plus functionality to change files
+        with filters. Protocol adapters allow <code class="classname">Zend_File_Transfer</code> to expose
+        the same <acronym class="acronym">API</acronym> for transport protocols like <acronym class="acronym">HTTP</acronym>, FTP,
+        WEBDAV and more.
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Limitation">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Limitation</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            The current implementation of <code class="classname">Zend_File_Transfer</code> is limited to
+            <acronym class="acronym">HTTP</acronym> Post Uploads. Other adapters supporting downloads and other
+            protocols will be added in future releases. Unimplemented methods will throw an
+            exception. For now, you should use
+            <code class="classname">Zend_File_Transfer_Adapter_Http</code> directly. As soon as
+            there are multiple adapters available you can use a common interface.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="note"><table border="0" summary="Note: Forms">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Forms</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            When you are using <code class="classname">Zend_Form</code> you should use the
+            <acronym class="acronym">API</acronym>s provided by <code class="classname">Zend_Form</code> and not
+            <code class="classname">Zend_File_Transfer</code> directly. The file transfer support in
+            <code class="classname">Zend_Form</code> is implemented with
+            <code class="classname">Zend_File_Transfer</code>, so the information in this chapter may
+            be useful for advanced users of <code class="classname">Zend_Form</code>.
+        </p>
+    </td></tr>
+</table></div>
+
+    <p>
+        The usage of <code class="classname">Zend_File_Transfer</code> is relatively simple. It consists of
+        two parts. The <acronym class="acronym">HTTP</acronym> form does the upload, while the
+        <code class="classname">Zend_File_Transfer</code> handles the uploaded files. See the following
+        example:
+    </p>
+
+    <div class="example">
+<a name="zend.file.transfer.introduction.example"></a><p class="title"><b>Ejemplo 395. Simple Form for Uploading Files</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            This example illustrates basic file uploading.
+            The first part is the file form. In our example there is one file to upload.
+        </p>
+
+        <pre class="programlisting">
+&lt;form enctype="multipart/form-data" action="/file/upload" method="POST"&gt;
+    &lt;input type="hidden" name="MAX_FILE_SIZE" value="100000" /&gt;
+        Choose a file to upload: &lt;input name="uploadedfile" type="file" /&gt;
+    &lt;br /&gt;
+    &lt;input type="submit" value="Upload File" /&gt;
+&lt;/form&gt;
+</pre>
+
+        <p>
+           For convenience, you can use <a class="link" href="zend.form.standardElements.html#zend.form.standardElements.file" title="Zend_Form_Element_File">Zend_Form_Element_File</a> instead of
+           building the <acronym class="acronym">HTML</acronym> manually.
+        </p>
+
+        <p>
+            The next step is to create the receiver of the upload. In our example the receiver is
+            located at <code class="filename">/file/upload</code>. So next we will create the 'file'
+            controller and the <code class="methodname">upload()</code> action.
+        </p>
+
+        <pre class="programlisting">
+$adapter = new Zend_File_Transfer_Adapter_Http();
+
+$adapter-&gt;setDestination('C:\temp');
+
+if (!$adapter-&gt;receive()) {
+    $messages = $adapter-&gt;getMessages();
+    echo implode("\n", $messages);
+}
+</pre>
+
+        <p>
+            This code listing demonstrates the simplest usage of
+            <code class="classname">Zend_File_Transfer</code>. A local destination is set with the
+            <code class="methodname">setDestination()</code> method, then the
+            <code class="methodname">receive()</code> method is called. if there are any upload errors, an
+            error will be returned.
+        </p>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="note"><table border="0" summary="Note: Attention">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Attention</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            This example is suitable only for demonstrating the basic <acronym class="acronym">API</acronym> of
+            <code class="classname">Zend_File_Transfer</code>. You should <span class="emphasis"><em>never</em></span> use
+            this code listing in a production environment, because severe security issues may be
+            introduced. You should always use validators to increase security.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.file.transfer.introduction.adapters"></a>Supported Adapters for Zend_File_Transfer</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_File_Transfer</code> is designed to support a variety of adapters
+            and transfer directions. With <code class="classname">Zend_File_Transfer</code> you can upload,
+            download and even forward (upload one adapter and download with another adapter at the
+            same time) files.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.file.transfer.introduction.options"></a>Options for Zend_File_Transfer</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_File_Transfer</code> and its adapters support different options.
+            You can set all options either by passing them to the constructor or by calling
+            <code class="methodname">setOptions($options)</code>. <code class="methodname">getOptions()</code>
+            will return the options that are currently set. The following is a list of all supported
+            options.
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+                <p>
+                    <span class="emphasis"><em>ignoreNoFile</em></span>: If this option is set to
+                    <code class="constant">TRUE</code>, all validators will ignore files that have not been
+                    uploaded by the form. The default value is <code class="constant">FALSE</code> which
+                    results in an error if no files were specified.
+                </p>
+            </li></ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.file.transfer.introduction.checking"></a>Checking Files</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_File_Transfer</code> has several methods that check for various
+            states of the specified file. These are useful if you must process files after they have
+            been uploaded. These methods include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>isValid($files = null)</em></span>: This method will check if the
+                    given files are valid, based on the validators that are attached to the files.
+                    If no files are specified, all files will be checked. You can call
+                    <code class="methodname">isValid()</code> before calling
+                    <code class="methodname">receive()</code>; in this case,
+                    <code class="methodname">receive()</code> will not call
+                    <code class="methodname">isValid()</code> internally again when receiving the file.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>isUploaded($files = null)</em></span>: This method will check if the
+                    specified files have been uploaded by the user. This is useful when you have
+                    defined one or more optional files. When no files are specified, all files will
+                    be checked.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>isReceived($files = null)</em></span>: This method will check if the
+                    given files have already been received. When no files are specified, all files
+                    will be checked.
+                </p>
+            </li>
+</ul></div>
+
+        <div class="example">
+<a name="zend.file.transfer.introduction.checking.example"></a><p class="title"><b>Ejemplo 396. Checking Files</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$upload = new Zend_File_Transfer();
+
+// Returns all known internal file information
+$files = $upload-&gt;getFileInfo();
+
+foreach ($files as $file =&gt; $info) {
+    // file uploaded ?
+    if (!$upload-&gt;isUploaded($file)) {
+        print "Why havn't you uploaded the file ?";
+        continue;
+    }
+
+    // validators are ok ?
+    if (!$upload-&gt;isValid($file)) {
+        print "Sorry but $file is not what we wanted";
+        continue;
+    }
+}
+
+$upload-&gt;receive();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.file.transfer.introduction.informations"></a>Additional File Informations</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_File_Transfer</code> can return additional information on files.
+            The following methods are available:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>getFileName($file = null, $path = true)</em></span>: This method
+                    will return the real file name of a transferred file.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>getFileInfo($file = null)</em></span>: This method will return all
+                    internal information for the given file.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>getFileSize($file = null)</em></span>: This method will return the
+                    real filesize for the given file.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>getHash($hash = 'crc32', $files = null)</em></span>: This method
+                    returns a hash of the content of a given transferred file.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>getMimeType($files = null)</em></span>: This method returns the
+                    mimetype of a given transferred file.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            <code class="methodname">getFileName()</code> accepts the name of the element as first
+            parameter. If no name is given, all known filenames will be returned in an array. If the
+            file is a multifile, you will also get an array. If there is only a single file a string
+            will be returned.
+        </p>
+
+        <p>
+            By default file names will be returned with the complete path. If you only need the file
+            name without path, you can set the second parameter, <code class="varname">$path</code>, which
+            will truncate the file path when set to <code class="constant">FALSE</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.file.transfer.introduction.informations.example1"></a><p class="title"><b>Ejemplo 397. Getting the Filename</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$upload = new Zend_File_Transfer();
+$upload-&gt;receive();
+
+// Returns the file names from all files
+$names = $upload-&gt;getFileName();
+
+// Returns the file names from the 'foo' form element
+$names = $upload-&gt;getFileName('foo');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Note that the file name can change after you receive the file, because all filters
+                will be applied once the file is received. So you should always call
+                <code class="methodname">getFileName()</code> after the files have been received.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            <code class="methodname">getFileSize()</code> returns per default the real filesize in SI
+            notation which means you will get <span class="emphasis"><em>2kB</em></span> instead of
+            <span class="emphasis"><em>2048</em></span>. If you need only the plain size set the
+            <span class="property">useByteString</span> option to <code class="constant">FALSE</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.file.transfer.introduction.informations.example.getfilesize"></a><p class="title"><b>Ejemplo 398. Getting the size of a file</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$upload = new Zend_File_Transfer();
+$upload-&gt;receive();
+
+// Returns the sizes from all files as array if more than one file was uploaded
+$size = $upload-&gt;getFileSize();
+
+// Switches of the SI notation to return plain numbers
+$upload-&gt;setOptions(array('useByteString' =&gt; false));
+$size = $upload-&gt;getFileSize();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note: Client given filesize">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Client given filesize</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Note that the filesize which is given by the client is not seen as save input.
+                Therefor the real size of the file will be detected and returned instead of the
+                filesize sent by the client.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            <code class="methodname">getHash()</code> accepts the name of a hash algorithm as first
+            parameter. For a list of known algorithms refer to
+            <a class="ulink" href="http://php.net/hash_algos" target="_top">PHP's hash_algos method</a>. If you don't
+            specify an algorithm, the <span class="emphasis"><em>crc32</em></span> algorithm will be used by default.
+        </p>
+
+        <div class="example">
+<a name="zend.file.transfer.introduction.informations.example2"></a><p class="title"><b>Ejemplo 399. Getting the hash of a file</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$upload = new Zend_File_Transfer();
+$upload-&gt;receive();
+
+// Returns the hashes from all files as array if more than one file was uploaded
+$hash = $upload-&gt;getHash('md5');
+
+// Returns the hash for the 'foo' form element
+$names = $upload-&gt;getHash('crc32', 'foo');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note: Return value">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Return value</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Note that if the given file or form name contains more than one file, the returned
+                value will be an array.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            <code class="methodname">getMimeType()</code> returns the mimetype of a file. If more than one
+            file was uploaded it returns an array, otherwise a string.
+        </p>
+
+        <div class="example">
+<a name="zend.file.transfer.introduction.informations.getmimetype"></a><p class="title"><b>Ejemplo 400. Getting the mimetype of a file</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$upload = new Zend_File_Transfer();
+$upload-&gt;receive();
+
+$mime = $upload-&gt;getMimeType();
+
+// Returns the mimetype for the 'foo' form element
+$names = $upload-&gt;getMimeType('foo');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note: Client given mimetype">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Client given mimetype</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Note that the mimetype which is given by the client is not seen as save input.
+                Therefor the real mimetype of the file will be detected and returned instead of the
+                mimetype sent by the client.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="warning"><table border="0" summary="Warning: Possible exception">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Aviso]" src="images/warning.png"></td>
+<th align="left">Possible exception</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Note that this method uses the fileinfo extension if it is available. If this
+                extension can not be found, it uses the mimemagic extension. When no extension was
+                found it raises an exception.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="warning"><table border="0" summary="Warning: Original data within $_FILES">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Aviso]" src="images/warning.png"></td>
+<th align="left">Original data within $_FILES</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Due to security reasons also the original data within $_FILES will be overridden
+                as soon as <code class="classname">Zend_File_Transfer</code> is initiated. When you want
+                to omit this behaviour and have the original data simply set the
+                <span class="property">detectInfos</span> option to <code class="constant">FALSE</code> at initiation.
+            </p>
+
+            <p>
+                This option will have no effect after you initiated
+                <code class="classname">Zend_File_Transfer</code>.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.file.transfer.introduction.uploadprogress"></a>Progress for file uploads</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_File_Transfer</code> can give you the actual state of a fileupload
+            in progress. To use this feature you need either the <acronym class="acronym">APC</acronym> extension
+            which is provided with most default <acronym class="acronym">PHP</acronym> installations, or the
+            <code class="classname">UploadProgress</code> extension. Both extensions are detected and used
+            automatically. To be able to get the progress you need to meet some prerequisites.
+        </p>
+
+        <p>
+            First, you need to have either <acronym class="acronym">APC</acronym> or
+            <code class="classname">UploadProgress</code> to be enabled. Note that you can disable this
+            feature of <acronym class="acronym">APC</acronym> within your <code class="filename">php.ini</code>.
+        </p>
+
+        <p>
+            Second, you need to have the proper hidden fields added in the form which sends the
+            files. When you use <code class="classname">Zend_Form_Element_File</code> this hidden fields are
+            automatically added by <code class="classname">Zend_Form</code>.
+        </p>
+
+        <p>
+            When the above two points are provided then you are able to get the actual progress of
+            the file upload by using the <code class="methodname">getProgress()</code> method. Actually
+            there are 2 official ways to handle this.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.file.transfer.introduction.uploadprogress.progressadapter"></a>Using a progressbar adapter</h4></div></div></div>
+            
+
+            <p>
+                You can use the convinient <span class="emphasis"><em>Zend_ProgressBar</em></span> to get the actual
+                progress and can display it in a simple manner to your user.
+            </p>
+
+            <p>
+                To archive this, you have to add the wished
+                <span class="emphasis"><em>Zend_ProgressBar_Adapter</em></span> to
+                <code class="methodname">getProgress()</code> when you are calling it the first time. For
+                details about the right adapter to use, look into the chapter <a class="link" href="zend.progressbar.introduction.html#zend.progressbar.adapters" title="Standard adapters">Zend_ProgressBar Standard Adapters</a>.
+            </p>
+
+            <div class="example">
+<a name="zend.file.transfer.introduction.uploadprogress.progressadapter.example1"></a><p class="title"><b>Ejemplo 401. Using the progressbar adapter to retrieve the actual state</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$adapter = new Zend_ProgressBar_Adapter_Console();
+$upload  = Zend_File_Transfer_Adapter_Http::getProgress($adapter);
+
+$upload = null;
+while (!$upload['done']) {
+    $upload = Zend_File_Transfer_Adapter_Http:getProgress($upload);
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                The complete handling is done by <code class="methodname">getProgress()</code> for you in
+                the background.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.file.transfer.introduction.uploadprogress.manually"></a>Using getProgress() manually</h4></div></div></div>
+            
+
+            <p>
+                You can also work manually with <code class="methodname">getProgress()</code> without the
+                usage of <code class="classname">Zend_ProgressBar</code>.
+            </p>
+
+            <p>
+                Call <code class="methodname">getProgress()</code> without settings. It will return you an
+                array with several keys. They differ according to the used <acronym class="acronym">PHP</acronym>
+                extension. But the following keys are given independently of the extension:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>id</em></span>: The ID of this upload. This ID identifies the
+                        upload within the extension. You can set it to the value of the hidden key
+                        which identified the upload when initially calling
+                        <code class="methodname">getProgress()</code>. Per default it is set to
+                        <span class="emphasis"><em>progress_key</em></span>. You must not change the ID afterwards.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>total</em></span>: The total filesize of the uploaded files in
+                        bytes as integer.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>current</em></span>: The current uploaded filesize in bytes
+                        as integer.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>rate</em></span>: The average upload speed in bytes per second
+                        as integer.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>done</em></span>: Returns <code class="constant">TRUE</code> when the upload
+                        is finished and <code class="constant">FALSE</code> otherwise.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>message</em></span>: The actual message. Either the progress as
+                        text in the form <span class="emphasis"><em>10kB / 200kB</em></span>, or a helpful message
+                        in the case of a problem. Problems could be, that there is no upload in
+                        progress, that there was a failure while retrieving the data for the
+                        progress, or that the upload has been canceled.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>progress</em></span>: This optional key takes a instance of
+                        <code class="classname">Zend_ProgressBar_Adapter</code> or
+                        <code class="classname">Zend_ProgressBar</code> and allows to get the actual upload
+                        state within a progressbar.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <span class="emphasis"><em>session</em></span>: This optional key takes the name of a session
+                        namespace which will be used within <code class="classname">Zend_ProgressBar</code>.
+                        When this key is not given it defaults to
+                        <code class="classname">Zend_File_Transfer_Adapter_Http_ProgressBar</code>.
+                    </p>
+                </li>
+</ul></div>
+
+            <p>
+                All other returned keys are provided directly from the extensions and will not be
+                checked.
+            </p>
+
+            <p>
+                The following example shows a possible manual usage:
+            </p>
+
+            <div class="example">
+<a name="zend.file.transfer.introduction.uploadprogress.manually.example1"></a><p class="title"><b>Ejemplo 402. Manual usage of the file progress</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$upload  = Zend_File_Transfer_Adapter_Http::getProgress();
+
+while (!$upload['done']) {
+    $upload = Zend_File_Transfer_Adapter_Http:getProgress($upload);
+    print "\nActual progress:".$upload['message'];
+    // do whatever you need
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="note"><table border="0" summary="Note: Knowing the file to get the progress from">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Knowing the file to get the progress from</th>
+</tr>
+<tr><td align="left" valign="top">
+                
+
+                <p>
+                    The above example works when your upload identified is set to 'progress_key'.
+                    When you are using another identifier within your form you must give the used
+                    identifier as first parameter to <code class="methodname">getProgress()</code> on the
+                    initial call.
+                </p>
+            </td></tr>
+</table></div>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.file.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.file.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.file.transfer.validators.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_File </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Validators for Zend_File_Transfer</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

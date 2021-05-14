@@ -1,0 +1,237 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Db_Table_Definition</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.db.html" title="Zend_Db">
+<link rel="prev" href="zend.db.table.relationships.html" title="Relations Zend_Db_Table">
+<link rel="next" href="zend.debug.html" title="Zend_Debug">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Db_Table_Definition</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.db.table.relationships.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Db</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.debug.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.db.table.definition"></a>Zend_Db_Table_Definition</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.definition.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Db_Table_Definition</code> est une classe qui peut être
+            utilisée pour décrire les relations et les options de configuration qui devraient
+            être utilisées lorsque <code class="classname">Zend_Db_Table</code> est manipulée par
+            instantiation concrête.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.definition.usage"></a>Utilisation de base</h3></div></div></div>
+        
+
+        <p>
+            Les options décrites dans un objet de définition sont les mêmes que celles
+            qu'utilisent les classes étendant Zend_Db_Table_Abstract. Votre objet de définition
+            peut alors être passé à la classe à l'instanciation, celle-ci connaitra alors la
+            définition de toutes les tables concernées.
+        </p>
+
+        <p>
+            Voici un exemple d'objet de définition qui va décrire les noms des tables
+            et les relations entre les objets supports de ces tables.
+            Note: Si 'name' n'est pas précisé, la clé servira alors de nom à la table,
+            c'est le cas dans notre exemple avec 'genre'.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.definition.example1"></a><p class="title"><b>Exemple 339. Décrire un modèle de base de données</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$definition = new Zend_Db_Table_Definition(array(
+    'author' =&gt; array(
+        'name' =&gt; 'author',
+        'dependentTables' =&gt; array('book')
+        ),
+    'book' =&gt; array(
+        'name' =&gt; 'book',
+        'referenceMap' =&gt; array(
+            'author' =&gt; array(
+                'columns' =&gt; 'author_id',
+                'refTableClass' =&gt; 'author',
+                'refColumns' =&gt; 'id'
+                )
+            )
+        ),
+    'genre' =&gt; null,
+    'book_to_genre' =&gt; array(
+        'referenceMap' =&gt; array(
+            'book' =&gt; array(
+                'columns' =&gt; 'book_id',
+                'refTableClass' =&gt; 'book',
+                'refColumns' =&gt; 'id'
+                ),
+            'genre' =&gt; array(
+                'columns' =&gt; 'genre_id',
+                'refTableClass' =&gt; 'genre',
+                'refColumns' =&gt; 'id'
+                )
+            )
+        )
+    ));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Comme vous le voyez, les mêmes options que vous utilisez en général en étendant
+            Zend_Db_Table_Abstract sont présentes dans ce tableau. Cette définition va
+            <span class="emphasis"><em>persister</em></span> vers toutes les tables qui seront créees par votre
+            objet, ceci assure une isolation et un bon fonctionnement.
+        </p>
+
+        <p>
+            Ci-après un exemple d'instanciation d'une table et de l'utilisation de
+            findDependentRowset() et findManyToManyRowset() qui vont correspondre au modèle
+            de données:
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.definition.example2"></a><p class="title"><b>Exemple 340. Intéragir avec la définition utilisée</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$authorTable = new Zend_Db_Table('author', $definition);
+$authors = $authorTable-&gt;fetchAll();
+
+foreach ($authors as $author) {
+    echo $author-&gt;id . ': ' . $author-&gt;first_name . ' ' . $author-&gt;last_name . PHP_EOL;
+    $books = $author-&gt;findDependentRowset('book');
+    foreach ($books as $book) {
+        echo '    Book: ' . $book-&gt;title . PHP_EOL;
+        $genreOutputArray = array();
+        foreach ($book-&gt;findManyToManyRowset('genre', 'book_to_genre') as $genreRow) {
+            $genreOutputArray[] = $genreRow-&gt;name;
+        }
+        echo '        Genre: ' . implode(', ', $genreOutputArray) . PHP_EOL;
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.definition.advanced-usage"></a>Utilisation avancée</h3></div></div></div>
+        
+
+        <p>
+            Quelques fois vous voudriez mixer les utilisations, via la définition et
+            une extension concrête de Zend_Db_Table_Abstract. Pour ce faire, omettez
+            de spécifier une définition concernant la classe concrête.
+            Zend_Db_Table utiisera alors l'instance que vous lui passerez.
+        </p>
+
+        <p>
+            Dans l'exemple d'après, nous allons placer une des tables sous forme de classe
+            concrête, et laisser les autres sous forme de définitions. Nous allons voir
+            alors comment les faire intéragir.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.definition.example3"></a><p class="title"><b>Exemple 341. Mixer la définition et l'extension concrête</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+class MyBook extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'book';
+    protected $_referenceMap = array(
+        'author' =&gt; array(
+            'columns' =&gt; 'author_id',
+            'refTableClass' =&gt; 'author',
+            'refColumns' =&gt; 'id'
+            )
+        );
+}
+
+$definition = new Zend_Db_Table_Definition(array(
+    'author' =&gt; array(
+        'name' =&gt; 'author',
+        'dependentTables' =&gt; array('MyBook')
+        ),
+    'genre' =&gt; null,
+    'book_to_genre' =&gt; array(
+        'referenceMap' =&gt; array(
+            'book' =&gt; array(
+                'columns' =&gt; 'book_id',
+                'refTableClass' =&gt; 'MyBook',
+                'refColumns' =&gt; 'id'
+                ),
+            'genre' =&gt; array(
+                'columns' =&gt; 'genre_id',
+                'refTableClass' =&gt; 'genre',
+                'refColumns' =&gt; 'id'
+                )
+            )
+        )
+    ));
+
+$authorTable = new Zend_Db_Table('author', $definition);
+$authors = $authorTable-&gt;fetchAll();
+
+foreach ($authors as $author) {
+    echo $author-&gt;id . ': ' . $author-&gt;first_name . ' ' . $author-&gt;last_name . PHP_EOL;
+    $books = $author-&gt;findDependentRowset(new MyBook());
+    foreach ($books as $book) {
+        echo '    Book: ' . $book-&gt;title . PHP_EOL;
+        $genreOutputArray = array();
+        foreach ($book-&gt;findManyToManyRowset('genre', 'book_to_genre') as $genreRow) {
+            $genreOutputArray[] = $genreRow-&gt;name;
+        }
+        echo '        Genre: ' . implode(', ', $genreOutputArray) . PHP_EOL;
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.db.table.relationships.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.db.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.debug.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Relations Zend_Db_Table </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_Debug</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

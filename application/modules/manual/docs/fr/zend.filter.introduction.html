@@ -1,0 +1,148 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Introduction</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.filter.html" title="Zend_Filter">
+<link rel="prev" href="zend.filter.html" title="Zend_Filter">
+<link rel="next" href="zend.filter.set.html" title="Classes de filtre standards">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Introduction</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.filter.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Filter</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.filter.set.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.filter.introduction"></a>Introduction</h2></div></div></div>
+    
+
+    <p>
+        Le composant <code class="classname">Zend_Filter</code> fournit un ensemble de filtres de
+        données usuel. Il fournit également un mécanisme simple de chaînage par lequel plusieurs
+        filtres peuvent être appliqués à une donnée dans un ordre défini.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.filter.introduction.definition"></a>Qu'est-ce qu'un filtre ?</h3></div></div></div>
+        
+
+        <p>
+            Généralement parlant, un filtre est utilisé pour supprimer les parties non
+            désirées de ce qui lui est soumis tout en laissant passer la partie désirée. Dans ce cas
+            de figure, un filtre est une opération qui restitue une partie de la donnée soumise. Ce
+            type de filtrage est utile pour les applications Web : suppression des données
+            soumises non conformes, élimination des espaces inutiles, etc.
+        </p>
+
+        <p>
+            Cette définition simple d'un filtre peut être étendue pour inclure des
+            transformations généralisées aux données soumises. Une transformation communément
+            requise dans les applications Web consiste à échapper les entités HTML. Ainsi, si un
+            champ de formulaire est automatiquement transmis et contient des données non vérifiées
+            (provenant par exemple d'un navigateur Web), ces données doivent être purgées de leurs
+            entités HTML ou bien contenir uniquement des entités HTML échappées, de manière à se
+            garantir contre des comportements non désirés et les vulnérabilités de sécurité. Afin
+            d'assurer cette opération, les entités HTML qui sont présentes dans les données saisies
+            doivent être soit supprimées soit échappées. Naturellement, l'approche adéquate dépend
+            du contexte. Un filtre de suppression des entités HTML opère dans le contexte défini
+            plus haut : une opération produisant un sous-ensemble à partir d'une donnée
+            soumise. Cependant, un filtre échappant les entités HTML transforme la valeur entrée
+            (par exemple, "<code class="code">&amp;</code>" sera transformé en "<code class="code">&amp;amp;</code>".
+            Permettre de telles choses est important pour les développeurs Web et "filtrer" dans le
+            contexte d'utilisation de <code class="classname">Zend_Filter</code> consiste à réaliser des
+            transformations sur les données soumises.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.filter.introduction.using"></a>Utilisation basique des filtres</h3></div></div></div>
+        
+
+        <p>
+            Avoir cette définition d'un filtre établie fournit la base pour
+            <code class="classname">Zend_Filter_Interface</code>, qui nécessitent une méthode unique nommée
+            <code class="methodname">filter()</code> pour être implémentée par une classe de filtre.
+        </p>
+
+        <p>
+            L'exemple simple ci-dessous démontre l'utilisation d'un filtre sur les caractères
+            esperluette (<code class="code">&amp;</code>, "ampersand" en anglais) et guillemet double
+            (<code class="code">"</code>) : </p>
+<pre class="programlisting">
+$htmlEntities = new Zend_Filter_HtmlEntities();
+
+echo $htmlEntities-&gt;filter('&amp;'); // &amp;amp;
+echo $htmlEntities-&gt;filter('"'); // &amp;quot;
+</pre>
+        </div>
+
+        <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.filter.introduction.static"></a>Utilisation de la méthode statique staticFilter()</h3></div></div></div>
+            
+
+        <p>
+            S'il est peu pratique de charger une classe de filtre donnée et créer une instance
+            du filtre, vous pouvez utiliser la méthode statique
+            <code class="methodname">Zend_Filter::get()</code> comme appel alternatif. Le premier argument de
+            cette méthode est une valeur de saisie de données, que vous passeriez à la méthode
+            <code class="methodname">filter()</code>. Le deuxième argument est une chaîne, qui correspond au nom de
+            base de la classe de filtre, relativement dans l'espace de nommage
+            <code class="classname">Zend_Filter</code>. La méthode <code class="methodname">staticFilter()</code> charge automatiquement
+            la classe, crée une instance et applique la méthode <code class="methodname">filter()</code> à la donnée
+            saisie. </p>
+<pre class="programlisting">
+echo Zend_Filter::get('&amp;', 'HtmlEntities');
+</pre>
+
+        <p>
+            Vous pouvez aussi fournir un tableau de paramètres destinés au constructeur de la
+            classe, s'ils sont nécessaires pour votre classe de filtre. </p>
+<pre class="programlisting">
+echo Zend_Filter::filterStatic('"',
+                               'HtmlEntities',
+                               array('quotestyle' =&gt; ENT_QUOTES));
+</pre>
+
+        <p>
+            L'utilisation statique peut être pratique pour invoquer un filtre ad hoc, mais si
+            vous avez besoin d'exécuter un filtre pour des saisies multiples, il est plus efficace
+            de suivre le premier exemple ci-dessus, créant une instance de l'objet de filtre et
+            appelant sa méthode <code class="methodname">filter()</code>.
+        </p>
+
+        <p>
+            De plus, la classe <code class="classname">Zend_Filter_Input</code> vous permet
+            d'instancier et d'exécuter des filtres multiples et des classes de validateurs sur
+            demande pour traiter l'ensemble de données saisies. Voir <a class="xref" href="zend.filter.input.html" title="Zend_Filter_Input">la section intitulée « Zend_Filter_Input »</a>.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.filter.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.filter.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.filter.set.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Filter </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Classes de filtre standards</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

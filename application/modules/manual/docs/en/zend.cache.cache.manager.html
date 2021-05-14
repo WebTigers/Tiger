@@ -1,0 +1,239 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The Cache Manager</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.cache.html" title="Zend_Cache">
+<link rel="prev" href="zend.cache.backends.html" title="Zend_Cache Backends">
+<link rel="next" href="zend.captcha.html" title="Zend_Captcha">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">The Cache Manager</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.cache.backends.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Cache</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.captcha.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.cache.cache.manager"></a>The Cache Manager</h2></div></div></div>
+    
+
+    <p>
+        It's the nature of applications to require a multitude of caches of any
+        type often dependent on the controller, library or domain model being
+        accessed. To allow for a simple means of defining <code class="classname">Zend_Cache</code>
+        options in advance (such as from a bootstrap) so that accessing a cache
+        object requires minimum setup within the application source code, the
+        <code class="classname">Zend_Cache_Manager</code> class was written. This class
+        is accompanied by <code class="classname">Zend_Application_Resource_Cachemanager</code>
+        ensuring bootstrap configuration is available and
+        <code class="classname">Zend_Controller_Action_Helper_Cache</code> to allow simple
+        cache access and instantiation from controllers and other helpers.
+    </p>
+
+    <p>
+        The basic operation of this component is as follows. The Cache Manager allows users to setup
+        "option templates", basically options for a set of named caches. These can be set using the
+        method <code class="methodname">Zend_Cache_Manager::setCacheTemplate()</code>.
+        These templates do not give rise to a cache until the user attempts to retrieve
+        a named cache (associated with an existing option template) using the method
+        <code class="methodname">Zend_Cache_Manager::getCache()</code>.
+    </p>
+
+    <pre class="programlisting">
+$manager = new Zend_Cache_Manager;
+
+$dbCache = array(
+    'frontend' =&gt; array(
+        'name' =&gt; 'Core',
+        'options' =&gt; array(
+            'lifetime' =&gt; 7200,
+            'automatic_serialization' =&gt; true
+        )
+    ),
+    'backend' =&gt; array(
+        'name' =&gt; 'Core',
+        'options' =&gt; array(
+            'cache_dir' =&gt; '/path/to/cache'
+        )
+    )
+);
+
+$manager-&gt;setCacheTemplate('database', $dbCache);
+
+/**
+ * Anywhere else where the Cache Manager is available...
+ */
+$databaseCache = $manager-&gt;getCache('database');
+</pre>
+
+    <p>
+        The Cache Manager also allows simple setting of pre-instantiated caches
+        using the method <code class="methodname">Zend_Cache_Manager::setCache()</code>.
+    </p>
+
+    <pre class="programlisting">
+$frontendOptions = array(
+   'lifetime' =&gt; 7200,
+   'automatic_serialization' =&gt; true
+);
+
+$backendOptions = array(
+    'cache_dir' =&gt; '/path/to/cache'
+);
+
+$dbCache = Zend_Cache::factory('Core',
+                             'File',
+                             $frontendOptions,
+                             $backendOptions);
+
+$manager = new Zend_Cache_Manager;
+$manager-&gt;setCache('database', $dbCache);
+
+/**
+ * Anywhere else where the Cache Manager is available...
+ */
+$databaseCache = $manager-&gt;getCache('database');
+</pre>
+
+    <p>
+        If for any reason, you are unsure where the Cache Manager contains a
+        pre-instantiated cache or a relevant option cache template to create one
+        on request, you can check for the existence of a name cache configuration
+        or instance using the method <code class="methodname">Zend_Cache_Manager::hasCache()</code>.
+    </p>
+
+    <pre class="programlisting">
+$manager = new Zend_Cache_Manager;
+
+$dbCache = array(
+    'frontend' =&gt; array(
+        'name' =&gt; 'Core',
+        'options' =&gt; array(
+            'lifetime' =&gt; 7200,
+            'automatic_serialization' =&gt; true
+        )
+    ),
+    'backend' =&gt; array(
+        'name' =&gt; 'Core',
+        'options' =&gt; array(
+            'cache_dir' =&gt; '/path/to/cache'
+        )
+    )
+);
+
+$manager-&gt;setCacheTemplate('database', $dbCache);
+
+/**
+ * Anywhere else where the Cache Manager is available...
+ */
+if ($manager-&gt;hasCache('database')) {
+    $databaseCache = $manager-&gt;getCache('database');
+} else {
+    // create a cache from scratch if none available from Manager
+}
+</pre>
+
+    <p>
+        In some scenarios, you may have defined a number of general use caches
+        using <code class="classname">Zend_Cache_Manager</code> but need to fine-tune
+        their options before use depending on the circumstances. You can edit
+        previously set cache templates on the fly before they are instantiated
+        using the method <code class="methodname">Zend_Cache_Manager::setTemplateOptions()</code>.
+    </p>
+
+    <pre class="programlisting">
+$manager = new Zend_Cache_Manager;
+
+$dbCache = array(
+    'frontend' =&gt; array(
+        'name' =&gt; 'Core',
+        'options' =&gt; array(
+            'lifetime' =&gt; 7200,
+            'automatic_serialization' =&gt; true
+        )
+    ),
+    'backend' =&gt; array(
+        'name' =&gt; 'Core',
+        'options' =&gt; array(
+            'cache_dir' =&gt; '/path/to/cache'
+        )
+    )
+);
+
+$manager-&gt;setCacheTemplate('database', $dbCache);
+
+/**
+ * Anywhere else where the Cache Manager is available...
+ * Here we decided to store some upcoming database queries to Memcached instead
+ * of the preconfigured File backend.
+ */
+$fineTuning = array(
+    'backend' =&gt; array(
+        'name' =&gt; 'Memcached',
+        'options' =&gt; array(
+            'servers' =&gt; array(
+                array(
+                    'host' =&gt; 'localhost',
+                    'port' =&gt; 11211,
+                    'persistent' =&gt; true,
+                    'weight' =&gt; 1,
+                    'timeout' =&gt; 5,
+                    'retry_interval' =&gt; 15,
+                    'status' =&gt; true,
+                    'failure_callback' =&gt; ''
+                )
+            )
+        )
+    )
+);
+$manager-&gt;setTemplateOptions('database', $fineTuning);
+$databaseCache = $manager-&gt;getCache('database');
+</pre>
+
+    <p>
+        To assist in making the Cache Manager more useful, it is accompanied by
+        <code class="classname">Zend_Application_Resource_Cachemanager</code> and also
+        the <code class="classname">Zend_Controller_Action_Helper_Cache</code> Action
+        Helper. Both of these are described in their relevant areas of the
+        Reference Guide.
+    </p>
+
+    <p>
+        Out of the box, <code class="classname">Zend_Cache_Manager</code> already includes
+        three pre-defined cache templates called "default", "page" and "pagetag".
+        The default cache is a simple File based cache using the Core frontend.
+        The remaining two caches are used to implement a default Static Page Cache
+        where static <acronym class="acronym">HTML</acronym>, <acronym class="acronym">XML</acronym> or even <acronym class="acronym">JSON</acronym>
+        may be written to static files in <code class="filename">/public</code>. Control over a Static Page
+        Cache is offered via <code class="classname">Zend_Controller_Action_Helper_Cache</code>, though you
+        may alter the settings of this "page" the "pagetag" it uses to track tags using
+        <code class="methodname">Zend_Cache_Manager::setTemplateOptions()</code> or even
+        <code class="methodname">Zend_Cache_Manager::setCacheTemplate()</code> if overloading
+        all of their options.
+    </p>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.cache.backends.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.cache.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.captcha.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Cache Backends </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend_Captcha</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

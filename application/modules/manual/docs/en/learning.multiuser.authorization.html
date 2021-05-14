@@ -1,0 +1,285 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Building an Authorization System in Zend Framework</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="learning.multiuser.html" title="Getting Started with Zend_Session, Zend_Auth, and Zend_Acl">
+<link rel="prev" href="learning.multiuser.authentication.html" title="Authenticating Users in Zend Framework">
+<link rel="next" href="learning.lucene.html" title="Getting Started with Zend_Search_Lucene">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Building an Authorization System in Zend Framework</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.multiuser.authentication.html">Prev</a> </td>
+<th width="60%" align="center">Getting Started with Zend_Session, Zend_Auth, and Zend_Acl</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.lucene.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.multiuser.authorization"></a>Building an Authorization System in Zend Framework</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.multiuser.authorization.intro"></a>Introduction to Authorization</h3></div></div></div>
+        
+
+        <p>
+            After a user has been identified as being authentic, an application can go about its
+            business of providing some useful and desirable resources to a consumer. In many cases,
+            applications might contain different resource types, with some resources having stricter
+            rules regarding access. This process of determining who has access to which resources is
+            the process of "authorization". Authorization in its simplest form is the composition of
+            these elements:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    the identity whom wishes to be granted access
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    the resource the identity is asking permission to consume
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    and optionally, what the identity is privileged to do with the resource
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            In Zend Framework, the <code class="classname">Zend_Acl</code> component handles the task of
+            building a tree of roles, resources and privileges to manage and query authorization
+            requests against.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.multiuser.authorization.basic-usage"></a>Basic Usage of Zend_Acl</h3></div></div></div>
+        
+
+
+
+        <p>
+            When using <code class="classname">Zend_Acl</code>, any models can serve as roles or resources
+            by simply implementing the proper interface. To be used in a role capacity, the class
+            must implement the <code class="classname">Zend_Acl_Role_Interface</code>, which requires only
+            <code class="methodname">getRoleId()</code>. To be used in a resource capacity, a class must
+            implement the <code class="classname">Zend_Acl_Resource_Interface</code> which similarly
+            requires the class implement the <code class="methodname">getResourceId()</code> method.
+        </p>
+
+        <p>
+            Demonstrated below is a simple user model. This model can take part in our
+            <acronym class="acronym">ACL</acronym> system simply by implementing the
+            <code class="classname">Zend_Acl_Role_Interface</code>. The method
+            <code class="methodname">getRoleId()</code> will return the id "guest" when an ID is not known,
+            or it will return the role ID that was assigned to this actual user object. This value
+            can effectively come from anywhere, a static definition or perhaps dynamically from the
+            users database role itself.
+        </p>
+
+        <pre class="programlisting">
+class Default_Model_User implements Zend_Acl_Role_Interface
+{
+    protected $_aclRoleId = null;
+
+    public function getRoleId()
+    {
+        if ($this-&gt;_aclRoleId == null) {
+            return 'guest';
+        }
+
+        return $this-&gt;_aclRoleId;
+    }
+}
+</pre>
+
+        <p>
+            While the concept of a user as a role is pretty straight forward, your application
+            might choose to have any other models in your system as a potential "resource" to be
+            consumed in this <acronym class="acronym">ACL</acronym> system. For simplicity, we'll use the example
+            of a blog post. Since the type of the resource is tied to the type of the object,
+            this class will only return 'blogPost' as the resource ID in this system. Naturally,
+            this value can be dynamic if your system requires it to be so.
+        </p>
+
+        <pre class="programlisting">
+class Default_Model_BlogPost implements Zend_Acl_Resource_Interface
+{
+    public function getResourceId()
+    {
+        return 'blogPost';
+    }
+}
+</pre>
+
+        <p>
+            Now that we have at least a role and a resource, we can go about defining the rules
+            of the <acronym class="acronym">ACL</acronym> system. These rules will be consulted when the system
+            receives a query about what is possible given a certain role, resources, and optionally
+            a privilege.
+        </p>
+
+        <p>
+            Lets assume the following rules:
+        </p>
+
+        <pre class="programlisting">
+$acl = new Zend_Acl();
+
+// setup the various roles in our system
+$acl-&gt;addRole('guest');
+// owner inherits all of the rules of guest
+$acl-&gt;addRole('owner', 'guest');
+
+// add the resources
+$acl-&gt;addResource('blogPost');
+
+// add privileges to roles and resource combinations
+$acl-&gt;allow('guest', 'blogPost', 'view');
+$acl-&gt;allow('owner', 'blogPost', 'post');
+$acl-&gt;allow('owner', 'blogPost', 'publish');
+</pre>
+
+        <p>
+            The above rules are quite simple: a guest role and an owner role exist; as does a
+            blogPost type resource. Guests are allowed to view blog posts, and owners are
+            allowed to post and publish blog posts. To query this system one might do any of
+            the following:
+        </p>
+
+        <pre class="programlisting">
+// assume the user model is of type guest resource
+$guestUser = new Default_Model_User();
+$ownerUser = new Default_Model_Owner('OwnersUsername');
+
+$post = new Default_Model_BlogPost();
+
+$acl-&gt;isAllowed($guestUser, $post, 'view'); // true
+$acl-&gt;isAllowed($ownerUser, $post, 'view'); // true
+$acl-&gt;isAllowed($guestUser, $post, 'post'); // false
+$acl-&gt;isAllowed($ownerUser, $post, 'post'); // true
+</pre>
+
+        <p>
+            As you can see, the above rules exercise whether owners and guests can view posts,
+            which they can, or post new posts, which owners can and guests cannot. But as you
+            might expect this type of system might not be as dynamic as we wish it to be.
+            What if we want to ensure a specific owner actual owns a very specific blog post
+            before allowing him to publish it? In other words, we want to ensure that only post
+            owners have the ability to publish their own posts.
+        </p>
+
+        <p>
+            This is where assertions come in. Assertions are methods that will be called out to
+            when the static rule checking is simply not enough. When registering an assertion
+            object this object will be consulted to determine, typically dynamically, if some
+            roles has access to some resource, with some optional privlidge that can only be
+            answered by the logic within the assertion. For this example, we'll use the following
+            assertion:
+        </p>
+
+        <pre class="programlisting">
+class OwnerCanPublishBlogPostAssertion implements Zend_Acl_Assert_Interface
+{
+    /**
+     * This assertion should receive the actual User and BlogPost objects.
+     *
+     * @param Zend_Acl $acl
+     * @param Zend_Acl_Role_Interface $user
+     * @param Zend_Acl_Resource_Interface $blogPost
+     * @param $privilege
+     * @return bool
+     */
+    public function assert(Zend_Acl $acl,
+                           Zend_Acl_Role_Interface $user = null,
+                           Zend_Acl_Resource_Interface $blogPost = null,
+                           $privilege = null)
+    {
+        if (!$user instanceof Default_Model_User) {
+            throw new Exception(__CLASS__
+                              . '::'
+                              . __METHOD__
+                              . ' expects the role to be'
+                              . ' an instance of User');
+        }
+
+        if (!$blogPost instanceof Default_Model_BlogPost) {
+            throw new Exception(__CLASS__
+                              . '::'
+                              . __METHOD__
+                              . ' expects the resource to be'
+                              . ' an instance of BlogPost');
+        }
+
+        // if role is publisher, he can always modify a post
+        if ($user-&gt;getRoleId() == 'publisher') {
+            return true;
+        }
+
+        // check to ensure that everyone else is only modifying their own post
+        if ($user-&gt;id != null &amp;&amp; $blogPost-&gt;ownerUserId == $user-&gt;id) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+</pre>
+
+        <p>
+            To hook this into our <acronym class="acronym">ACL</acronym> system, we would do the following:
+        </p>
+
+        <pre class="programlisting">
+// replace this:
+//   $acl-&gt;allow('owner', 'blogPost', 'publish');
+// with this:
+$acl-&gt;allow('owner',
+            'blogPost',
+            'publish',
+            new OwnerCanPublishBlogPostAssertion());
+
+// lets also add the role of a "publisher" who has access to everything
+$acl-&gt;allow('publisher', 'blogPost', 'publish');
+</pre>
+
+        <p>
+            Now, anytime the <acronym class="acronym">ACL</acronym> is consulted about whether or not an owner
+            can publish a specific blog post, this assertion will be run. This assertion will
+            ensure that unless the role type is 'publisher' the owner role must be logically
+            tied to the blog post in question. In this example, we check to see that the
+            <span class="property">ownerUserId</span> property of the blog post matches the id of the
+            owner passed in.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.multiuser.authentication.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.multiuser.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.lucene.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Authenticating Users in Zend Framework </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Getting Started with Zend_Search_Lucene</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

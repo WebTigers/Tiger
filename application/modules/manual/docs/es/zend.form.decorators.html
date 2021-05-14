@@ -1,0 +1,515 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Creando un personalizado marcado de formulario usando Zend_Form_Decorator</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.form.html" title="Zend_Form">
+<link rel="prev" href="zend.form.forms.html" title="Creando formularios usando Zend_Form">
+<link rel="next" href="zend.form.standardElements.html" title="Elementos Enviados en el Formulario Estandard de Zend Framework">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Creando un personalizado marcado de formulario usando
+        Zend_Form_Decorator</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.form.forms.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Form</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.form.standardElements.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.form.decorators"></a>Creando un personalizado marcado de formulario usando
+        Zend_Form_Decorator</h2></div></div></div>
+    
+
+    <p>
+        Representar un objeto form es completamente opcional -- no está
+        obligado a usar los métodos
+        <code class="classname">Zend_Form</code>
+        render() en
+        absoluto. Sin embargo, si lo hace, los decoradores se usan para
+        representar
+        distintos objetos form.
+    </p>
+
+    <p>Un número arbitrario de decoradores pueden estar junto a cada
+        elemento (elements, display
+        groups, sub forms o el objeto form por si
+        mismo); Sin embargo, solo un decorador de un tipo
+        dado puede estar al
+        lado de cada elemento. Los decoradores son llamados en el orden en que
+        han sido introducidos. Dependiendo del decorador, puede reemplazar el
+        contenido que se ha
+        pasado, postponerlo o anteponerlo.</p>
+
+    <p>
+        El estado del objeto es determinado a través de las opciones de
+        configuración pasadas al
+        constructor o el método decorador
+        <code class="methodname">setOptions()</code>
+        . Cuando se crean decoradores
+        mediante funciones
+        <code class="methodname">addDecorator()</code>
+        o métodos
+        relacionados, las opciones pueden ser pasadas como argumentos al método.
+        Esto puese
+        ser usado para una ubicación especifica, un separador se usa
+        entre el contenido pasado y el
+        nuevo contenido generado y cualquier
+        opción que el decorador soporte.
+    </p>
+
+    <p>
+        Antes de que el
+        <code class="methodname">render()</code>
+        de cada decorador
+        sea llamado, el item actual es determinado en el decorador usando
+        <code class="methodname">setElement()</code>
+        , dando al decorador
+        conocimiento del item representado. Esto permite crear decoradores que
+        sólo representan porciones especificas del item -- tal como etiquetas,
+        el valor, mensajes de
+        error, etc. Encadenando muchos decoradores que
+        representan especificos segmentos, puede
+        construir marcados complejos
+        representando al item entero.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.decorators.operation"></a>Operación</h3></div></div></div>
+        
+
+        <p>
+            Para configurar un decorador, pase un array de opciones o un
+            objeto
+            <code class="classname">Zend_Config</code>
+            a este constructor, a un
+            array
+            <code class="methodname">setOptions()</code>
+            , o a un objeto
+            <code class="classname">Zend_Config</code>
+            <code class="methodname">setConfig()</code>
+            .
+        </p>
+
+        <p>Opciones estándar incluyen:</p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">placement</code>
+                    : La ubicación puede ser
+                    cualquiera de los dos 'append' o 'prepend' (caso
+                    insensitivo) e indica cualquier contenido pasado a
+                    <code class="methodname">render()</code>
+                    será postpuesto o
+                    antepuesto respectivamente. En el caso de que el decorador
+                    reemplace el contenido, esta configuración es ignorada. La
+                    configuración por
+                    defecto es adjuntada.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">separator</code>
+                    : El separator es usado
+                    entre el contenido pasado a
+                    <code class="methodname">render()</code>
+                    y el nuevo contenido
+                    generado por el decorador, o entre items generados por el
+                    decorador (ejemplo FormElements usa el separador entre cada
+                    item generado). En el
+                    caso que un decorador reemplace el
+                    contenido, esta configuración puede ser
+                    ignorada. El valor
+                    por defecto es
+                    <code class="constant">PHP_EOL</code>
+                    .
+                </p>
+            </li>
+</ul></div>
+
+        <p>La interface del decorador especifica los métodos para
+            interactuar con las opciones.
+            Esto incluye:</p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setOption($key, $value)</code>
+                    : determina
+                    una sola opción.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getOption($key)</code>
+                    : recuperar un solo
+                    valor de opción.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getOptions()</code>
+                    : recuperar todas las
+                    opciones.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">removeOption($key)</code>
+                    : eliminar una
+                    sola opción.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearOptions()</code>
+                    : eliminar todas las
+                    opciones.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            Decoradores son diseñados para interactuar con varios tipos de
+            clases
+            <code class="classname">Zend_Form</code>
+            :
+            <code class="classname">Zend_Form</code>
+            ,
+            <code class="classname">Zend_Form_Element</code>
+            ,
+            <code class="classname">Zend_Form_DisplayGroup</code>
+            , y todas las
+            clases derivan de ellas. El método
+            <code class="methodname">setElement()</code>
+            permite determinar el
+            objeto del decorador que esta actualmente trabajando con, y
+            <code class="methodname">getElement()</code>
+            es usado para recuperarlo.
+        </p>
+
+        <p>
+            Cada método decorador
+            <code class="methodname">render()</code>
+            acepta
+            una cadena
+            <code class="varname">$content</code>
+            . Cuando el primer
+            decorador es llamado, esta cadena esta tipicamente vacía, mientras
+            las
+            subsecuentes llamadas serán puestas. Basados en el tipo de
+            decorador y en las opciones
+            pasadas, el decorador ya sea reemplazará
+            la cadena, antenpodrá la cadena o adjuntará la
+            cadena; una separador
+            opcional será usado en las dos últimas situaciones.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.decorators.standard"></a>Decoradores estándar</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Form</code>
+            entrega muchos decoradores
+            estándar; ver
+            <a class="link" href="zend.form.standardDecorators.html" title="Decoradores de Formulario (Form Decorartors) estándar contenidos en Zend Framework">el
+                capítulo Decoradores estándar</a>
+            para detalles.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.decorators.custom"></a>Decoradores personalizados</h3></div></div></div>
+        
+
+        <p>Si encuentra que sus necesidades son complejas o necesita una
+            enorme personalización,
+            debería considerar crear un decorador
+            personalizado.</p>
+
+        <p>
+            Los decoradores necesitan implementar sólo
+            <code class="classname">Zend_Form_Decorator_Interface</code>
+            . La
+            interface especifica lo siguiente:
+        </p>
+
+        <pre class="programlisting">
+interface Zend_Decorator_Interface
+{
+    public function __construct($options = null);
+    public function setElement($element);
+    public function getElement();
+    public function setOptions(array $options);
+    public function setConfig(Zend_Config $config);
+    public function setOption($key, $value);
+    public function getOption($key);
+    public function getOptions();
+    public function removeOption($key);
+    public function clearOptions();
+    public function render($content);
+}
+</pre>
+
+        <p>
+            Para hacerlo mas simple, simplemente puede extender
+            <code class="classname">Zend_Form_Decorator_Abstract</code>
+            , el cual
+            implementa todos los métodos excepto
+            <code class="methodname">render()</code>
+            .
+        </p>
+
+        <p>
+            Como ejemplo, digamos que quiere reducir el número de decoradores
+            que utiliza, y
+            construir un decorador compuesto que se encargó de
+            renderizar la etiqueta generadora, el
+            elemento, cualquier mensaje de
+            error, y descripción en un
+            <code class="methodname">div</code>
+            HTML. Puede
+            construir como un decorador compuesto como sigue:
+        </p>
+
+        <pre class="programlisting">
+class My_Decorator_Composite extends Zend_Form_Decorator_Abstract
+{
+    public function buildLabel()
+    {
+        $element = $this-&gt;getElement();
+        $label = $element-&gt;getLabel();
+        if ($translator = $element-&gt;getTranslator()) {
+            $label = $translator-&gt;translate($label);
+        }
+        if ($element-&gt;isRequired()) {
+            $label .= '*';
+        }
+        $label .= ':';
+        return $element-&gt;getView()
+                       -&gt;formLabel($element-&gt;getName(), $label);
+    }
+
+    public function buildInput()
+    {
+        $element = $this-&gt;getElement();
+        $helper  = $element-&gt;helper;
+        return $element-&gt;getView()-&gt;$helper(
+            $element-&gt;getName(),
+            $element-&gt;getValue(),
+            $element-&gt;getAttribs(),
+            $element-&gt;options
+        );
+    }
+
+    public function buildErrors()
+    {
+        $element  = $this-&gt;getElement();
+        $messages = $element-&gt;getMessages();
+        if (empty($messages)) {
+            return '';
+        }
+        return '&lt;div class="errors"&gt;' .
+               $element-&gt;getView()-&gt;formErrors($messages) . '&lt;/div&gt;';
+    }
+
+    public function buildDescription()
+    {
+        $element = $this-&gt;getElement();
+        $desc    = $element-&gt;getDescription();
+        if (empty($desc)) {
+            return '';
+        }
+        return '&lt;div class="description"&gt;' . $desc . '&lt;/div&gt;';
+    }
+
+    public function render($content)
+    {
+        $element = $this-&gt;getElement();
+        if (!$element instanceof Zend_Form_Element) {
+            return $content;
+        }
+        if (null === $element-&gt;getView()) {
+            return $content;
+        }
+
+        $separator = $this-&gt;getSeparator();
+        $placement = $this-&gt;getPlacement();
+        $label     = $this-&gt;buildLabel();
+        $input     = $this-&gt;buildInput();
+        $errors    = $this-&gt;buildErrors();
+        $desc      = $this-&gt;buildDescription();
+
+        $output = '&lt;div class="form element"&gt;'
+                . $label
+                . $input
+                . $errors
+                . $desc
+                . '&lt;/div&gt;'
+
+        switch ($placement) {
+            case (self::PREPEND):
+                return $output . $separator . $content;
+            case (self::APPEND):
+            default:
+                return $content . $separator . $output;
+        }
+    }
+}
+</pre>
+
+        <p>Puede entonces ubicarlo en el directorio del decorador:</p>
+
+        <pre class="programlisting">
+// para un elemento:
+$element-&gt;addPrefixPath('My_Decorator',
+                        'My/Decorator/',
+                        'decorator');
+
+// para todos los elementos:
+$form-&gt;addElementPrefixPath('My_Decorator',
+                            'My/Decorator/',
+                            'decorator');
+</pre>
+
+        <p>Puede especificar este decorador como compuesto (composite) y
+            adjuntarlo a un elemento:</p>
+
+        <pre class="programlisting">
+// Sobreescribe los decoradores existentes con este otro:
+$element-&gt;setDecorators(array('Composite'));
+</pre>
+
+        <p>Mientras este ejemplo mostró cómo crear un decorador que genera
+            salidas complejas de
+            muchas propiedades de elementos, puede también
+            crear decoradores que manejen un solo
+            aspecto de un elemento; los
+            decoradores 'Decorator' y 'Label' son excelentes ejemplos
+            para esta
+            práctica. Hacerlo le permite mezclar y combinar decoradores para
+            llegar a
+            complejas salidas -- y también anular aspectos de
+            decoración para personalizar sus
+            necesidades.</p>
+
+        <p>Por ejemplo, si quiere simplemente desplegar que un error ha
+            ocurrido cuando
+            validábamos un elemento, pero no desplegar
+            individualmente cada uno de los mensajes de
+            error, usted podría
+            crear su propio decorador 'Errores':</p>
+
+        <pre class="programlisting">
+class My_Decorator_Errors
+{
+    public function render($content = '')
+    {
+        $output = '&lt;div class="errors"&gt;El valor que proporcionó no es válido;
+            please try again&lt;/div&gt;';
+
+        $placement = $this-&gt;getPlacement();
+        $separator = $this-&gt;getSeparator();
+
+        switch ($placement) {
+            case 'PREPEND':
+                return $output . $separator . $content;
+            case 'APPEND':
+            default:
+                return $content . $separator . $output;
+        }
+    }
+}
+</pre>
+
+        <p>
+            En este ejemplo particular, debido al segmento del decorador
+            final, 'Errors', se combina
+            como
+            <code class="classname">Zend_Form_Decorator_Errors</code>
+            , será generado
+            <span class="emphasis"><em>en lugar de</em></span>
+            el decorador -- significa que
+            no necesitará cambiar ningún decorador para modificar la
+            salida.
+            Nombrando sus decoradores después de los decoradores existentes
+            estándar, usted
+            puede modificar decoradores sin necesitad de
+            modificar sus elementos decoradores.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.form.decorators.individual"></a>Generando decoradores individuales</h3></div></div></div>
+        
+
+        <p>Desde que los decoradores pueden capturar distintos metadatos del
+            elemento o formulario
+            que ellos decoran, es a menudo útil generar un
+            decorador individual. Afortunadamente,
+            esta caracteristica es
+            posible inicializando el método en cada tipo de clase form (forms,
+            sub form, display group, element).</p>
+
+        <p>
+            Para hacer eso, simplemente
+            <code class="methodname">render[DecoratorName]()</code>
+            , cuando
+            "[DecoratorName]" es el "nombre corto" de su decorador;
+            opcionalmente, puede
+            pasar en el contenido lo que usted quiera. Por
+            ejemplo:
+        </p>
+
+        <pre class="programlisting">
+// genera el elemento decorador label:
+echo $element-&gt;renderLabel();
+
+// genera sólo el campo display group, con algún contenido:
+echo $group-&gt;renderFieldset('fieldset content');
+
+// genera sólo el formulario HTML, con algún contenido:
+echo $form-&gt;renderHtmlTag('wrap this content');
+</pre>
+
+        <p>Si el decorador no existe, una excepción es inicializada.</p>
+
+        <p>Esto puede ser útil particularmente cuando se genera un
+            formulario con el decorador
+            ViewScript; cada elemento puede usar sus
+            decoradores adjuntos para generar contenido,
+            pero con un control
+            minucioso.</p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.form.forms.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.form.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.form.standardElements.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Creando formularios usando Zend_Form </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Elementos Enviados en el Formulario Estandard de Zend
+        Framework</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Uso Avançado de Zend_Layout</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.layout.html" title="Zend_Layout">
+<link rel="prev" href="zend.layout.options.html" title="Opções de Configuração Zend_Layout">
+<link rel="next" href="zend.ldap.html" title="Zend_Ldap">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Uso Avançado de Zend_Layout</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.layout.options.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Layout</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.ldap.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.layout.advanced"></a>Uso Avançado de Zend_Layout</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Layout</code> tem um número de casos de uso para o desenvolvedor
+        que deseja adaptá-lo para diferentes implementações de view, layouts de sistema de
+        arquivos, e mais.
+    </p>
+
+    <p>
+        Os principais pontos de extensão são:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Custom view objects</em></span>.
+                <code class="classname">Zend_Layout</code> permite a você utilizar qualquer classe que
+                implemente <code class="classname">Zend_View_Interface</code>.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Custom front controller plugins</em></span>.
+                <code class="classname">Zend_Layout</code> vem embarcado com um front controller plugin
+                padrão que automatiza a renderização de layouts antes de retornar a resposta.
+                Você pode substituir por seu próprio plugin.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Custom action helpers</em></span>.
+                <code class="classname">Zend_Layout</code> vem embarcado com um action helper padrão que
+                deve servir para a maioria das necessidades já que é um proxy mudo para o próprio
+                objeto de layout.
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <span class="emphasis"><em>Custom layout script path resolution</em></span>.
+                <code class="classname">Zend_Layout</code> permite a você usar seu próprio
+                <a class="link" href="zend.filter.inflector.html" title="Zend_Filter_Inflector">inflector</a> para resolução do
+                caminho do script de layout, ou simplesmente modificar o inflector
+                anexado para especificar suas próprias regras de inflexão.
+            </p>
+        </li>
+</ul></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.layout.advanced.view"></a>Objetos View Customizados</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Layout</code> permite a você usar qualquer classe
+            que implemente <code class="classname">Zend_View_Interface</code> ou estenda
+            <code class="classname">Zend_View_Abstract</code> para renderizar seu script de layout.
+            Simplesmente passe seu objeto view customizado como um parâmetro para
+            o construtor/<code class="methodname">startMvc()</code>, ou configure o
+            usando o acessor <code class="methodname">setView()</code>:
+        </p>
+
+        <pre class="programlisting">
+$view = new My_Custom_View();
+$layout-&gt;setView($view);
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Nem todas as implementações de Zend_View são iguais">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nem todas as implementações de Zend_View são iguais</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Enquanto <code class="classname">Zend_Layout</code> permite que você use qualquer
+                classe que implemente <code class="classname">Zend_View_Interface</code>, você pode
+                entrar bem se elas não puderem utilizar os vários helpers
+                <code class="classname">Zend_View</code>, particularmente os helpers layout e
+                <a class="link" href="zend.view.helpers.html#zend.view.helpers.initial.placeholder" title="Placeholder Helper">placeholder</a>. Isso
+                ocorre porque <code class="classname">Zend_Layout</code> torna o conjunto de variáveis
+                no objeto disponível via ele mesmo e
+                <a class="link" href="zend.view.helpers.html#zend.view.helpers.initial.placeholder" title="Placeholder Helper">placeholders</a>.
+            </p>
+
+            <p>
+                Se você precisa usar uma implementação customizada de
+                <code class="classname">Zend_View</code> que não suporta esses helpers, você precisará
+                descobrir um modo de obter as variáveis de layout para o view. Isso pode
+                ser feito ou pela extensão do objeto <code class="classname">Zend_Layout</code> com
+                alteração do método <code class="methodname">render()</code> para passar variáveis
+                para o view, ou criando sua própria classe plugin
+                que as passa antes de renderizar o layout.
+            </p>
+
+            <p>
+                Alternativamente, se sua implementação de view suporta qualquer espécie de
+                capacidade do plugin, você pode acessar as variáveis por meio do placeholder
+                'Zend_Layout' usando o <a class="link" href="zend.view.helpers.html#zend.view.helpers.initial.placeholder" title="Placeholder Helper">helper
+                    placeholder</a>:
+            </p>
+
+            <pre class="programlisting">
+$placeholders = new Zend_View_Helper_Placeholder();
+$layoutVars   = $placeholders-&gt;placeholder('Zend_Layout')-&gt;getArrayCopy();
+</pre>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.layout.advanced.plugin"></a>Plugins Front Controller Customizados</h3></div></div></div>
+        
+
+        <p>
+            Quando o usamos com os componentes <acronym class="acronym">MVC</acronym>,
+            <code class="classname">Zend_Layout</code> registra um plugin front controller que renderiza o
+            layout como a última ação antes de abandonar o laço de despacho. Na maioria dos casos, o
+            plugin padrão servirá, mas você se você desejar escrever o seu próprio, você pode
+            especificar o nome da classe plugin a ser carregada carregar pela passagem da opção
+            <span class="property">pluginClass</span> ao método <code class="methodname">startMvc()</code>.
+        </p>
+
+        <p>
+            Qualquer classe plugin que você escrever para esse propósito precisará estender
+            <code class="classname">Zend_Controller_Plugin_Abstract</code>, e deverá aceitar uma instância
+            de objeto layout como um argumento para o construtor. Caso contrário, os detalhes de sua
+            implementação ficarão acima de você.
+        </p>
+
+        <p>
+            A classe plugin padrão usada é
+            <code class="classname">Zend_Layout_Controller_Plugin_Layout</code>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.layout.advanced.helper"></a>Action Helpers Customizados</h3></div></div></div>
+        
+
+        <p>
+            Quando o usamos com componentes <acronym class="acronym">MVC</acronym>,
+            <code class="classname">Zend_Layout</code> registra um helper action controller com o helper
+            broker. O helper padrão,
+            <code class="classname">Zend_Layout_Controller_Action_Helper_Layout</code>, age como um proxy
+            mudo para a própria instância do objeto de layout, e deve servir para a maioria dos
+            casos de uso.
+        </p>
+
+        <p>
+            Se você sentir necessidade de escrever funcionalidades customizadas, simplesmente
+            escreva uma classe action helper estendendo
+            <code class="classname">Zend_Controller_Action_Helper_Abstract</code> e passe o nome da classe
+            como uma opção <span class="property">helperClass</span> para o método
+            <code class="methodname">startMvc()</code>. Detalhes da implementação ficarão acima de você.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.layout.advanced.inflector"></a>Resolução de Caminho de Script de Layout Customizada: Usando o Inflector</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Layout</code> usa <code class="classname">Zend_Filter_Inflector</code>
+            para estabelecer uma cadeia de filtro para traduzir um nome de layout para caminho
+            de script de layout. Por padrão, ela usa as regras 'Word_CamelCaseToDash' seguida
+            por 'StringToLower', e o sufixo 'phtml' para transformar o nome em um caminho.
+            Alguns exemplos:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>'foo' será transformado em 'foo.phtml'.</p>
+            </li>
+<li class="listitem">
+                <p>'FooBarBaz' será transformado em 'foo-bar-baz.phtml'.</p>
+            </li>
+</ul></div>
+
+        <p>
+            Você tem três opções para modificar inflexão: modificar o alvo de inflexão
+            e/ou sufixo da view via acessores de <code class="classname">Zend_Layout</code>, modificar
+            as regras do inflector e alvo do inflector associado com a instância
+            <code class="classname">Zend_Layout</code>, ou criar sua própria instância de inflector
+            e passá-la para <code class="methodname">Zend_Layout::setInflector()</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.layout.advanced.inflector.accessors"></a><p class="title"><b>Exemplo 493. Usando acessores Zend_Layout para modificar o inflector</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                O inflector <code class="classname">Zend_Layout</code> padrão usa referências estáticas
+                para o alvo e sufixo de view script, e tem acessores para configurar esses valores.
+            </p>
+
+            <pre class="programlisting">
+// Configure o alvo do inflector:
+$layout-&gt;setInflectorTarget('layouts/:script.:suffix');
+
+// Configura o sufixo do view script de layout:
+$layout-&gt;setViewSuffix('php');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.layout.advanced.inflector.directmodification"></a><p class="title"><b>Exemplo 494. Modificação direta do inflector Zend_Layout</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                Inflectores tem um alvo e uma ou mais regras. O alvo padrão usado com
+                <code class="classname">Zend_Layout</code> é ':script.:suffix'; ':script' passa o nome
+                do layout registrado, enquanto ':suffix' é uma regra estática do inflector.
+            </p>
+
+            <p>
+                Digamos que você queira que o script de layout termine no sufixo 'html',
+                e que você queira separar palavras MixedCase e camelCased com underscores
+                ao invés de hífens, e não deixe o nome em caixa baixa. Adicionalmente,
+                você quer procurar em um subdiretório 'layouts' pelo script.
+            </p>
+
+            <pre class="programlisting">
+$layout-&gt;getInflector()-&gt;setTarget('layouts/:script.:suffix')
+                       -&gt;setStaticRule('suffix', 'html')
+                       -&gt;setFilterRule(array('Word_CamelCaseToUnderscore'));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.layout.advanced.inflector.custom"></a><p class="title"><b>Exemplo 495. Inflectores Customizados</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                Na maioria dos casos, modificar o inflector existente será suficiente.
+                Entretanto, você pode ter um inflector que você deseja usar em diversos
+                lugares, com diferentes objetos de diferentes tipos.
+                <code class="classname">Zend_Layout</code> suporta isso.
+            </p>
+
+            <pre class="programlisting">
+$inflector = new Zend_Filter_Inflector('layouts/:script.:suffix');
+$inflector-&gt;addRules(array(
+    ':script' =&gt; array('Word_CamelCaseToUnderscore'),
+    'suffix'  =&gt; 'html'
+));
+$layout-&gt;setInflector($inflector);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note: Inflexão pode ser desabilitada">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Inflexão pode ser desabilitada</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Inflexão pode ser desabilitada e habilitada usando acessores no objeto
+                <code class="classname">Zend_Layout</code>. Isso pode ser útil se você quiser especificar
+                um caminho absoluto para um view script de layout, ou saber que o mecanismo
+                que você usará para especificar o script de layout não precisa de inflexão.
+                Simplesmente use os métodos <code class="methodname">enableInflector()</code> e
+                <code class="methodname">disableInflector()</code>.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.layout.options.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.layout.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.ldap.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Opções de Configuração Zend_Layout </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_Ldap</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

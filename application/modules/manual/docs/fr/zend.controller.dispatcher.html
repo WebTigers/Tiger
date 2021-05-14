@@ -1,0 +1,336 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Le distributeur</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.router.html" title="Routeur Standard">
+<link rel="next" href="zend.controller.action.html" title="Contrôleurs d'action">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Le distributeur</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.router.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.action.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.dispatcher"></a>Le distributeur</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.dispatcher.overview"></a>Vue d'ensemble</h3></div></div></div>
+        
+
+        <p>
+            La distribution est le processus de récupération de l'objet requête,
+            <code class="classname">Zend_Controller_Request_Abstract</code>, d'extraction du nom de module,
+            du nom de contrôleur, du nom d'action, et des paramètres facultatifs qui s'y trouvent,
+            et enfin d'instanciation du contrôleur et de l'appel d'une action de ce contrôleur. Si
+            le module, le contrôleur, ou l'action ne sont pas trouvés, il emploiera des valeurs par
+            défaut pour eux. <code class="classname">Zend_Controller_Dispatcher_Standard</code> indique
+            <code class="code">index</code> pour le contrôleur et l'action par défaut et <code class="code">default</code>
+            pour le module par défaut, mais permet au développeur de changer ces valeurs par défaut
+            pour chacun en utilisant les méthodes respectives <code class="methodname">setDefaultController()</code>,
+            <code class="methodname">setDefaultAction()</code>, et <code class="methodname">setDefaultModule()</code>.
+        </p>
+
+        <div class="note"><table border="0" summary='Note: Le module "Default"'>
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Le module "Default"</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+            <p>
+                Quand vous créez des applications modulaires, vous pouvez constater que vous
+                voulez aussi que votre module par défaut ait son espace de noms (dans la
+                configuration par défaut, le module "<code class="code">default</code>"
+                <span class="emphasis"><em>n'a pas</em></span> d'espace de noms). A partir de la version 1.5.0, vous
+                pouvez spécifier le paramètre <code class="code">prefixDefaultModule</code> à <code class="constant">TRUE</code>
+                soit dans le contrôleur frontal soit dans le distributeur :
+            </p>
+            <pre class="programlisting">
+// Dans le contrôleur frontal :
+$front-&gt;setParam('prefixDefaultModule', true);
+
+// Dans le distributeur :
+$dispatcher-&gt;setParam('prefixDefaultModule', true);
+</pre>
+            <p>
+                Ceci vous permet de ré-utiliser un module existant en tant que module par
+                défaut d'une application.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            La distribution se produit dans une boucle dans le contrôleur frontal. Avant que
+            le distribution ne se produise, le contrôleur frontal détermine la route de la requête
+            pour récupérer les valeurs spécifiées par l'utilisateur pour le module, le contrôleur ,
+            l'action , et les paramètres optionnels. Il entre alors dans la boucle d'expédition, et
+            distribue la requête.
+        </p>
+
+        <p>
+            Au début de chaque itération, il régle un drapeau dans l'objet requête indiquant
+            que l'action a été distribuée. Si une action ou un plugin <code class="code">pre/postDispatch</code>
+            remet à zéro ce drapeau, la boucle de distribution continue et tente de distribuer la
+            nouvelle requête. En changeant le contrôleur et/ou l'action dans la requête et en
+            effaçant le drapeau de distribution, le développeur peut définir une chaîne de requêtes
+            à réaliser.
+        </p>
+
+        <p>
+            La méthode du contrôleur d'action qui contrôle cette distribution est
+            <code class="methodname">_forward()</code> ; appelez cette méthode à partir de
+            <code class="code">pre/postDispatch()</code> ou d'une méthode d'action, en fournissant une action,
+            un contrôleur, un module, et optionnellement des paramètres additionnels que vous
+            souhaitez passer à la nouvelle action :
+        </p>
+
+        <pre class="programlisting">
+public function fooAction()
+{
+    // Transférer la nouvelle action dans le contrôleur
+    // et le module courant :
+    $this-&gt;_forward('bar', null, null, array('baz' =&gt; 'bogus'));
+}
+
+public function barAction()
+{
+    // Transférer vers une action dans un autre contrôleur,
+    // FooController::bazAction(), dans le module courant :
+    $this-&gt;_forward('baz', 'foo', null, array('baz' =&gt; 'bogus'));
+}
+
+public function bazAction()
+{
+    // Transférer vers une action dans un autre contrôleur
+    // dans un autre module, Foo_BarController::bazAction():
+    $this-&gt;_forward('baz', 'bar', 'foo', array('baz' =&gt; 'bogus'));
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.dispatcher.subclassing"></a>Sous-classer le distributeur</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Controller_Front</code> appelle en premier le routeur pour
+            déterminer la première action dans la requête. Il entre ensuite dans la boucle de
+            distribution, qui demande au distributeur de distribuer l'action.
+        </p>
+
+        <p>
+            Le distributeur a besoin de plusieurs données afin de réaliser son travail - il
+            doit connaître le format des noms d'actions et de contrôleur, où chercher les fichiers
+            de classe des contrôleurs, savoir si le nom de module fourni est valide, et il a besoin
+            d'une <acronym class="acronym">API</acronym> pour déterminer si une requête donnée est distribuable suivant les
+            informations disponibles.
+        </p>
+
+        <p>
+            <code class="classname">Zend_Controller_Dispatcher_Interface</code> définit les méthodes
+            suivantes nécessaires pour toute implémentation d'un distributeur :
+        </p>
+
+        <pre class="programlisting">
+interface Zend_Controller_Dispatcher_Interface
+{
+    /**
+     * Formate une chaîne en un nom de classe de contrôleur
+     *
+     * @param string $unformatted
+     * @return string
+     */
+    public function formatControllerName($unformatted);
+
+    /**
+     * Formate une chaîne en un nom de méthode d'action
+     *
+     * @param string $unformatted
+     * @return string
+     */
+    public function formatActionName($unformatted);
+
+    /**
+     * Détermine si une requête est distribuable
+     *
+     * @param  Zend_Controller_Request_Abstract $request
+     * @return boolean
+     */
+    public function isDispatchable(
+                Zend_Controller_Request_Abstract $request);
+
+    /**
+     * Règle un paramètre utilisateur
+     * (via le contrôleur frontal, ou pour un usage local)
+     *
+     * @param string $name
+     * @param mixed $value
+     * @return Zend_Controller_Dispatcher_Interface
+     */
+    public function setParam($name, $value);
+
+    /**
+     * Règle un tableau de paramètres utilisateur
+     *
+     * @param array $params
+     * @return Zend_Controller_Dispatcher_Interface
+     */
+    public function setParams(array $params);
+
+    /**
+     * Récupère un paramètre utilisateur unique
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public function getParam($name);
+
+    /**
+     * Récupère tous les paramètres utilisateur
+     *
+     * @return array
+     */
+    public function getParams();
+
+    /**
+     * Efface le tableau des paramètres utilisateur,
+     * ou un paramètre utilisateur unique :
+     *
+     * @param null|string|array single key or
+     *                          array of keys for params to clear
+     * @return Zend_Controller_Dispatcher_Interface
+     */
+    public function clearParams($name = null);
+
+    /**
+     * Règle l'objet réponse à utiliser, s'il existe
+     *
+     * @param Zend_Controller_Response_Abstract|null $response
+     * @return void
+     */
+    public function setResponse(
+                Zend_Controller_Response_Abstract $response = null);
+
+    /**
+     * Récupère l'objet réponse, s'il existe
+     *
+     * @return Zend_Controller_Response_Abstract|null
+     */
+    public function getResponse();
+
+    /**
+     * Ajoute un dossier de contrôleur dans le tableau
+     * des dossiers de contrôleurs
+     *
+     * @param string $path
+     * @param string $args
+     * @return Zend_Controller_Dispatcher_Interface
+     */
+    public function addControllerDirectory($path, $args = null);
+
+    /**
+     * Règle le(s) dossier(s) où les fichiers de contrôleurs
+     * sont stockés
+     *
+     * @param string|array $dir
+     * @return Zend_Controller_Dispatcher_Interface
+     */
+    public function setControllerDirectory($path);
+
+    /**
+     * Retourne le(s) dossier(s) où les fichiers de contrôleurs
+     * sont stockés
+     *
+     * @return array
+     */
+    public function getControllerDirectory();
+
+    /**
+     * Distribue une requête vers un (module/)contrôleur/action.
+     *
+     * @param  Zend_Controller_Request_Abstract $request
+     * @param  Zend_Controller_Response_Abstract $response
+     * @return Zend_Controller_Request_Abstract|boolean
+     */
+    public function dispatch(Zend_Controller_Request_Abstract $request,
+                             Zend_Controller_Response_Abstract $response);
+
+    /**
+     * Informe si un module donné est valide
+     *
+     * @param string $module
+     * @return boolean
+     */
+    public function isValidModule($module);
+
+    /**
+     * Retourne le nom du module par défaut
+     *
+     * @return string
+     */
+    public function getDefaultModule();
+
+    /**
+     * Retourne le nom du contrôleur par défaut
+     *
+     * @return string
+     */
+    public function getDefaultControllerName();
+
+    /**
+     * Retourne le nom de l'action par défaut
+     *
+     * @return string
+     */
+    public function getDefaultAction();
+}
+</pre>
+
+        <p>
+            Cependant, dans la plupart des cas, vous devriez simplement étendre la classe
+            abstraite <code class="classname">Zend_Controller_Dispatcher_Abstract</code>, dans laquelle
+            chacune de ces méthodes a déjà été définie, ou
+            <code class="classname">Zend_Controller_Dispatcher_Standard</code> pour modifier une
+            fonctionnalité du distributeur standard.
+        </p>
+
+        <p>
+            Les raisons possibles au sous-classement du distributeur incluent un désir
+            d'employer une classe ou un schéma différent de nommage des classes et/ou des méthodes
+            dans vos contrôleurs d'action, ou un désir d'employer un paradigme de distribution
+            différent tel que la distribution de fichiers de classe d'action dans des dossiers de
+            contrôleur (au lieu de la distribution des méthodes de classes).
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.router.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.action.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Routeur Standard </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Contrôleurs d'action</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

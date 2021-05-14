@@ -1,0 +1,532 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Db_Profiler</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.db.html" title="Zend_Db">
+<link rel="prev" href="zend.db.statement.html" title="Zend_Db_Statement">
+<link rel="next" href="zend.db.select.html" title="Zend_Db_Select">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Db_Profiler</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.db.statement.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Db</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.db.select.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.db.profiler"></a>Zend_Db_Profiler</h2></div></div></div>
+
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.profiler.introduction"></a>Introducción</h3></div></div></div>
+
+        
+
+        <p>
+            <code class="classname">Zend_Db_Profiler</code> puede ser habilitado para
+            Perfilar las consultas. Los Perfiles incluyen la consulta procesada
+            por el adaptador como el tiempo as transcurrido en la ejecución de
+            las consultas, permitiendo inspeccionar las consultas realizadas win
+            necesidad de agregar información de depuración extra en el código de
+            las clases. El uso avanzado también permite que el desarrollador
+            filtre las consultas que desea perfilar. </p>
+
+        <p>Habilite el perfilador pasando una directiva al al constructor del
+            adaptador, o pidiendole al adaptador permitirlo más adelante.</p>
+
+        <pre class="programlisting">
+$params = array(
+    'host'     =&gt; '127.0.0.1',
+    'username' =&gt; 'webuser',
+    'password' =&gt; 'xxxxxxxx',
+    'dbname'   =&gt; 'test'
+    'profiler' =&gt; true  // enciende el perfilador
+                        // establezca false para deshabilitar (está deshabilitado por defecto)
+);
+
+$db = Zend_Db::factory('PDO_MYSQL', $params);
+
+// apagar el perfilador:
+$db-&gt;getProfiler()-&gt;setEnabled(false);
+
+// encender el perfilador:
+$db-&gt;getProfiler()-&gt;setEnabled(true);
+</pre>
+
+        <p> El valor de la opción ' <span class="property">profiler</span> ' es
+            flexible. Es interpretada de distintas formas dependiendo del tipo.
+            Normalmente, debería usar un valor booleano simple, pero otros tipos
+            le permiten personalizar el comportamiento del perfilador. </p>
+
+        <p> Un argumento booleano establece el perfilador como habilitado si
+            el valor es <code class="constant">TRUE</code> , o deshabilitado si es
+                <code class="constant">FALSE</code> . La clase del perfilador es el la
+            clase de perfilador por defecto del adaptador,
+                <code class="classname">Zend_Db_Profiler</code> . </p>
+
+        <pre class="programlisting">
+$params['profiler'] = true;
+$db = Zend_Db::factory('PDO_MYSQL', $params);
+</pre>
+
+        <p> Una instancia del objeto perfilador hace que el adaptador use ese
+            objeto. El tipo del objeto debe ser
+                <code class="classname">Zend_Db_Profiler</code> o una subclase de este.
+            Habilitar el perfilador se hace por separado. </p>
+
+        <pre class="programlisting">
+$profiler = MyProject_Db_Profiler();
+$profiler-&gt;setEnabled(true);
+$params['profiler'] = $profiler;
+$db = Zend_Db::factory('PDO_MYSQL', $params);
+</pre>
+
+        <p> El argumento puede ser un array asociativo conteniendo algunas o
+            todas las claves ' <span class="property">enabled</span> ', '
+                <span class="property">instance</span> ', y ' <span class="property">class</span>
+            '. Las claves ' <span class="property">enabled</span> ' e '
+                <span class="property">instance</span> ' corresponden a los tipos
+            booleano y la instancia documentada previamente. La clave '
+                <span class="property">class</span> ' es usada para nombrar la clase que
+            usará el perfilador personalizado. La clase debe ser
+                <code class="classname">Zend_Db_Profiler</code> o una subclase. La clase
+            es instanciada sin argumentos de constructor. La opción '
+                <span class="property">class</span> ' es ignorada cuando la opción '
+                <span class="property">instance</span> ' está dada. </p>
+
+        <pre class="programlisting">
+$params['profiler'] = array(
+    'enabled' =&gt; true,
+    'class'   =&gt; 'MyProject_Db_Profiler'
+);
+$db = Zend_Db::factory('PDO_MYSQL', $params);
+</pre>
+
+        <p> Finalmente, el argumento puede ser un objeto de tipo
+                <code class="classname">Zend_Config</code> conteniendo las propiedades,
+            que son tratadas como las claves de array descritas recién. Por
+            ejemplo, un archivo " <code class="filename">config.ini</code> " puede
+            contener los siguientes datos: </p>
+
+        <pre class="programlisting">
+[main]
+db.profiler.class   = "MyProject_Db_Profiler"
+db.profiler.enabled = true
+</pre>
+
+        <p> Esta configuración puede ser aplicada con el siguiente código
+                <acronym class="acronym">PHP</acronym> : </p>
+        <pre class="programlisting">
+$config = new Zend_Config_Ini('config.ini', 'main');
+$params['profiler'] = $config-&gt;db-&gt;profiler;
+$db = Zend_Db::factory('PDO_MYSQL', $params);
+</pre>
+        <p> La propiedad ' <code class="methodname">instance</code> ' debe ser usada
+            como el siguiente ejemplo: </p>
+
+        <pre class="programlisting">
+$profiler = new MyProject_Db_Profiler();
+$profiler-&gt;setEnabled(true);
+$configData = array(
+    'instance' =&gt; $profiler
+    );
+$config = new Zend_Config($configData);
+$params['profiler'] = $config;
+$db = Zend_Db::factory('PDO_MYSQL', $params);
+</pre>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.profiler.using"></a>Usando el Perfilador</h3></div></div></div>
+
+        
+
+        <p> En este punto, obtenemos el perfilador usando el método
+                <code class="methodname">getProfiler()</code> del adaptador: </p>
+
+        <pre class="programlisting">
+$profiler = $db-&gt;getProfiler();
+</pre>
+
+        <p> Este retorna una instancia del objeto
+                <code class="classname">Zend_Db_Profiler</code> . Con esta instancia, el
+            desarrollador puede examinar las consultar usando una variedad de
+            métodos: </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">getTotalNumQueries()</code> retorna el
+                    número total de consultas que han sido perfiladas. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getTotalElapsedSecs()</code> retorna el
+                    número total de segundos transcurridos en todas las
+                    consultas perfiladas. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getQueryProfiles()</code> retorna un array
+                    con todos los perfiles de consultas. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getLastQueryProfile()</code> retorna el
+                    último perfil (más reciente) de consulta, independientemente
+                    de si la consulta ha terminado o no (si no lo ha hecho, la
+                    hora de finalización será <code class="constant">NULL</code>). </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clear()</code> limpia los perfiles de
+                    consulta de la pila. </p>
+            </li>
+</ul></div>
+
+        <p> El valor de retorno de
+                <code class="methodname">getLastQueryProfile()</code> y elementos
+            individuales de <code class="methodname">getQueryProfiles()</code> son
+                <code class="classname">Zend_Db_Profiler_Query</code> objetos, que
+            proporcionan la capacidad para inspeccionar cada una de las
+            consultas: </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">getQuery()</code> retorna el texto SQL de
+                    la consulta. El texto <acronym class="acronym">SQL</acronym> de una
+                    declaración preparada con parámetros es el texto al tiempo
+                    en que la consulta fué preparada, por lo que contiene
+                    marcadores de posición, no los valores utilizados cuando la
+                    declaración se ejecuta. </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getQueryParams()</code> retorna un array
+                    de los valores de los parámetros usados cuando se ejecuta
+                    una consulta preparada. Este incluye ambos parámetros y
+                    argumentos vinculados al método
+                        <code class="methodname">execute()</code> de la declaración.
+                    Las claves del array son las posiciones (basado en 1) o
+                    indices de parámetros nombrados (string). </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getElapsedSecs()</code> returna el número
+                    de segundos que tuvo la consulta al correr. </p>
+            </li>
+</ul></div>
+
+        <p> La información que <code class="classname">Zend_Db_Profiler</code> provee
+            es útil para perfilar cuellos de botella en aplicaciones, y para
+            depurar consultas que han sido ejecutadas. Por instancia, para ver
+            la consulta exacta que tuvo la última ejecución: </p>
+
+        <pre class="programlisting">
+$query = $profiler-&gt;getLastQueryProfile();
+
+echo $query-&gt;getQuery();
+</pre>
+
+        <p>Tal vez una página se genera lentamente; use el perfilador para
+            determinar primero el número total de segundos de todas las
+            consultas, y luego recorrer paso a paso a través de las consultas
+            para encontrar la más lenta:</p>
+
+        <pre class="programlisting">
+$totalTime    = $profiler-&gt;getTotalElapsedSecs();
+$queryCount   = $profiler-&gt;getTotalNumQueries();
+$longestTime  = 0;
+$longestQuery = null;
+
+foreach ($profiler-&gt;getQueryProfiles() as $query) {
+    if ($query-&gt;getElapsedSecs() &gt; $longestTime) {
+        $longestTime  = $query-&gt;getElapsedSecs();
+        $longestQuery = $query-&gt;getQuery();
+    }
+}
+
+echo 'Ejecutadas ' . $queryCount . ' consultas en ' . $totalTime .
+     ' segundos' . "\n";
+echo 'Promedio de tiempo de consulta: ' . $totalTime / $queryCount .
+     ' segundos' . "\n";
+echo 'Consultas por segundo: ' . $queryCount / $totalTime . "\n";
+echo 'Tardanza de la consulta más lenta: ' . $longestTime . "\n";
+echo "Consulta más lenta: \n" . $longestQuery . "\n";
+</pre>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.profiler.advanced"></a>Uso avanzado del Perfilador</h3></div></div></div>
+
+        
+
+        <p> Además de la inspección de consultas, el perfilador también le
+            permite al desarrollador filtrar que consultas serán perfiladas. El
+            siguiente método opera en una instancia de
+                <code class="classname">Zend_Db_Profiler</code> : </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.profiler.advanced.filtertime"></a>Filtrar por tiempo transcurrido en consulta</h4></div></div></div>
+            
+
+            <p>
+                <code class="methodname">setFilterElapsedSecs()</code> le permite al
+                desarrolador establecer un tiempo mínimo antes de que una
+                consulta se perfile. Para remover el filtro, pase un valor
+                    <code class="constant">NULL</code> al método. </p>
+
+            <pre class="programlisting">
+// Solo perfilar consultas que tardan más de 5 segundos:
+$profiler-&gt;setFilterElapsedSecs(5);
+
+// Perfilar todas las consultas sin importar el tiempo:
+$profiler-&gt;setFilterElapsedSecs(null);
+</pre>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.profiler.advanced.filtertype"></a>Filtrar por tipo de consulta</h4></div></div></div>
+            
+
+            <p>
+                <code class="methodname">setFilterQueryType()</code> le permite al
+                desarrollador establecer que tipo de consulta serán perfiladas;
+                para perfilar multiples tipos, use un "OR" lógico. Los tipos de
+                consulta se definen como las siguientes constantes de
+                    <code class="classname">Zend_Db_Profiler</code> : </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Db_Profiler::CONNECT</code> :
+                        operaciones de conexión o selección de base de datos.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Db_Profiler::QUERY</code> : consultas
+                        generales a la base de datos que no calzan con otros
+                        tipos. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Db_Profiler::INSERT</code> :
+                        cualquier consulta que agrega filas a la base de datos,
+                        generalmente un <acronym class="acronym">SQL</acronym> INSERT. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Db_Profiler::UPDATE</code> :
+                        cualquier consulta que actualice registros existentes,
+                        usualmente un <acronym class="acronym">SQL</acronym> UPDATE. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Db_Profiler::DELETE</code> :
+                        cualquier consulta que elimine datos existentes,
+                        usualmente un <acronym class="acronym">SQL</acronym> DELETE. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Db_Profiler::SELECT</code> :
+                        cualquier consulta que retorne datos existentes,
+                        usualmente un <acronym class="acronym">SQL</acronym> SELECT. </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="constant">Zend_Db_Profiler::TRANSACTION</code> :
+                        cualquier operación transaccional, tal como iniciar una
+                        transacción, confirmar, o revertir. </p>
+                </li>
+</ul></div>
+
+            <p> Asi como con <code class="methodname">setFilterElapsedSecs()</code>
+                , puedes remover cualquier filtro existente pasando un
+                    <code class="constant">NULL</code> como único argumento. </p>
+
+            <pre class="programlisting">
+// Perfilar solo consultas SELECT
+$profiler-&gt;setFilterQueryType(Zend_Db_Profiler::SELECT);
+
+// Perfila consultas SELECT, INSERT, y UPDATE
+$profiler-&gt;setFilterQueryType(Zend_Db_Profiler::SELECT |
+                              Zend_Db_Profiler::INSERT |
+                              Zend_Db_Profiler::UPDATE);
+
+// Perfilar consultas DELETE
+$profiler-&gt;setFilterQueryType(Zend_Db_Profiler::DELETE);
+
+// Remover todos los filtros
+$profiler-&gt;setFilterQueryType(null);
+</pre>
+
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.profiler.advanced.getbytype"></a>Obtener perfiles por tipo de consulta</h4></div></div></div>
+            
+
+            <p> Usando <code class="methodname">setFilterQueryType()</code> puedes
+                reducir los perfiles generados. Sin embargo, a veces puede ser
+                más útil mantener todos los perfiles, pero ver sólo los que
+                necesita en un determinado momento. Otra característica de
+                    <code class="methodname">getQueryProfiles()</code> es que puede
+                este filtrado al-vuelo, pasando un tipo de consulta(o una
+                combinación lógica de tipos de consulta) en el primer; vea <a class="xref" href="zend.db.profiler.html#zend.db.profiler.advanced.filtertype" title="Filtrar por tipo de consulta">“Filtrar por tipo de consulta”</a> para una
+                lista las constantes de tipo de consulta. </p>
+
+            <pre class="programlisting">
+// Obtiene solo perfiles de consultas SELECT
+$profiles = $profiler-&gt;getQueryProfiles(Zend_Db_Profiler::SELECT);
+
+// Obtiene los perfiles de consultas SELECT, INSERT, y UPDATE
+$profiles = $profiler-&gt;getQueryProfiles(Zend_Db_Profiler::SELECT |
+                                        Zend_Db_Profiler::INSERT |
+                                        Zend_Db_Profiler::UPDATE);
+
+// Obtiene solo perfiles de consultas DELETE
+$profiles = $profiler-&gt;getQueryProfiles(Zend_Db_Profiler::DELETE);
+</pre>
+
+        </div>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.profiler.profilers"></a>Perfiladores Especializados</h3></div></div></div>
+        
+
+        <p> Un Perfilador Especializado es un objeto que hereda de
+                <code class="classname">Zend_Db_Profiler</code> . Los Perfiladores
+            Especializados tratan la información de perfilado de maneras más
+            especificas. </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.profiler.profilers.firebug"></a>Perfilando con Firebug</h4></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Db_Profiler_Firebug</code> envía información de
+        perfilado a la <a class="ulink" href="http://getfirebug.com/logging.html" target="_top">Consola</a> de <a class="ulink" href="http://www.getfirebug.com/" target="_top">Firebug</a> . </p>
+
+    <p> Todos los datos son enviados a través del componente
+            <code class="classname">Zend_Wildfire_Channel_HttpHeaders</code> que usa
+        cabeceras <acronym class="acronym">HTTP</acronym> para asegurar que el contenido de la
+        página no sea alterado. Depurar peticiones <acronym class="acronym">AJAX</acronym> que
+        requieren respuestas <acronym class="acronym">JSON</acronym> y <acronym class="acronym">XML</acronym> es
+        perfectamente posible con este enfoque. </p>
+
+    <p>Requerimientos:</p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>Navegador web Firefox idealmente versión 3, pero la versión 2
+                tambien está soportada.</p>
+        </li>
+<li class="listitem">
+            <p> Extensión Firebug para Firefox, la cual puede descargarse
+                desde <a class="ulink" href="https://addons.mozilla.org/en-US/firefox/addon/1843" target="_top">https://addons. mozilla
+                    .org/en-US/firefox/addon/1843</a> . </p>
+        </li>
+<li class="listitem">
+            <p> Extensión FirePHP para Firefox, la cual puede descargarse
+                desde <a class="ulink" href="https://addons.mozilla.org/en-US/firefox/addon/6149" target="_top">https://addons.mozilla.org/en-US/firefox/addon/6149</a>
+                . </p>
+        </li>
+</ul></div>
+
+    <div class="example">
+<a name="zend.db.profiler.profilers.firebug.example.with_front_controller"></a><p class="title"><b>Ejemplo 226. Perfilando DB con Zend_Controller_Front</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+// En tu archivo bootstrap
+
+$profiler = new Zend_Db_Profiler_Firebug('All DB Queries');
+$profiler-&gt;setEnabled(true);
+
+// Anexar el perfilador a tu adaptador de base de datos
+$db-&gt;setProfiler($profiler)
+
+// Despachar el controlador frontal
+
+// Todas las consultas a la base de datos en tus archivos modelo, vista y controlador
+// ahora serán perfilados y enviados a Firebug
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="example">
+<a name="zend.db.profiler.profilers.firebug.example.without_front_controller"></a><p class="title"><b>Ejemplo 227.  Perfilar DB sin Zend_Controller_Front </b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+$profiler = new Zend_Db_Profiler_Firebug('All DB Queries');
+$profiler-&gt;setEnabled(true);
+
+// Anexar el perfilador a tu adaptador de base de datos
+$db-&gt;setProfiler($profiler)
+
+$request  = new Zend_Controller_Request_Http();
+$response = new Zend_Controller_Response_Http();
+$channel  = Zend_Wildfire_Channel_HttpHeaders::getInstance();
+$channel-&gt;setRequest($request);
+$channel-&gt;setResponse($response);
+
+// Iniciar un buffer de las salidas
+ob_start();
+
+// Ahora se pueden ejecutar las consultas a la Base de Datos para ser perfiladas
+
+// Enviar los datos de perfilado al navegador
+$channel-&gt;flush();
+$response-&gt;sendHeaders();
+</pre>
+    </div>
+</div>
+<br class="example-break">
+</div>
+
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.db.statement.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.db.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.db.select.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Db_Statement </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Zend_Db_Select</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,416 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Construindo Índices</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.search.lucene.html" title="Zend_Search_Lucene">
+<link rel="prev" href="zend.search.lucene.overview.html" title="Resumo">
+<link rel="next" href="zend.search.lucene.searching.html" title="Searching an Index">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Construindo Índices</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.search.lucene.overview.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.search.lucene.searching.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.search.lucene.index-creation"></a>Construindo Índices</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.index-creation.creating"></a>Criando um Novo Índice</h3></div></div></div>
+        
+
+        <p>
+            As funcionalidades de criação e atualização de índices são implementadas tanto no
+            componente <code class="classname">Zend_Search_Lucene</code> como no projeto Java Lucene. Você
+            pode usar qualquer uma destas opções para criar índices pesquisáveis pelo
+            <code class="classname">Zend_Search_Lucene</code>.
+        </p>
+
+        <p>
+            O código <acronym class="acronym">PHP</acronym> abaixo mostra um exemplo de como indexar um arquivo
+            usando a <acronym class="acronym">API</acronym> de indexação do
+            <code class="classname">Zend_Search_Lucene</code>:
+        </p>
+
+        <pre class="programlisting">
+// Cria o índice
+$index = Zend_Search_Lucene::create('/data/my-index');
+
+$doc = new Zend_Search_Lucene_Document();
+
+// Armazena a URL do documento para identificá-lo nos resultados da pesquisa
+$doc-&gt;addField(Zend_Search_Lucene_Field::Text('url', $docUrl));
+
+// Indexa os conteúdos do documento
+$doc-&gt;addField(Zend_Search_Lucene_Field::UnStored('contents', $docContent));
+
+// Adiciona o documento ao índice
+$index-&gt;addDocument($doc);
+</pre>
+
+        <p>
+            Documentos adicionados recentemente são imediatamente pesquisáveis no índice.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.index-creation.updating"></a>Atualizando um Índice</h3></div></div></div>
+        
+
+        <p>
+            O mesmo procedimento é empregado para atualizar um índice existente. A única diferença
+            é que o método open() é chamado no lugar do método create():
+        </p>
+
+        <pre class="programlisting">
+// Abre um índice existente
+$index = Zend_Search_Lucene::open('/data/my-index');
+
+$doc = new Zend_Search_Lucene_Document();
+// Armazena a URL do documento para identificá-lo no resultado da pesquisa
+$doc-&gt;addField(Zend_Search_Lucene_Field::Text('url', $docUrl));
+// Indexa o conteúdo do documento
+$doc-&gt;addField(Zend_Search_Lucene_Field::UnStored('contents',
+                                                  $docContent));
+
+// Adiciona o documento ao índice
+$index-&gt;addDocument($doc);
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.index-creation.document-updating"></a>Atualizando os Documentos</h3></div></div></div>
+        
+
+        <p>
+            O formato de arquivo do índice Lucene não suporta a atualização do documento. Os
+            documentos devem ser removidos e adicionados novamente ao índice para atualizá-los de
+            forma eficaz.
+        </p>
+
+        <p>
+            O método <code class="methodname">Zend_Search_Lucene::delete()</code> funciona com uma
+            identificação interna do índice do documento. Ela pode ser recuperada de uma consulta
+            pela propriedade 'id':
+        </p>
+
+        <pre class="programlisting">
+$removePath = ...;
+$hits = $index-&gt;find('path:' . $removePath);
+foreach ($hits as $hit) {
+    $index-&gt;delete($hit-&gt;id);
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.index-creation.counting"></a>Recuperando o Tamanho do Índice</h3></div></div></div>
+        
+
+        <p>
+            Existem dois métodos para recuperar o tamanho de um índice no
+            <code class="classname">Zend_Search_Lucene</code>.
+        </p>
+
+        <p>
+            O método <code class="methodname">Zend_Search_Lucene::maxDoc()</code> retorna um número maior
+            do que o maior número possível de documentos. É na verdade o número total de documentos
+            no índice incluindo os documentos excluídos, por isso ele tem um sinônimo:
+            <code class="methodname">Zend_Search_Lucene::count()</code>.
+        </p>
+
+        <p>
+            O método <code class="methodname">Zend_Search_Lucene::numDocs()</code> retorna o número total
+            de documentos que não foram excluídos.
+        </p>
+
+        <pre class="programlisting">
+$indexSize = $index-&gt;count();
+$documents = $index-&gt;numDocs();
+</pre>
+
+        <p>
+            O método <code class="methodname">Zend_Search_Lucene::isDeleted($id)</code> pode ser usado para
+            verificar se um documento foi excluído.
+        </p>
+
+        <pre class="programlisting">
+for ($count = 0; $count &lt; $index-&gt;maxDoc(); $count++) {
+    if ($index-&gt;isDeleted($count)) {
+        echo "O documento #$id foi excluído.\n";
+    }
+}
+</pre>
+
+        <p>
+            A otimização do índice remove os documentos excluídos e comprime as IDs dos documentos
+            em um intervalo menor. Assim, uma id interna de um documento pode ser alterada durante
+            a otimização do índice.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.index-creation.optimization"></a>Otimização do Índice</h3></div></div></div>
+        
+
+        <p>
+            Um índice Lucene é composto por vários segmentos. Cada segmento é um conjunto de dados
+            completamente independente.
+        </p>
+
+        <p>
+            Os arquivos de segmento de índice Lucene não podem ser atualizados devido ao seu
+            projeto. A atualização de um segmento necessita de uma reorganização completa do
+            segmento. Veja os formatos de arquivos de índice Lucene para mais detalhes (<a class="ulink" href="http://lucene.apache.org/java/2_3_0/fileformats.html" target="_top">http://lucene.apache.org/java/2_3_0/fileformats.html</a>)
+
+            <a href="#ftn.idm205656773744" class="footnote" name="idm205656773744"><sup class="footnote">[10]</sup></a>.
+
+            Novos documentos são adicionados ao índice através da criação de um novo segmento.
+        </p>
+
+        <p>
+            O aumento do número de segmentos reduz a qualidade do índice, mas uma otimização do
+            índice resolverá o problema. Essencialmente, a otimização mescla vários segmentos em um
+            novo. Além disso, este processo não atualiza os segmentos. Ele gera um novo grande
+            segmento e atualiza a lista de segmentos (arquivo 'segments').
+        </p>
+
+        <p>
+            A otimização completa do índice pode ser feita chamando o método
+            <code class="methodname">Zend_Search_Lucene::optimize()</code>. Ele funde todos os segmentos de
+            índice em um novo segmento:
+        </p>
+
+        <pre class="programlisting">
+// Abre um índice existente
+$index = Zend_Search_Lucene::open('/data/my-index');
+
+// Otimiza o índice
+$index-&gt;optimize();
+</pre>
+
+        <p>
+            A otimização automática do índice é realizada para manter os índices em um estado
+            consistente.
+        </p>
+
+        <p>
+            A otimização automática é um processo iterativo controlado por várias opções de índice.
+            Ele funde segmentos muito pequenos para obter outros maiores, então mescla esses
+            segmentos em segmentos ainda maiores e assim por diante.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.index-creation.optimization.maxbuffereddocs"></a>Opção de auto-otimização MaxBufferedDocs</h4></div></div></div>
+            
+
+            <p>
+                <span class="emphasis"><em>MaxBufferedDocs</em></span> é o número mínimo de documentos necessários
+                antes que os documentos presentes na memória dentro do buffer sejam escritos em um
+                novo segmento.
+            </p>
+
+            <p>
+                <span class="emphasis"><em>MaxBufferedDocs</em></span> pode ser recuperado ou definido pelas chamadas
+                <code class="code">$index-&gt;getMaxBufferedDocs()</code> ou
+                <code class="code">$index-&gt;setMaxBufferedDocs($maxBufferedDocs)</code>.
+            </p>
+
+            <p>
+                O valor padrão é 10.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.index-creation.optimization.maxmergedocs"></a>Opção de auto-otimização MaxMergeDocs</h4></div></div></div>
+            
+
+            <p>
+                <span class="emphasis"><em>MaxMergeDocs</em></span> é o maior número de documentos já fundidos por
+                addDocument(). Valores pequenos (p. ex., menores que 10.000) são os melhores para
+                indexação interativa, visto que isso limita em alguns segundos a duração das pausas
+                durante a indexação. Os maiores valores são os melhores para a indexação em lote e
+                buscas rápidas.
+            </p>
+
+            <p>
+                <span class="emphasis"><em>MaxMergeDocs</em></span> pode ser recuperado ou definido pelas chamadas
+                <code class="code">$index-&gt;getMaxMergeDocs()</code> ou
+                <code class="code">$index-&gt;setMaxMergeDocs($maxMergeDocs)</code>.
+            </p>
+
+            <p>
+                O valor padrão é PHP_INT_MAX.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.index-creation.optimization.mergefactor"></a>Opção de auto-otimização MergeFactor</h4></div></div></div>
+            
+
+            <p>
+                <span class="emphasis"><em>MergeFactor</em></span> determina a frequência com que os índices de
+                segmento são fundidos por addDocument(). Com valores menores, menos memória
+                <acronym class="acronym">RAM</acronym> é usada durante a indexação, e buscas em índices não
+                otimizados são mais rápidas, mas a velocidade de indexação é mais lenta. Com valores
+                maiores, mais memória <acronym class="acronym">RAM</acronym> é usada durante a indexação, e, embora
+                as buscas em índices não otimizados sejam mais lentas, a indexação é mais rápida.
+                Desse modo, valores maiores (&gt; 10) são melhores para a criação de índices em
+                lotes, e os valores menores (&lt; 10) são melhores para os índices que são mantidos
+                de forma interativa.
+            </p>
+
+            <p>
+                <span class="emphasis"><em>MergeFactor</em></span> é uma boa estimativa para o número médio de
+                segmentos fundidos em uma passagem de auto-otimização. Valores muito grandes
+                produzem um grande número de segmentos, enquanto não são fundidos em um novo. Isso
+                pode causar a mensagem de erro "failed to open stream: Too many open files". Essa
+                limitação é dependente do sistema.
+            </p>
+
+            <p>
+                <span class="emphasis"><em>MergeFactor</em></span> pode ser recuperado ou definido pelas chamadas
+                <code class="code">$index-&gt;getMergeFactor()</code> ou
+                <code class="code">$index-&gt;setMergeFactor($mergeFactor)</code>.
+            </p>
+
+            <p>
+                O valor padrão é 10.
+            </p>
+
+            <p>
+                Lucene Java e Luke (Lucene Index Toolbox - <a class="ulink" href="http://www.getopt.org/luke/" target="_top">http://www.getopt.org/luke/</a>) também
+                podem ser usados para otimizar um índice. O último lançamento do Luke (v0.8) é
+                baseado no Lucene v2.3 e é compatível com a atual implementação do componente
+                <code class="classname">Zend_Search_Lucene</code> (Zend Framework 1.6). Versões anteriores
+                das implementações do <code class="classname">Zend_Search_Lucene</code> necessitam de outras
+                versões das ferramentas Java Lucene para serem compatíveis:
+
+                </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                        <p>
+                            Zend Framework 1.5 - Java Lucene 2.1 (Luke tool v0.7.1 - <a class="ulink" href="http://www.getopt.org/luke/luke-0.7.1/" target="_top">http://www.getopt.org/luke/luke-0.7.1/</a>)
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            Zend Framework 1.0 - Java Lucene 1.4 - 2.1 (Luke tool v0.6 - <a class="ulink" href="http://www.getopt.org/luke/luke-0.6/" target="_top">http://www.getopt.org/luke/luke-0.6/</a>)
+                        </p>
+                    </li>
+</ul></div>
+<p>
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.index-creation.permissions"></a>Permissões</h3></div></div></div>
+        
+
+        <p>
+            Por padrão, arquivos de índice estão disponíveis para leitura e escrita por todos.
+        </p>
+
+        <p>
+            É possível substituir esse comportamento com o método
+            <code class="methodname">Zend_Search_Lucene_Storage_Directory_Filesystem::setDefaultFilePermissions()</code>:
+        </p>
+
+        <pre class="programlisting">
+// Recupera as permissões padrões
+$currentPermissions =
+    Zend_Search_Lucene_Storage_Directory_Filesystem::getDefaultFilePermissions();
+
+// Fornece permissões de leitura e escrita apenas para o usuário e grupo atuais
+Zend_Search_Lucene_Storage_Directory_Filesystem::setDefaultFilePermissions(0660);
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.index-creation.limitations"></a>Limitações</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.index-creation.limitations.index-size"></a>Tamanho do Índice</h4></div></div></div>
+            
+
+            <p>
+                O tamanho do índice é limitado em 2GB para plataformas 32-bit.
+            </p>
+
+            <p>
+                Utilize plataformas 64-bit para índices maiores.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.search.lucene.index-creation.limitations.filesystems"></a>Sistemas de Arquivos Suportados</h4></div></div></div>
+            
+
+            <p>
+                <code class="classname">Zend_Search_Lucene</code> utiliza <code class="methodname">flock()</code>
+                para fornecer pesquisas simultâneas, atualização de índice e otimização.
+            </p>
+
+            <p>
+                De acordo com a <a class="ulink" href="http://www.php.net/manual/en/function.flock.php" target="_top">documentação</a> do
+                <acronym class="acronym">PHP</acronym>, "<code class="methodname">flock()</code> não funcionará em NFS ou
+                em qualquer outro sistema de arquivos em rede.".
+            </p>
+
+            <p>
+                Não utilize sistemas de arquivos em rede com o
+                <code class="classname">Zend_Search_Lucene</code>.
+            </p>
+        </div>
+    </div>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm205656773744" class="footnote">
+                <p><a href="#idm205656773744" class="para"><sup class="para">[10] </sup></a>
+                    O formato de arquivo de índice Lucene atualmente suportado é a versão 2.3
+                    (desde Zend Framework 1.6).
+                </p>
+            </div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.search.lucene.overview.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.search.lucene.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.search.lucene.searching.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Resumo </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Searching an Index</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

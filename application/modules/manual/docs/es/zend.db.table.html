@@ -1,0 +1,1925 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Db_Table</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.db.html" title="Zend_Db">
+<link rel="prev" href="zend.db.select.html" title="Zend_Db_Select">
+<link rel="next" href="zend.db.table.row.html" title="Zend_Db_Table_Row">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Db_Table</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.db.select.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Db</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.db.table.row.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.db.table"></a>Zend_Db_Table</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            The <code class="classname">Zend_Db_Table</code> class is an object-oriented interface to
+            database tables. It provides methods for many common operations on tables. The base
+            class is extensible, so you can add custom logic.
+        </p>
+
+        <p>
+            The <code class="classname">Zend_Db_Table</code> solution is an implementation of the
+            <a class="ulink" href="http://www.martinfowler.com/eaaCatalog/tableDataGateway.html" target="_top">Table Data
+            Gateway</a> pattern. The solution also includes a class that implements the
+            <a class="ulink" href="http://www.martinfowler.com/eaaCatalog/rowDataGateway.html" target="_top">Row Data
+            Gateway</a> pattern.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.concrete"></a>Using Zend_Db_Table as a concrete class</h3></div></div></div>
+        
+
+        <p>
+            As of Zend Framework 1.9, you can instantiate <code class="classname">Zend_Db_Table</code>. This
+            added benefit is that you do not have to extend a base class and configure it to do
+            simple operations such as selecting, inserting, updating and deleteing on a single
+            table. below is an example of the simplest of use cases.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.defining.concrete-instantiation.example1"></a><p class="title"><b>Ejemplo 261. Declaring a table class with just the string name</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+Zend_Db_Table::setDefaultAdapter($dbAdapter);
+$bugTable = new Zend_Db_Table('bug');
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The above example represents the simplest of use cases. Make not of all the
+            options describe below for configuring <code class="classname">Zend_Db_Table</code> tables. If
+            you want to be able to use the concrete usage case, in addition to the more complex
+            relationhip features, see the <code class="classname">Zend_Db_Table_Definition</code>
+            documentation.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.defining"></a>Defining a Table Class</h3></div></div></div>
+        
+
+        <p>
+            For each table in your database that you want to access, define a class that extends
+            <code class="classname">Zend_Db_Table_Abstract</code>.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.defining.table-schema"></a>Defining the Table Name and Schema</h4></div></div></div>
+            
+
+            <p>
+                Declare the database table for which this class is defined, using the protected
+                variable <code class="varname">$_name</code>. This is a string, and must contain the name of
+                the table spelled as it appears in the database.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.defining.table-schema.example1"></a><p class="title"><b>Ejemplo 262. Declaring a table class with explicit table name</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'bugs';
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                If you don't specify the table name, it defaults to the name of the class. If you
+                rely on this default, the class name must match the spelling of the table name as
+                it appears in the database.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.defining.table-schema.example"></a><p class="title"><b>Ejemplo 263. Declaring a table class with implicit table name</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class bugs extends Zend_Db_Table_Abstract
+{
+    // table name matches class name
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                You can also declare the schema for the table, either with the protected variable
+                <code class="varname">$_schema</code>, or with the schema prepended to the table name in the
+                <code class="varname">$_name</code> property. Any schema specified with the
+                <code class="varname">$_name</code> property takes precedence over a schema specified with the
+                <code class="varname">$_schema</code> property. In some <acronym class="acronym">RDBMS</acronym> brands, the
+                term for schema is "database" or "tablespace," but it is used similarly.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.defining.table-schema.example3"></a><p class="title"><b>Ejemplo 264. Declaring a table class with schema</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+// First alternative:
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected $_schema = 'bug_db';
+    protected $_name   = 'bugs';
+}
+
+// Second alternative:
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'bug_db.bugs';
+}
+
+// If schemas are specified in both $_name and $_schema, the one
+// specified in $_name takes precedence:
+
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected $_name   = 'bug_db.bugs';
+    protected $_schema = 'ignored';
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                The schema and table names may also be specified via constructor configuration
+                directives, which override any default values specified with the
+                <code class="varname">$_name</code> and <code class="varname">$_schema</code> properties. A schema
+                specification given with the <span class="property">name</span> directive overrides any value
+                provided with the <span class="property">schema</span> option.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.defining.table-schema.example.constructor"></a><p class="title"><b>Ejemplo 265. Declaring table and schema names upon instantiation</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class Bugs extends Zend_Db_Table_Abstract
+{
+}
+
+// First alternative:
+
+$tableBugs = new Bugs(array('name' =&gt; 'bugs', 'schema' =&gt; 'bug_db'));
+
+// Second alternative:
+
+$tableBugs = new Bugs(array('name' =&gt; 'bug_db.bugs'));
+
+// If schemas are specified in both 'name' and 'schema', the one
+// specified in 'name' takes precedence:
+
+$tableBugs = new Bugs(array('name' =&gt; 'bug_db.bugs',
+                            'schema' =&gt; 'ignored'));
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                If you don't specify the schema name, it defaults to the schema to which your
+                database adapter instance is connected.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.defining.primary-key"></a>Defining the Table Primary Key</h4></div></div></div>
+            
+
+            <p>
+                Every table must have a primary key. You can declare the column for the primary key
+                using the protected variable <code class="varname">$_primary</code>. This is either a string
+                that names the single column for the primary key, or else it is an array of column
+                names if your primary key is a compound key.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.defining.primary-key.example"></a><p class="title"><b>Ejemplo 266. Example of specifying the primary key</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'bugs';
+    protected $_primary = 'bug_id';
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                If you don't specify the primary key, <code class="classname">Zend_Db_Table_Abstract</code>
+                tries to discover the primary key based on the information provided by the
+                <code class="methodname">describeTable()</code>´ method.
+            </p>
+
+            <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    Every table class must know which columns can be used to address rows
+                    uniquely. If no primary key columns are specified in the table class
+                    definition or the table constructor arguments, or discovered in the table
+                    metadata provided by <code class="methodname">describeTable()</code>, then the table
+                    cannot be used with <code class="classname">Zend_Db_Table</code>.
+                </p>
+            </td></tr>
+</table></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.defining.setup"></a>Overriding Table Setup Methods</h4></div></div></div>
+            
+
+            <p>
+                When you create an instance of a Table class, the constructor calls a set of
+                protected methods that initialize metadata for the table. You can extend any of
+                these methods to define metadata explicitly. Remember to call the method of the
+                same name in the parent class at the end of your method.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.defining.setup.example"></a><p class="title"><b>Ejemplo 267. Example of overriding the _setupTableName() method</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected function _setupTableName()
+    {
+        $this-&gt;_name = 'bugs';
+        parent::_setupTableName();
+    }
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                The setup methods you can override are the following:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        <code class="methodname">_setupDatabaseAdapter()</code> checks that an adapter has
+                        been provided; gets a default adapter from the registry if needed. By
+                        overriding this method, you can set a database adapter from some other
+                        source.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">_setupTableName()</code> defaults the table name to the
+                        name of the class. By overriding this method, you can set the table name
+                        before this default behavior runs.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">_setupMetadata()</code> sets the schema if the table name
+                        contains the pattern "<span class="command"><strong>schema.table</strong></span>"; calls
+                        <code class="methodname">describeTable()</code> to get metadata information;
+                        defaults the <code class="varname">$_cols</code> array to the columns reported by
+                        <code class="methodname">describeTable()</code>. By overriding this method, you can
+                        specify the columns.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        <code class="methodname">_setupPrimaryKey()</code> defaults the primary key columns
+                        to those reported by <code class="methodname">describeTable()</code>; checks that
+                        the primary key columns are included in the <code class="varname">$_cols</code> array.
+                        By overriding this method, you can specify the primary key columns.
+                    </p>
+                </li>
+</ul></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.initialization"></a>Table initialization</h4></div></div></div>
+            
+
+            <p>
+                If application-specific logic needs to be initialized when a Table class is
+                constructed, you can select to move your tasks to the
+                <code class="methodname">init()</code> method, which is called after all Table metadata has
+                been processed. This is recommended over the <code class="methodname">__construct()</code>
+                method if you do not need to alter the metadata in any programmatic way.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.defining.init.usage.example"></a><p class="title"><b>Ejemplo 268. Example usage of init() method</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected $_observer;
+
+    public function init()
+    {
+        $this-&gt;_observer = new MyObserverClass();
+    }
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.constructing"></a>Creating an Instance of a Table</h3></div></div></div>
+        
+
+        <p>
+            Before you use a Table class, create an instance using its constructor. The
+            constructor's argument is an array of options. The most important option to a Table
+            constructor is the database adapter instance, representing a live connection to an
+            <acronym class="acronym">RDBMS</acronym>. There are three ways of specifying the database adapter to a
+            Table class, and these three ways are described below:
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.constructing.adapter"></a>Specifying a Database Adapter</h4></div></div></div>
+            
+
+            <p>
+                The first way to provide a database adapter to a Table class is by passing it as an
+                object of type <code class="classname">Zend_Db_Adapter_Abstract</code> in the options array,
+                identified by the key '<span class="property">db</span>'.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.constructing.adapter.example"></a><p class="title"><b>Ejemplo 269. Example of constructing a Table using an Adapter object</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$db = Zend_Db::factory('PDO_MYSQL', $options);
+
+$table = new Bugs(array('db' =&gt; $db));
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.constructing.default-adapter"></a>Setting a Default Database Adapter</h4></div></div></div>
+            
+
+            <p>
+                The second way to provide a database adapter to a Table class is by declaring an
+                object of type <code class="classname">Zend_Db_Adapter_Abstract</code> to be a default
+                database adapter for all subsequent instances of Tables in your application. You can
+                do this with the static method
+                <code class="methodname">Zend_Db_Table_Abstract::setDefaultAdapter()</code>. The argument
+                is an object of type <code class="classname">Zend_Db_Adapter_Abstract</code>.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.constructing.default-adapter.example"></a><p class="title"><b>Ejemplo 270. Example of constructing a Table using a the Default Adapter</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$db = Zend_Db::factory('PDO_MYSQL', $options);
+Zend_Db_Table_Abstract::setDefaultAdapter($db);
+
+// Later...
+
+$table = new Bugs();
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                It can be convenient to create the database adapter object in a central place of
+                your application, such as the bootstrap, and then store it as the default adapter.
+                This gives you a means to ensure that the adapter instance is the same throughout
+                your application. However, setting a default adapter is limited to a single adapter
+                instance.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.constructing.registry"></a>Storing a Database Adapter in the Registry</h4></div></div></div>
+            
+
+            <p>
+                The third way to provide a database adapter to a Table class is by passing a string
+                in the options array, also identified by the '<span class="property">db</span>' key. The
+                string is used as a key to the static <code class="classname">Zend_Registry</code> instance,
+                where the entry at that key is an object of type
+                <code class="classname">Zend_Db_Adapter_Abstract</code>.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.constructing.registry.example"></a><p class="title"><b>Ejemplo 271. Example of constructing a Table using a Registry key</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$db = Zend_Db::factory('PDO_MYSQL', $options);
+Zend_Registry::set('my_db', $db);
+
+// Later...
+
+$table = new Bugs(array('db' =&gt; 'my_db'));
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                Like setting the default adapter, this gives you the means to ensure that the same
+                adapter instance is used throughout your application. Using the registry is more
+                flexible, because you can store more than one adapter instance. A given adapter
+                instance is specific to a certain <acronym class="acronym">RDBMS</acronym> brand and database
+                instance. If your application needs access to multiple databases or even multiple
+                database brands, then you need to use multiple adapters.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.insert"></a>Inserting Rows to a Table</h3></div></div></div>
+        
+
+        <p>
+            You can use the Table object to insert rows into the database table on which the Table
+            object is based. Use the <code class="methodname">insert()</code> method of your Table object.
+            The argument is an associative array, mapping column names to values.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.insert.example"></a><p class="title"><b>Ejemplo 272. Example of inserting to a Table</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$table = new Bugs();
+
+$data = array(
+    'created_on'      =&gt; '2007-03-22',
+    'bug_description' =&gt; 'Something wrong',
+    'bug_status'      =&gt; 'NEW'
+);
+
+$table-&gt;insert($data);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            By default, the values in your data array are inserted as literal values, using
+            parameters. If you need them to be treated as <acronym class="acronym">SQL</acronym> expressions, you
+            must make sure they are distinct from plain strings. Use an object of type
+            <code class="classname">Zend_Db_Expr</code> to do this.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.insert.example-expr"></a><p class="title"><b>Ejemplo 273. Example of inserting expressions to a Table</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$table = new Bugs();
+
+$data = array(
+    'created_on'      =&gt; new Zend_Db_Expr('CURDATE()'),
+    'bug_description' =&gt; 'Something wrong',
+    'bug_status'      =&gt; 'NEW'
+);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            In the examples of inserting rows above, it is assumed that the table has an
+            auto-incrementing primary key. This is the default behavior of
+            <code class="classname">Zend_Db_Table_Abstract</code>, but there are other types of primary keys
+            as well. The following sections describe how to support different types of primary keys.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.insert.key-auto"></a>Using a Table with an Auto-incrementing Key</h4></div></div></div>
+            
+
+            <p>
+                An auto-incrementing primary key generates a unique integer value for you if you
+                omit the primary key column from your <acronym class="acronym">SQL</acronym>
+                <code class="constant">INSERT</code> statement.
+            </p>
+
+            <p>
+                In <code class="classname">Zend_Db_Table_Abstract</code>, if you define the protected
+                variable <code class="varname">$_sequence</code> to be the Boolean value
+                <code class="constant">TRUE</code>, then the class assumes that the table has an
+                auto-incrementing primary key.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.insert.key-auto.example"></a><p class="title"><b>Ejemplo 274. Example of declaring a Table with auto-incrementing primary key</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'bugs';
+
+    // This is the default in the Zend_Db_Table_Abstract class;
+    // you do not need to define this.
+    protected $_sequence = true;
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                MySQL, Microsoft <acronym class="acronym">SQL</acronym> Server, and SQLite are examples of
+                <acronym class="acronym">RDBMS</acronym> brands that support auto-incrementing primary keys.
+            </p>
+
+            <p>
+                PostgreSQL has a <code class="constant">SERIAL</code> notation that implicitly defines a
+                sequence based on the table and column name, and uses the sequence to generate key
+                values for new rows. <acronym class="acronym">IBM</acronym> <acronym class="acronym">DB2</acronym> has an
+                <code class="constant">IDENTITY</code> notation that works similarly. If you use either of
+                these notations, treat your <code class="classname">Zend_Db_Table</code> class as having an
+                auto-incrementing column with respect to declaring the <code class="varname">$_sequence</code>
+                member as <code class="constant">TRUE</code>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.insert.key-sequence"></a>Using a Table with a Sequence</h4></div></div></div>
+            
+
+            <p>
+                A sequence is a database object that generates a unique value, which can be used
+                as a primary key value in one or more tables of the database.
+            </p>
+
+            <p>
+                If you define <code class="varname">$_sequence</code> to be a string, then
+                <code class="classname">Zend_Db_Table_Abstract</code> assumes the string to name a sequence
+                object in the database. The sequence is invoked to generate a new value, and this
+                value is used in the <code class="constant">INSERT</code> operation.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.insert.key-sequence.example"></a><p class="title"><b>Ejemplo 275. Example of declaring a Table with a sequence</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'bugs';
+
+    protected $_sequence = 'bug_sequence';
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                Oracle, PostgreSQL, and <acronym class="acronym">IBM</acronym> <acronym class="acronym">DB2</acronym> are examples
+                of <acronym class="acronym">RDBMS</acronym> brands that support sequence objects in the database.
+            </p>
+
+            <p>
+                PostgreSQL and <acronym class="acronym">IBM</acronym> <acronym class="acronym">DB2</acronym> also have syntax that
+                defines sequences implicitly and associated with columns. If you use this notation,
+                treat the table as having an auto-incrementing key column. Define the sequence name
+                as a string only in cases where you would invoke the sequence explicitly to get the
+                next key value.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.insert.key-natural"></a>Using a Table with a Natural Key</h4></div></div></div>
+            
+
+            <p>
+                Some tables have a natural key. This means that the key is not automatically
+                generated by the table or by a sequence. You must specify the value for the primary
+                key in this case.
+            </p>
+
+            <p>
+                If you define the <code class="varname">$_sequence</code> to be the Boolean value
+                <code class="constant">FALSE</code>, then <code class="classname">Zend_Db_Table_Abstract</code>
+                assumes that the table has a natural primary key. You must provide values for the
+                primary key columns in the array of data to the <code class="methodname">insert()</code>
+                method, or else this method throws a <code class="classname">Zend_Db_Table_Exception</code>.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.insert.key-natural.example"></a><p class="title"><b>Ejemplo 276. Example of declaring a Table with a natural key</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class BugStatus extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'bug_status';
+
+    protected $_sequence = false;
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    All <acronym class="acronym">RDBMS</acronym> brands support tables with natural keys. Examples
+                    of tables that are often declared as having natural keys are lookup tables,
+                    intersection tables in many-to-many relationships, or most tables with compound
+                    primary keys.
+                </p>
+            </td></tr>
+</table></div>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.update"></a>Updating Rows in a Table</h3></div></div></div>
+        
+
+        <p>
+            You can update rows in a database table using the <code class="methodname">update()</code>
+            method of a Table class. This method takes two arguments: an associative array of
+            columns to change and new values to assign to these columns; and an
+            <acronym class="acronym">SQL</acronym> expression that is used in a <code class="constant">WHERE</code> clause,
+            as criteria for the rows to change in the <code class="constant">UPDATE</code> operation.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.update.example"></a><p class="title"><b>Ejemplo 277. Example of updating rows in a Table</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$table = new Bugs();
+
+$data = array(
+    'updated_on'      =&gt; '2007-03-23',
+    'bug_status'      =&gt; 'FIXED'
+);
+
+$where = $table-&gt;getAdapter()-&gt;quoteInto('bug_id = ?', 1234);
+
+$table-&gt;update($data, $where);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Since the table <code class="methodname">update()</code> method proxies to the database adapter
+            <a class="link" href="zend.db.adapter.html#zend.db.adapter.write.update" title="Updating Data"><code class="methodname">update()</code></a>
+            method, the second argument can be an array of <acronym class="acronym">SQL</acronym> expressions. The
+            expressions are combined as Boolean terms using an <code class="constant">AND</code> operator.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                The values and identifiers in the <acronym class="acronym">SQL</acronym> expression are not quoted
+                for you. If you have values or identifiers that require quoting, you are responsible
+                for doing this. Use the <code class="methodname">quote()</code>,
+                <code class="methodname">quoteInto()</code>, and <code class="methodname">quoteIdentifier()</code>
+                methods of the database adapter.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.delete"></a>Deleting Rows from a Table</h3></div></div></div>
+        
+
+        <p>
+            You can delete rows from a database table using the <code class="methodname">delete()</code>
+            method. This method takes one argument, which is an <acronym class="acronym">SQL</acronym> expression
+            that is used in a <code class="constant">WHERE</code> clause, as criteria for the rows to delete.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.delete.example"></a><p class="title"><b>Ejemplo 278. Example of deleting rows from a Table</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$table = new Bugs();
+
+$where = $table-&gt;getAdapter()-&gt;quoteInto('bug_id = ?', 1235);
+
+$table-&gt;delete($where);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Since the table <code class="methodname">delete()</code> method proxies to the database adapter
+            <a class="link" href="zend.db.adapter.html#zend.db.adapter.write.delete" title="Deleting Data"><code class="methodname">delete()</code></a>
+            method, the argument can also be an array of <acronym class="acronym">SQL</acronym> expressions. The
+            expressions are combined as Boolean terms using an <code class="constant">AND</code> operator.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                The values and identifiers in the <acronym class="acronym">SQL</acronym> expression are not quoted
+                for you. If you have values or identifiers that require quoting, you are responsible
+                for doing this. Use the <code class="methodname">quote()</code>,
+                <code class="methodname">quoteInto()</code>, and <code class="methodname">quoteIdentifier()</code>
+                methods of the database adapter.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.find"></a>Finding Rows by Primary Key</h3></div></div></div>
+        
+
+        <p>
+            You can query the database table for rows matching specific values in the primary key,
+            using the <code class="methodname">find()</code> method. The first argument of this method is
+            either a single value or an array of values to match against the primary key of the
+            table.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.find.example"></a><p class="title"><b>Ejemplo 279. Example of finding rows by primary key values</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$table = new Bugs();
+
+// Find a single row
+// Returns a Rowset
+$rows = $table-&gt;find(1234);
+
+// Find multiple rows
+// Also returns a Rowset
+$rows = $table-&gt;find(array(1234, 5678));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            If you specify a single value, the method returns at most one row, because a primary
+            key cannot have duplicate values and there is at most one row in the database table
+            matching the value you specify. If you specify multiple values in an array, the method
+            returns at most as many rows as the number of distinct values you specify.
+        </p>
+
+        <p>
+            The <code class="methodname">find()</code> method might return fewer rows than the number of
+            values you specify for the primary key, if some of the values don't match any rows in
+            the database table. The method even may return zero rows. Because the number of rows
+            returned is variable, the <code class="methodname">find()</code> method returns an object of
+            type <code class="classname">Zend_Db_Table_Rowset_Abstract</code>.
+        </p>
+
+        <p>
+            If the primary key is a compound key, that is, it consists of multiple columns, you can
+            specify the additional columns as additional arguments to the
+            <code class="methodname">find()</code> method. You must provide as many arguments as the number
+            of columns in the table's primary key.
+        </p>
+
+        <p>
+            To find multiple rows from a table with a compound primary key, provide an array for
+            each of the arguments. All of these arrays must have the same number of elements. The
+            values in each array are formed into tuples in order; for example, the first element
+            in all the array arguments define the first compound primary key value, then the second
+            elements of all the arrays define the second compound primary key value, and so on.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.find.example-compound"></a><p class="title"><b>Ejemplo 280. Example of finding rows by compound primary key values</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                The call to <code class="methodname">find()</code> below to match multiple rows can match
+                two rows in the database. The first row must have primary key value (1234, 'ABC'),
+                and the second row must have primary key value (5678, 'DEF').
+            </p>
+
+            <pre class="programlisting">
+class BugsProducts extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'bugs_products';
+    protected $_primary = array('bug_id', 'product_id');
+}
+
+$table = new BugsProducts();
+
+// Find a single row with a compound primary key
+// Returns a Rowset
+$rows = $table-&gt;find(1234, 'ABC');
+
+// Find multiple rows with compound primary keys
+// Also returns a Rowset
+$rows = $table-&gt;find(array(1234, 5678), array('ABC', 'DEF'));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.fetch-all"></a>Querying for a Set of Rows</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.fetch-all.select"></a>Select API</h4></div></div></div>
+            
+
+            <div class="warning"><table border="0" summary="Warning">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Aviso]" src="images/warning.png"></td>
+<th align="left">Aviso</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    The <acronym class="acronym">API</acronym> for fetch operations has been superseded to allow
+                    a <code class="classname">Zend_Db_Table_Select</code> object to modify the query.
+                    However, the deprecated usage of the <code class="methodname">fetchRow()</code> and
+                    <code class="methodname">fetchAll()</code> methods will continue to work without
+                    modification.
+                </p>
+
+                <p>
+                    The following statements are all legal and functionally identical, however
+                    it is recommended to update your code to take advantage of the new usage
+                    where possible.
+                </p>
+
+                <pre class="programlisting">
+/**
+ * Fetching a rowset
+ */
+$rows = $table-&gt;fetchAll(
+    'bug_status = "NEW"',
+    'bug_id ASC',
+    10,
+    0
+    );
+$rows = $table-&gt;fetchAll(
+    $table-&gt;select()
+        -&gt;where('bug_status = ?', 'NEW')
+        -&gt;order('bug_id ASC')
+        -&gt;limit(10, 0)
+    );
+// or with binding
+$rows = $table-&gt;fetchAll(
+    $table-&gt;select()
+        -&gt;where('bug_status = :status')
+        -&gt;bind(array(':status'=&gt;'NEW')
+        -&gt;order('bug_id ASC')
+        -&gt;limit(10, 0)
+    );
+
+/**
+ * Fetching a single row
+ */
+$row = $table-&gt;fetchRow(
+    'bug_status = "NEW"',
+    'bug_id ASC'
+    );
+$row = $table-&gt;fetchRow(
+    $table-&gt;select()
+        -&gt;where('bug_status = ?', 'NEW')
+        -&gt;order('bug_id ASC')
+    );
+// or with binding
+$row = $table-&gt;fetchRow(
+    $table-&gt;select()
+        -&gt;where('bug_status = :status')
+        -&gt;bind(array(':status'=&gt;'NEW')
+        -&gt;order('bug_id ASC')
+    );
+</pre>
+            </td></tr>
+</table></div>
+
+            <p>
+                The <code class="classname">Zend_Db_Table_Select</code> object is an extension of the
+                <code class="classname">Zend_Db_Select</code> object that applies specific restrictions to
+                a query. The enhancements and restrictions are:
+            </p>
+
+            <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                    <p>
+                        You <span class="emphasis"><em>can</em></span> elect to return a subset of columns within a
+                        fetchRow or fetchAll query. This can provide optimization benefits where
+                        returning a large set of results for all columns is not desirable.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        You <span class="emphasis"><em>can</em></span> specify columns that evaluate expressions from
+                        within the selected table. However this will mean that the returned row or
+                        rowset will be <span class="property">readOnly</span> and cannot be used for
+                        <code class="methodname">save()</code> operations. A
+                        <code class="classname">Zend_Db_Table_Row</code> with
+                        <span class="property">readOnly</span> status will throw an exception if a
+                        <code class="methodname">save()</code> operation is attempted.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        You <span class="emphasis"><em>can</em></span> allow <code class="constant">JOIN</code> clauses on a
+                        select to allow multi-table lookups.
+                    </p>
+                </li>
+<li class="listitem">
+                    <p>
+                        You <span class="emphasis"><em>can not</em></span> specify columns from a JOINed tabled to be
+                        returned in a row or rowset. Doing so will trigger a <acronym class="acronym">PHP</acronym>
+                        error. This was done to ensure the integrity of the
+                        <code class="classname">Zend_Db_Table</code> is retained. i.e. A
+                        <code class="classname">Zend_Db_Table_Row</code> should only reference columns
+                        derived from its parent table.
+                    </p>
+                </li>
+</ul></div>
+
+            <div class="example">
+<a name="zend.db.table.qry.rows.set.simple.usage.example"></a><p class="title"><b>Ejemplo 281. Simple usage</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$table = new Bugs();
+
+$select = $table-&gt;select();
+$select-&gt;where('bug_status = ?', 'NEW');
+
+$rows = $table-&gt;fetchAll($select);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                Fluent interfaces are implemented across the component, so this can be rewritten
+                this in a more abbreviated form.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.qry.rows.set.fluent.interface.example"></a><p class="title"><b>Ejemplo 282. Example of fluent interface</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$table = new Bugs();
+
+$rows =
+    $table-&gt;fetchAll($table-&gt;select()-&gt;where('bug_status = ?', 'NEW'));
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.fetch-all.usage"></a>Fetching a rowset</h4></div></div></div>
+            
+
+            <p>
+                You can query for a set of rows using any criteria other than the primary key
+                values, using the <code class="methodname">fetchAll()</code> method of the Table class.
+                This method returns an object of type
+                <code class="classname">Zend_Db_Table_Rowset_Abstract</code>.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.qry.rows.set.finding.row.example"></a><p class="title"><b>Ejemplo 283. Example of finding rows by an expression</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$table = new Bugs();
+
+$select = $table-&gt;select()-&gt;where('bug_status = ?', 'NEW');
+
+$rows = $table-&gt;fetchAll($select);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                You may also pass sorting criteria in an <code class="constant">ORDER</code> BY clause, as
+                well as count and offset integer values, used to make the query return a specific
+                subset of rows. These values are used in a <code class="constant">LIMIT</code> clause, or in
+                equivalent logic for <acronym class="acronym">RDBMS</acronym> brands that do not support the
+                <code class="constant">LIMIT</code> syntax.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.fetch-all.example2"></a><p class="title"><b>Ejemplo 284. Example of finding rows by an expression</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$table = new Bugs();
+
+$order  = 'bug_id';
+
+// Return the 21st through 30th rows
+$count  = 10;
+$offset = 20;
+
+$select = $table-&gt;select()-&gt;where('bug_status = ?', 'NEW')
+                          -&gt;order($order)
+                          -&gt;limit($count, $offset);
+
+$rows = $table-&gt;fetchAll($select);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                All of the arguments above are optional. If you omit the <code class="constant">ORDER</code>
+                clause, the result set includes rows from the table in an unpredictable order. If
+                no <code class="constant">LIMIT</code> clause is set, you retrieve every row in the table
+                that matches the <code class="constant">WHERE</code> clause.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.advanced.usage"></a>Advanced usage</h4></div></div></div>
+            
+
+            <p>
+                For more specific and optimized requests, you may wish to limit the number of
+                columns returned in a row or rowset. This can be achieved by passing a
+                <code class="constant">FROM</code> clause to the select object. The first argument in the
+                <code class="constant">FROM</code> clause is identical to that of a
+                <code class="classname">Zend_Db_Select</code> object with the addition of being able to pass
+                an instance of <code class="classname">Zend_Db_Table_Abstract</code> and have it
+                automatically determine the table name.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.qry.rows.set.retrieving.a.example"></a><p class="title"><b>Ejemplo 285. Retrieving specific columns</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$table = new Bugs();
+
+$select = $table-&gt;select();
+$select-&gt;from($table, array('bug_id', 'bug_description'))
+       -&gt;where('bug_status = ?', 'NEW');
+
+$rows = $table-&gt;fetchAll($select);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="important"><table border="0" summary="Important">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Importante]" src="images/important.png"></td>
+<th align="left">Importante</th>
+</tr>
+<tr><td align="left" valign="top">
+                <p>
+                    The rowset contains rows that are still 'valid' - they simply contain a
+                    subset of the columns of a table. If a <code class="methodname">save()</code>
+                    method is called on a partial row then only the fields available will be
+                    modified.
+                </p>
+            </td></tr>
+</table></div>
+
+            <p>
+                You can also specify expressions within a <code class="constant">FROM</code> clause and have
+                these returned as a readOnly row or rowset. In this example we will return a rows
+                from the bugs table that show an aggregate of the number of new bugs reported by
+                individuals. Note the <code class="constant">GROUP</code> clause. The 'count' column will be
+                made available to the row for evaluation and can be accessed as if it were part of
+                the schema.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.qry.rows.set.retrieving.b.example"></a><p class="title"><b>Ejemplo 286. Retrieving expressions as columns</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$table = new Bugs();
+
+$select = $table-&gt;select();
+$select-&gt;from($table,
+              array('COUNT(reported_by) as `count`', 'reported_by'))
+       -&gt;where('bug_status = ?', 'NEW')
+       -&gt;group('reported_by');
+
+$rows = $table-&gt;fetchAll($select);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                You can also use a lookup as part of your query to further refine your fetch
+                operations. In this example the accounts table is queried as part of a search for
+                all new bugs reported by 'Bob'.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.qry.rows.set.refine.example"></a><p class="title"><b>Ejemplo 287. Using a lookup table to refine the results of fetchAll()</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$table = new Bugs();
+
+// retrieve with from part set, important when joining
+$select = $table-&gt;select(Zend_Db_Table::SELECT_WITH_FROM_PART);
+$select-&gt;setIntegrityCheck(false)
+       -&gt;where('bug_status = ?', 'NEW')
+       -&gt;join('accounts', 'accounts.account_name = bugs.reported_by')
+       -&gt;where('accounts.account_name = ?', 'Bob');
+
+$rows = $table-&gt;fetchAll($select);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                The <code class="classname">Zend_Db_Table_Select</code> is primarily used to constrain and
+                validate so that it may enforce the criteria for a legal <code class="constant">SELECT</code>
+                query. However there may be certain cases where you require the flexibility of the
+                <code class="classname">Zend_Db_Table_Row</code> component and do not require a writable or
+                deletable row. for this specific user case, it is possible to retrieve a row or
+                rowset by passing a <code class="constant">FALSE</code> value to
+                <code class="methodname">setIntegrityCheck()</code>. The resulting row or rowset will be
+                returned as a 'locked' row (meaning the <code class="methodname">save()</code>,
+                <code class="methodname">delete()</code> and any field-setting methods will throw an
+                exception).
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.qry.rows.set.integrity.example"></a><p class="title"><b>Ejemplo 288. 
+                    Removing the integrity check on Zend_Db_Table_Select to allow JOINed rows
+                </b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$table = new Bugs();
+
+$select = $table-&gt;select(Zend_Db_Table::SELECT_WITH_FROM_PART)
+                -&gt;setIntegrityCheck(false);
+$select-&gt;where('bug_status = ?', 'NEW')
+       -&gt;join('accounts',
+              'accounts.account_name = bugs.reported_by',
+              'account_name')
+       -&gt;where('accounts.account_name = ?', 'Bob');
+
+$rows = $table-&gt;fetchAll($select);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.fetch-row"></a>Querying for a Single Row</h3></div></div></div>
+        
+
+        <p>
+            You can query for a single row using criteria similar to that of the
+            <code class="methodname">fetchAll()</code> method.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.fetch-row.example1"></a><p class="title"><b>Ejemplo 289. Example of finding a single row by an expression</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$table = new Bugs();
+
+$select  = $table-&gt;select()-&gt;where('bug_status = ?', 'NEW')
+                           -&gt;order('bug_id');
+
+$row = $table-&gt;fetchRow($select);
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            This method returns an object of type <code class="classname">Zend_Db_Table_Row_Abstract</code>.
+            If the search criteria you specified match no rows in the database table, then
+            <code class="methodname">fetchRow()</code> returns <acronym class="acronym">PHP</acronym>'s
+            <code class="constant">NULL</code> value.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.info"></a>Retrieving Table Metadata Information</h3></div></div></div>
+        
+
+        <p>
+            The <code class="classname">Zend_Db_Table_Abstract</code> class provides some information about
+            its metadata. The <code class="methodname">info()</code> method returns an array structure with
+            information about the table, its columns and primary key, and other metadata.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.info.example"></a><p class="title"><b>Ejemplo 290. Example of getting the table name</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$table = new Bugs();
+
+$info = $table-&gt;info();
+
+echo "The table name is " . $info['name'] . "\n";
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            The keys of the array returned by the <code class="methodname">info()</code> method are
+            described below:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>name</em></span> =&gt; the name of the table.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>cols</em></span> =&gt; an array, naming the columns of
+                    the table.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>primary</em></span> =&gt; an array, naming the columns in
+                    the primary key.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>metadata</em></span> =&gt; an associative array, mapping
+                    column names to information about the columns. This is the information returned
+                    by the <code class="methodname">describeTable()</code> method.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>rowClass</em></span> =&gt; the name of the concrete class
+                    used for Row objects returned by methods of this table instance. This defaults
+                    to <code class="classname">Zend_Db_Table_Row</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>rowsetClass</em></span> =&gt; the name of the concrete
+                    class used for Rowset objects returned by methods of this table instance. This
+                    defaults to <code class="classname">Zend_Db_Table_Rowset</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>referenceMap</em></span> =&gt; an associative array, with
+                    information about references from this table to any parent tables. See
+                    <a class="link" href="zend.db.table.relationships.html#zend.db.table.relationships.defining" title="Defining Relationships">this chapter</a>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>dependentTables</em></span> =&gt; an array of class names
+                    of tables that reference this table. See
+                    <a class="link" href="zend.db.table.relationships.html#zend.db.table.relationships.defining" title="Defining Relationships">this chapter</a>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>schema</em></span> =&gt; the name of the schema (or
+                    database or tablespace) for this table.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.metadata.caching"></a>Caching Table Metadata</h3></div></div></div>
+        
+
+        <p>
+            By default, <code class="classname">Zend_Db_Table_Abstract</code> queries the
+            underlying database for <a class="link" href="zend.db.table.html#zend.db.table.info" title="Retrieving Table Metadata Information">table
+                metadata</a> whenever that data is needed to perform table
+            operations. The table object fetches the table metadata from the
+            database using the adapter's <code class="methodname">describeTable()</code> method.
+            Operations requiring this introspection include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem"><p><code class="methodname">insert()</code></p></li>
+<li class="listitem"><p><code class="methodname">find()</code></p></li>
+<li class="listitem"><p><code class="methodname">info()</code></p></li>
+</ul></div>
+
+        <p>
+            In some circumstances, particularly when many table objects are instantiated against
+            the same database table, querying the database for the table metadata for each instance
+            may be undesirable from a performance standpoint. In such cases, users may benefit by
+            caching the table metadata retrieved from the database.
+        </p>
+
+        <p>
+            There are two primary ways in which a user may take advantage of table metadata
+            caching:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Call
+                    <code class="methodname">Zend_Db_Table_Abstract::setDefaultMetadataCache()</code></em></span>
+                    - This allows a developer to once set the default cache object to be used
+                    for all table classes.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>Configure
+                    <code class="methodname">Zend_Db_Table_Abstract::__construct()</code></em></span> -
+                    This allows a developer to set the cache object to be used for a particular
+                    table class instance.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            In both cases, the cache specification must be either <code class="constant">NULL</code> (i.e.,
+            no cache used) or an instance of
+            <a class="link" href="zend.cache.frontends.html#zend.cache.frontends.core" title="Zend_Cache_Core"><code class="classname">Zend_Cache_Core</code></a>.
+            The methods may be used in conjunction when it is desirable to have both a default
+            metadata cache and the ability to change the cache for individual table objects.
+        </p>
+
+        <div class="example">
+<a name="zend.db.table.metadata.caching-default"></a><p class="title"><b>Ejemplo 291. Using a Default Metadata Cache for all Table Objects</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                The following code demonstrates how to set a default metadata cache to be used for
+                all table objects:
+            </p>
+
+            <pre class="programlisting">
+// First, set up the Cache
+$frontendOptions = array(
+    'automatic_serialization' =&gt; true
+    );
+
+$backendOptions  = array(
+    'cache_dir'                =&gt; 'cacheDir'
+    );
+
+$cache = Zend_Cache::factory('Core',
+                             'File',
+                             $frontendOptions,
+                             $backendOptions);
+
+// Next, set the cache to be used with all table objects
+Zend_Db_Table_Abstract::setDefaultMetadataCache($cache);
+
+// A table class is also needed
+class Bugs extends Zend_Db_Table_Abstract
+{
+    // ...
+}
+
+// Each instance of Bugs now uses the default metadata cache
+$bugs = new Bugs();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.db.table.metadata.caching-instance"></a><p class="title"><b>Ejemplo 292. Using a Metadata Cache for a Specific Table Object</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                The following code demonstrates how to set a metadata cache for a specific table
+                object instance:
+            </p>
+
+            <pre class="programlisting">
+// First, set up the Cache
+$frontendOptions = array(
+    'automatic_serialization' =&gt; true
+    );
+
+$backendOptions  = array(
+    'cache_dir'                =&gt; 'cacheDir'
+    );
+
+$cache = Zend_Cache::factory('Core',
+                             'File',
+                             $frontendOptions,
+                             $backendOptions);
+
+// A table class is also needed
+class Bugs extends Zend_Db_Table_Abstract
+{
+    // ...
+}
+
+// Configure an instance upon instantiation
+$bugs = new Bugs(array('metadataCache' =&gt; $cache));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note: Automatic Serialization with the Cache Frontend">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Automatic Serialization with the Cache Frontend</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Since the information returned from the adapter's
+                <code class="methodname">describeTable()</code> method is an array, ensure that the
+                <span class="property">automatic_serialization</span> option is set to
+                <code class="constant">TRUE</code> for the <code class="classname">Zend_Cache_Core</code> frontend.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Though the above examples use <code class="classname">Zend_Cache_Backend_File</code>, developers
+            may use whatever cache backend is appropriate for the situation. Please see
+            <a class="link" href="zend.cache.html" title="Zend_Cache">Zend_Cache</a> for more information.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.metadata.caching.hardcoding"></a>Hardcoding Table Metadata</h4></div></div></div>
+            
+
+            <p>
+                To take metadata caching a step further, you can also choose to
+                hardcode metadata. In this particular case, however, any changes
+                to the table schema will require a change in your code. As such,
+                it is only recommended for those who are optimizing for
+                production usage.
+            </p>
+
+            <p>
+                The metadata structure is as follows:
+            </p>
+
+            <pre class="programlisting">
+protected $_metadata = array(
+    '&lt;column_name&gt;' =&gt; array(
+        'SCHEMA_NAME'      =&gt; &lt;string&gt;,
+        'TABLE_NAME'       =&gt; &lt;string&gt;,
+        'COLUMN_NAME'      =&gt; &lt;string&gt;,
+        'COLUMN_POSITION'  =&gt; &lt;int&gt;,
+        'DATA_TYPE'        =&gt; &lt;string&gt;,
+        'DEFAULT'          =&gt; NULL|&lt;value&gt;,
+        'NULLABLE'         =&gt; &lt;bool&gt;,
+        'LENGTH'           =&gt; &lt;string - length&gt;,
+        'SCALE'            =&gt; NULL|&lt;value&gt;,
+        'PRECISION'        =&gt; NULL|&lt;value&gt;,
+        'UNSIGNED'         =&gt; NULL|&lt;bool&gt;,
+        'PRIMARY'          =&gt; &lt;bool&gt;,
+        'PRIMARY_POSITION' =&gt; &lt;int&gt;,
+        'IDENTITY'         =&gt; &lt;bool&gt;,
+    ),
+    // additional columns...
+);
+</pre>
+
+            <p>
+                An easy way to get the appropriate values is to use the metadata
+                cache, and then to deserialize values stored in the cache.
+            </p>
+
+            <p>
+                You can disable this optimization by turning of the
+                <span class="property">metadataCacheInClass</span> flag:
+            </p>
+
+            <pre class="programlisting">
+// At instantiation:
+$bugs = new Bugs(array('metadataCacheInClass' =&gt; false));
+
+// Or later:
+$bugs-&gt;setMetadataCacheInClass(false);
+</pre>
+
+            <p>
+                The flag is enabled by default, which ensures that the
+                <code class="varname">$_metadata</code> array is only populated once per
+                instance.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.db.table.extending"></a>Customizing and Extending a Table Class</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.extending.row-rowset"></a>Using Custom Row or Rowset Classes</h4></div></div></div>
+            
+
+            <p>
+                By default, methods of the Table class return a Rowset in instances of the concrete
+                class <code class="classname">Zend_Db_Table_Rowset</code>, and Rowsets contain a collection
+                of instances of the concrete class <code class="classname">Zend_Db_Table_Row</code> You can
+                specify an alternative class to use for either of these, but they must be classes
+                that extend <code class="classname">Zend_Db_Table_Rowset_Abstract</code> and
+                <code class="classname">Zend_Db_Table_Row_Abstract</code>, respectively.
+            </p>
+
+            <p>
+                You can specify Row and Rowset classes using the Table constructor's options array,
+                in keys '<span class="property">rowClass</span>' and '<span class="property">rowsetClass</span>'
+                respectively. Specify the names of the classes using strings.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.extending.row-rowset.example"></a><p class="title"><b>Ejemplo 293. Example of specifying the Row and Rowset classes</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class My_Row extends Zend_Db_Table_Row_Abstract
+{
+    ...
+}
+
+class My_Rowset extends Zend_Db_Table_Rowset_Abstract
+{
+    ...
+}
+
+$table = new Bugs(
+    array(
+        'rowClass'    =&gt; 'My_Row',
+        'rowsetClass' =&gt; 'My_Rowset'
+    )
+);
+
+$where = $table-&gt;getAdapter()-&gt;quoteInto('bug_status = ?', 'NEW')
+
+// Returns an object of type My_Rowset,
+// containing an array of objects of type My_Row.
+$rows = $table-&gt;fetchAll($where);
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                You can change the classes by specifying them with the
+                <code class="methodname">setRowClass()</code> and <code class="methodname">setRowsetClass()</code>
+                methods. This applies to rows and rowsets created subsequently; it does not change
+                the class of any row or rowset objects you have created previously.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.extending.row-rowset.example2"></a><p class="title"><b>Ejemplo 294. Example of changing the Row and Rowset classes</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$table = new Bugs();
+
+$where = $table-&gt;getAdapter()-&gt;quoteInto('bug_status = ?', 'NEW')
+
+// Returns an object of type Zend_Db_Table_Rowset
+// containing an array of objects of type Zend_Db_Table_Row.
+$rowsStandard = $table-&gt;fetchAll($where);
+
+$table-&gt;setRowClass('My_Row');
+$table-&gt;setRowsetClass('My_Rowset');
+
+// Returns an object of type My_Rowset,
+// containing an array of objects of type My_Row.
+$rowsCustom = $table-&gt;fetchAll($where);
+
+// The $rowsStandard object still exists, and it is unchanged.
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                For more information on the Row and Rowset classes, see
+                <a class="link" href="zend.db.table.row.html" title="Zend_Db_Table_Row">this chapter</a> and <a class="link" href="zend.db.table.rowset.html" title="Zend_Db_Table_Rowset">this one</a>.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.extending.insert-update"></a>Defining Custom Logic for Insert, Update, and Delete</h4></div></div></div>
+            
+
+            <p>
+                You can override the <code class="methodname">insert()</code> and
+                <code class="methodname">update()</code> methods in your Table class. This gives you the
+                opportunity to implement custom code that is executed before performing the database
+                operation. Be sure to call the parent class method when you are done.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.extending.insert-update.example"></a><p class="title"><b>Ejemplo 295. Custom logic to manage timestamps</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'bugs';
+
+    public function insert(array $data)
+    {
+        // add a timestamp
+        if (empty($data['created_on'])) {
+            $data['created_on'] = time();
+        }
+        return parent::insert($data);
+    }
+
+    public function update(array $data, $where)
+    {
+        // add a timestamp
+        if (empty($data['updated_on'])) {
+            $data['updated_on'] = time();
+        }
+        return parent::update($data, $where);
+    }
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                You can also override the <code class="methodname">delete()</code> method.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.extending.finders"></a>Define Custom Search Methods in Zend_Db_Table</h4></div></div></div>
+            
+
+            <p>
+                You can implement custom query methods in your Table class, if you have frequent
+                need to do queries against this table with specific criteria. Most queries can be
+                written using <code class="methodname">fetchAll()</code>, but this requires that you
+                duplicate code to form the query conditions if you need to run the query in several
+                places in your application. Therefore it can be convenient to implement a method in
+                the Table class to perform frequently-used queries against this table.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.extending.finders.example"></a><p class="title"><b>Ejemplo 296. Custom method to find bugs by status</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+class Bugs extends Zend_Db_Table_Abstract
+{
+    protected $_name = 'bugs';
+
+    public function findByStatus($status)
+    {
+        $where = $this-&gt;getAdapter()-&gt;quoteInto('bug_status = ?', $status);
+        return $this-&gt;fetchAll($where, 'bug_id');
+    }
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.db.table.extending.inflection"></a>Define Inflection in Zend_Db_Table</h4></div></div></div>
+            
+
+            <p>
+                Some people prefer that the table class name match a table name in the
+                <acronym class="acronym">RDBMS</acronym> by using a string transformation called
+                <span class="emphasis"><em>inflection</em></span>.
+            </p>
+
+            <p>
+                For example, if your table class name is "BugsProducts", it would
+                match the physical table in the database called "bugs_products", if
+                you omit the explicit declaration of the <code class="varname">$_name</code> class property.
+                In this inflection mapping, the class name spelled in "CamelCase" format would be
+                transformed to lower case, and words are separated with an underscore.
+            </p>
+
+            <p>
+                You can specify the database table name independently from the class name by
+                declaring the table name with the <code class="varname">$_name</code> class property in each
+                of your table classes.
+            </p>
+
+            <p>
+                <code class="classname">Zend_Db_Table_Abstract</code> performs no inflection to map the
+                class name to the table name. If you omit the declaration of
+                <code class="varname">$_name</code> in your table class, the class maps to a database table
+                that matches the spelling of the class name exactly.
+            </p>
+
+            <p>
+                It is inappropriate to transform identifiers from the database, because this can
+                lead to ambiguity or make some identifiers inaccessible. Using the
+                <acronym class="acronym">SQL</acronym> identifiers exactly as they appear in the database makes
+                <code class="classname">Zend_Db_Table_Abstract</code> both simpler and more flexible.
+            </p>
+
+            <p>
+                If you prefer to use inflection, then you must implement the transformation
+                yourself, by overriding the <code class="methodname">_setupTableName()</code> method in
+                your Table classes. One way to do this is to define an abstract class that extends
+                <code class="classname">Zend_Db_Table_Abstract</code>, and then the rest of your tables
+                extend your new abstract class.
+            </p>
+
+            <div class="example">
+<a name="zend.db.table.extending.inflection.example"></a><p class="title"><b>Ejemplo 297. Example of an abstract table class that implements inflection</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+abstract class MyAbstractTable extends Zend_Db_Table_Abstract
+{
+    protected function _setupTableName()
+    {
+        if (!$this-&gt;_name) {
+            $this-&gt;_name = myCustomInflector(get_class($this));
+        }
+        parent::_setupTableName();
+    }
+}
+
+class BugsProducts extends MyAbstractTable
+{
+}
+</pre>
+            </div>
+</div>
+<br class="example-break">
+
+            <p>
+                You are responsible for writing the functions to perform inflection transformation.
+                Zend Framework does not provide such a function.
+            </p>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.db.select.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.db.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.db.table.row.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Db_Select </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Zend_Db_Table_Row</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

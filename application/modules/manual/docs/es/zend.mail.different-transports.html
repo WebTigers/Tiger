@@ -1,0 +1,143 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Using Different Transports</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.mail.html" title="Zend_Mail">
+<link rel="prev" href="zend.mail.multiple-emails.html" title="Sending Multiple Mails per SMTP Connection">
+<link rel="next" href="zend.mail.html-mails.html" title="HTML E-Mail">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Using Different Transports</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.mail.multiple-emails.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Mail</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.mail.html-mails.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.mail.different-transports"></a>Using Different Transports</h2></div></div></div>
+    
+
+    <p>
+        In case you want to send different e-mails through different connections, you can also pass
+        the transport object directly to <code class="methodname">send()</code> without a prior call to
+        <code class="methodname">setDefaultTransport()</code>. The passed object will override the default
+        transport for the actual <code class="methodname">send()</code> request.
+    </p>
+
+    <div class="example">
+<a name="zend.mail.different-transports.example-1"></a><p class="title"><b>Ejemplo 571. Using Different Transports</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+$mail = new Zend_Mail();
+// build message...
+$tr1 = new Zend_Mail_Transport_Smtp('server@example.com');
+$tr2 = new Zend_Mail_Transport_Smtp('other_server@example.com');
+$mail-&gt;send($tr1);
+$mail-&gt;send($tr2);
+$mail-&gt;send();  // use default again
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="note"><table border="0" summary="Note: Additional transports">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Additional transports</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Additional transports can be written by implementing
+            <code class="classname">Zend_Mail_Transport_Interface</code>.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.mail.file-transport"></a>Using File Transport</h3></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Mail_Transport_File</code> is useful in a
+        development environment or for testing purposes. Instead of sending any real
+        emails it simply dumps the email's body and headers to a file in the filesystem.
+        Like the other transports, it may be configured using
+        <code class="classname">Zend_Application_Resource_Mail</code>, or by passing an instance to the
+        <code class="methodname">send()</code> method of a <code class="classname">Zend_Mail</code> instance.
+    </p>
+
+    <p>
+        The transport has two optional parameters that can be passed to the constructor or
+        via <code class="methodname">setOptions()</code> method. The <span class="property">path</span>
+        option specifies the base path where new files are saved. If nothing is set, the transport
+        uses the default system directory for temporary files.  The second parameter,
+        <span class="property">callback</span>, defines what PHP callback should be used to generate a
+        filename. As an example, assume we need to use the recipient's email plus some
+        hash as the filename:
+    </p>
+
+    <pre class="programlisting">
+function recipientFilename($transport)
+{
+    return $transport-&gt;recipients . '_' . mt_rand() . '.tmp';
+}
+
+$mail = new Zend_Mail();
+$mail-&gt;addTo('somebody@example.com', 'Some Recipient');
+// build message...
+$tr = new Zend_Mail_Transport_File(array('callback' =&gt; 'recipientFilename'));
+$mail-&gt;send($tr);
+</pre>
+
+    <p>
+        The resulting file will be something like <code class="filename">somebody@example.com_1493362665.tmp</code>
+    </p>
+
+    <div class="note"><table border="0" summary="Note: Include randomness in filename generation">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Include randomness in filename generation</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            When generating filenames, you should inject some sort of randomness into the generation
+            to ensure that the filenames are unique. This is especially important on servers where
+            you may expect high load, as it will ensure that despite a number of requests coming in
+            during the same second or millisecond, the filename will still be unique.
+        </p>
+    </td></tr>
+</table></div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.mail.multiple-emails.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.mail.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.mail.html-mails.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Sending Multiple Mails per SMTP Connection </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> HTML E-Mail</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

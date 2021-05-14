@@ -1,0 +1,286 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Using a Conventional Modular Directory Structure</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.plugins.html" title="Plugins">
+<link rel="next" href="zend.controller.exceptions.html" title="MVC Exceptions">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Using a Conventional Modular Directory Structure</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.plugins.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.exceptions.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.modular"></a>Using a Conventional Modular Directory Structure</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.modular.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            The Conventional Modular directory structure allows you to separate
+            different <acronym class="acronym">MVC</acronym> applications into self-contained units, and re-use
+            them with different front controllers. To illustrate such a
+            directory structure:
+        </p>
+
+        <pre class="programlisting">
+docroot/
+    index.php
+application/
+    default/
+        controllers/
+            IndexController.php
+            FooController.php
+        models/
+        views/
+            scripts/
+                index/
+                foo/
+            helpers/
+            filters/
+    blog/
+        controllers/
+            IndexController.php
+        models/
+        views/
+            scripts/
+                index/
+            helpers/
+            filters/
+    news/
+        controllers/
+            IndexController.php
+            ListController.php
+        models/
+        views/
+            scripts/
+                index/
+                list/
+            helpers/
+            filters/
+</pre>
+
+        <p>
+            In this paradigm, the module name serves as a prefix to the
+            controllers it contains. The above example contains three
+            module controllers, '<code class="classname">Blog_IndexController</code>',
+            '<code class="classname">News_IndexController</code>', and
+            '<code class="classname">News_ListController</code>'.
+            Two global controllers, '<code class="classname">IndexController</code>' and
+            '<code class="classname">FooController</code>' are also defined; neither of these will be
+            namespaced. This directory structure will be used for examples in
+            this chapter.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: No Namespacing in the Default Module">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">No Namespacing in the Default Module</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Note that in the default module, controllers do not need a
+                namespace prefix. Thus, in the example above, the controllers in
+                the default module do not need a prefix of 'Default_' -- they
+                are simply dispatched according to their base controller name:
+                '<code class="classname">IndexController</code>' and
+                '<code class="classname">FooController</code>'. A namespace prefix is
+                used in all other modules, however.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            So, how do you implement such a directory layout using the Zend
+            Framework <acronym class="acronym">MVC</acronym> components?
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.modular.directories"></a>Specifying Module Controller Directories</h3></div></div></div>
+        
+
+        <p>
+            The first step to making use of modules is to modify how you specify
+            the controller directory list in the front controller. In the basic
+            <acronym class="acronym">MVC</acronym> series, you pass either an array or a string to
+            <code class="methodname">setControllerDirectory()</code>, or a path to
+            <code class="methodname">addControllerDirectory()</code>. When using modules, you need
+            to alter your calls to these methods slightly.
+        </p>
+
+        <p>
+            With <code class="methodname">setControllerDirectory()</code>, you will need to pass an
+            associative array and specify key and value pairs of module
+            name and directory paths. The special key <span class="property">default</span> will be
+            used for global controllers (those not needing a module namespace).
+            All entries should contain a string key pointing to a single path,
+            and the <span class="property">default</span> key must be present. As an example:
+        </p>
+
+        <pre class="programlisting">
+$front-&gt;setControllerDirectory(array(
+    'default' =&gt; '/path/to/application/controllers',
+    'blog'    =&gt; '/path/to/application/blog/controllers'
+));
+</pre>
+
+        <p>
+            <code class="methodname">addControllerDirectory()</code> will take an optional second
+            argument. When using modules, pass the module name as the second
+            argument; if not specified, the path will be added to the
+            <span class="emphasis"><em>default</em></span> namespace. As an example:
+        </p>
+
+        <pre class="programlisting">
+$front-&gt;addControllerDirectory('/path/to/application/news/controllers',
+                               'news');
+</pre>
+
+        <p>
+            Saving the best for last, the easiest way to specify module
+            directories is to do so en masse, with all modules under a common
+            directory and sharing the same structure. This can be done with
+            <code class="methodname">addModuleDirectory()</code>:
+        </p>
+
+        <pre class="programlisting">
+/**
+ * Assuming the following directory structure:
+ * application/
+ *     modules/
+ *         default/
+ *             controllers/
+ *         foo/
+ *             controllers/
+ *         bar/
+ *             controllers/
+ */
+$front-&gt;addModuleDirectory('/path/to/application/modules');
+</pre>
+
+        <p>
+            The above example will define the <span class="emphasis"><em>default</em></span>,
+            <span class="emphasis"><em>foo</em></span>, and <span class="emphasis"><em>bar</em></span> modules, each pointing to the
+            <code class="filename">controllers/</code> subdirectory of their respective module.
+        </p>
+
+        <p>
+            You may customize the controller subdirectory to use within your
+            modules by using <code class="methodname">setModuleControllerDirectoryName()</code>:
+        </p>
+
+        <pre class="programlisting">
+/**
+ * Change the controllers subdirectory to be 'con'
+ * application/
+ *     modules/
+ *         default/
+ *             con/
+ *         foo/
+ *             con/
+ *         bar/
+ *             con/
+ */
+$front-&gt;setModuleControllerDirectoryName('con');
+$front-&gt;addModuleDirectory('/path/to/application/modules');
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                You can indicate that no controller subdirectory be used for your
+                modules by passing an empty value to
+                <code class="methodname">setModuleControllerDirectoryName()</code>.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.modular.router"></a>Routing to Modules</h3></div></div></div>
+        
+
+        <p>
+            The default route in <code class="classname">Zend_Controller_Router_Rewrite</code> is
+            an object of type <code class="classname">Zend_Controller_Router_Route_Module</code>.
+            This route expects one of the following routing schemas:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem"><p><code class="filename">:module/:controller/:action/*</code></p></li>
+<li class="listitem"><p><code class="filename">:controller/:action/*</code></p></li>
+</ul></div>
+
+        <p>
+            In other words, it will match a controller and action by themselves
+            or with a preceding module. The rules for matching specify that a
+            module will only be matched if a key of the same name exists in the
+            controller directory array passed to the front controller and
+            dispatcher.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.modular.defaultcontroller"></a>Module or Global Default Controller</h3></div></div></div>
+        
+
+        <p>
+            In the default router, if a controller was not specified in the <acronym class="acronym">URL</acronym>,
+            a default controller is used (<code class="classname">IndexController</code>, unless
+            otherwise requested). With modular controllers, if a module has been
+            specified but no controller, the dispatcher first looks for this
+            default controller in the module path, and then falls back on the
+            default controller found in the 'default', global, namespace.
+        </p>
+
+        <p>
+            If you wish to always default to the global namespace, set the
+            <code class="varname">$useDefaultControllerAlways</code> parameter in the front controller:
+        </p>
+
+        <pre class="programlisting">
+$front-&gt;setParam('useDefaultControllerAlways', true);
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.plugins.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.exceptions.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Plugins </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> MVC Exceptions</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

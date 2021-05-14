@@ -1,0 +1,837 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The EventManager</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.event-manager.html" title="Zend_EventManager">
+<link rel="prev" href="zend.event-manager.html" title="Zend_EventManager">
+<link rel="next" href="zend.exception.html" title="Zend_Exception">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">The EventManager</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.event-manager.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_EventManager</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.exception.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.event-manager.event-manager"></a>The EventManager</h2></div></div></div>
+    
+ 
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.event-manager.event-manager.intro"></a>Overview</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_EventManager</code> is a component designed for the following use
+            cases:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    Implementing simple subject/observer patterns.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Implementing Aspect-Oriented designs.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    Implementing event-driven architectures.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            The basic architecture allows you to attach and detach listeners to named events, both on
+            a per-instance basis as well as statically; trigger events; and interrupt execution of
+            listeners.
+        </p>
+    </div>
+ 
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.event-manager.event-manager.quick-start"></a>Quick Start</h3></div></div></div>
+        
+
+        <p>
+            Typically, you will compose a <code class="classname">Zend_EventManager_EventManager</code> instance in a class.
+        </p>
+
+        <pre class="programlisting">
+class Foo
+{
+    protected $events;
+
+    public function events(Zend_EventManager_EventCollection $events = null)
+    {
+        if (null !== $events) {
+            $this-&gt;events = $events;
+        } elseif (null === $this-&gt;events) {
+            $this-&gt;events = new Zend_EventManager_EventManager(__CLASS__);
+        }
+        return $this-&gt;events;
+    }
+}
+</pre>
+
+        <p>
+            The above allows users to access the <code class="classname">EventManager</code> instance, or
+            reset it with a new instance; if one does not exist, it will be lazily instantiated
+            on-demand.
+        </p>
+
+        <p>
+            An <code class="classname">EventManager</code> is really only interesting if it triggers some
+            events. Basic triggering takes three arguments: the event name, which is usually the
+            current function/method name; the "context", which is usually the current object
+            instance; and the arguments, which are usually the arguments provided to the current
+            function/method.
+        </p>
+
+        <pre class="programlisting">
+class Foo
+{
+    // ... assume events definition from above
+
+    public function bar($baz, $bat = null)
+    {
+        $params = compact('baz', 'bat');
+        $this-&gt;events()-&gt;trigger(__FUNCTION__, $this, $params);
+    }
+}
+</pre>
+
+        <p>
+            In turn, triggering events is only interesting if something is listening for the event.
+            Listeners attach to the <code class="classname">EventManager</code>, specifying a named event
+            and the callback to notify. The callback receives a <code class="classname">Zend_EventManager_Event</code>
+            object, which has accessors for retrieving the event name, context, and parameters.
+            Let's add a listener, and trigger the event.
+        </p>
+
+        <pre class="programlisting">
+$log = Zend_Log::factory($someConfig);
+$foo = new Foo();
+$foo-&gt;events()-&gt;attach('bar', function ($e) use ($log) {
+    $event  = $e-&gt;getName();
+    $target = get_class($e-&gt;getTarget());
+    $params = json_encode($e-&gt;getParams());
+
+    $log-&gt;info(sprintf(
+        '%s called on %s, using params %s',
+        $event,
+        $target,
+        $params
+    ));
+});
+
+// Results in log message:
+$foo-&gt;bar('baz', 'bat');
+// reading: bar called on Foo, using params {"baz" : "baz", "bat" : "bat"}"
+</pre>
+
+        <p>
+            Note that the second argument to <code class="methodname">attach()</code> is any valid callback;
+            an anonymous function is shown in the example in order to keep the example
+            self-contained. However, you could also utilize a valid function name, a functor, a
+            string referencing a static method, or an array callback with a named static method or
+            instance method. Again, any PHP callback is valid.
+        </p>
+
+        <p>
+            Sometimes you may want to specify listeners without yet having an object instance of the
+            class composing an <code class="classname">EventManager</code>. The
+            <code class="classname">Zend_EventManager_StaticEventManager</code> allows you to do this. The call to
+            <code class="methodname">attach</code> is identical to the <code class="classname">EventManager</code>,
+            but expects an additional parameter at the beginning: a named instance. Remember the
+            example of composing an <code class="classname">EventManager</code>, how we passed it
+            <code class="constant">__CLASS__</code>? That value, or any strings you provide in an array to
+            the constructor, may be used to identify an instance when using the
+            <code class="classname">StaticEventManager</code>. As an example, we could change the above
+            example to attach statically:
+        </p>
+
+        <pre class="programlisting">
+$log = Zend_Log::factory($someConfig);
+$events = Zend_EventManager_StaticEventManager::getInstance();
+$events-&gt;attach('Foo', 'bar', function ($e) use ($log) {
+    $event  = $e-&gt;getName();
+    $target = get_class($e-&gt;getTarget());
+    $params = json_encode($e-&gt;getParams());
+
+    $log-&gt;info(sprintf(
+        '%s called on %s, using params %s',
+        $event,
+        $target,
+        $params
+    ));
+});
+
+// Later, instantiate Foo:
+$foo = new Foo();
+
+// And we can still trigger the above event:
+$foo-&gt;bar('baz', 'bat');
+// results in log message: 
+// bar called on Foo, using params {"baz" : "baz", "bat" : "bat"}"
+</pre>
+
+        <p>
+            The <code class="classname">EventManager</code> also provides the ability to detach listeners,
+            short-circuit execution of an event either from within a listener or by testing return
+            values of listeners, test and loop through the results returned by listeners, prioritize
+            listeners, and more. Many of these features are detailed in the examples.
+        </p>
+        
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.event-manager.event-manager.quick-start.wildcard"></a>Wildcard Listeners</h4></div></div></div>
+            
+
+            <p>
+                Sometimes you'll want to attach the same listener to many events or to all events of
+                a given instance -- or potentially, with the static manager, many contexts, and many
+                events. The <code class="classname">EventManager</code> component allows for this.
+            </p>
+
+            <div class="example">
+<a name="zend.event-manager.event-manager.quick-start.wildcard.many"></a><p class="title"><b>Ejemplo 377. Attaching to many events at once</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$events = new Zend_EventManager_EventManager();
+$events-&gt;attach(array('these', 'are', 'event', 'names'), $callback);
+</pre>
+
+                <p>
+                    Note that if you specify a priority, that priority will be used for all events
+                    specified.
+                </p>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="example">
+<a name="zend.event-manager.event-manager.quick-start.wildcard.wildcard"></a><p class="title"><b>Ejemplo 378. Attaching using the wildcard</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$events = new Zend_EventManager_EventManager();
+$events-&gt;attach('*', $callback);
+</pre>
+
+                <p>
+                    Note that if you specify a priority, that priority will be used for this
+                    listener for any event triggered.
+                </p>
+
+                <p>
+                    What the above specifies is that <span class="emphasis"><em>any</em></span> event triggered will
+                    result in notification of this particular listener.
+                </p>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="example">
+<a name="zend.event-manager.event-manager.quick-start.wildcard.static-many"></a><p class="title"><b>Ejemplo 379. Attaching to many events at once via the StaticEventManager</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$events = Zend_EventManager_StaticEventManager::getInstance();
+// Attach to many events on the context "foo"
+$events-&gt;attach('foo', array('these', 'are', 'event', 'names'), $callback);
+
+// Attach to many events on the contexts "foo" and "bar"
+$events-&gt;attach(array('foo', 'bar'), array('these', 'are', 'event', 'names'), $callback);
+</pre>
+
+                <p>
+                    Note that if you specify a priority, that priority will be used for all events
+                    specified.
+                </p>
+            </div>
+</div>
+<br class="example-break">
+
+            <div class="example">
+<a name="zend.event-manager.event-manager.quick-start.wildcard.static-wildcard"></a><p class="title"><b>Ejemplo 380. Attaching to many events at once via the StaticEventManager</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$events = Zend_EventManager_StaticEventManager::getInstance();
+// Attach to all events on the context "foo"
+$events-&gt;attach('foo', '*', $callback);
+
+// Attach to all events on the contexts "foo" and "bar"
+$events-&gt;attach(array('foo', 'bar'), '*', $callback);
+</pre>
+
+                <p>
+                    Note that if you specify a priority, that priority will be used for all events
+                    specified.
+                </p>
+
+                <p>
+                    The above is specifying that for the contexts "foo" and "bar", the specified
+                    listener should be notified for any event they trigger.
+                </p>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+    </div>
+ 
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.event-manager.event-manager.options"></a>Configuration Options</h3></div></div></div>
+        
+ 
+        <div class="variablelist">
+<p class="title"><b>Zend_EventManager_EventManager Options</b></p>
+<dl class="variablelist">
+<dt><span class="term">identifier</span></dt>
+<dd>
+                    <p>
+                        A string or array of strings to which the given
+                        <code class="classname">EventManager</code> instance can answer when accessed via
+                        the <code class="classname">StaticEventManager</code>.
+                    </p>
+                </dd>
+<dt><span class="term">event_class</span></dt>
+<dd>
+                    <p>
+                        The name of an alternate <code class="classname">Zend_EventManager_Event</code> class to use for
+                        representing events passed to listeners.
+                    </p>
+                </dd>
+<dt><span class="term">static_connections</span></dt>
+<dd>
+                    <p>
+                        An instance of a <code class="interfacename">Zend_EventManager_StaticEventCollection</code>
+                        instance to use when triggering events. By default, this will use
+                        the global <code class="classname">Zend_EventManager_StaticEventManager</code> instance, but that can
+                        be overridden by passing a value to this method. A <code class="constant">null</code>
+                        value will prevent the instance from triggering any further statically
+                        attached listeners.
+                    </p>
+                </dd>
+</dl>
+</div>
+    </div>
+ 
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.event-manager.event-manager.methods"></a>Available Methods</h3></div></div></div>
+        
+ 
+        <div class="variablelist"><dl class="variablelist">
+<dt>
+<a name="zend.event-manager.event-manager.methods.constructor"></a><span class="term">__construct</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">__construct</span>(<span class="methodparam">
+                            null|string|int $identifier
+                        </span>);</code>
+                    <p>
+                        Constructs a new <code class="classname">EventManager</code> instance, using the
+                        given identifier, if provided, for purposes of static attachment.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.set-event-class"></a><span class="term">setEventClass</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">setEventClass</span>(<span class="methodparam">
+                            string $class
+                        </span>);</code>
+                    <p>
+                        Provide the name of an alternate <code class="classname">Zend_EventManager_Event</code> class to use
+                        when creating events to pass to triggered listeners.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.set-static-connections"></a><span class="term">setStaticConnections</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">setStaticConnections</span>(<span class="methodparam">
+                            Zend_EventManager_StaticEventCollection $connections = null
+                        </span>);</code>
+                    <p>
+                        An instance of a <code class="interfacename">Zend_EventManager_StaticEventCollection</code>
+                        instance to use when triggering events. By default, this will use
+                        the global <code class="classname">Zend_EventManager_StaticEventManager</code> instance, but that can
+                        be overridden by passing a value to this method. A <code class="constant">null</code>
+                        value will prevent the instance from triggering any further statically
+                        attached listeners.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.get-static-connections"></a><span class="term">getStaticConnections</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">getStaticConnections</span>();</code>
+                    <p>
+                        Returns the currently attached
+                        <code class="interfacename">Zend_EventManager_StaticEventCollection</code> instance, lazily
+                        retrieving the global <code class="classname">Zend_EventManager_StaticEventManager</code> instance if
+                        none is attached and usage of static listeners hasn't been disabled by
+                        passing a <code class="constant">null</code> value to <a class="link" href="zend.event-manager.event-manager.html#zend.event-manager.event-manager.methods.set-static-connections">setStaticConnections()</a>.
+                        Returns either a boolean <code class="constant">false</code> if static listeners are
+                        disabled, or a <code class="interfacename">StaticEventCollection</code> instance
+                        otherwise.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.trigger"></a><span class="term">trigger</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">trigger</span>(<span class="methodparam">
+                            string $event, mixed $target, mixed $argv, callback $callback
+                        </span>);</code>
+                    <p>
+                        Triggers all listeners to a named event. The recommendation is to use the
+                        current function/method name for <code class="varname">$event</code>, appending it
+                        with values such as ".pre", ".post", etc. as needed.
+                        <code class="varname">$context</code> should be the current object instance, or the
+                        name of the function if not triggering within an object.
+                        <code class="varname">$params</code> should typically be an associative array or
+                        <code class="classname">ArrayAccess</code> instance; we recommend using the
+                        parameters passed to the function/method (<code class="function">compact()</code> is
+                        often useful here). This method can also take a callback and behave in the 
+                        same way as <code class="methodname">triggerUntil()</code>.
+                    </p>
+
+                    <p>
+                        The method returns an instance of <code class="classname">Zend_EventManager_ResponseCollection</code>,
+                        which may be used to introspect return values of the various listeners, test
+                        for short-circuiting, and more.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.trigger-until"></a><span class="term">triggerUntil</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">triggerUntil</span>(<span class="methodparam">
+                            string $event, mixed $context, mixed $argv, callback
+                                $callback
+                        </span>);</code>
+                    <p>
+                        Triggers all listeners to a named event, just like <a class="link" href="zend.event-manager.event-manager.html#zend.event-manager.event-manager.methods.trigger">trigger()</a>,
+                        with the addition that it passes the return value from each listener to
+                        <code class="varname">$callback</code>; if <code class="varname">$callback</code> returns a
+                        boolean <code class="constant">true</code> value, execution of the listeners is
+                        interrupted. You can test for this using <code class="code">$result-&gt;stopped()</code>.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.attach"></a><span class="term">attach</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">attach</span>(<span class="methodparam">
+                            string $event, callback $callback, int $priority
+                        </span>);</code>
+                    <p>
+                        Attaches <code class="varname">$callback</code> to the
+                        <code class="classname">Zend_EventManager_EventManager</code> instance, listening for the event
+                        <code class="varname">$event</code>. If a <code class="varname">$priority</code> is provided,
+                        the listener will be inserted into the internal listener stack using that
+                        priority; higher values execute earliest. (Default priority is "1", and
+                        negative priorities are allowed.)
+                    </p>
+
+                    <p>
+                        The method returns an instance of
+                        <code class="classname">Zend_Stdlib_CallbackHandler</code>; this value can later be
+                        passed to <code class="methodname">detach()</code> if desired.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.attach-aggregate"></a><span class="term">attachAggregate</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">attachAggregate</span>(<span class="methodparam">
+                            string|Zend_EventManager_ListenerAggregate $aggregate
+                        </span>);</code>
+                    <p>
+                        If a string is passed for <code class="varname">$aggregate</code>, instantiates that
+                        class. The <code class="varname">$aggregate</code> is then passed the
+                        <code class="classname">EventManager</code> instance to its
+                        <code class="methodname">attach()</code> method so that it may register listeners.
+                    </p>
+
+                    <p>
+                        The <code class="classname">ListenerAggregate</code> instance is returned.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.detach"></a><span class="term">detach</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">detach</span>(<span class="methodparam">
+                            Zend_Stdlib_CallbackHandler $listener
+                        </span>);</code>
+                    <p>
+                        Scans all listeners, and detaches any that match <code class="varname">$listener</code>
+                        so that they will no longer be triggered.
+                    </p>
+
+                    <p>
+                        Returns a boolean <code class="constant">true</code> if any listeners have been
+                        identified and unsubscribed, and a boolean <code class="constant">false</code>
+                        otherwise.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.detach-aggregate"></a><span class="term">detachAggregate</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">detachAggregate</span>(<span class="methodparam">
+                            Zend_EventManager_ListenerAggregate $aggregate
+                        </span>);</code>
+                    <p>
+                        Loops through all listeners of all events to identify listeners that are
+                        represented by the aggregate; for all matches, the listeners will be removed.
+
+                    </p>
+
+                    <p>
+                        Returns a boolean <code class="constant">true</code> if any listeners have been
+                        identified and unsubscribed, and a boolean <code class="constant">false</code>
+                        otherwise.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.get-events"></a><span class="term">detachAggregate</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">getEvents</span>();</code>
+                    <p>
+                        Returns an array of all event names that have listeners attached.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.get-listeners"></a><span class="term">getListeners</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">getListeners</span>(<span class="methodparam">
+                            string $event
+                        </span>);</code>
+                    <p>
+                        Returns a <code class="classname">Zend_Stdlib_PriorityQueue</code> instance of all
+                        listeners attached to <code class="varname">$event</code>.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.clear-listeners"></a><span class="term">clearListeners</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">clearListeners</span>(<span class="methodparam">
+                            string $event
+                        </span>);</code>
+                    <p>
+                        Removes all listeners attached to <code class="varname">$event</code>.
+                    </p>
+                </dd>
+<dt>
+<a name="zend.event-manager.event-manager.methods.prepare-args"></a><span class="term">prepareArgs</span>
+</dt>
+<dd>
+                    <code class="methodsynopsis"><span class="methodname">prepareArgs</span>(<span class="methodparam">
+                            array $args
+                        </span>);</code>
+                    <p>
+                        Creates an <code class="classname">ArrayObject</code> from the provided
+                        <code class="varname">$args</code>. This can be useful if you want yours listeners
+                        to be able to modify arguments such that later listeners or the triggering
+                        method can see the changes.
+                    </p>
+                </dd>
+</dl></div>
+    </div>
+ 
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.event-manager.event-manager.examples"></a>Examples</h3></div></div></div>
+        
+ 
+        <div class="example">
+<a name="zend.event-manager.event-manager.examples.modifying-args"></a><p class="title"><b>Ejemplo 381. Modifying Arguments</b></p>
+<div class="example-contents">
+            
+ 
+            <p>
+                Occasionally it can be useful to allow listeners to modify the arguments they
+                receive so that later listeners or the calling method will receive those changed
+                values.
+            </p>
+
+            <p>
+                As an example, you might want to pre-filter a date that you know will arrive as a
+                string and convert it to a <code class="classname">DateTime</code> argument.
+            </p>
+
+            <p>
+                To do this, you can pass your arguments to <code class="methodname">prepareArgs()</code>,
+                and pass this new object when triggering an event. You will then pull that value
+                back into your method.
+            </p>
+ 
+            <pre class="programlisting">
+class ValueObject
+{
+    // assume a composed event manager
+
+    function inject(array $values)
+    {
+        $argv = compact('values');
+        $argv = $this-&gt;events()-&gt;prepareArgs($argv);
+        $this-&gt;events()-&gt;trigger(__FUNCTION__, $this, $argv);
+        $date = isset($argv['values']['date']) ? $argv['values']['date'] : new DateTime('now');
+
+        // ...
+    }
+}
+
+$v = new ValueObject();
+
+$v-&gt;events()-&gt;attach('inject', function($e) {
+    $values = $e-&gt;getParam('values');
+    if (!$values) {
+        return;
+    }
+    if (!isset($values['date'])) {
+        $values['date'] = new DateTime('now');
+        return;
+    }
+    $values['date'] = new Datetime($values['date']);
+});
+
+$v-&gt;inject(array(
+    'date' =&gt; '2011-08-10 15:30:29',
+));
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.event-manager.event-manager.examples.short-circuiting"></a><p class="title"><b>Ejemplo 382. Short Circuiting</b></p>
+<div class="example-contents">
+            
+ 
+            <p>
+                One common use case for events is to trigger listeners until either one indicates no
+                further processing should be done, or until a return value meets specific criteria.
+                As examples, if an event creates a Response object, it may want execution to stop.
+            </p>
+
+            <pre class="programlisting">
+$listener = function($e) {
+    // do some work
+    
+    // Stop propagation and return a response
+    $e-&gt;stopPropagation(true);
+    return $response;
+};
+</pre>
+
+            <p>
+                Alternately, we could do the check from the method triggering the event.
+            </p>
+ 
+            <pre class="programlisting">
+class Foo implements Dispatchable
+{
+    // assume composed event manager
+
+    public function dispatch(Request $request, Response $response = null)
+    {
+        $argv = compact('request', 'response');
+        $results = $this-&gt;events()-&gt;triggerUntil(__FUNCTION__, $this, $argv, function($v) {
+            return ($v instanceof Response);
+        });
+    }
+}
+</pre>
+
+            <p>
+                Typically, you may want to return a value that stopped execution, or use it some
+                way. Both <code class="methodname">trigger()</code> and
+                <code class="methodname">triggerUntil()</code> return a
+                <code class="classname">Zend_EventManager_ResponseCollection</code> instance; call its
+                <code class="methodname">stopped()</code> method to test if execution was stopped, and
+                <code class="methodname">last()</code> method to retrieve the return value from the last
+                executed listener:
+            </p>
+ 
+            <pre class="programlisting">
+class Foo implements Dispatchable
+{
+    // assume composed event manager
+
+    public function dispatch(Request $request, Response $response = null)
+    {
+        $argv = compact('request', 'response');
+        $results = $this-&gt;events()-&gt;triggerUntil(__FUNCTION__, $this, $argv, function($v) {
+            return ($v instanceof Response);
+        });
+
+        // Test if execution was halted, and return last result:
+        if ($results-&gt;stopped()) {
+            return $results-&gt;last();
+        }
+
+        // continue...
+    }
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.event-manager.event-manager.examples.priority"></a><p class="title"><b>Ejemplo 383. Assigning Priority to Listeners</b></p>
+<div class="example-contents">
+            
+ 
+            <p>
+                One use case for the <code class="classname">EventManager</code> is for implementing caching
+                systems. As such, you often want to check the cache early, and save to it late. 
+            </p>
+
+            <p>
+                The third argument to <code class="methodname">attach()</code> is a priority value. The
+                higher this number, the earlier that listener will execute; the lower it is, the
+                later it executes. The value defaults to 1, and values will trigger in the order
+                registered within a given priority.
+            </p>
+
+            <p>
+                So, to implement a caching system, our method will need to trigger an event at
+                method start as well as at method end. At method start, we want an event that will
+                trigger early; at method end, an event should trigger late. 
+            </p>
+
+            <p>
+                Here is the class in which we want caching:
+            </p>
+
+            <pre class="programlisting">
+class SomeValueObject
+{
+    // assume it composes an event manager
+
+    public function get($id)
+    {
+        $params = compact('id');
+        $results = $this-&gt;events()-&gt;trigger('get.pre', $this, $params);
+
+        // If an event stopped propagation, return the value
+        if ($results-&gt;stopped()) {
+            return $results-&gt;last();
+        }
+
+        // do some work...
+
+        $params['__RESULT__'] = $someComputedContent;
+        $this-&gt;events()-&gt;trigger('get.post', $this, $params);
+    }
+}
+</pre>
+
+            <p>
+                Now, let's create a <code class="interfacename">ListenerAggregate</code> that can handle
+                caching for us:
+            </p>
+
+            <pre class="programlisting">
+class CacheListener implements Zend_EventManager_ListenerAggregate
+{
+    protected $cache;
+
+    public function __construct(Cache $cache)
+    {
+        $this-&gt;cache = $cache;
+    }
+
+    public function attach(Zend_EventManager_EventCollection $events)
+    {
+        $events-&gt;attach('get.pre', array($this, 'load'), 100);
+        $events-&gt;attach('get.post', array($this, 'save'), -100);
+    }
+
+    public function load($e)
+    {
+        $id = get_class($e-&gt;getTarget()) . '-' . json_encode($e-&gt;getParams());
+        if (false !== ($content = $this-&gt;cache-&gt;load($id))) {
+            $e-&gt;stopPropagation(true);
+            return $content;
+        }
+    }
+
+    public function save($e)
+    {
+        $params  = $e-&gt;getParams();
+        $content = $params['__RESULT__'];
+        unset($params['__RESULT__']);
+
+        $id = get_class($e-&gt;getTarget()) . '-' . json_encode($params);
+        $this-&gt;cache-&gt;save($content, $id);
+    }
+}
+</pre>
+
+            <p>
+                We can then attach the aggregate to an instance.
+            </p>
+
+            <pre class="programlisting">
+$value         = new SomeValueObject();
+$cacheListener = new CacheListener($cache);
+$value-&gt;events()-&gt;attachAggregate($cacheListener);
+</pre>
+
+            <p>
+                Now, as we call <code class="methodname">get()</code>, if we have a cached entry, it will
+                be returned immediately; if not, a computed entry will be cached when we complete
+                the method.
+            </p>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.event-manager.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.event-manager.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.exception.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_EventManager </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Zend_Exception</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

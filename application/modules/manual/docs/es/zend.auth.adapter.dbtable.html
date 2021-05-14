@@ -1,0 +1,497 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Tabla de base de datos de autenticación</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Guía de Referencia">
+<link rel="up" href="zend.auth.html" title="Zend_Auth">
+<link rel="prev" href="zend.auth.introduction.html" title="Introducción">
+<link rel="next" href="zend.auth.adapter.digest.html" title='Autenticación "Digest"'>
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Tabla de base de datos de autenticación</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.auth.introduction.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Auth</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.auth.adapter.digest.html">Siguiente</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.auth.adapter.dbtable"></a>Tabla de base de datos de autenticación</h2></div></div></div>
+    
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.dbtable.introduction"></a>Introducción</h3></div></div></div>
+        
+        <p>
+            <code class="classname">Zend_Auth_Adapter_DbTable</code>
+            proporciona la
+            capacidad de autenticar contra credenciales almacenadas en una tabla
+            de la
+            base de datos. Como
+            <code class="classname">Zend_Auth_Adapter_DbTable</code>
+            requiere una
+            instancia de
+            <code class="classname">Zend_Db_Adapter_Abstract</code>
+            que
+            será pasada a su constructor, cada instancia está vinculada a una
+            conexión concreta de
+            la base de datos. Se pueden establecer otras
+            opciones de configuración a través del
+            constructor y de métodos de
+            instancia:
+        </p>
+        <p>Las opciones de configuración disponibles incluyen:
+       </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>
+                        <span class="property">tableName</span>
+                    </em></span>
+                    : Nombre de tabla de
+                    la base de datos que contiene las credenciales de
+                    autenticación, y contra la cual se realiza la búsqueda
+                    de autenticación en la
+                    base de datos.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>
+                        <span class="property">identityColumn</span>
+                    </em></span>
+                    : Nombre de la
+                    columna de la tabla de la base de datos utilizada para
+                    representar
+                    la identidad. La columna identidad debe
+                    contar con valores únicos, tales como un
+                    apellido ó una
+                    dirección de e-mail.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>
+                        <span class="property">credentialColumn</span>
+                    </em></span>
+                    : Nombre de la
+                    columna de la tabla de la base de datos utilizada para
+                    representar
+                    la credencial. Conforme a un sistema de
+                    identidad simple y autenticación de
+                    contraseña, el valor
+                    de la credencial corresponde con la contraseña. Véase
+                    también la opción
+                    <span class="property">credentialTreatment
+                    </span>
+                    .
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em>
+                        <span class="property">credentialTreatment</span>
+                    </em></span>
+                    : En muchos
+                    casos, contraseñas y otros datos son encriptados,
+                    mezclados, codificados, ocultados, desplazados o
+                    tratados de otra manera a través de alguna función o
+                    algoritmo. Al especificar una cadena de tratamiento
+                    parametrizada con este método, tal como
+                    <code class="methodname">'MD5(?)'</code>
+                    o
+                    <code class="methodname">'PASSWORD(?)'</code>
+                    , un
+                    desarrollador podría aplicar sentencias arbitrarias
+                    <acronym class="acronym">SQL</acronym>
+                    sobre los datos credenciales de entrada. Ya que estas
+                    funciones son específicas de los
+                    <acronym class="acronym">RDBMS</acronym>
+                    , debemos
+                    consultar el manual de la base de datos para comprobar
+                    la disponibilidad de tales funciones para su sistema de
+                    base de datos.
+                </p>
+            </li>
+</ul></div>
+
+        <div class="example">
+<a name="zend.auth.adapter.dbtable.introduction.example.basic_usage"></a><p class="title"><b>Ejemplo 54. Uso Básico</b></p>
+<div class="example-contents">
+            
+            <p>
+                Como se explicó en la introducción, el constructor
+                <code class="classname">Zend_Auth_Adapter_DbTable</code>
+                requiere
+                una instancia de
+                <code class="classname">Zend_Db_Adapter_Abstract</code>
+                que sirve como conexión a la base de datos a la cual la
+                instancia de autenticación
+                está obligada a adaptarse. En primer
+                lugar, la conexión de la base de datos debe ser
+                creada.
+            </p>
+            <p>
+                El siguiente código crea un adaptador para una base de datos
+                en memoria , un esquema
+                simple de la tabla, e inserta una fila
+                contra la que se pueda realizar una consulta
+                de autenticación
+                posterior. Este ejemplo requiere que la extensión
+                <acronym class="acronym">PDO</acronym>
+                SQLite
+                esté disponible.
+            </p>
+            <pre class="programlisting">
+// Crear una conexión en memoria de la bade de datos SQLite
+$dbAdapter = new Zend_Db_Adapter_Pdo_Sqlite(array('dbname' =&gt;
+                                                  ':memory:'));
+
+// Construir mediante una consulta una simple tabla
+$sqlCreate = 'CREATE TABLE [users] ('
+           . '[id] INTEGER  NOT NULL PRIMARY KEY, '
+           . '[username] VARCHAR(50) UNIQUE NOT NULL, '
+           . '[password] VARCHAR(32) NULL, '
+           . '[real_name] VARCHAR(150) NULL)';
+
+// Crear las credenciales de autenticación de la tabla
+$dbAdapter-&gt;query($sqlCreate);
+
+// Construir una consulta para insertar una fila para que se pueda realizar la autenticación
+$sqlInsert = "INSERT INTO users (username, password, real_name) "
+           . "VALUES ('my_username', 'my_password', 'My Real Name')";
+
+// Insertar los datos
+$dbAdapter-&gt;query($sqlInsert);
+</pre>
+            <p>
+                Con la conexión de la base de datos y los datos de la tabla
+                disponibles, podemos
+                crear un instancia de
+                <code class="classname">Zend_Auth_Adapter_DbTable</code>
+                . Los
+                valores de las opciones de configuración pueden ser pasados al
+                constructor o
+                pasados como parámetros a los métodos setter
+                después de ser instanciados.
+            </p>
+            <pre class="programlisting">
+// Configurar la instancia con los parámetros del constructor...
+$authAdapter = new Zend_Auth_Adapter_DbTable(
+    $dbAdapter,
+    'users',
+    'username',
+    'password'
+);
+
+// ...o configurar la instancia con los métodos setter.
+$authAdapter = new Zend_Auth_Adapter_DbTable($dbAdapter);
+
+$authAdapter
+    -&gt;setTableName('users')
+    -&gt;setIdentityColumn('username')
+    -&gt;setCredentialColumn('password')
+;
+</pre>
+            <p>
+                En este punto, el adaptador de la instancia de autenticación
+                está listo para aceptar
+                consultas de autenticación. Con el fin
+                de elaborar una consulta de autenticación, los
+                valores de
+                entrada de la credencial son pasados por el adaptador ates de
+                llamar al
+                método
+                <code class="methodname">authenticate()</code>
+                :
+            </p>
+            <pre class="programlisting">
+// Seleccionamos los valores de entrada de la credencial (e.g., de un formulario de acceso)
+$authAdapter
+    -&gt;setIdentity('my_username')
+    -&gt;setCredential('my_password')
+;
+
+// Ejecutamos la consulta de autenticación, salvando los resultados
+</pre>
+            <p>
+                Además de la disponibilidad del método
+                <code class="methodname">getIdentity()</code>
+                sobre el objeto
+                resultante de la autenticación,
+                <code class="classname">Zend_Auth_Adapter_DbTable</code>
+                también
+                ayuda a recuperar la fila de al tabla sobre la autenticación
+                realizada.
+            </p>
+            <pre class="programlisting">
+// Imprimir la identidad
+echo $result-&gt;getIdentity() . "\n\n";
+
+// Imprimir la fila resultado
+print_r($authAdapter-&gt;getResultRowObject());
+
+/* Salida:
+my_username
+
+Array
+(
+    [id] =&gt; 1
+    [username] =&gt; my_username
+    [password] =&gt; my_password
+    [real_name] =&gt; My Real Name
+)
+</pre>
+            <p>Ya que la fila de la tabla contiene el valor de la
+                credencial, es importante
+                proteger los valores contra accesos no
+                deseados.</p>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.dbtable.advanced.storing_result_row"></a>Advanced Usage: Manteniendo el resultado del Objeto
+            DbTable</h3></div></div></div>
+        
+        <p>
+            Por defecto,
+            <code class="classname">Zend_Auth_Adapter_DbTable</code>
+            devuelve la identidad proporcionada al objeto Auth en la
+            autenticación realizada. Otro de
+            los casos de uso, donde los
+            desarrolladores desean guardar para mantener el mecanismo de
+            almacenamiento de un objeto identidad
+            <code class="classname">Zend_Auth</code>
+            que contiene información útil,
+            se resuelve usando el método
+            <code class="methodname">getResultRowObject()</code>
+            para devolver un
+            objeto
+            <span class="emphasis"><em>stdClass</em></span>
+            . El siguiente fragmento de
+            código muestra su uso:
+        </p>
+        <pre class="programlisting">
+// Autenticar con Zend_Auth_Adapter_DbTable
+$result = $this-&gt;_auth-&gt;authenticate($adapter);
+
+if ($result-&gt;isValid()) {
+    // Almacena la identidad como un objedo dónde solo username y
+    // real_name han sido devueltos
+    $storage = $this-&gt;_auth-&gt;getStorage();
+    $storage-&gt;write($adapter-&gt;getResultRowObject(array(
+        'username',
+        'real_name',
+    )));
+
+    // Almacena la identidad como un objeto dónde la columna contraseña ha
+    // sido omitida
+    $storage-&gt;write($adapter-&gt;getResultRowObject(
+        null,
+        'password'
+    ));
+
+    /* ... */
+
+} else {
+
+    /* ... */
+
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.dbtable.advanced.advanced_usage"></a>Ejemplo de Uso Avanzado</h3></div></div></div>
+        
+        <p>
+            Si bien el objetivo primordial de
+            <code class="classname">Zend_Auth</code>
+            (y, por consiguiente,
+            <code class="classname">Zend_Auth_Adapter_DbTable</code>
+            ) es
+            principalmente la
+            <span class="emphasis"><em>autenticación</em></span>
+            y no la
+            <span class="emphasis"><em>autorización</em></span>
+            , hay unos pocos casos y
+            problemas que se encuentran al límite entre cuales encajan
+            dentro
+            del dominio. Dependiendo de cómo haya decidido explicar su problema,
+            a veces tiene
+            sentido resolver lo que podría parecer un problema de
+            autorización dentro de un adaptador
+            de autenticación.
+        </p>
+
+        <p>
+            Con esa excepción fuera de lo común,
+            <code class="classname">Zend_Auth_Adapter_DbTable</code>
+            ha construido
+            mecanismos que pueden ser aprovechados para realizar controles
+            adicionales
+            en la autenticación a la vez que se resuelven algunos
+            problemas comunes de los usuarios.
+        </p>
+
+        <pre class="programlisting">
+// El valor del campo status de una cuenta no es igual a "compromised"
+$adapter = new Zend_Auth_Adapter_DbTable(
+    $db,
+    'users',
+    'username',
+    'password',
+    'MD5(?) AND status != "compromised"'
+);
+
+// El valor del campo active de una cuenta es igual a "TRUE"
+$adapter = new Zend_Auth_Adapter_DbTable(
+    $db,
+    'users',
+    'username',
+    'password',
+    'MD5(?) AND active = "TRUE"'
+    </pre>
+
+        <p>Otra idea puede ser la aplicación de un mecanismo de "salting".
+            "Salting" es un término
+            que se refiere a una técnica que puede
+            mejorar altamente la seguridad de su aplicación.
+            Se basa en la idea
+            de concatenar una cadena aleatoria a cada contraseña para evitar un
+            ataque de fuerza bruta sobre la base de datos usando los valores
+            hash de un diccionario
+            pre-calculado.</p>
+
+        <p>Por lo tanto, tenemos que modificar nuestra tabla para almacenar
+            nuestra cadena
+            mezclada:</p>
+
+        <pre class="programlisting">
+$sqlAlter = "ALTER TABLE [users] "
+          . "ADD COLUMN [password_salt] "
+          . "AFTER [password]";
+</pre>
+
+        <p>Aquí hay una forma sencilla de generar una cadena mezclada por
+            cada usuario en el
+            momento del registro:</p>
+
+        <pre class="programlisting">
+for ($i = 0; $i &lt; 50; $i++) {
+    $dynamicSalt .= chr(rand(33, 126));
+</pre>
+
+        <p>Y ahora vamos a construir el adaptador:</p>
+
+        <pre class="programlisting">
+$adapter = new Zend_Auth_Adapter_DbTable(
+    $db,
+    'users',
+    'username',
+    'password',
+    "MD5(CONCAT('"
+    . Zend_Registry::get('staticSalt')
+    . "', ?, password_salt))"
+);
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                Puede mejorar aún más la seguridad mediante el uso de un
+                valor 'salt' estático
+                fuertemente codificado en su aplicación.
+                En el caso de que su base de datos se vea
+                comprometida (por
+                ejemplo, por un ataque de inyección
+                <acronym class="acronym">SQL</acronym>
+                ), su servidor web está
+                intacto y sus datos son inutilizable para el atacante.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Otra alternativa es utilizar el método
+            <code class="methodname">getDbSelect()</code>
+            de
+            <code class="classname">Zend_Auth_Adapter_DbTable</code>
+            después de que el adaptador se ha
+            construido. Este método devolverá la instancia del
+            objeto
+            <code class="classname">Zend_Db_Select</code>
+            que se va a utilizar para completar la rutina de
+            authenticate(). Es importante señalar
+            que este método siempre
+            devuelve el mismo objeto, independientemente de si
+            <code class="methodname">authenticate()</code>
+            ha
+            sido llamado o no. Este objeto
+            <span class="emphasis"><em>no tendrá</em></span>
+            ninguna de las credenciales de identidad o información de como estos
+            valores son
+            colocados dentro del objeto seleccionado en
+            <code class="methodname">authenticate()</code>
+            .
+        </p>
+
+        <p>
+            Un ejemplo de una situación en la que uno podría querer utilizar
+            el método
+            <code class="methodname">getDbSelect()</code>
+            sería comprobar el estado de un usuario, en
+            otras palabras, ver si la cuenta del usuario
+            está habilitada.
+        </p>
+
+        <pre class="programlisting">
+// Continuando con el ejemplo de arriba
+$adapter = new Zend_Auth_Adapter_DbTable(
+    $db,
+    'users',
+    'username',
+    'password',
+    'MD5(?)'
+);
+
+// obtener el objeto select (por referencia)
+$select = $adapter-&gt;getDbSelect();
+$select-&gt;where('active = "TRUE"');
+
+// authenticate, esto asegura que users.active = TRUE
+$adapter-&gt;authenticate();
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.auth.introduction.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.auth.html">Subir</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.auth.adapter.digest.html">Siguiente</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introducción </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td>
+<td width="40%" align="right" valign="top"> Autenticación "Digest"</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

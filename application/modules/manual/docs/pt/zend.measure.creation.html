@@ -1,0 +1,179 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Creation of Measurements</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.measure.html" title="Zend_Measure">
+<link rel="prev" href="zend.measure.introduction.html" title="Introduction">
+<link rel="next" href="zend.measure.output.html" title="Outputting measurements">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Creation of Measurements</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.measure.introduction.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Measure</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.measure.output.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.measure.creation"></a>Creation of Measurements</h2></div></div></div>
+    
+
+    <p>
+        When creating a measurement object, <code class="classname">Zend_Measure_*</code> methods expect the
+        input/original measurement data value as the first parameter. This can be a
+        <a class="link" href="zend.measure.creation.html#zend.measure.creation.number" title="Creating measurements from integers and floats">numeric argument</a>, a
+        <a class="link" href="zend.measure.creation.html#zend.measure.creation.string" title="Creating measurements from strings"><span class="type">String</span></a> without units, or a
+        <a class="link" href="zend.measure.creation.html#zend.measure.creation.localized" title="Measurements from localized strings">localized string with unit(s)
+            specified.</a> The second parameter defines the type of the measurement. Both
+        parameters are mandatory. The language may optionally be specified as the third parameter.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.measure.creation.number"></a>Creating measurements from integers and floats</h3></div></div></div>
+        
+
+        <p>
+            In addition to integer data values, floating point types may be used, but
+            <a class="ulink" href="http://www.php.net/float" target="_top">"simple decimal fractions like 0.1 or 0.7 cannot
+                be converted into their internal binary counterparts without a little loss of
+                precision,"</a> sometimes giving surprising results. Also, do not compare two
+            "float" type numbers for equality.
+        </p>
+
+        <div class="example">
+<a name="zend.measure.creation.number.example-1"></a><p class="title"><b>Exemplo 589. Creation using integer and floating values</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$measurement = 1234.7;
+$unit = new Zend_Measure_Length((integer)$measurement,
+                                Zend_Measure_Length::STANDARD);
+echo $unit;
+// outputs '1234 m' (meters)
+
+$unit = new Zend_Measure_Length($measurement, Zend_Measure_Length::STANDARD);
+echo $unit;
+// outputs '1234.7 m' (meters)
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.measure.creation.string"></a>Creating measurements from strings</h3></div></div></div>
+        
+
+        <p>
+            Many measurements received as input to Zend Framework applications can only be passed
+            to <code class="classname">Zend_Measure_*</code> classes as strings, such as numbers written
+            using <a class="ulink" href="http://en.wikipedia.org/wiki/Roman_numerals" target="_top">roman numerals</a>
+            or extremely large binary values that exceed the precision of <acronym class="acronym">PHP</acronym>'s
+            native integer and float types. Since integers can be denoted using strings, if there is
+            any risk of losing precision due to limitations of <acronym class="acronym">PHP</acronym>'s native
+            integer and float types, using strings instead.
+            <code class="classname">Zend_Measure_Number</code> uses the BCMath extension to support
+            arbitrary precision, as shown in the example below, to avoid limitations in many
+            <acronym class="acronym">PHP</acronym> functions, such as <a class="ulink" href="http://php.net/bin2dec" target="_top"><code class="methodname">bin2dec()</code></a>.
+        </p>
+
+        <div class="example">
+<a name="zend.measure.creation.string.example-1"></a><p class="title"><b>Exemplo 590. Creation using strings</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$mystring = "10010100111010111010100001011011101010001";
+$unit = new Zend_Measure_Number($mystring, Zend_Measure_Number::BINARY);
+
+echo $unit;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.measure.creation.localized"></a>Measurements from localized strings</h3></div></div></div>
+        
+
+        <p>
+            When a string is entered in a localized notation, the correct interpretation can not be
+            determined without knowing the intended locale. The division of decimal digits with "."
+            and grouping of thousands with "," is common in the English language, but not so in
+            other languages. For example, the English number "1,234.50" would be interpreted as
+            meaning "1.2345" in German. To deal with such problems, the locale-aware
+            <code class="classname">Zend_Measure_*</code> family of classes offer the possibility to specify
+            a language or region to disambiguate the input data and properly interpret the intended
+            semantic value.
+        </p>
+
+        <div class="example">
+<a name="zend.measure.creation.localized.example-1"></a><p class="title"><b>Exemplo 591. Localized string</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de');
+$mystring = "1,234.50";
+$unit = new Zend_Measure_Length($mystring,
+                                Zend_Measure_Length::STANDARD,
+                                $locale);
+echo $unit; // outputs "1.234 m"
+
+$mystring = "1,234.50";
+$unit = new Zend_Measure_Length($mystring,
+                                Zend_Measure_Length::STANDARD,
+                                'en_US');
+echo $unit; // outputs "1234.50 m"
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Since Zend Framework 1.7.0 <code class="classname">Zend_Measure</code> does also support the
+            usage of an application wide locale. You can simply set a
+            <code class="classname">Zend_Locale</code> instance to the registry like shown below. With this
+            notation you can forget about setting the locale manually with each instance when you
+            want to use the same locale multiple times.
+        </p>
+
+        <pre class="programlisting">
+// in your bootstrap file
+$locale = new Zend_Locale('de_AT');
+Zend_Registry::set('Zend_Locale', $locale);
+
+// somewhere in your application
+$length = new Zend_Measure_Length(Zend_Measure_Length::METER();
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.measure.introduction.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.measure.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.measure.output.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Outputting measurements</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

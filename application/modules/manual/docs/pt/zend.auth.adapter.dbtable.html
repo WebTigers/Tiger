@@ -1,0 +1,414 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Database Table Authentication</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.auth.html" title="Zend_Auth">
+<link rel="prev" href="zend.auth.introduction.html" title="Introduction">
+<link rel="next" href="zend.auth.adapter.digest.html" title="Digest Authentication">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Database Table Authentication</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.auth.introduction.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Auth</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.auth.adapter.digest.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.auth.adapter.dbtable"></a>Database Table Authentication</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.dbtable.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Auth_Adapter_DbTable</code> provides the ability to
+            authenticate against credentials stored in a database table. Because
+            <code class="classname">Zend_Auth_Adapter_DbTable</code> requires an instance of
+            <code class="classname">Zend_Db_Adapter_Abstract</code> to be passed to its
+            constructor, each instance is bound to a particular database
+            connection. Other configuration options may be set through the
+            constructor and through instance methods, one for each option.
+        </p>
+
+        <p>
+            The available configuration options include:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><span class="property">tableName</span></em></span>: This is the name of the
+                    database table that contains the authentication credentials,
+                    and against which the database authentication query is
+                    performed.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><span class="property">identityColumn</span></em></span>: This is the name of
+                    the database table column used to represent the identity.
+                    The identity column must contain unique values, such as
+                    a username or e-mail address.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><span class="property">credentialColumn</span></em></span>: This is the name
+                    of the database table column used to represent the credential.
+                    Under a simple identity and password authentication
+                    scheme, the credential value corresponds to the
+                    password. See also the <span class="property">credentialTreatment</span>
+                    option.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <span class="emphasis"><em><span class="property">credentialTreatment</span></em></span>: In many cases,
+                    passwords and other sensitive data are encrypted,
+                    hashed, encoded, obscured, salted or otherwise treated
+                    through some function or algorithm. By specifying a
+                    parameterized treatment string with this method, such as
+                    '<code class="methodname">MD5(?)</code>' or
+                    '<code class="methodname">PASSWORD(?)</code>', a
+                    developer may apply such arbitrary <acronym class="acronym">SQL</acronym> upon input
+                    credential data. Since these functions are specific to
+                    the underlying <acronym class="acronym">RDBMS</acronym>, check the database manual for the
+                    availability of such functions for your database system.
+                </p>
+            </li>
+</ul></div>
+
+        <div class="example">
+<a name="zend.auth.adapter.dbtable.introduction.example.basic_usage"></a><p class="title"><b>Exemplo 58. Basic Usage</b></p>
+<div class="example-contents">
+            
+
+            <p>
+                As explained in the introduction, the
+                <code class="classname">Zend_Auth_Adapter_DbTable</code> constructor requires an
+                instance of <code class="classname">Zend_Db_Adapter_Abstract</code> that serves as
+                the database connection to which the authentication adapter
+                instance is bound. First, the database connection should be
+                created.
+            </p>
+
+            <p>
+                The following code creates an adapter for an in-memory database,
+                creates a simple table schema, and inserts a row against
+                which we can perform an authentication query later. This example
+                requires the <acronym class="acronym">PDO</acronym> SQLite extension to be available:
+            </p>
+
+            <pre class="programlisting">
+// Create an in-memory SQLite database connection
+$dbAdapter = new Zend_Db_Adapter_Pdo_Sqlite(array('dbname' =&gt;
+                                                  ':memory:'));
+
+// Build a simple table creation query
+$sqlCreate = 'CREATE TABLE [users] ('
+           . '[id] INTEGER  NOT NULL PRIMARY KEY, '
+           . '[username] VARCHAR(50) UNIQUE NOT NULL, '
+           . '[password] VARCHAR(32) NULL, '
+           . '[real_name] VARCHAR(150) NULL)';
+
+// Create the authentication credentials table
+$dbAdapter-&gt;query($sqlCreate);
+
+// Build a query to insert a row for which authentication may succeed
+$sqlInsert = "INSERT INTO users (username, password, real_name) "
+           . "VALUES ('my_username', 'my_password', 'My Real Name')";
+
+// Insert the data
+$dbAdapter-&gt;query($sqlInsert);
+</pre>
+
+            <p>
+                With the database connection and table data available, an
+                instance of <code class="classname">Zend_Auth_Adapter_DbTable</code> may be
+                created. Configuration option values may be passed to the
+                constructor or deferred as parameters to setter methods after
+                instantiation:
+            </p>
+
+            <pre class="programlisting">
+// Configure the instance with constructor parameters...
+$authAdapter = new Zend_Auth_Adapter_DbTable(
+    $dbAdapter,
+    'users',
+    'username',
+    'password'
+);
+
+// ...or configure the instance with setter methods
+$authAdapter = new Zend_Auth_Adapter_DbTable($dbAdapter);
+
+$authAdapter
+    -&gt;setTableName('users')
+    -&gt;setIdentityColumn('username')
+    -&gt;setCredentialColumn('password')
+;
+</pre>
+
+            <p>
+                At this point, the authentication adapter instance is ready to
+                accept authentication queries. In order to formulate an
+                authentication query, the input credential values are passed to
+                the adapter prior to calling the <code class="methodname">authenticate()</code>
+                method:
+            </p>
+
+            <pre class="programlisting">
+// Set the input credential values (e.g., from a login form)
+$authAdapter
+    -&gt;setIdentity('my_username')
+    -&gt;setCredential('my_password')
+;
+
+// Perform the authentication query, saving the result
+</pre>
+
+            <p>
+                In addition to the availability of the
+                <code class="methodname">getIdentity()</code> method upon the authentication result
+                object, <code class="classname">Zend_Auth_Adapter_DbTable</code> also supports
+                retrieving the table row upon authentication success:
+            </p>
+
+            <pre class="programlisting">
+// Print the identity
+echo $result-&gt;getIdentity() . "\n\n";
+
+// Print the result row
+print_r($authAdapter-&gt;getResultRowObject());
+
+/* Output:
+my_username
+
+Array
+(
+    [id] =&gt; 1
+    [username] =&gt; my_username
+    [password] =&gt; my_password
+    [real_name] =&gt; My Real Name
+)
+</pre>
+
+            <p>
+                Since the table row contains the credential value, it is
+                important to secure the values against unintended access.
+            </p>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.dbtable.advanced.storing_result_row"></a>Advanced Usage: Persisting a DbTable Result Object</h3></div></div></div>
+        
+
+        <p>
+            By default, <code class="classname">Zend_Auth_Adapter_DbTable</code> returns the
+            identity supplied back to the auth object upon successful
+            authentication. Another use case scenario, where developers want to
+            store to the persistent storage mechanism of <code class="classname">Zend_Auth</code>
+            an identity object containing other useful information, is solved by
+             using the <code class="methodname">getResultRowObject()</code> method to return a
+            <span class="emphasis"><em>stdClass</em></span> object. The following code snippet illustrates
+            its use:
+        </p>
+
+        <pre class="programlisting">
+// authenticate with Zend_Auth_Adapter_DbTable
+$result = $this-&gt;_auth-&gt;authenticate($adapter);
+
+if ($result-&gt;isValid()) {
+    // store the identity as an object where only the username and
+    // real_name have been returned
+    $storage = $this-&gt;_auth-&gt;getStorage();
+    $storage-&gt;write($adapter-&gt;getResultRowObject(array(
+        'username',
+        'real_name',
+    )));
+
+    // store the identity as an object where the password column has
+    // been omitted
+    $storage-&gt;write($adapter-&gt;getResultRowObject(
+        null,
+        'password'
+    ));
+
+    /* ... */
+
+} else {
+
+    /* ... */
+
+}
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.auth.adapter.dbtable.advanced.advanced_usage"></a>Advanced Usage By Example</h3></div></div></div>
+        
+
+        <p>
+            While the primary purpose of <code class="classname">Zend_Auth</code> (and consequently
+            <code class="classname">Zend_Auth_Adapter_DbTable</code>) is primarily
+            <span class="emphasis"><em>authentication</em></span> and not
+            <span class="emphasis"><em>authorization</em></span>, there are a few
+            instances and problems that toe the line between which domain they fit
+            within. Depending on how you've decided to explain your problem, it
+             sometimes makes sense to solve what could look like an
+             authorization problem within the authentication adapter.
+        </p>
+
+        <p>
+            With that disclaimer out of the way, <code class="classname">Zend_Auth_Adapter_DbTable</code>
+            has some built in mechanisms that can be leveraged for additional checks at
+            authentication time to solve some common user problems.
+        </p>
+
+        <pre class="programlisting">
+// The status field value of an account is not equal to "compromised"
+$adapter = new Zend_Auth_Adapter_DbTable(
+    $db,
+    'users',
+    'username',
+    'password',
+    'MD5(?) AND status != "compromised"'
+);
+
+// The active field value of an account is equal to "TRUE"
+$adapter = new Zend_Auth_Adapter_DbTable(
+    $db,
+    'users',
+    'username',
+    'password',
+    'MD5(?) AND active = "TRUE"'
+</pre>
+
+        <p>
+            Another scenario can be the implementation of a salting mechanism.
+            Salting is a term referring to a technique which can highly improve
+            your application's security. It's based on the idea that
+            concatenating a random string to every password makes it impossible
+            to accomplish a successful brute force attack on the database using
+            pre-computed hash values from a dictionary.
+        </p>
+
+        <p>
+            Therefore, we need to modify our table to store our salt string:
+        </p>
+
+        <pre class="programlisting">
+$sqlAlter = "ALTER TABLE [users] "
+          . "ADD COLUMN [password_salt] "
+          . "AFTER [password]";
+</pre>
+
+        <p>
+            Here's a simple way to generate a salt string for every user at
+            registration:
+        </p>
+
+        <pre class="programlisting">
+for ($i = 0; $i &lt; 50; $i++) {
+    $dynamicSalt .= chr(rand(33, 126));
+</pre>
+        <p>
+            And now let's build the adapter:
+        </p>
+
+        <pre class="programlisting">
+$adapter = new Zend_Auth_Adapter_DbTable(
+    $db,
+    'users',
+    'username',
+    'password',
+    "MD5(CONCAT('"
+    . Zend_Registry::get('staticSalt')
+    . "', ?, password_salt))"
+);
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                You can improve security even more by using a static salt value
+                hard coded into your application. In the case that your database
+                is compromised (e. g. by an <acronym class="acronym">SQL</acronym> injection attack) but your web
+                server is intact your data is still unusable for the attacker.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Another alternative is to use the <code class="methodname">getDbSelect()</code> method
+            of the <code class="classname">Zend_Auth_Adapter_DbTable</code> after the adapter has been
+            constructed. This method will return the <code class="classname">Zend_Db_Select</code> object
+            instance it will use to complete the <code class="methodname">authenticate()</code> routine.
+            It is important to note that this method will always return the same object regardless
+            if <code class="methodname">authenticate()</code> has been called or not. This object
+            <span class="emphasis"><em>will not</em></span> have any of the identity or credential information in it
+            as those values are placed into the select object at
+            <code class="methodname">authenticate()</code> time.
+        </p>
+
+        <p>
+            An example of a situation where one might want to use the
+            <code class="methodname">getDbSelect()</code> method would check the status of a user, in
+            other words to see if that user's account is enabled.
+        </p>
+
+        <pre class="programlisting">
+// Continuing with the example from above
+$adapter = new Zend_Auth_Adapter_DbTable(
+    $db,
+    'users',
+    'username',
+    'password',
+    'MD5(?)'
+);
+
+// get select object (by reference)
+$select = $adapter-&gt;getDbSelect();
+$select-&gt;where('active = "TRUE"');
+
+// authenticate, this ensures that users.active = TRUE
+$adapter-&gt;authenticate();
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.auth.introduction.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.auth.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.auth.adapter.digest.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Digest Authentication</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

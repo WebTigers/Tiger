@@ -1,0 +1,661 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The Response Object</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.controller.html" title="Zend_Controller">
+<link rel="prev" href="zend.controller.actionhelpers.html" title="Action Helpers">
+<link rel="next" href="zend.controller.plugins.html" title="Plugins">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">The Response Object</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.controller.actionhelpers.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Controller</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.controller.plugins.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.controller.response"></a>The Response Object</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.response.usage"></a>Usage</h3></div></div></div>
+        
+
+        <p>
+            The response object is the logical counterpart to the <a class="link" href="zend.controller.request.html" title="The Request Object">request object</a>. Its
+            purpose is to collate content and/or headers so that they may be
+            returned en masse. Additionally, the front controller will pass any
+            caught exceptions to the response object, allowing the developer to
+            gracefully handle exceptions. This functionality may be overridden
+            by setting
+            <code class="methodname">Zend_Controller_Front::throwExceptions(true)</code>:
+        </p>
+
+        <pre class="programlisting">
+$front-&gt;throwExceptions(true);
+</pre>
+
+        <p>
+            To send the response output, including headers, use
+            <code class="methodname">sendResponse()</code>.
+        </p>
+
+        <pre class="programlisting">
+$response-&gt;sendResponse();
+</pre>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                By default, the front controller calls <code class="methodname">sendResponse()</code>
+                when it has finished dispatching the request; typically you will
+                never need to call it. However, if you wish to manipulate the
+                response or use it in testing, you can override this
+                behaviour by setting the <span class="property">returnResponse</span> flag with
+                <code class="methodname">Zend_Controller_Front::returnResponse(true)</code>:
+            </p>
+
+            <pre class="programlisting">
+$front-&gt;returnResponse(true);
+$response = $front-&gt;dispatch();
+
+// do some more processing, such as logging...
+// and then send the output:
+$response-&gt;sendResponse();
+</pre>
+        </td></tr>
+</table></div>
+
+        <p>
+            Developers should make use of the response object in their action
+            controllers. Instead of directly rendering output and sending
+            headers, push them to the response object:
+        </p>
+
+        <pre class="programlisting">
+// Within an action controller action:
+// Set a header
+$this-&gt;getResponse()
+    -&gt;setHeader('Content-Type', 'text/html')
+    -&gt;appendBody($content);
+</pre>
+
+        <p>
+            By doing this, all headers get sent at once, just prior to
+            displaying the content.
+        </p>
+
+        <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Nota</th>
+</tr>
+<tr><td align="left" valign="top">
+            <p>
+                If using the action controller <a class="link" href="zend.controller.action.html#zend.controller.action.viewintegration" title="View Integration">view
+                    integration</a>, you do not need to set the rendered view
+                script content in the response object, as
+                <code class="methodname">Zend_Controller_Action::render()</code> does this by default.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            Should an exception occur in an application, check the response object's
+            <code class="methodname">isException()</code> flag, and retrieve the exception using
+            <code class="methodname">getException()</code>. Additionally, one may create custom
+            response objects that redirect to error pages, log exception messages,
+            do pretty formatting of exception messages (for development
+            environments), etc.
+        </p>
+
+        <p>
+            You may retrieve the response object following the front controller
+            <code class="methodname">dispatch()</code>, or request the front controller to return the
+            response object instead of rendering output.
+        </p>
+
+        <pre class="programlisting">
+// retrieve post-dispatch:
+$front-&gt;dispatch();
+$response = $front-&gt;getResponse();
+if ($response-&gt;isException()) {
+    // log, mail, etc...
+}
+
+// Or, have the front controller dispatch() process return it
+$front-&gt;returnResponse(true);
+$response = $front-&gt;dispatch();
+
+// do some processing...
+
+// finally, echo the response
+$response-&gt;sendResponse();
+</pre>
+
+        <p>
+            By default, exception messages are not displayed. This behaviour may be
+            overridden by calling <code class="methodname">renderExceptions()</code>, or enabling the
+            front controller to <code class="methodname">throwExceptions()</code>, as shown above:
+        </p>
+
+        <pre class="programlisting">
+$response-&gt;renderExceptions(true);
+$front-&gt;dispatch($request, $response);
+
+// or:
+$front-&gt;returnResponse(true);
+$response = $front-&gt;dispatch();
+$response-&gt;renderExceptions();
+$response-&gt;sendResponse();
+
+// or:
+$front-&gt;throwExceptions(true);
+$front-&gt;dispatch();
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.response.headers"></a>Manipulating Headers</h3></div></div></div>
+        
+
+        <p>
+            As stated previously, one aspect of the response object's duties is
+            to collect and emit <acronym class="acronym">HTTP</acronym> response headers. A variety of methods
+            exist for this:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">canSendHeaders()</code> is used to determine if
+                    headers have already been sent. It takes an optional flag
+                    indicating whether or not to throw an exception if headers
+                    have already been sent. This can be overridden by setting
+                    the property <span class="property">headersSentThrowsException</span> to
+                    <code class="constant">FALSE</code>.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setHeader($name, $value, $replace = false)</code> is
+                    used to set an individual header. By default, it does not
+                    replace existing headers of the same name in the object;
+                    however, setting <code class="varname">$replace</code> to <code class="constant">TRUE</code> will
+                    force it to do so.
+                </p>
+
+                <p>
+                    Before setting the header, it checks with
+                    <code class="methodname">canSendHeaders()</code> to see if this operation is
+                    allowed at this point, and requests that an exception be
+                    thrown.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setRedirect($url, $code = 302)</code> sets an
+                    <acronym class="acronym">HTTP</acronym> Location header for a redirect. If an
+                    <acronym class="acronym">HTTP</acronym> status code has been provided, it will use that status
+                    code.
+                </p>
+
+                <p>
+                    Internally, it calls <code class="methodname">setHeader()</code> with the
+                    <code class="varname">$replace</code> flag on to ensure only one such header
+                    is ever sent.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getHeaders()</code> returns an array of all headers.
+                    Each array element is an array with the keys 'name' and
+                    'value'.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearHeaders()</code> clears all registered headers.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">setRawHeader()</code> can be used to set headers that
+                    are not key and value pairs, such as an <acronym class="acronym">HTTP</acronym> status header.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getRawHeaders()</code> returns any registered raw
+                    headers.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearRawHeaders()</code> clears any registered raw
+                    headers.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearAllHeaders()</code> clears both regular key and value
+                    headers as well as raw headers.
+                </p>
+            </li>
+</ul></div>
+
+        <p>
+            In addition to the above methods, there are accessors for setting
+            and retrieving the <acronym class="acronym">HTTP</acronym> response code for the current request,
+            <code class="methodname">setHttpResponseCode()</code> and
+            <code class="methodname">getHttpResponseCode()</code>.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.controller.response.headers.setcookie"></a>Setting Cookie Headers</h4></div></div></div>
+            
+
+            <p>
+                You can inject <acronym class="acronym">HTTP</acronym> Set-Cookie headers into the response object
+                of an action controller by using the provided header class 
+                <code class="classname">Zend_Http_Header_SetCookie</code>
+            </p>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.controller.response.headers.setcookie.constructor"></a>Constructor Arguments</h5></div></div></div>
+                
+
+                <p>
+                    The following table lists all constructor arguments of 
+                    <code class="classname">Zend_Http_Header_SetCookie</code>
+                    in the order they are accepted.  All arguments are optional,
+                    but name and value must be supplied via their setters if not
+                    passed in via the constructor or the resulting Set-Cookie header
+                    be invalid.
+                </p>
+
+                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                        <p>
+                            <code class="varname">$name</code>: The name of the cookie
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="varname">$value</code>: The value of the cookie
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="varname">$expires</code>: The time the cookie expires
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="varname">$path</code>: The path on the server in which 
+                            the cookie will be available
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="varname">$domain</code>: The domain to restrict cookie to
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="varname">$secure</code>: boolean indicating whether cookie
+                            should be sent over an unencrypted connection (false) or via 
+                            <acronym class="acronym">HTTPS</acronym> only (true)
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="varname">$httpOnly</code>: boolean indicating whether cookie
+                            should be transmitted only via the <acronym class="acronym">HTTP</acronym> protocol
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="varname">$maxAge</code>: The maximum age of the cookie in seconds
+                        </p>
+                    </li>
+<li class="listitem">
+                        <p>
+                            <code class="varname">$version</code>: The cookie specification version
+                        </p>
+                    </li>
+</ul></div>
+
+                <div class="example">
+<a name="idm205403720672"></a><p class="title"><b>Exemplo 153. Populate Zend_Http_Header_SetCookie via constructor and add to response</b></p>
+<div class="example-contents">
+                    
+                    <pre class="programlisting">
+$this-&gt;getResponse()-&gt;setRawHeader(new Zend_Http_Header_SetCookie(
+    'foo', 'bar', NULL, '/', 'example.com', false, true
+));
+</pre>
+                </div>
+</div>
+<br class="example-break">
+                <div class="example">
+<a name="idm205403720480"></a><p class="title"><b>Exemplo 154. Populate Zend_Http_Header_SetCookie via setters and add to response</b></p>
+<div class="example-contents">
+                    
+                    <pre class="programlisting">
+$cookie = new Zend_Http_Header_SetCookie();
+$cookie-&gt;setName('foo')
+       -&gt;setValue('bar')
+       -&gt;setDomain('example.com')
+       -&gt;setPath('/')
+       -&gt;setHttponly(true);
+$this-&gt;getResponse()-&gt;setRawHeader($cookie);
+</pre>
+                </div>
+</div>
+<br class="example-break">
+            </div>
+        </div>
+
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.response.namedsegments"></a>Named Segments</h3></div></div></div>
+        
+
+        <p>
+            The response object has support for "named segments". This allows
+            you to segregate body content into different segments and order
+            those segments so output is returned in a specific order.
+            Internally, body content is saved as an array, and the various
+            accessor methods can be used to indicate placement and names within
+            that array.
+        </p>
+
+        <p>
+            As an example, you could use a <code class="methodname">preDispatch()</code> hook to
+            add a header to the response object, then have the action controller
+            add body content, and a <code class="methodname">postDispatch()</code> hook add a
+            footer:
+        </p>
+
+        <pre class="programlisting">
+// Assume that this plugin class is registered with the front controller
+class MyPlugin extends Zend_Controller_Plugin_Abstract
+{
+    public function preDispatch(Zend_Controller_Request_Abstract $request)
+    {
+        $response = $this-&gt;getResponse();
+        $view = new Zend_View();
+        $view-&gt;setBasePath('../views/scripts');
+
+        $response-&gt;prepend('header', $view-&gt;render('header.phtml'));
+    }
+
+    public function postDispatch(Zend_Controller_Request_Abstract $request)
+    {
+        $response = $this-&gt;getResponse();
+        $view = new Zend_View();
+        $view-&gt;setBasePath('../views/scripts');
+
+        $response-&gt;append('footer', $view-&gt;render('footer.phtml'));
+    }
+}
+
+// a sample action controller
+class MyController extends Zend_Controller_Action
+{
+    public function fooAction()
+    {
+        $this-&gt;render();
+    }
+}
+</pre>
+
+        <p>
+            In the above example, a call to <code class="filename">/my/foo</code> will cause the
+            final body content of the response object to have the following
+            structure:
+        </p>
+
+        <pre class="programlisting">
+array(
+    'header'  =&gt; ..., // header content
+    'default' =&gt; ..., // body content from MyController::fooAction()
+    'footer'  =&gt; ...  // footer content
+);
+</pre>
+
+        <p>
+            When this is rendered, it will render in the order in which elements
+            are arranged in the array.
+        </p>
+
+        <p>
+            A variety of methods can be used to manipulate the named segments:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setBody()</code>
+                    allows you to pass a second value, <code class="varname">$name</code>,
+                    indicating a named segment. If you provide a segment name
+                    it will overwrite that specific named segment or
+                    create it if it does not exist (appending to the body array by
+                    default). If no named segment is passed to
+                    <code class="methodname">setBody()</code>, it resets the entire body content
+                    array.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">appendBody()</code> also allows you to pass 
+                    a second value, <code class="varname">$name</code>, indicating a named segment.
+                    If you provide a segment name it will append the supplied content
+                    to the existing content in the named segment, or create the segment
+                    if it does not exist (appending to the body array by
+                    default). If no named segment is passed to
+                    <code class="methodname">appendBody()</code>, it will append the supplied
+                    content to the named segment 'default', creating it if it does not
+                    already exist. 
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">prepend($name, $content)</code> will create a segment
+                    named <code class="varname">$name</code> and place it at the beginning of
+                    the array. If the segment exists already, it will be removed
+                    prior to the operation (i.e., overwritten and replaced).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">append($name, $content)</code> will create a segment
+                    named <code class="varname">$name</code> and place it at the end of
+                    the array. If the segment exists already, it will be removed
+                    prior to the operation (i.e., overwritten and replaced).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">insert($name, $content, $parent = null, $before =
+                        false)</code> will create a segment named
+                    <code class="varname">$name</code>. If provided with a <code class="varname">$parent</code>
+                    segment, the new segment will be placed either before or
+                    after that segment (based on the value of
+                    <code class="varname">$before</code>) in the array. If the segment exists
+                    already, it will be removed prior to the operation (i.e.,
+                    overwritten and replaced).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">clearBody($name = null)</code> will remove a single
+                    named segment if a <code class="varname">$name</code> is provided (and the
+                    entire array otherwise).
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getBody($spec = false)</code> can be used to retrieve a
+                    single array segment if <code class="varname">$spec</code> is the name of a named
+                    segment. If <code class="varname">$spec</code> is <code class="constant">FALSE</code>, it returns
+                    a string formed by concatenating all named segments in order. If
+                    <code class="varname">$spec</code> is <code class="constant">TRUE</code>, it returns the body
+                    content array.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.response.exceptions"></a>Testing for Exceptions in the Response Object</h3></div></div></div>
+        
+
+        <p>
+            As mentioned earlier, by default, exceptions caught during dispatch
+            are registered with the response object. Exceptions are registered
+            in a stack, which allows you to keep all exceptions thrown --
+            application exceptions, dispatch exceptions, plugin exceptions, etc.
+            Should you wish to check for particular exceptions or to log
+            exceptions, you'll want to use the response object's exception <acronym class="acronym">API</acronym>:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    <code class="methodname">setException(Exception $e)</code> allows you to
+                    register an exception.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">isException()</code> will tell you if an exception has
+                    been registered.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getException()</code> returns the entire
+                    exception stack.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">hasExceptionOfType($type)</code> allows you to
+                    determine if an exception of a particular class is in the
+                    stack.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">hasExceptionOfMessage($message)</code> allows you to
+                    determine if an exception with a specific message is in the
+                    stack.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">hasExceptionOfCode($code)</code> allows you to
+                    determine if an exception with a specific code is in the
+                    stack.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getExceptionByType($type)</code> allows you to
+                    retrieve all exceptions of a specific class from the stack.
+                    It will return <code class="constant">FALSE</code> if none are found, and an array of
+                    exceptions otherwise.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getExceptionByMessage($message)</code> allows you to
+                    retrieve all exceptions with a specific message from the stack.
+                    It will return <code class="constant">FALSE</code> if none are found, and an array of
+                    exceptions otherwise.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">getExceptionByCode($code)</code> allows you to
+                    retrieve all exceptions with a specific code from the stack.
+                    It will return <code class="constant">FALSE</code> if none are found, and an array of
+                    exceptions otherwise.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="methodname">renderExceptions($flag)</code> allows you to set a
+                    flag indicating whether or not exceptions should be emitted
+                    when the response is sent.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.controller.response.subclassing"></a>Subclassing the Response Object</h3></div></div></div>
+        
+
+        <p>
+            The purpose of the response object is to collect headers and content
+            from the various actions and plugins and return them to the client;
+            secondarily, it also collects any errors (exceptions) that occur in
+            order to process them, return them, or hide them from the end user.
+        </p>
+
+        <p>
+            The base response class is
+            <code class="classname">Zend_Controller_Response_Abstract</code>, and any subclass you
+            create should extend that class or one of its derivatives. The
+            various methods available have been listed in the previous sections.
+        </p>
+
+        <p>
+            Reasons to subclass the response object include modifying how output
+            is returned based on the request environment (e.g., not sending
+            headers for <acronym class="acronym">CLI</acronym> or <acronym class="acronym">PHP</acronym>-<acronym class="acronym">GTK</acronym>
+            requests), adding functionality to return a final view based on content stored in named
+            segments, etc.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.controller.actionhelpers.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.controller.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.controller.plugins.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Action Helpers </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Plugins</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

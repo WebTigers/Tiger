@@ -1,0 +1,216 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Affiner les Contrôles d'Accès</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.acl.html" title="Zend_Acl">
+<link rel="prev" href="zend.acl.introduction.html" title="Introduction">
+<link rel="next" href="zend.acl.advanced.html" title="Utilisation avancée">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Affiner les Contrôles d'Accès</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.acl.introduction.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Acl</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.acl.advanced.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.acl.refining"></a>Affiner les Contrôles d'Accès</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.acl.refining.precise"></a>Mieux définir les Contrôles d'Accès</h3></div></div></div>
+        
+
+        <p>
+            L'<acronym class="acronym">ACL</acronym> basique définie dans le
+            <a class="link" href="zend.acl.introduction.html" title="Introduction">chapitre précédent</a>montre comment plusieurs
+            privilèges peuvent être alloués pour l'ensemble de l'<acronym class="acronym">ACL</acronym> (toutes les
+            ressources). En pratique, toutefois, les contrôles d'accès ont souvent des exceptions et
+            des degrés de complexité variables. <code class="classname">Zend_Acl</code> permet d'atteindre
+            ce degré de finesse d'une manière directe et flexible.
+        </p>
+
+        <p>
+            Pour l'exemple du <acronym class="acronym">CMS</acronym>, nous avons déterminé que bien que le groupe
+            "Staff" couvre les besoins de la plupart des utilisateurs, un groupe "Marketing" est
+            nécessaire. Ce groupe doit avoir accès à la newsletter et aux dernières news dans le
+            <acronym class="acronym">CMS</acronym>. Le groupe va recevoir la possibilité de publier et d'archiver à
+            la fois des newsletters et des news.
+        </p>
+
+        <p>
+            De plus, il a été demandé que le groupe "Staff" puisse voir les nouveaux textes,
+            mais pas les nouvelles news. Enfin, il devrait être impossible pour tout le monde (y
+            compris les administrateurs) d'archiver un contenu qui n'aurait une durée de vie que de
+            1 ou 2 jours.
+        </p>
+
+        <p>
+            En premier lieu, nous modifions le registre des rôles pour refléter ces
+            changements. Nous avons dit que le groupe "Marketing" a les même permissions de base
+            que "Staff". Donc nous créons "marketing" pour qu'il hérite des permissions de
+            "staff".
+        </p>
+
+        <pre class="programlisting">
+// Le nouveau groupe Marketing hérite des permissions de Staff
+$acl-&gt;addRole(new Zend_Acl_Role('marketing'), 'staff');
+</pre>
+
+        <p>
+            Ensuite, notez que les contrôles d'accès plus haut font référence à des
+            ressources (ex. "newsletters", "dernières news", "annonces"). Maintenant, nous ajoutons
+            ces Ressources :
+        </p>
+
+        <pre class="programlisting">
+// Créer les Ressources pour les règles
+
+// newsletter
+$acl-&gt;addResource(new Zend_Acl_Resource('newsletter'));
+
+// news
+$acl-&gt;addResource(new Zend_Acl_Resource('news'));
+
+// dernières news
+$acl-&gt;addResource(new Zend_Acl_Resource('latest'), 'news');
+
+// annonces
+$acl-&gt;addResource(new Zend_Acl_Resource('announcement'), 'news');
+</pre>
+
+        <p>
+            Ensuite c'est simplement une manière de définir ces règles spécifiques sur les
+            parties cibles de l'<acronym class="acronym">ACL</acronym> :
+        </p>
+
+        <pre class="programlisting">
+// Le Marketing doit être capable de publier
+// et d'archiver les newsletters et les dernières news
+$acl-&gt;allow('marketing',
+            array('newsletter', 'latest'),
+            array('publish', 'archive'));
+
+// Staff (et marketing, par héritage),
+// n'ont pas la permission de relire les dernières news
+$acl-&gt;deny('staff', 'latest', 'relire');
+
+// Personne (y compris les administrateurs)
+// n'a la permission d'archiver des annonces
+$acl-&gt;deny(null, 'annonce', 'archive');
+</pre>
+
+        <p>
+            On peut maintenant interroger les <acronym class="acronym">ACL</acronym> sur base des dernières
+            modifications :
+        </p>
+
+        <pre class="programlisting">
+echo $acl-&gt;isAllowed('staff', 'newsletter', 'publish') ?
+     "autorisé" : "refusé"; // refusé
+
+echo $acl-&gt;isAllowed('marketing', 'newsletter', 'publish') ?
+     "autorisé" : "refusé"; // autorisé
+
+echo $acl-&gt;isAllowed('staff', 'latest', 'publish') ?
+     "autorisé" : "refusé"; // refusé
+
+echo $acl-&gt;isAllowed('marketing', 'latest', 'publish') ?
+     "autorisé" : "refusé"; // autorisé
+
+echo $acl-&gt;isAllowed('marketing', 'latest', 'archive') ?
+     "autorisé" : "refusé"; // autorisé
+
+echo $acl-&gt;isAllowed('marketing', 'latest', 'revise') ?
+     "autorisé" : "refusé"; // refusé
+
+echo $acl-&gt;isAllowed('editor', 'announcement', 'archive') ?
+     "autorisé" : "refusé"; // refusé
+
+echo $acl-&gt;isAllowed('administrator', 'announcement', 'archive') ?
+     "autorisé" : "refusé"; // refusé
+</pre>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.acl.refining.removing"></a>Retirer les Contrôles d'Accès</h3></div></div></div>
+        
+
+        <p>
+            Pour retirer une ou plusieurs règles des <acronym class="acronym">ACL</acronym>, utilisez simplement la
+            méthode <code class="methodname">removeAllow()</code> ou <code class="methodname">removeDeny()</code>.
+            Comme pour <code class="methodname">allow()</code> et <code class="methodname">deny()</code>, vous
+            pouvez utiliser une valeur <code class="constant">NULL</code> pour indiquer que la méthode
+            s'applique à tous les rôles, ressources et / ou privilèges.
+        </p>
+
+        <pre class="programlisting">
+// Retire l'interdiction de relire les dernières news au Staff
+// (et au marketing, par héritage)
+$acl-&gt;removeDeny('staff', 'latest', 'relire');
+
+echo $acl-&gt;isAllowed('marketing', 'latest', 'relire') ?
+     "autorisé" : "refusé"; // autorisé
+
+// Retire l'autorisation de publier
+// et archiver les newsletters au Marketing
+$acl-&gt;removeAllow('marketing',
+                  'newsletter',
+                  array('publish', 'archive'));
+
+echo $acl-&gt;isAllowed('marketing', 'newsletter', 'publish') ?
+     "autorisé" : "refusé"; // refusé
+
+echo $acl-&gt;isAllowed('marketing', 'newsletter', 'archive') ?
+     "autorisé" : "refusé"; // refusé
+</pre>
+
+        <p>
+            Les privilèges peuvent être modifiés de manière incrémentielle comme indiqué au
+            dessus, mais une valeur <code class="constant">NULL</code> pour les privilèges écrase ces
+            modifications incrémentielles.
+        </p>
+
+        <pre class="programlisting">
+// donne au groupe Marketing toutes les permissions
+// sur les dernières nouvelles
+$acl-&gt;allow('marketing', 'latest');
+
+echo $acl-&gt;isAllowed('marketing', 'latest', 'publish') ?
+     "autorisé" : "refusé"; // autorisé
+
+echo $acl-&gt;isAllowed('marketing', 'latest', 'archive') ?
+     "autorisé" : "refusé"; // autorisé
+
+echo $acl-&gt;isAllowed('marketing', 'latest', 'anything') ?
+     "autorisé" : "refusé"; // autorisé
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.acl.introduction.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.acl.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.acl.advanced.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Utilisation avancée</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

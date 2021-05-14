@@ -1,0 +1,160 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Formateurs (mise en forme)</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.log.html" title="Zend_Log">
+<link rel="prev" href="zend.log.writers.html" title="Rédacteurs (Writers)">
+<link rel="next" href="zend.log.filters.html" title="Filtres">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Formateurs (mise en forme)</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.log.writers.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Log</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.log.filters.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.log.formatters"></a>Formateurs (mise en forme)</h2></div></div></div>
+    
+
+    <p>
+        Un formateur est un objet qui est responsable de prendre un tableau <code class="code">event</code>
+        décrivant un événement de log et produisant une ligne de log formatée sous la forme d'un une
+        chaîne.
+    </p>
+
+    <p>
+        Quelques rédacteurs ("Writers") ne fonctionnent pas en terme de ligne et ne peuvent
+        pas utiliser un formateur. Un exemple est le rédacteur de base de données, qui insère les
+        items d'événement directement en colonnes de base de données. Pour les rédacteurs qui ne
+        peuvent pas supporter un formateur, une exception est levée si vous essayez d'affecter un
+        formateur.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.formatters.simple"></a>Formatage simple</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Log_Formatter_Simple</code> est le formateur par défaut. Il
+            est configuré automatiquement quand vous n'indiquez aucun formateur. La configuration
+            par défaut est équivalente à ce qui suit : </p>
+<pre class="programlisting">
+$format = '%timestamp% %priorityName% (%priority%): %message%' . PHP_EOL;
+$formatter = new Zend_Log_Formatter_Simple($format);
+</pre>
+
+        <p>
+            Un formateur est affecté à un objet individuel de rédacteur en utilisant la
+            méthode <code class="methodname">setFormatter()</code> du rédacteur : </p>
+<pre class="programlisting">
+$redacteur = new Zend_Log_Writer_Stream('php://output');
+$formateur = new Zend_Log_Formatter_Simple('Bonjour %message%' . PHP_EOL);
+$redacteur-&gt;setFormatter($formateur);
+
+$logger = new Zend_Log();
+$logger-&gt;addWriter($redacteur);
+
+$logger-&gt;info('Monde');
+
+// affiche "Bonjour Monde"
+</pre>
+
+        <p>
+            Le constructeur de <code class="classname">Zend_Log_Formatter_Simple</code> accepte un
+            paramètre unique : la chaîne de formatage. Cette chaîne contient des clés entourées par
+            le signe pourcentage (par exemple %message%). La chaîne de formatage peut contenir
+            n'importe quelle clé du tableau de données d'événement. Vous pouvez récupérer les clés
+            par défaut en utilisant la constante DEFAULT_FORMAT de
+            <code class="classname">Zend_Log_Formatter_Simple</code>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.formatters.xml"></a>Formater vers le XML</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Log_Formatter_Xml</code> formate des données de log dans des
+            chaînes de type XML. Par défaut, il note automatiquement tout le tableau de données
+            d'événements : </p>
+<pre class="programlisting">
+$redacteur = new Zend_Log_Writer_Stream('php://output');
+$formateur = new Zend_Log_Formatter_Xml();
+$redacteur-&gt;setFormatter($formateur);
+
+$logger = new Zend_Log();
+$logger-&gt;addWriter($redacteur);
+
+$logger-&gt;info("Message d'information");
+</pre>
+
+        <p>
+            Le code ci-dessus affiche le XML suivant (des espaces supplémentaires sont ajoutés
+            pour la clarté) : </p>
+<pre class="programlisting">
+&lt;logEntry&gt;
+  &lt;timestamp&gt;2007-04-06T07:24:37-07:00&lt;/timestamp&gt;
+  &lt;message&gt;Message d'information&lt;/message&gt;
+  &lt;priority&gt;6&lt;/priority&gt;
+  &lt;priorityName&gt;INFO&lt;/priorityName&gt;
+&lt;/logEntry&gt;
+</pre>
+
+        <p>
+            Il est possible d'adapter l'élément racine comme indiquent faire correspondre les
+            éléments XML au tableau de données d'évènements. Le constructeur de
+            <code class="classname">Zend_Log_Formatter_Xml</code> accepte une chaîne avec le nom de
+            l'élément racine comme premier paramètre et un tableau associatif avec les éléments de
+            correspondance comme deuxième paramètre : </p>
+<pre class="programlisting">
+$redacteur = new Zend_Log_Writer_Stream('php://output');
+$formateur = new Zend_Log_Formatter_Xml('log',
+                                        array('msg' =&gt; 'message',
+                                              'niveau' =&gt; 'priorityName'));
+$redacteur-&gt;setFormatter($formateur);
+
+$logger = new Zend_Log();
+$logger-&gt;addWriter($redacteur);
+
+$logger-&gt;info("Message d'information");
+</pre>
+<p> Le code ci-dessus change l'élément racine par défaut de
+            <code class="code">logEntry</code> en <code class="code">log</code>. Il fait correspondre également les éléments
+            <code class="code">msg</code> au <code class="code">message</code> de l'item de donnée d'événement. Ceci a comme
+            conséquence l'affichage suivant : </p>
+<pre class="programlisting">
+&lt;log&gt;
+  &lt;msg&gt;Message d'information&lt;/msg&gt;
+  &lt;niveau&gt;INFO&lt;/niveau&gt;
+&lt;/log&gt;
+</pre>
+        </div>
+    </div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.log.writers.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.log.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.log.filters.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Rédacteurs (Writers) </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Filtres</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

@@ -1,0 +1,646 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Normalization and Localization</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.locale.html" title="Zend_Locale">
+<link rel="prev" href="zend.locale.functions.html" title="Using Zend_Locale">
+<link rel="next" href="zend.locale.date.datesandtimes.html" title="Working with Dates and Times">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Normalization and Localization</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.locale.functions.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Locale</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.locale.date.datesandtimes.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.locale.parsing"></a>Normalization and Localization</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Locale_Format</code> is an internal component used by
+        <code class="classname">Zend_Locale</code>. All locale aware classes use
+        <code class="classname">Zend_Locale_Format</code> for normalization and localization of numbers and
+        dates. Normalization involves parsing input from a variety of data representations, like
+        dates, into a standardized, structured representation, such as a <acronym class="acronym">PHP</acronym>
+        array with year, month, and day elements.
+    </p>
+
+    <p>
+        The exact same string containing a number or a date might mean different things to people
+        with different customs and conventions. Disambiguation of numbers and dates requires rules
+        about how to interpret these strings and normalize the values into a standardized data
+        structure. Thus, all methods in <code class="classname">Zend_Locale_Format</code> require a locale
+        in order to parse the input data.
+
+        </p>
+<div class="note"><table border="0" summary='Note: Default "root" Locale'>
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Default "root" Locale</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                If no locale is specified, then normalization and localization will use the standard
+                "root" locale, which might yield unexpected behavior, if the input originated in a
+                different locale, or output for a specific locale was expected.
+            </p>
+        </td></tr>
+</table></div>
+<p>
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.number.normalize"></a>Number normalization: getNumber($input, Array $options)</h3></div></div></div>
+        
+
+        <p>
+            There are many <a class="ulink" href="http://en.wikipedia.org/wiki/Numeral" target="_top">number systems</a>
+            different from the common <a class="ulink" href="http://en.wikipedia.org/wiki/Decimal" target="_top">decimal system</a> (e.g. "3.14").
+            Numbers can be normalized with the <code class="methodname">getNumber()</code> function to
+            obtain the standard decimal representation. for all number-related discussions in this
+            manual, <a class="ulink" href="http://en.wikipedia.org/wiki/Arabic_numerals" target="_top">Arabic/European numerals
+                (0,1,2,3,4,5,6,7,8,9)</a> are implied, unless explicitly stated otherwise. The
+            options array may contain a 'locale' to define grouping and decimal characters. The
+            array may also have a 'precision' to truncate excess digits from the result.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.number.normalize.example-1"></a><p class="title"><b>Example 546. Number normalization</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+$number = Zend_Locale_Format::getNumber('13.524,678',
+                                        array('locale' =&gt; $locale,
+                                              'precision' =&gt; 3)
+                                       );
+
+print $number; // will return 13524.678
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.locale.number.normalize.precision"></a>Precision and Calculations</h4></div></div></div>
+            
+
+            <p>
+                Since <code class="methodname">getNumber($value, array $options = array())</code> can
+                normalize extremely large numbers, check the result carefully before using finite
+                precision calculations, such as ordinary <acronym class="acronym">PHP</acronym> math operations. For
+                example, <span class="command"><strong>if ((string)int_val($number) != $number) {</strong></span> use <a class="ulink" href="http://www.php.net/bc" target="_top">BCMath</a> or <a class="ulink" href="http://www.php.net/gmp" target="_top">GMP</a>. Most <acronym class="acronym">PHP</acronym>
+                installations support the BCMath extension.
+            </p>
+
+            <p>
+                Also, the precision of the resulting decimal representation can be rounded to a
+                desired length with <code class="methodname">getNumber()</code> with the option
+                '<span class="property">precision</span>'. If no precision is given, no rounding occurs. Use
+                only <acronym class="acronym">PHP</acronym> integers to specify the precision.
+            </p>
+
+            <p>
+                If the resulting decimal representation should be truncated to a desired length
+                instead of rounded the option '<span class="property">number_format</span>' can be used
+                instead. Define the length of the decimal representation with the desired length
+                of zeros. The result will then not be rounded. So if the defined precision within
+                <span class="property">number_format</span> is zero the value "1.6" will return "1", not "2.
+                See the example nearby:
+            </p>
+
+            <div class="example">
+<a name="zend.locale.number.normalize.precision.example-1"></a><p class="title"><b>Example 547. Number normalization with precision</b></p>
+<div class="example-contents">
+                
+
+                <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+$number = Zend_Locale_Format::getNumber('13.524,678',
+                                        array('precision' =&gt; 1,
+                                              'locale' =&gt; $locale)
+                                       );
+print $number; // will return 13524.7
+
+$number = Zend_Locale_Format::getNumber('13.524,678',
+                                        array('number_format' =&gt; '#.00',
+                                              'locale' =&gt; $locale)
+                                       );
+print $number; // will return 13524.67
+</pre>
+            </div>
+</div>
+<br class="example-break">
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.number.localize"></a>Number localization</h3></div></div></div>
+        
+
+        <p>
+            <code class="methodname">toNumber($value, array $options = array())</code> can localize numbers
+            to the following <a class="link" href="zend.locale.appendix.html" title="Supported locales">supported locales</a>. This
+            function will return a localized string of the given number in a conventional format for
+            a specific locale. The 'number_format' option explicitly specifies a non-default number
+            format for use with <code class="methodname">toNumber()</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.number.localize.example-1"></a><p class="title"><b>Example 548. Number localization</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+$number = Zend_Locale_Format::toNumber(13547.36,
+                                       array('locale' =&gt; $locale));
+
+// will return 13.547,36
+print $number;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            </p>
+<div class="note"><table border="0" summary="Note: Unlimited length">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Unlimited length</th>
+</tr>
+<tr><td align="left" valign="top">
+                
+
+                <p>
+                    <code class="methodname">toNumber()</code> can localize numbers with unlimited length.
+                    It is not related to integer or float limitations.
+                </p>
+            </td></tr>
+</table></div>
+<p>
+        </p>
+
+        <p>
+            The same way as within <code class="methodname">getNumber()</code>,
+            <code class="methodname">toNumber()</code> handles precision. If no precision is given, the
+            complete localized number will be returned.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.number.localize.example-2"></a><p class="title"><b>Example 549. Number localization with precision</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+$number = Zend_Locale_Format::toNumber(13547.3678,
+                                       array('precision' =&gt; 2,
+                                             'locale' =&gt; $locale));
+
+// will return 13.547,37
+print $number;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Using the option 'number_format' a self defined format for generating a number can be
+            defined. The format itself has to be given in <acronym class="acronym">CLDR</acronym> format as
+            described below. The locale is used to get separation, precision and other number
+            formatting signs from it. German for example defines ',' as precision separation and in
+            English the '.' sign is used.
+        </p>
+
+        <div class="table">
+<a name="zend.locale.number.localize.table-1"></a><p class="title"><b>Table 105. Format tokens for self generated number formats</b></p>
+<div class="table-contents">
+            
+
+            <table class="table" summary="Format tokens for self generated number formats" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Token</th>
+<th>Description</th>
+<th>Example format</th>
+<th>Generated output</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>#0</td>
+<td>Generates a number without precision and separation</td>
+<td>#0</td>
+<td>1234567</td>
+</tr>
+<tr>
+<td>,</td>
+<td>
+                            Generates a separation with the length from separation to next
+                            separation or to 0
+                        </td>
+<td>#,##0</td>
+<td>1,234,567</td>
+</tr>
+<tr>
+<td>#,##,##0</td>
+<td>
+                            Generates a standard separation of 3 and all following separations with
+                            2
+                        </td>
+<td>#,##,##0</td>
+<td>12,34,567</td>
+</tr>
+<tr>
+<td>.</td>
+<td>Generates a precision</td>
+<td>#0.#</td>
+<td>1234567.1234</td>
+</tr>
+<tr>
+<td>0</td>
+<td>Generates a precision with a defined length</td>
+<td>#0.00</td>
+<td>1234567.12</td>
+</tr>
+</tbody>
+</table>
+        </div>
+</div>
+<br class="table-break">
+
+        <div class="example">
+<a name="zend.locale.number.localize.example-3"></a><p class="title"><b>Example 550. Using a self defined number format</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+$number = Zend_Locale_Format::toNumber(13547.3678,
+                                       array('number_format' =&gt; '#,#0.00',
+                                             'locale' =&gt; 'de')
+                                      );
+
+// will return 1.35.47,36
+print $number;
+
+$number = Zend_Locale_Format::toNumber(13547.3,
+                                       array('number_format' =&gt; '#,##0.00',
+                                             'locale' =&gt; 'de')
+                                       );
+
+// will return 13.547,30
+print $number;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.number.test"></a>Number testing</h3></div></div></div>
+        
+
+        <p>
+            <code class="methodname">isNumber($value, array $options = array())</code> checks if a given
+            string is a number and returns <code class="constant">TRUE</code> or <code class="constant">FALSE</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.number.test.example-1"></a><p class="title"><b>Example 551. Number testing</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale();
+if (Zend_Locale_Format::isNumber('13.445,36', array('locale' =&gt; 'de_AT'))) {
+    print "Number";
+} else {
+    print "not a Number";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.float.normalize"></a>Float value normalization</h3></div></div></div>
+        
+
+        <p>
+            Floating point values can be parsed with the
+            <code class="methodname">getFloat($value, array $options = array())</code> function. A floating
+            point value will be returned.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.float.normalize.example-1"></a><p class="title"><b>Example 552. Floating point value normalization</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+$number = Zend_Locale_Format::getFloat('13.524,678',
+                                       array('precision' =&gt; 2,
+                                             'locale' =&gt; $locale)
+                                      );
+
+// will return 13524.68
+print $number;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.float.localize"></a>Floating point value localization</h3></div></div></div>
+        
+
+        <p>
+            <code class="methodname">toFloat()</code> can localize floating point values. This function
+            will return a localized string of the given number.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.float.localize.example-1"></a><p class="title"><b>Example 553. Floating point value localization</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+$number = Zend_Locale_Format::toFloat(13547.3655,
+                                      array('precision' =&gt; 1,
+                                            'locale' =&gt; $locale)
+                                     );
+
+// will return 13.547,4
+print $number;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.float.test"></a>Floating point value testing</h3></div></div></div>
+        
+
+        <p>
+            <code class="methodname">isFloat($value, array $options = array())</code> checks if a given
+            string is a floating point value and returns <code class="constant">TRUE</code> or
+            <code class="constant">FALSE</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.float.test.example-1"></a><p class="title"><b>Example 554. Floating point value testing</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+if (Zend_Locale_Format::isFloat('13.445,36', array('locale' =&gt; $locale))) {
+    print "float";
+} else {
+    print "not a float";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.integer.normalize"></a>Integer value normalization</h3></div></div></div>
+        
+
+        <p>
+            Integer values can be parsed with the <code class="methodname">getInteger()</code> function. A
+            integer value will be returned.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.integer.normalize.example-1"></a><p class="title"><b>Example 555. Integer value normalization</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+$number = Zend_Locale_Format::getInteger('13.524,678',
+                                         array('locale' =&gt; $locale));
+
+// will return 13524
+print $number;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.integer.localize"></a>Integer point value localization</h3></div></div></div>
+        
+
+        <p>
+            <code class="methodname">toInteger($value, array $options = array())</code> can localize
+            integer values. This function will return a localized string of the given number.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.integer.localize.example-1"></a><p class="title"><b>Example 556. Integer value localization</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+$number = Zend_Locale_Format::toInteger(13547.3655,
+                                        array('locale' =&gt; $locale));
+
+// will return 13.547
+print $number;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.integer.test"></a>Integer value testing</h3></div></div></div>
+        
+
+        <p>
+            <code class="methodname">isInteger($value, array $options = array())</code> checks if a given
+            string is an integer value and returns <code class="constant">TRUE</code> or
+            <code class="constant">FALSE</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.integer.test.example-1"></a><p class="title"><b>Example 557. Integer value testing</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$locale = new Zend_Locale('de_AT');
+if (Zend_Locale_Format::isInteger('13.445', array('locale' =&gt; $locale))) {
+    print "integer";
+} else {
+    print "not an integer";
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.locale.numbersystems"></a>Numeral System Conversion</h3></div></div></div>
+        
+
+        <p>
+            <code class="methodname">Zend_Locale_Format::convertNumerals()</code> converts digits between
+            different <a class="ulink" href="http://en.wikipedia.org/wiki/Arabic_numerals" target="_top">numeral
+                systems</a>, including the standard Arabic/European/Latin numeral system
+            (0,1,2,3,4,5,6,7,8,9), not to be confused with <a class="ulink" href="http://en.wikipedia.org/wiki/Eastern_Arabic_numerals" target="_top">Eastern Arabic
+                numerals</a> sometimes used with the Arabic language to express numerals.
+            Attempts to use an unsupported numeral system will result in an exception, to avoid
+            accidentally performing an incorrect conversion due to a spelling error. All characters
+            in the input, which are not numerals for the selected numeral system, are copied to the
+            output with no conversion provided for unit separator characters.
+            <code class="classname">Zend_Locale</code>* components rely on the data provided by
+            <acronym class="acronym">CLDR</acronym> (see their <a class="ulink" href="http://unicode.org/cldr/data/diff/supplemental/languages_and_scripts.html?sortby=date" target="_top">list
+                of scripts grouped by language</a>).
+        </p>
+
+        <p>
+            In <acronym class="acronym">CLDR</acronym> and hereafter, the Europena/Latin numerals will
+            be referred to as "Latin" or by the assigned 4-letter code "Latn".
+            Also, the <acronym class="acronym">CLDR</acronym> refers to this numeral systems as "scripts".
+        </p>
+
+        <p>
+            Suppose a web form collected a numeric input expressed using Eastern Arabic digits
+            "١‎٠٠". Most software and <acronym class="acronym">PHP</acronym> functions expect input using Arabic
+            numerals. Fortunately, converting this input to its equivalent Latin numerals "100"
+            requires little effort using <code class="methodname">convertNumerals($inputNumeralString,
+                $sourceNumeralSystem, $destNumeralSystem)</code>, which returns the
+            <code class="varname">$input</code> with numerals in the script
+            <code class="varname">$sourceNumeralSystem</code> converted to the script
+            <code class="varname">$destNumeralSystem</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.numbersystems.example-1"></a><p class="title"><b>Example 558. Converting numerals from Eastern Arabic scripts to European/Latin scripts</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$arabicScript = "١‎٠٠";   // Arabic for "100" (one hundred)
+$latinScript = Zend_Locale_Format::convertNumerals($arabicScript,
+                                                   'Arab',
+                                                   'Latn');
+
+print "\nOriginal:   " . $arabicScript;
+print "\nNormalized: " . $latinScript;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Similarly, any of the supported numeral systems may be converted to any other supported
+            numeral system.
+        </p>
+
+        <div class="example">
+<a name="zend.locale.numbersystems.example-2"></a><p class="title"><b>Example 559. Converting numerals from Latin script to Eastern Arabic script</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$latinScript = '123';
+$arabicScript = Zend_Locale_Format::convertNumerals($latinScript,
+                                                    'Latn',
+                                                    'Arab');
+
+print "\nOriginal:  " . $latinScript;
+print "\nLocalized: " . $arabicScript;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.locale.numbersystems.example-3"></a><p class="title"><b>Example 560. 
+                Getting 4 letter CLDR script code using a native-language name of the script
+            </b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+function getScriptCode($scriptName, $locale)
+{
+    $scripts2names = Zend_Locale_Data::getList($locale, 'script');
+    $names2scripts = array_flip($scripts2names);
+    return $names2scripts[$scriptName];
+}
+echo getScriptCode('Latin', 'en'); // outputs "Latn"
+echo getScriptCode('Tamil', 'en'); // outputs "Taml"
+echo getScriptCode('tamoul', 'fr'); // outputs "Taml"
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            For a list of supported numeral systems call
+            <code class="methodname">Zend_Locale::getTranslationList('numberingsystem', 'en')</code>.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.locale.functions.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.locale.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.locale.date.datesandtimes.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Using Zend_Locale </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Working with Dates and Times</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

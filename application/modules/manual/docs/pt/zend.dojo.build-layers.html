@@ -1,0 +1,492 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Dojo build layer support</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.dojo.html" title="Zend_Dojo">
+<link rel="prev" href="zend.dojo.form.html" title="Dojo Form Elements and Decorators">
+<link rel="next" href="zend.dom.html" title="Zend_Dom">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Dojo build layer support</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.dojo.form.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Dojo</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.dom.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.dojo.build-layers"></a>Zend_Dojo build layer support</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.dojo.build-layers.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            Dojo build layers provide a clean path from development to
+            production when using Dojo for your UI layer. In development, you
+            can have load-on-demand, rapid application prototyping; a build
+            layer takes all Dojo dependencies and compiles them to a single
+            file, optionally stripping whitespace and comments, and performing
+            code heuristics to allow further minification of variable names.
+            Additionally, it can do <acronym class="acronym">CSS</acronym> minification.
+        </p>
+
+        <p>
+            In order to create a build layer, you would traditionally create a
+            JavaScript file that has <span class="command"><strong>dojo.require</strong></span> statements for
+            each dependency, and optionally some additional code that might run
+            when the script is loaded. As an example:
+        </p>
+
+        <pre class="programlisting">
+dojo.provide("custom.main");
+
+dojo.require("dijit.layout.TabContainer");
+dojo.require("dijit.layout.ContentPane");
+dojo.require("dijit.form.Form");
+dojo.require("dijit.form.Button");
+dojo.require("dijit.form.TextBox");
+</pre>
+
+        <p>
+            This script is generally referred to as a "layer" script.
+        </p>
+
+        <p>
+            Then, in your application's layout, you'd instruct Dojo to load this
+            module:
+        </p>
+
+        <pre class="programlisting">
+&lt;html&gt;
+&lt;head&gt;
+    &lt;script type="text/javascript" src="/js/dojo/dojo.js"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript"&gt;
+        dojo.registerModulePath("custom", "../custom/");
+        dojo.require("custom.main");
+    &lt;/script&gt;
+</pre>
+
+        <p>
+            If you use <code class="classname">Zend_Dojo</code> to do this, you'd do the
+            following:
+        </p>
+
+        <pre class="programlisting">
+$view-&gt;dojo()-&gt;registerModulePath('custom', '../custom/')
+             -&gt;requireModule('custom.main');
+</pre>
+
+        <p>
+            But since <code class="classname">Zend_Dojo</code> aggregates your various
+            <span class="command"><strong>dojo.require</strong></span> statements, how do you create your layer
+            script? You could open each page and view the generated
+            <span class="command"><strong>dojo.require</strong></span> statements, and cut and paste them into a
+            layer script file manually.
+        </p>
+
+        <p>
+            However, a better solution exists: since
+            <code class="classname">Zend_Dojo</code> aggregates this information
+            already, you can simply pull that information and build your layer
+            file. This is the purpose of
+            <code class="classname">Zend_Dojo_BuildLayer</code>.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.dojo.build-layers.usage"></a>Generating Custom Module Layers with Zend_Dojo_BuildLayer</h3></div></div></div>
+        
+
+        <p>
+            At its simplest, you simply instantiate
+            <code class="classname">Zend_Dojo_BuildLayer</code>, feed it the view object
+            and the name of your custom module layer, and have it generate the
+            content of the layer file; it is up to you to then write it to disk.
+        </p>
+
+        <p>
+            As an example, let's say you wanted to create the module layer
+            "<code class="filename">custom.main</code>". Assuming you follow the recommended project
+            directory structure, and that you are storing your JavaScript files under
+            <code class="filename">public/js/</code>, you could do the following:
+        </p>
+
+        <pre class="programlisting">
+$build = new Zend_Dojo_BuildLayer(array(
+    'view'      =&gt; $view,
+    'layerName' =&gt; 'custom.main',
+));
+
+$layerContents = $build-&gt;generateLayerScript();
+$filename      = APPLICATION_PATH . '/../public/js/custom/main.js';
+if (!file_exists(dirname($filename))) {
+    mkdir(dirname($filename));
+}
+file_put_contents($filename, $layerContents);
+</pre>
+
+        <p>
+            When should you do the above? For it to work correctly, you need to
+            do it after all view scripts and the layout have been rendered, to
+            ensure that the <code class="methodname">dojo()</code> helper is fully populated. One
+            easy way to do so is using a front controller plugin, with a
+            <code class="methodname">dispatchLoopShutdown()</code> hook:
+        </p>
+
+        <pre class="programlisting">
+class App_Plugin_DojoLayer extends Zend_Controller_Plugin_Abstract
+{
+    public $layerScript = APPLICATION_PATH . '/../public/js/custom/main.js';
+    protected $_build;
+
+    public function dispatchLoopShutdown()
+    {
+        if (!file_exists($this-&gt;layerScript)) {
+            $this-&gt;generateDojoLayer();
+        }
+    }
+
+    public function getBuild()
+    {
+        $viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper(
+            'ViewRenderer'
+        );
+        $viewRenderer-&gt;initView();
+        if (null === $this-&gt;_build) {
+            $this-&gt;_build = new Zend_Dojo_BuildLayer(array(
+                'view'      =&gt; $viewRenderer-&gt;view,
+                'layerName' =&gt; 'custom.main',
+            ));
+        }
+        return $this-&gt;_build;
+    }
+
+    public function generateDojoLayer()
+    {
+        $build = $this-&gt;getBuild();
+        $layerContents = $build-&gt;generateLayerScript();
+        if (!file_exists(dirname($this-&gt;layerScript))) {
+            mkdir(dirname($this-&gt;layerScript));
+        }
+        file_put_contents($this-&gt;layerScript, $layerContents);
+    }
+}
+</pre>
+
+        <div class="note"><table border="0" summary="Note: Do not generate the layer on every page">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Do not generate the layer on every page</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                It's tempting to generate the layer script on each and every
+                page. However, this is resource intensive, as it must write to
+                the disk on each page. Additionally, since the mtime of the file
+                will keep changing, you will get no benefits of client-side
+                caching. Write the file once.
+            </p>
+        </td></tr>
+</table></div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.build-layers.usage.options"></a>BuildLayer options</h4></div></div></div>
+            
+
+            <p>
+                The above functionality will suffice for most situations. For
+                those needing more customization, a variety of options may be
+                invoked.
+            </p>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.dojo.build-layers.usage.options.view"></a>Setting the view object</h5></div></div></div>
+                
+
+                <p>
+                    While the view object may be passed during instantiation,
+                    you may also pass it in to an instance via the
+                    <code class="methodname">setView()</code> method:
+                </p>
+
+                <pre class="programlisting">
+$build-&gt;setView($view);
+</pre>
+            </div>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.dojo.build-layers.usage.options.layername"></a>Setting the layer name</h5></div></div></div>
+                
+
+                <p>
+                    While the layer name may be passed during instantiation,
+                    you may also pass it in to an instance via the
+                    <code class="methodname">setLayerName()</code> method:
+                </p>
+
+                <pre class="programlisting">
+$build-&gt;setLayerName("custom.main");
+</pre>
+            </div>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.dojo.build-layers.usage.options.onload"></a>Including onLoad events in the generated layer</h5></div></div></div>
+                
+
+                <p>
+                    <span class="command"><strong>dojo.addOnLoad</strong></span> is a useful utility for
+                    specifying actions that should trigger when the <acronym class="acronym">DOM</acronym> has
+                    finished loading. The <code class="methodname">dojo()</code> view helper can
+                    create these statements via its
+                    <code class="methodname">addOnLoad()</code> and
+                    <code class="methodname">onLoadCapture()</code> methods. In some
+                    cases, it makes sense to push these into your layer file
+                    instead of rendering them via your view scripts.
+                </p>
+
+                <p>
+                    By default, these are not rendered; to enable them, pass the
+                    <span class="property">consumeOnLoad</span> configuration key during
+                    instantiation:
+                </p>
+
+                <pre class="programlisting">
+$build = new Zend_Dojo_BuildLayer(array(
+    'view'          =&gt; $view,
+    'layerName'     =&gt; 'custom.main',
+    'consumeOnLoad' =&gt; true,
+));
+</pre>
+
+                <p>
+                    Alternately, you can use the
+                    <code class="methodname">setConsumeOnLoad()</code> method after
+                    instantiation:
+                </p>
+
+                <pre class="programlisting">
+$build-&gt;setConsumeOnLoad(true);
+</pre>
+            </div>
+
+            <div class="sect4">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="zend.dojo.build-layers.usage.options.javascript"></a>Including captured JavaScript in the generated layer</h5></div></div></div>
+                
+
+                <p>
+                    The <code class="methodname">dojo()</code> view helper includes methods for
+                    capturing arbitrary JavaScript to include in the
+                    &lt;script&gt; tag containing the various
+                    <span class="command"><strong>dojo.require</strong></span> and <span class="command"><strong>dojo.addOnLoad</strong></span>
+                    statements. This can be useful when creating default data
+                    stores or globally scoped objects used throughout your
+                    application.
+                </p>
+
+                <p>
+                    By default, these are not rendered; to enable them, pass the
+                    <span class="property">consumeJavascript</span> configuration key during
+                    instantiation:
+                </p>
+
+                <pre class="programlisting">
+$build = new Zend_Dojo_BuildLayer(array(
+    'view'              =&gt; $view,
+    'layerName'         =&gt; 'custom.main',
+    'consumeJavascript' =&gt; true,
+));
+</pre>
+
+                <p>
+                    Alternately, you can use the
+                    <code class="methodname">setConsumeJavascript()</code> method after
+                    instantiation:
+                </p>
+
+                <pre class="programlisting">
+$build-&gt;setConsumeJavascript(true);
+</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.dojo.build-layers.profiles"></a>Generating Build Profiles with Zend_Dojo_BuildLayer</h3></div></div></div>
+        
+
+        <p>
+            One of the chief benefits of a Dojo module layer is that it
+            facilitates the creation of a custom build.
+            <code class="classname">Zend_Dojo_BuildLayer</code> has functionality for
+            generate build profiles.
+        </p>
+
+        <p>
+            The simplest use case is to utilize the
+            <code class="methodname">generateBuildProfile()</code> method and send the
+            output to a file:
+        </p>
+
+        <pre class="programlisting">
+$build = new Zend_Dojo_BuildLayer(array(
+    'view'      =&gt; $view,
+    'layerName' =&gt; 'custom.main',
+));
+
+$profile   = $build-&gt;generateBuildProfile();
+$filename  = APPLICATION_PATH . '/../misc/scripts/custom.profile.js';
+file_put_contents($filename, $profile);
+</pre>
+
+        <p>
+            Just like generating layers, you may want to automate this via a
+            <code class="methodname">dispatchLoopShutdown()</code> plugin hook; you
+            could even simply modify the one shown for generating layers to read
+            as follows:
+        </p>
+
+        <pre class="programlisting">
+class App_Plugin_DojoLayer extends Zend_Controller_Plugin_Abstract
+{
+    public $layerScript  = APPLICATION_PATH
+                         . '/../public/js/custom/main.js';
+    public $buildProfile = APPLICATION_PATH
+                         . '/../misc/scripts/custom.profile.js';
+    protected $_build;
+
+    public function dispatchLoopShutdown()
+    {
+        if (!file_exists($this-&gt;layerScript)) {
+            $this-&gt;generateDojoLayer();
+        }
+        if (!file_exists($this-&gt;buildProfile)) {
+            $this-&gt;generateBuildProfile();
+        }
+    }
+
+    public function generateDojoLayer() { /* ... */ }
+
+    public function generateBuildProfile()
+    {
+        $profile = $this-&gt;getBuild()-&gt;generateBuildProfile();
+        file_put_contents($this-&gt;buildProfile, $profile);
+    }
+
+}
+</pre>
+
+        <p>
+            As noted, with module layers, you should only create the file once.
+        </p>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.dojo.build-layers.profiles.options"></a>Build Profile options</h4></div></div></div>
+            
+
+            <p>
+                The above functionality will suffice for most situations. The
+                only way to customize build profile generation is to provide
+                additional build profile options to utilize.
+            </p>
+
+            <p>
+                As an example, you may want to specify what type of
+                optimizations should be performed, whether or not to optimize
+                <acronym class="acronym">CSS</acronym> files in the layer, whether or not to copy tests into the
+                build, etc. For a listing of available options, you should read
+                the <a class="ulink" href="http://docs.dojocampus.org/build/index" target="_top">Dojo
+                    Build documentation</a> and <a class="ulink" href="http://dojotoolkit.org/reference-guide/dojo/index.html#package-system" target="_top">accompanying
+                documentation</a>.
+            </p>
+
+            <p>
+                Setting these options is trivial: use the
+                <code class="methodname">addProfileOption()</code>,
+                <code class="methodname">addProfileOptions()</code>, or
+                <code class="methodname">setProfileOptions()</code> methods. The first
+                method adds a single key and value option pair, the second will add
+                several, and the third will overwrite any options with the list
+                of key and value pairs provided.
+            </p>
+
+            <p>
+                By default, the following options are set:
+            </p>
+
+            <pre class="programlisting">
+{
+    action:        "release",
+    optimize:      "shrinksafe",
+    layerOptimize: "shrinksafe",
+    copyTests:     false,
+    loader:        "default",
+    cssOptimize:   "comments"
+}
+</pre>
+
+            <p>
+                You can pass in whatever key and value pairs you want; the Dojo
+                build script will ignore those it does not understand.
+            </p>
+
+            <p>
+                As an example of setting options:
+            </p>
+
+            <pre class="programlisting">
+// A single option:
+$build-&gt;addProfileOption('version', 'zend-1.3.1');
+
+// Several options:
+$build-&gt;addProfileOptions(array(
+    'loader'   =&gt; 'xdomain',
+    'optimize' =&gt; 'packer',
+));
+
+// Or overwrite options:
+$build-&gt;setProfileOptions(array(
+    'version'  =&gt; 'custom-1.3.1',
+    'loader'   =&gt; 'shrinksafe',
+    'optimize' =&gt; 'shrinksafe',
+));
+</pre>
+        </div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.dojo.form.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.dojo.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.dom.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Dojo Form Elements and Decorators </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_Dom</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

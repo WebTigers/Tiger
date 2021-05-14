@@ -1,0 +1,595 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Using the Factory to Create a Log</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.log.html" title="Zend_Log">
+<link rel="prev" href="zend.log.filters.html" title="Filters">
+<link rel="next" href="zend.mail.html" title="Zend_Mail">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Using the Factory to Create a Log</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.log.filters.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Log</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.mail.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.log.factory"></a>Using the Factory to Create a Log</h2></div></div></div>
+    
+
+    <p>
+        In addition to direct instantiation, you may also use the static
+        <code class="methodname">factory()</code> method to instantiate a Log instance, as well as to
+        configure attached writers and their filters. Using the factory, you can attach zero or
+        more writers. Configuration may be passed as either an array or a
+        <code class="classname">Zend_Config</code> instance. If you want to create an instance of
+        a custom class (extending Zend_Log), you can pass a <code class="varname">className</code>
+        option to the <code class="methodname">factory()</code> method.
+    </p>
+
+    <p>
+        As an example:
+    </p>
+
+    <pre class="programlisting">
+$logger = Zend_Log::factory(array(
+    'timestampFormat' =&gt; 'Y-m-d',
+    array(
+        'writerName'   =&gt; 'Stream',
+        'writerParams' =&gt; array(
+            'stream'   =&gt; '/tmp/zend.log',
+        ),
+        'formatterName' =&gt; 'Simple',
+        'formatterParams' =&gt; array(
+            'format'   =&gt; '%timestamp%: %message% -- %info%',
+        ),
+        'filterName'   =&gt; 'Priority',
+        'filterParams' =&gt; array(
+            'priority' =&gt; Zend_Log::WARN,
+        ),
+    ),
+    array(
+        'writerName'   =&gt; 'Firebug',
+        'filterName'   =&gt; 'Priority',
+        'filterParams' =&gt; array(
+            'priority' =&gt; Zend_Log::INFO,
+        ),
+    ),
+));
+</pre>
+
+    <p>
+        The above will instantiate a logger with two writers, one for writing to a local file,
+        another for sending data to Firebug. Each has an attached priority filter, with different
+        maximum priorities.
+    </p>
+
+    <p>
+        By default, events are logged with the ISO 8601 date format. You can choose your own format
+        with the option <span class="emphasis"><em>timestampFormat</em></span>.
+    </p>
+
+    <p>
+        Each writer can be defined with the following keys:
+    </p>
+
+    <div class="variablelist"><dl class="variablelist">
+<dt><span class="term">writerName (required)</span></dt>
+<dd>
+                <p>
+                    The "short" name of a log writer; the name of the log writer minus the leading
+                    class prefix/namespace. See the "writerNamespace" entry below for more details.
+                    Examples: "Mock", "Stream", "Firebug".
+                </p>
+            </dd>
+<dt><span class="term">writerParams (optional)</span></dt>
+<dd>
+                <p>
+                    An associative array of parameters to use when instantiating the log writer.
+                    Each log writer's <code class="methodname">factory()</code> method will map these to
+                    constructor arguments, as noted below.
+                </p>
+            </dd>
+<dt><span class="term">writerNamespace (optional)</span></dt>
+<dd>
+                <p>
+                    The class prefix/namespace to use when constructing the final log writer
+                    classname. By default, if this is not provided, "Zend_Log_Writer" is assumed;
+                    however, you can pass your own namespace if you are using a custom log writer.
+                </p>
+            </dd>
+<dt><span class="term">formatterName (optional)</span></dt>
+<dd>
+                <p>
+                    The "short" name of a formatter to use with the given log writer; the name of the
+                    formatter minus the leading class prefix/namespace. See the "formatterNamespace"
+                    entry below for more details. Examples: "Simple", "Xml".
+                </p>
+            </dd>
+<dt><span class="term">formatterParams (optional)</span></dt>
+<dd>
+                <p>
+                    An associative array of parameters to use when instantiating the log formatter.
+                    Each log formatter's <code class="methodname">factory()</code> method will map these to
+                    constructor arguments, as noted below.
+                </p>
+            </dd>
+<dt><span class="term">formatterNamespace (optional)</span></dt>
+<dd>
+                <p>
+                    The class prefix/namespace to use when constructing the final log formatter
+                    classname. By default, if this is not provided, "Zend_Log_Formatter" is assumed;
+                    however, you can pass your own namespace if you are using a custom log formatter.
+                </p>
+            </dd>
+<dt><span class="term">filterName (optional)</span></dt>
+<dd>
+                <p>
+                    The "short" name of a filter to use with the given log writer; the name of the
+                    filter minus the leading class prefix/namespace. See the "filterNamespace" entry
+                    below for more details. Examples: "Message", "Priority".
+                </p>
+            </dd>
+<dt><span class="term">filterParams (optional)</span></dt>
+<dd>
+                <p>
+                    An associative array of parameters to use when instantiating the log filter.
+                    Each log filter's <code class="methodname">factory()</code> method will map these to
+                    constructor arguments, as noted below.
+                </p>
+            </dd>
+<dt><span class="term">filterNamespace (optional)</span></dt>
+<dd>
+                <p>
+                    The class prefix/namespace to use when constructing the final log filter
+                    classname. By default, if this is not provided, "Zend_Log_Filter" is assumed;
+                    however, you can pass your own namespace if you are using a custom log filter.
+                </p>
+            </dd>
+</dl></div>
+
+    <p>
+        Each writer and each filter has specific options.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.factory.writer-options"></a>Writer Options</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.writer-options.db"></a>Zend_Log_Writer_Db Options</h4></div></div></div>
+            
+
+            <div class="variablelist"><dl class="variablelist">
+<dt><span class="term">db</span></dt>
+<dd>
+                        <p>
+                            A <code class="classname">Zend_Db_Adapter</code> instance.
+                        </p>
+                    </dd>
+<dt><span class="term">table</span></dt>
+<dd>
+                        <p>
+                            The name of the table in the RDBMS that will contain log entries.
+                        </p>
+                    </dd>
+<dt><span class="term">columnMap</span></dt>
+<dd>
+                        <p>
+                            An associative array mapping database table column names to log event
+                            fields.
+                        </p>
+                    </dd>
+</dl></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.writer-options.firebug"></a>Zend_Log_Writer_Firebug Options</h4></div></div></div>
+            
+
+            <p>
+                This log writer takes no options; any provided will be ignored.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.writer-options.mail"></a>Zend_Log_Writer_Mail Options</h4></div></div></div>
+            
+
+            <div class="table">
+<a name="zend.log.factory.writer-options.mail.table"></a><p class="title"><b>Table 113. Zend_Log_Writer_Mail Options</b></p>
+<div class="table-contents">
+                
+
+                <table class="table" summary="Zend_Log_Writer_Mail Options" border="1">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>Option</th>
+<th>Data Type</th>
+<th>Default Value</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><span class="emphasis"><em>mail</em></span></td>
+<td><span class="type">String</span></td>
+<td><code class="classname">Zend_Mail</code></td>
+<td>
+                                An <code class="classname">Zend_Mail</code> instance
+                            </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>charset</em></span></td>
+<td><span class="type">String</span></td>
+<td>iso-8859-1</td>
+<td>
+                                Charset of the mail
+                            </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>from</em></span></td>
+<td>
+<span class="type">String</span> or <span class="type">Array</span>
+</td>
+<td><code class="constant">NULL</code></td>
+<td>
+                                Sender of the mail
+
+                                The parameters for <span class="type">Array</span> type are :
+                                <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                                        <p>
+                                            <span class="property">email</span> : address of sender
+                                        </p>
+                                    </li>
+<li class="listitem">
+                                        <p>
+                                            <span class="property">name</span> : name of sender
+                                        </p>
+                                    </li>
+</ul></div>
+                            </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>to</em></span></td>
+<td>
+<span class="type">String</span> or <span class="type">Array</span>
+</td>
+<td><code class="constant">NULL</code></td>
+<td>
+                                Recipient(s) of the mail
+                            </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>cc</em></span></td>
+<td>
+<span class="type">String</span> or <span class="type">Array</span>
+</td>
+<td><code class="constant">NULL</code></td>
+<td>
+                                Carbon copy recipient(s) of the mail
+                            </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>bcc</em></span></td>
+<td>
+<span class="type">String</span> or <span class="type">Array</span>
+</td>
+<td><code class="constant">NULL</code></td>
+<td>
+                                Blind carbon copy recipient(s) of the mail
+                            </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>subject</em></span></td>
+<td><span class="type">String</span></td>
+<td><code class="constant">NULL</code></td>
+<td>
+                                Subject of the mail
+                            </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>subjectPrependText</em></span></td>
+<td><span class="type">String</span></td>
+<td><code class="constant">NULL</code></td>
+<td>
+                                A summary of number of errors per priority is appended to the
+                                subject of the mail
+                            </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>layout</em></span></td>
+<td><span class="type">String</span></td>
+<td><code class="constant">NULL</code></td>
+<td>
+                                An <code class="classname">Zend_Layout</code> instance
+                            </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>layoutOptions</em></span></td>
+<td><span class="type">Array</span></td>
+<td><code class="constant">NULL</code></td>
+<td>
+                                See the section <a class="xref" href="zend.layout.options.html" title="Zend_Layout Configuration Options">the section called “Zend_Layout Configuration Options”</a>
+                            </td>
+</tr>
+<tr>
+<td><span class="emphasis"><em>layoutFormatter</em></span></td>
+<td><span class="type">String</span></td>
+<td><code class="constant">NULL</code></td>
+<td>
+                                An <code class="classname">Zend_Log_Formatter_Interface</code> instance
+                            </td>
+</tr>
+</tbody>
+</table>
+            </div>
+</div>
+<br class="table-break">
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.writer-options.mock"></a>Zend_Log_Writer_Mock Options</h4></div></div></div>
+            
+
+            <p>
+                This log writer takes no options; any provided will be ignored.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.writer-options.null"></a>Zend_Log_Writer_Null Options</h4></div></div></div>
+            
+
+            <p>
+                This log writer takes no options; any provided will be ignored.
+            </p>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.writer-options.stream"></a>Zend_Log_Writer_Stream Options</h4></div></div></div>
+            
+
+            <div class="variablelist"><dl class="variablelist">
+<dt><span class="term">stream|url</span></dt>
+<dd>
+                        <p>
+                            A valid <acronym class="acronym">PHP</acronym> stream identifier to which to log.
+                        </p>
+                    </dd>
+<dt><span class="term">mode</span></dt>
+<dd>
+                        <p>
+                            The I/O mode with which to log; defaults to "a", for "append".
+                        </p>
+                    </dd>
+</dl></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.writer-options.syslog"></a>Zend_Log_Writer_Syslog Options</h4></div></div></div>
+            
+
+            <div class="variablelist"><dl class="variablelist">
+<dt><span class="term">application</span></dt>
+<dd>
+                        <p>
+                            Application name used by the syslog writer.
+                        </p>
+                    </dd>
+<dt><span class="term">facility</span></dt>
+<dd>
+                        <p>
+                            Facility used by the syslog writer.
+                        </p>
+                    </dd>
+</dl></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.writer-options.zendmonitor"></a>Zend_Log_Writer_ZendMonitor Options</h4></div></div></div>
+            
+
+            <p>
+                This log writer takes no options; any provided will be ignored.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.factory.filter-options"></a>Filter Options</h3></div></div></div>
+        
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.filter-options.message"></a>Zend_Log_Filter_Message Options</h4></div></div></div>
+            
+
+            <div class="variablelist"><dl class="variablelist">
+<dt><span class="term">regexp</span></dt>
+<dd>
+                        <p>
+                            Regular expression that must be matched in order to log a message.
+                        </p>
+                    </dd>
+</dl></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.filter-options.priority"></a>Zend_Log_Filter_Priority Options</h4></div></div></div>
+            
+
+            <div class="variablelist"><dl class="variablelist">
+<dt><span class="term">priority</span></dt>
+<dd>
+                        <p>
+                            The maximum priority level by which messages will be logged.
+                        </p>
+                    </dd>
+<dt><span class="term">operator</span></dt>
+<dd>
+                        <p>
+                            The comparison operator by which to do priority comparisons; defaults to
+                            "&lt;=".
+                        </p>
+                    </dd>
+</dl></div>
+        </div>
+
+        <div class="sect3">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="zend.log.factory.filter-options.suppress"></a>Zend_Log_Filter_Suppress Options</h4></div></div></div>
+            
+
+            <p>
+                This log filter takes no options; any provided will be ignored.
+            </p>
+        </div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.log.factory.custom"></a>Creating Configurable Writers and Filters</h3></div></div></div>
+        
+
+        <p>
+            If you find yourself needing to write your own log writers and/or filters, you can make
+            them compatible with <code class="methodname">Zend_Log::factory()</code> very easily.
+        </p>
+
+        <p>
+            At the minimum, you need to implement
+            <code class="interfacename">Zend_Log_FactoryInterface</code>, which expects a static
+            <code class="methodname">factory()</code> method that accepts a single argument,
+            <code class="varname">$config</code>, which may be either an array or
+            <code class="classname">Zend_Config</code> object. If your log writer extends
+            <code class="classname">Zend_Log_Writer_Abstract</code>, or your log filter extends
+            <code class="classname">Zend_Log_Filter_Abstract</code>, you will pick this up for free.
+        </p>
+
+        <p>
+            Then, simply define mappings between the accepted configuration and any constructor
+            arguments. As an example:
+        </p>
+
+        <pre class="programlisting">
+class My_Log_Writer_Foo extends Zend_Log_Writer_Abstract
+{
+    public function __construct($bar, $baz)
+    {
+        // ...
+    }
+
+    public static function factory($config)
+    {
+        if ($config instanceof Zend_Config) {
+            $config = $config-&gt;toArray();
+        }
+        if (!is_array($config)) {
+            throw new Exception(
+                'factory expects an array or Zend_Config instance'
+            );
+        }
+
+        $default = array(
+            'bar' =&gt; null,
+            'baz' =&gt; null,
+        );
+        $config = array_merge($default, $config);
+
+        return new self(
+            $config['bar'],
+            $config['baz']
+        );
+    }
+}
+</pre>
+
+        <p>
+            Alternately, you could call appropriate setters after instantiation, but prior to
+            returning the instance:
+        </p>
+
+        <pre class="programlisting">
+class My_Log_Writer_Foo extends Zend_Log_Writer_Abstract
+{
+    public function __construct($bar = null, $baz = null)
+    {
+        // ...
+    }
+
+    public function setBar($value)
+    {
+        // ...
+    }
+
+    public function setBaz($value)
+    {
+        // ...
+    }
+
+    public static function factory($config)
+    {
+        if ($config instanceof Zend_Config) {
+            $config = $config-&gt;toArray();
+        }
+        if (!is_array($config)) {
+            throw new Exception(
+                'factory expects an array or Zend_Config instance'
+            );
+        }
+
+        $writer = new self();
+        if (isset($config['bar'])) {
+            $writer-&gt;setBar($config['bar']);
+        }
+        if (isset($config['baz'])) {
+            $writer-&gt;setBaz($config['baz']);
+        }
+        return $writer;
+    }
+}
+</pre>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.log.filters.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.log.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.mail.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Filters </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend_Mail</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

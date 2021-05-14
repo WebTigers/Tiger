@@ -1,0 +1,256 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Config_Writer</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guia de Referência do Programador">
+<link rel="up" href="zend.config.writer.html" title="Zend_Config_Writer">
+<link rel="prev" href="zend.config.writer.html" title="Zend_Config_Writer">
+<link rel="next" href="zend.console.getopt.html" title="Zend_Console_Getopt">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Config_Writer</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.config.writer.html">Anterior</a> </td>
+<th width="60%" align="center">Zend_Config_Writer</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.console.getopt.html">Próxima</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.config.writer.introduction"></a>Zend_Config_Writer</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Config_Writer</code> lhe dá a capacidade de escrever arquivos de
+        configuração a partir de objetos <code class="classname">Zend_Config</code>. Ele funciona com
+        adaptadores separados do sistema e muito fáceis de usar. Por padrão, o
+        <code class="classname">Zend_Config_Writer</code> vêm embarcado com quatro adaptadores, que são
+        todos baseados em arquivos. Você instanciará um escritor com opções específicas, que podem
+        ser <span class="emphasis"><em>filename</em></span> e <span class="emphasis"><em>config</em></span>. Em seguida, você irá chamar
+        o método <code class="methodname">write()</code> do escritor e o arquivo de configuração será
+        criado. Você também pode fornecer <code class="varname">$filename</code> e <code class="varname">$config</code>
+        diretamente ao método <code class="methodname">write()</code>. Atualmente os escritores que se
+        seguem são fornecidos com <code class="classname">Zend_Config_Writer</code>:
+    </p>
+
+    <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Config_Writer_Array</code>
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Config_Writer_Ini</code>
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Config_Writer_Json</code>
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Config_Writer_Xml</code>
+            </p>
+        </li>
+<li class="listitem">
+            <p>
+                <code class="classname">Zend_Config_Writer_Yaml</code>
+            </p>
+        </li>
+</ul></div>
+
+    <p>
+        Ao modificar ou criar um objeto <code class="classname">Zend_Config</code>, há algumas coisas que se
+        deve conhecer. Para criar ou modificar um valor, basta definir o parâmetro do objeto
+        <code class="classname">Zend_Config</code> através do assessor de parâmetro
+        (<span class="emphasis"><em>-&gt;</em></span>). Para criar uma seção na raiz ou para criar um ramo, você
+        apenas irá criar uma nova matriz ("<span class="command"><strong>$config-&gt;branch = array();</strong></span>"). Para
+        definir qual seção estende outra, você chamará o método <code class="methodname">setExtend()</code>
+        na raiz do objeto <code class="classname">Zend_Config</code>.
+    </p>
+
+    <div class="example">
+<a name="zend.config.writer.example.using"></a><p class="title"><b>Exemplo 124. Usando o Zend_Config_Writer</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Este exemplo ilustra a utilização básica de
+            <code class="classname">Zend_Config_Writer_Xml</code>
+            para criar um novo arquivo de configuração:
+        </p>
+
+        <pre class="programlisting">
+// Cria o objeto de configuração
+$config = new Zend_Config(array(), true);
+$config-&gt;production = array();
+$config-&gt;staging    = array();
+
+$config-&gt;setExtend('staging', 'production');
+
+$config-&gt;production-&gt;db = array();
+$config-&gt;production-&gt;db-&gt;hostname = 'localhost';
+$config-&gt;production-&gt;db-&gt;username = 'production';
+
+$config-&gt;staging-&gt;db = array();
+$config-&gt;staging-&gt;db-&gt;username = 'staging';
+
+// Escreve o arquivo de configuração em uma das seguintes formas:
+// a)
+$writer = new Zend_Config_Writer_Xml(array('config'   =&gt; $config,
+                                           'filename' =&gt; 'config.xml'));
+$writer-&gt;write();
+
+// b)
+$writer = new Zend_Config_Writer_Xml();
+$writer-&gt;setConfig($config)
+       -&gt;setFilename('config.xml')
+       -&gt;write();
+
+// c)
+$writer = new Zend_Config_Writer_Xml();
+$writer-&gt;write('config.xml', $config);
+</pre>
+
+        <p>
+            Isso criará um arquivo de configuração <acronym class="acronym">XML</acronym> com as seções de produção
+            e de testes, onde testes estende produção.
+        </p>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="example">
+<a name="zend.config.writer.modifying"></a><p class="title"><b>Exemplo 125. Modificando uma Configuração Existente</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Este exemplo demonstra como editar um arquivo de configuração existente.
+        </p>
+
+        <pre class="programlisting">
+// Carrega todas as seções de um arquivo de configuração
+// existente, enquanto pula o que é estendido.
+$config = new Zend_Config_Ini('config.ini',
+                              null,
+                              array('skipExtends'        =&gt; true,
+                                    'allowModifications' =&gt; true));
+
+// Modifica um valor
+$config-&gt;production-&gt;hostname = 'foobar';
+
+// Escreve o arquivo de configuração
+$writer = new Zend_Config_Writer_Ini(array('config'   =&gt; $config,
+                                           'filename' =&gt; 'config.ini'));
+$writer-&gt;write();
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="note"><table border="0" summary="Note: Carregando um Arquivo de Configuração">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Nota]" src="images/note.png"></td>
+<th align="left">Carregando um Arquivo de Configuração</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Ao carregar um arquivo de configuração existente para modificações, é muito importante
+            que se carregue todas as seções e que se pule tudo o que é estendido, para que valores
+            não sejam fundidos. Isto é feito passando o <span class="emphasis"><em>skipExtends</em></span> como opção
+            para o construtor.
+        </p>
+    </td></tr>
+</table></div>
+
+    <p>
+        Para todos os escritores baseados em arquivo (<acronym class="acronym">INI</acronym>,
+        <acronym class="acronym">JSON</acronym>, <acronym class="acronym">XML</acronym>, <acronym class="acronym">YAML</acronym> e Matriz
+        <acronym class="acronym">PHP</acronym>) internamente o <code class="methodname">render()</code> é usado para
+        construir a string de configuração. Este método pode ser usado de forma independente para
+        acessar a string de representação dos dados de configuração.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.config.writer.introduction.ini-notes"></a>Notes specific to the INI writer</h3></div></div></div>
+        
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>
+                    The <acronym class="acronym">INI</acronym> writer has two modes for rendering with regard to
+                    sections.  By default the top-level configuration is always written into section
+                    names.  By calling <span class="command"><strong>$writer-&gt;setRenderWithoutSections();</strong></span> all
+                    options are written into the global namespace of the <acronym class="acronym">INI</acronym> file
+                    and no sections are applied.
+                </p>
+            </li>
+<li class="listitem">
+                <p>
+                    <code class="classname">Zend_Config_Writer_Ini</code> has an additional option parameter
+                    <span class="emphasis"><em>nestSeparator</em></span>, which defines with which character the
+                    single nodes are separated. The default is a single dot, which is accepted by
+                    <code class="classname">Zend_Config_Ini</code> by default.
+                </p>
+            </li>
+</ul></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.config.writer.introduction.yaml-notes"></a>Notes specific to the YAML writer</h3></div></div></div>
+        
+
+        <p>
+            The <acronym class="acronym">YAML</acronym> writer lets you optionally specify an alternate
+            <acronym class="acronym">YAML</acronym> encoder to use. By default, one is shipped with the framework
+            that is suitable for most configuration tasks. If you find it insufficient, or wish to
+            use more advanced YAML, you may provide an alternate encoder callback.
+        </p>
+
+        <p>
+            The method for doing so is to use the
+            <code class="methodname">Zend_Config_Writer_Yaml::setYamlEncoder()</code> method, passing it a
+            valid callback.
+        </p>
+
+        <pre class="programlisting">
+// Use the Symfony Yaml Component:
+$writer = new Zend_Config_Writer_Yaml($filename);
+$writer-&gt;setYamlEncoder(array('sfYaml', 'dump'));
+</pre>
+
+        <p>
+            The above uses the Symfony Components' <code class="classname">sfYaml</code> component in order
+            to encode the configuration to <acronym class="acronym">YAML</acronym>.
+        </p>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.config.writer.html">Anterior</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.config.writer.html">Acima</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.console.getopt.html">Próxima</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Zend_Config_Writer </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Principal</a></td>
+<td width="40%" align="right" valign="top"> Zend_Console_Getopt</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

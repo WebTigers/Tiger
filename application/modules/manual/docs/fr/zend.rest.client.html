@@ -1,0 +1,299 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Zend_Rest_Client</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="zend.rest.html" title="Zend_Rest">
+<link rel="prev" href="zend.rest.introduction.html" title="Introduction">
+<link rel="next" href="zend.rest.server.html" title="Zend_Rest_Server">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Zend_Rest_Client</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.rest.introduction.html">Précédent</a> </td>
+<th width="60%" align="center">Zend_Rest</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.rest.server.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.rest.client"></a>Zend_Rest_Client</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.rest.client.introduction"></a>Introduction</h3></div></div></div>
+        
+
+        <p>
+            Utiliser le <code class="classname">Zend_Rest_Client</code> est très semblable à
+            l'utilisation des objets de <code class="code">SoapClient</code> (<a class="ulink" href="http://www.php.net/soap" target="_top">SOAP web service extension</a>). Vous pouvez
+            simplement appeler les procédures de service de REST comme méthodes de
+            <code class="classname">Zend_Rest_Client</code>. Vous devez indiquer l'adresse complète du
+            service dans le constructeur de <code class="classname">Zend_Rest_Client</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.rest.client.introduction.example-1"></a><p class="title"><b>Exemple 669. Une requête REST basique</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+/**
+ * Connexion au serveur framework.zend.com server
+ */
+require_once 'Zend/Rest/Client.php';
+
+$client = new Zend_Rest_Client('http://framework.zend.com/rest');
+
+echo $client-&gt;sayHello('Davey', 'Day')-&gt;get();
+// "Hello Davey, Good Day"
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="note"><table border="0" summary="Note: Différences dans les appels">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Différences dans les appels</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                <code class="classname">Zend_Rest_Client</code> tente de rendre les méthodes distantes
+                de la même manière que ses propres méthodes, la seule différence étant que vous
+                devez suivre l'appel de méthode <code class="methodname">get()</code>, <code class="methodname">post()</code>,
+                <code class="methodname">put()</code> ou <code class="methodname">delete()</code>. Cet appel peut être fait par
+                l'intermédiaire de méthodes enchaînées ou dans des appels séparés de méthode
+                :
+            </p>
+
+            <pre class="programlisting">
+$client-&gt;sayHello('Davey', 'Day');
+echo $client-&gt;get();
+</pre>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.rest.client.return"></a>Réponses</h3></div></div></div>
+        
+
+        <p>
+            Toutes les demandes faites en utilisant <code class="classname">Zend_Rest_Client</code>
+            retourne un objet <code class="classname">Zend_Rest_Client_Response</code>. Cet objet a beaucoup
+            de propriétés qui facilitent l'accès aux résultats.
+        </p>
+
+        <p>
+            Quand le service est basé sur <code class="classname">Zend_Rest_Server</code>,
+            Zend_Rest_Client peut faire plusieurs suppositions au sujet de la réponse, y compris le
+            statut de réponse (succès ou échec) et le type de retour.
+        </p>
+
+        <div class="example">
+<a name="zend.rest.client.return.example-1"></a><p class="title"><b>Exemple 670. État de la réponse</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$result = $client-&gt;sayHello('Davey', 'Day')-&gt;get();
+
+if ($result-&gt;isSuccess()) {
+    echo $result; // "Hello Davey, Good Day"
+}
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Dans l'exemple ci-dessus, vous pouvez voir que nous utilisons le résultat de la
+            demande comme un objet, pour appeler <code class="methodname">isSuccess()</code>, et puis grâce à
+            <code class="methodname">__toString()</code>, nous pouvons simplement faire <code class="code">echo</code> sur l'objet
+            pour récupérer le résultat. <code class="classname">Zend_Rest_Client_Response</code> vous
+            permettra de afficher n'importe quelle valeur scalaire. Pour les types complexes, vous
+            pouvez employer la notation type objet ou type tableau.
+        </p>
+
+        <p>
+            Si cependant, vous souhaitez questionner un service n'employant pas
+            <code class="classname">Zend_Rest_Server</code> l'objet de
+            <code class="classname">Zend_Rest_Client_Response</code> se comportera comme un
+            <code class="code">SimpleXMLElement</code>. Cependant, pour faciliter les choses, il questionnera
+            automatiquement le <acronym class="acronym">XML</acronym> en utilisant XPath si la propriété n'est pas un descendant direct
+            de l'élément racine du document. En plus, si vous accédez à une propriété comme à une
+            méthode, vous recevrez la valeur de <acronym class="acronym">PHP</acronym> pour l'objet, ou un tableau de résultats.
+        </p>
+
+        <div class="example">
+<a name="zend.rest.client.return.example-2"></a><p class="title"><b>Exemple 671. Utiliser le service REST Technorati</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$technorati = new Zend_Rest_Client('http://api.technorati.com/bloginfo');
+$technorati-&gt;key($key);
+$technorati-&gt;url('http://pixelated-dreams.com');
+$result = $technorati-&gt;get();
+echo $result-&gt;firstname() .' '. $result-&gt;lastname();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <div class="example">
+<a name="zend.rest.client.return.example-3"></a><p class="title"><b>Exemple 672. Exemple de réponse Technorati</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;!-- generator="Technorati API version 1.0 /bloginfo" --&gt;
+&lt;!DOCTYPE tapi PUBLIC "-//Technorati, Inc.//DTD TAPI 0.02//EN"
+     "http://api.technorati.com/dtd/tapi-002.xml"&gt;
+&lt;tapi version="1.0"&gt;
+    &lt;document&gt;
+        &lt;result&gt;
+            &lt;url&gt;http://pixelated-dreams.com&lt;/url&gt;
+            &lt;weblog&gt;
+                &lt;name&gt;Pixelated Dreams&lt;/name&gt;
+                &lt;url&gt;http://pixelated-dreams.com&lt;/url&gt;
+                &lt;author&gt;
+                    &lt;username&gt;DShafik&lt;/username&gt;
+                    &lt;firstname&gt;Davey&lt;/firstname&gt;
+                    &lt;lastname&gt;Shafik&lt;/lastname&gt;
+                &lt;/author&gt;
+                &lt;rssurl&gt;http://pixelated-dreams.com/feeds/index.rss2&lt;/rssurl&gt;
+                &lt;atomurl&gt;http://pixelated-dreams.com/feeds/atom.xml&lt;/atomurl&gt;
+                &lt;inboundblogs&gt;44&lt;/inboundblogs&gt;
+                &lt;inboundlinks&gt;218&lt;/inboundlinks&gt;
+                &lt;lastupdate&gt;2006-04-26 04:36:36 GMT&lt;/lastupdate&gt;
+                &lt;rank&gt;60635&lt;/rank&gt;
+            &lt;/weblog&gt;
+            &lt;inboundblogs&gt;44&lt;/inboundblogs&gt;
+            &lt;inboundlinks&gt;218&lt;/inboundlinks&gt;
+        &lt;/result&gt;
+    &lt;/document&gt;
+&lt;/tapi&gt;
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Ici nous accédons aux propriétés <code class="code">firstname</code> et
+            <code class="code">lastname</code>.Bien que ce ne soient pas les éléments supérieurs, elles sont
+            automatiquement retournées quand on accède par le nom.
+        </p>
+
+        <div class="note"><table border="0" summary="Note: Éléments multiples">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Éléments multiples</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Si des éléments multiples sont trouvés en accédant à une valeur de nom, un
+                tableau d'élément SimpleXMLElement sera retourné ; l'accès par l'intermédiaire de la
+                notation de méthode retournera un tableau de valeurs.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.rest.client.args"></a>Arguments de requêtes</h3></div></div></div>
+        
+
+        <p>
+            A moins que vous ne fassiez une demande à un service basé sur
+            <code class="classname">Zend_Rest_Server</code>, il y a des chances que vous devez envoyer des
+            arguments multiples avec votre requête. Ceci est fait en appelant une méthode avec le
+            nom de l'argument, en passant la valeur comme premier (et seul) argument. Chacun de ces
+            appels de méthode renvoie l'objet lui-même, tenant compte de l'enchaînement, ou de
+            l'utilisation habituelle. Le premier appel, ou le premier argument si vous passez plus
+            d'un argument, est toujours considéré comme la méthode en appelant un service
+            <code class="classname">Zend_Rest_Server</code>.
+        </p>
+
+        <div class="example">
+<a name="zend.rest.client.args.example-1"></a><p class="title"><b>Exemple 673. Affecter des arguments de requêtes</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$client = new Zend_Rest_Client('http://example.org/rest');
+
+$client-&gt;arg('value1');
+$client-&gt;arg2('value2');
+$client-&gt;get();
+
+// or
+
+$client-&gt;arg('value1')-&gt;arg2('value2')-&gt;get();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Les deux méthodes dans l'exemple ci-dessus, auront comme conséquence l'obtention
+            des arguments suivants :
+            <code class="code">?method=arg&amp;arg1=value1&amp;arg=value1&amp;arg2=value2</code>
+        </p>
+
+        <p>
+            Vous noterez que le premier appel de <code class="code">$client-&gt;arg('value1');</code> a eu
+            comme conséquence <code class="code">method=arg&amp;arg1=value1</code> et <code class="code">arg=value1</code> ;
+            ceci afin que <code class="classname">Zend_Rest_Server</code> puisse comprendre la demande
+            correctement, plutôt que d'exiger la connaissance préalable du service.
+        </p>
+
+        <div class="warning"><table border="0" summary="Warning: Sévérité de Zend_Rest_Client">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Avertissement]" src="images/warning.png"></td>
+<th align="left">Sévérité de Zend_Rest_Client</th>
+</tr>
+<tr><td align="left" valign="top">
+            
+
+            <p>
+                Tout service REST qui est strict au sujet des arguments qu'il reçoit échouera
+                probablement en utilisant <code class="classname">Zend_Rest_Client</code>, en raison du
+                comportement décrit ci-dessus. Ce n'est pas une pratique courante et ne devrait pas
+                poser des problèmes.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.rest.introduction.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.rest.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.rest.server.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Zend_Rest_Server</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

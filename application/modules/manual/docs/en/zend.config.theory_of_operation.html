@@ -1,0 +1,153 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Theory of Operation</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.config.html" title="Zend_Config">
+<link rel="prev" href="zend.config.introduction.html" title="Introduction">
+<link rel="next" href="zend.config.adapters.ini.html" title="Zend_Config_Ini">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Theory of Operation</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.config.introduction.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Config</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.config.adapters.ini.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.config.theory_of_operation"></a>Theory of Operation</h2></div></div></div>
+    
+
+    <p>
+        Configuration data are made accessible to the <code class="classname">Zend_Config</code> constructor
+        through an associative array, which may be multi-dimensional, in order to support
+        organizing the data from general to specific. Concrete adapter classes
+        adapt configuration data from storage to produce the associative array for the
+        <code class="classname">Zend_Config</code> constructor. User scripts may provide such arrays
+        directly to the <code class="classname">Zend_Config</code> constructor, without using an adapter
+        class, since it may be appropriate to do so in certain situations.
+    </p>
+
+    <p>
+        Each configuration data array value becomes a property of the
+        <code class="classname">Zend_Config</code> object. The key is used as the property name. If a value
+        is itself an array, then the resulting object property is created as a new
+        <code class="classname">Zend_Config</code> object, loaded with the array data. This occurs
+        recursively, such that a hierarchy of configuration data may be created with any number of
+        levels.
+    </p>
+
+    <p>
+        <code class="classname">Zend_Config</code> implements the <span class="emphasis"><em>Countable</em></span> and
+        <span class="emphasis"><em>Iterator</em></span> interfaces in order to facilitate simple access to
+        configuration data. Thus, one may use the
+        <a class="ulink" href="http://php.net/count" target="_top"><code class="methodname">count()</code></a>
+        function and <acronym class="acronym">PHP</acronym> constructs such as
+        <a class="ulink" href="http://php.net/foreach" target="_top"><span class="emphasis"><em>foreach</em></span></a> with
+        <code class="classname">Zend_Config</code> objects.
+    </p>
+
+    <p>
+        By default, configuration data made available through <code class="classname">Zend_Config</code> are
+        read-only, and an assignment (e.g.,
+        <span class="command"><strong>$config-&gt;database-&gt;host = 'example.com';</strong></span>)
+        results in a thrown exception. This default behavior may be overridden through the
+        constructor, however, to allow modification of data values. Also, when modifications are
+        allowed, <code class="classname">Zend_Config</code> supports unsetting of values (i.e.
+        <code class="methodname">unset($config-&gt;database-&gt;host)</code>). The
+        <code class="methodname">readOnly()</code> method can be used to determine if modifications to a
+        given <code class="classname">Zend_Config</code> object are allowed and the
+        <code class="methodname">setReadOnly()</code> method can be used to stop any further modifications
+        to a <code class="classname">Zend_Config</code> object that was created allowing modifications.
+    </p>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            It is important not to confuse such in-memory modifications with saving
+            configuration data out to specific storage media. Tools for creating and modifying
+            configuration data for various storage media are out of scope with respect to
+            <code class="classname">Zend_Config</code>. Third-party open source solutions are readily
+            available for the purpose of creating and modifying configuration data for various
+            storage media.
+        </p>
+    </td></tr>
+</table></div>
+
+    <p>
+        Adapter classes inherit from the <code class="classname">Zend_Config</code> class since they utilize
+        its functionality.
+    </p>
+
+    <p>
+        The <code class="classname">Zend_Config</code> family of classes enables configuration data to be
+        organized into sections. <code class="classname">Zend_Config</code> adapter objects may be loaded
+        with a single specified section, multiple specified sections, or all sections
+        (if none are specified).
+    </p>
+
+    <p>
+        <code class="classname">Zend_Config</code> adapter classes support a single inheritance model that
+        enables configuration data to be inherited from one section of configuration data
+        into another. This is provided in order to reduce or eliminate the need for
+        duplicating configuration data for different purposes. An inheriting section
+        may also override the values that it inherits through its parent section.
+        Like <acronym class="acronym">PHP</acronym> class inheritance, a section may inherit from a parent section,
+        which may inherit from a grandparent section, and so on, but multiple inheritance
+        (i.e., section C inheriting directly from parent sections A and B) is not supported.
+    </p>
+
+    <p>
+        If you have two <code class="classname">Zend_Config</code> objects, you can merge them into a single
+        object using the <code class="methodname">merge()</code> function. For example, given
+        <code class="varname">$config</code> and <code class="varname">$localConfig</code>, you can merge data from
+        <code class="varname">$localConfig</code> to <code class="varname">$config</code> using
+        <span class="command"><strong>$config-&gt;merge($localConfig);</strong></span>. The items in
+        <code class="varname">$localConfig</code> will override any items with the same name in
+        <code class="varname">$config</code>.
+    </p>
+
+    <div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top">
+        <p>
+            The <code class="classname">Zend_Config</code> object that is performing the merge must have
+            been constructed to allow modifications, by passing <code class="constant">TRUE</code> as the
+            second parameter of the constructor. The <code class="methodname">setReadOnly()</code>
+            method can then be used to prevent any further modifications after the merge is
+            complete.
+        </p>
+    </td></tr>
+</table></div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.config.introduction.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.config.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.config.adapters.ini.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Zend_Config_Ini</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

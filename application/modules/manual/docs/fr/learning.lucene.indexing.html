@@ -1,0 +1,160 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Indexation</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.lucene.html" title="Bien démarrer avec Zend_Search_Lucene">
+<link rel="prev" href="learning.lucene.index-opening.html" title="Ouverture et création d'index">
+<link rel="next" href="learning.lucene.searching.html" title="Recherche">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Indexation</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.lucene.index-opening.html">Précédent</a> </td>
+<th width="60%" align="center">Bien démarrer avec Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.lucene.searching.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.lucene.indexing"></a>Indexation</h2></div></div></div>
+    
+
+    <p>
+        L'indexation s'effectue en ajoutant un nouveau document à un index existant ou à un
+        nouvel index :
+    </p>
+
+    <pre class="programlisting">
+$index-&gt;addDocument($doc);
+</pre>
+
+    <p>
+        Il y a deux manières de créer un objet document. La première est de le faire
+        manuellement.
+    </p>
+
+    <div class="example">
+<a name="learning.lucene.indexing.doc-creation"></a><p class="title"><b>Exemple 5. Construction manuel de document</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+$doc = new Zend_Search_Lucene_Document();
+$doc-&gt;addField(Zend_Search_Lucene_Field::Text('url', $docUrl));
+$doc-&gt;addField(Zend_Search_Lucene_Field::Text('title', $docTitle));
+$doc-&gt;addField(Zend_Search_Lucene_Field::unStored('contents', $docBody));
+$doc-&gt;addField(Zend_Search_Lucene_Field::binary('avatar', $avatarData));
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <p>
+        La seconde méthode est de le charger depuis un fichier <acronym class="acronym">HTML</acronym> ou
+        Microsoft Office 2007 :
+    </p>
+
+    <div class="example">
+<a name="learning.lucene.indexing.doc-loading"></a><p class="title"><b>Exemple 6. Chargement de document</b></p>
+<div class="example-contents">
+        
+
+        <pre class="programlisting">
+$doc = Zend_Search_Lucene_Document_Html::loadHTML($htmlString);
+$doc = Zend_Search_Lucene_Document_Docx::loadDocxFile($path);
+$doc = Zend_Search_Lucene_Document_Pptx::loadPptFile($path);
+$doc = Zend_Search_Lucene_Document_Xlsx::loadXlsxFile($path);
+</pre>
+    </div>
+</div>
+<br class="example-break">
+
+    <p>
+        Si un document est chargé depuis l'un des formats supportés, il peut quand même être
+        étendu manuellement avec des champs définis par l'utilisateur.
+    </p>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="learning.lucene.indexing.policy"></a>Politique d'indexation</h3></div></div></div>
+        
+
+        <p>
+            Vous devrez définir votre politique d'indexation au sein de la conception de
+            l'architecture de votre application.
+        </p>
+
+        <p>
+            Vous pourriez avoir besoin d'une configuration d'indexation à la demande (quelque
+            chose comme le système <acronym class="acronym">OLTP</acronym>). Sur de test systèmes, vous ajoutez
+            généralement un document par requête utilisateur. De cette manière, l'option
+            <span class="emphasis"><em>MaxBufferedDocs</em></span> n'affectera pas le système. D'un autre coté,
+            <span class="emphasis"><em>MaxMergeDocs</em></span> est vraiment utile, car il vous permet de limiter le
+            temps d'exécution maximum du script. <span class="emphasis"><em>MergeFactor</em></span> doit être définis
+            par une valeur qui conserve un équilibre entre le temps moyen d'indexation (il est
+            aussi affecté par temps d'optimisation moyen) et les performance de recherche (le
+            niveau d'optimisation dépend du nombre de segments).
+        </p>
+
+        <p>
+            Si vous allez surtout effectuer des mises à jour d'index par lot, votre
+            configuration devrait utiliser une option <span class="emphasis"><em>MaxBufferedDocs</em></span> définis
+            à la valeur maximum supporté par la quantité de mémoire disponible.
+            <span class="emphasis"><em>MaxMergeDocs</em></span> et <span class="emphasis"><em>MergeFactor</em></span> doivent être
+            définis à des valeurs réduisant au maximum le recours à l'auto-optimisation
+            <a href="#ftn.idm192803643760" class="footnote" name="idm192803643760"><sup class="footnote">[5]</sup></a>.
+            Les optimisations complètes d'index doivent être appliquées après l'indexation.
+        </p>
+
+        <div class="example">
+<a name="learning.lucene.indexing.optimization"></a><p class="title"><b>Exemple 7. Optimisation d'index</b></p>
+<div class="example-contents">
+            
+
+            <pre class="programlisting">
+$index-&gt;optimize();
+</pre>
+        </div>
+</div>
+<br class="example-break">
+
+        <p>
+            Dans certaines configuration, il est plus efficace d'effectuer une série de mise
+            à jour de l'index en organisant une file de requête de mise à jour et de traiter
+            plusieurs requête de mise à jour dans une seule exécution de script. Ceci réduit la
+            charge d'ouverture de l'index et permet d'utiliser le tampon de document de
+            l'index.
+        </p>
+    </div>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm192803643760" class="footnote">
+                <p><a href="#idm192803643760" class="para"><sup class="para">[5] </sup></a>Une limite additionnelle est le nombre maximum de gestionnaire de fichiers
+                supporter par le système d'exploitation pour les opérations concurrente
+                d'ouverture</p>
+            </div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.lucene.index-opening.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.lucene.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.lucene.searching.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Ouverture et création d'index </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Recherche</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

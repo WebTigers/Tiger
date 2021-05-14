@@ -1,0 +1,309 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Writing Validators</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.validate.html" title="Zend_Validate">
+<link rel="prev" href="zend.validate.validator_chains.html" title="Validator Chains">
+<link rel="next" href="zend.validate.messages.html" title="Validation Messages">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Writing Validators</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.validate.validator_chains.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Validate</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.validate.messages.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.validate.writing_validators"></a>Writing Validators</h2></div></div></div>
+    
+
+    <p>
+        <code class="classname">Zend_Validate</code> supplies a set of commonly needed validators, but
+        inevitably, developers will wish to write custom validators for their particular needs. The
+        task of writing a custom validator is described in this section.
+    </p>
+
+    <p>
+        <code class="classname">Zend_Validate_Interface</code> defines two methods,
+        <code class="methodname">isValid()</code> and <code class="methodname">getMessages()</code>, that may
+        be implemented by user classes in order to create custom validation objects. An object that
+        implements <code class="classname">Zend_Validate_Interface</code> interface may be added to a
+        validator chain with <code class="methodname">Zend_Validate::addValidator()</code>. Such objects
+        may also be used with <a class="link" href="zend.filter.input.html" title="Zend_Filter_Input"><code class="classname">Zend_Filter_Input</code></a>.
+    </p>
+
+    <p>
+        As you may already have inferred from the above description of
+        <code class="classname">Zend_Validate_Interface</code>, validation classes provided with Zend
+        Framework return a boolean value for whether or not a value validates successfully. They
+        also provide information about <span class="emphasis"><em>why</em></span> a value failed validation. The
+        availability of the reasons for validation failures may be valuable to an application for
+        various purposes, such as providing statistics for usability analysis.
+    </p>
+
+    <p>
+        Basic validation failure message functionality is implemented in
+        <code class="classname">Zend_Validate_Abstract</code>. To include this functionality when creating a
+        validation class, simply extend <code class="classname">Zend_Validate_Abstract</code>. In the
+        extending class you would implement the <code class="methodname">isValid()</code> method logic and
+        define the message variables and message templates that correspond to the types of
+        validation failures that can occur. If a value fails your validation tests, then
+        <code class="methodname">isValid()</code> should return <code class="constant">FALSE</code>. If the value
+        passes your validation tests, then <code class="methodname">isValid()</code> should return
+        <code class="constant">TRUE</code>.
+    </p>
+
+    <p>
+        In general, the <code class="methodname">isValid()</code> method should not throw any exceptions,
+        except where it is impossible to determine whether or not the input value is valid. A few
+        examples of reasonable cases for throwing an exception might be if a file cannot be opened,
+        an <acronym class="acronym">LDAP</acronym> server could not be contacted, or a database connection is
+        unavailable, where such a thing may be required for validation success or failure to be
+        determined.
+    </p>
+
+    <div class="example">
+<a name="zend.validate.writing_validators.example.simple"></a><p class="title"><b>Example 943. Creating a Simple Validation Class</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            The following example demonstrates how a very simple custom validator might be written.
+            In this case the validation rules are simply that the input value must be a floating
+            point value.
+        </p>
+
+        <pre class="programlisting">
+class MyValid_Float extends Zend_Validate_Abstract
+{
+    const FLOAT = 'float';
+
+    protected $_messageTemplates = array(
+        self::FLOAT =&gt; "'%value%' is not a floating point value"
+    );
+
+    public function isValid($value)
+    {
+        $this-&gt;_setValue($value);
+
+        if (!is_float($value)) {
+            $this-&gt;_error(self::FLOAT);
+            return false;
+        }
+
+        return true;
+    }
+}
+</pre>
+
+        <p>
+            The class defines a template for its single validation failure message, which includes
+            the built-in magic parameter, <span class="emphasis"><em>%value%</em></span>. The call to
+            <code class="methodname">_setValue()</code> prepares the object to insert the tested value into
+            the failure message automatically, should the value fail validation. The call to
+            <code class="methodname">_error()</code> tracks a reason for validation failure.
+        </p>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="example">
+<a name="zend.validate.writing_validators.example.conditions.dependent"></a><p class="title"><b>Example 944. Writing a Validation Class having Dependent Conditions</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            The following example demonstrates a more complex set of validation rules, where it is
+            required that the input value be numeric and within the range of minimum and maximum
+            boundary values. An input value would fail validation for exactly one of the following
+            reasons:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem">
+                <p>The input value is not numeric.</p>
+            </li>
+<li class="listitem">
+                <p>The input value is less than the minimum allowed value.</p>
+            </li>
+<li class="listitem">
+                <p>The input value is more than the maximum allowed value.</p>
+            </li>
+</ul></div>
+
+        <p>
+            These validation failure reasons are then translated to definitions in the class:
+        </p>
+
+        <pre class="programlisting">
+class MyValid_NumericBetween extends Zend_Validate_Abstract
+{
+    const MSG_NUMERIC = 'msgNumeric';
+    const MSG_MINIMUM = 'msgMinimum';
+    const MSG_MAXIMUM = 'msgMaximum';
+
+    public $minimum = 0;
+    public $maximum = 100;
+
+    protected $_messageVariables = array(
+        'min' =&gt; 'minimum',
+        'max' =&gt; 'maximum'
+    );
+
+    protected $_messageTemplates = array(
+        self::MSG_NUMERIC =&gt; "'%value%' is not numeric",
+        self::MSG_MINIMUM =&gt; "'%value%' must be at least '%min%'",
+        self::MSG_MAXIMUM =&gt; "'%value%' must be no more than '%max%'"
+    );
+
+    public function isValid($value)
+    {
+        $this-&gt;_setValue($value);
+
+        if (!is_numeric($value)) {
+            $this-&gt;_error(self::MSG_NUMERIC);
+            return false;
+        }
+
+        if ($value &lt; $this-&gt;minimum) {
+            $this-&gt;_error(self::MSG_MINIMUM);
+            return false;
+        }
+
+        if ($value &gt; $this-&gt;maximum) {
+            $this-&gt;_error(self::MSG_MAXIMUM);
+            return false;
+        }
+
+        return true;
+    }
+}
+</pre>
+
+        <p>
+            The public properties <code class="varname">$minimum</code> and <code class="varname">$maximum</code> have
+            been established to provide the minimum and maximum boundaries, respectively, for a
+            value to successfully validate. The class also defines two message variables that
+            correspond to the public properties and allow <span class="property">min</span> and
+            <span class="property">max</span> to be used in message templates as magic parameters, just as
+            with <span class="property">value</span>.
+        </p>
+
+        <p>
+            Note that if any one of the validation checks in <code class="methodname">isValid()</code>
+            fails, an appropriate failure message is prepared, and the method immediately returns
+            <code class="constant">FALSE</code>. These validation rules are therefore sequentially dependent.
+            That is, if one test should fail, there is no need to test any subsequent validation
+            rules. This need not be the case, however. The following example illustrates how to
+            write a class having independent validation rules, where the validation object may
+            return multiple reasons why a particular validation attempt failed.
+        </p>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="example">
+<a name="zend.validate.writing_validators.example.conditions.independent"></a><p class="title"><b>Example 945. Validation with Independent Conditions, Multiple Reasons for Failure</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Consider writing a validation class for password strength enforcement - when a user is
+            required to choose a password that meets certain criteria for helping secure user
+            accounts. Let us assume that the password security criteria enforce that the password:
+        </p>
+
+        <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem"><p>is at least 8 characters in length,</p></li>
+<li class="listitem"><p>contains at least one uppercase letter,</p></li>
+<li class="listitem"><p>contains at least one lowercase letter,</p></li>
+<li class="listitem"><p>and contains at least one digit character.</p></li>
+</ul></div>
+
+        <p>
+            The following class implements these validation criteria:
+        </p>
+
+        <pre class="programlisting">
+class MyValid_PasswordStrength extends Zend_Validate_Abstract
+{
+    const LENGTH = 'length';
+    const UPPER  = 'upper';
+    const LOWER  = 'lower';
+    const DIGIT  = 'digit';
+
+    protected $_messageTemplates = array(
+        self::LENGTH =&gt; "'%value%' must be at least 8 characters in length",
+        self::UPPER  =&gt; "'%value%' must contain at least one uppercase letter",
+        self::LOWER  =&gt; "'%value%' must contain at least one lowercase letter",
+        self::DIGIT  =&gt; "'%value%' must contain at least one digit character"
+    );
+
+    public function isValid($value)
+    {
+        $this-&gt;_setValue($value);
+
+        $isValid = true;
+
+        if (strlen($value) &lt; 8) {
+            $this-&gt;_error(self::LENGTH);
+            $isValid = false;
+        }
+
+        if (!preg_match('/[A-Z]/', $value)) {
+            $this-&gt;_error(self::UPPER);
+            $isValid = false;
+        }
+
+        if (!preg_match('/[a-z]/', $value)) {
+            $this-&gt;_error(self::LOWER);
+            $isValid = false;
+        }
+
+        if (!preg_match('/\d/', $value)) {
+            $this-&gt;_error(self::DIGIT);
+            $isValid = false;
+        }
+
+        return $isValid;
+    }
+}
+</pre>
+
+        <p>
+            Note that the four criteria tests in <code class="methodname">isValid()</code> do not
+            immediately return <code class="constant">FALSE</code>. This allows the validation class to
+            provide <span class="emphasis"><em>all</em></span> of the reasons that the input password failed to meet
+            the validation requirements. if, for example, a user were to input the string "#$%" as a
+            password, <code class="methodname">isValid()</code> would cause all four validation failure
+            messages to be returned by a subsequent call to <code class="methodname">getMessages()</code>.
+        </p>
+    </div>
+</div>
+<br class="example-break">
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.validate.validator_chains.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.validate.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.validate.messages.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Validator Chains </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Validation Messages</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

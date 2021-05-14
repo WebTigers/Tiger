@@ -1,0 +1,235 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Character Set</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Programmer's Reference Guide">
+<link rel="up" href="zend.search.lucene.html" title="Zend_Search_Lucene">
+<link rel="prev" href="zend.search.lucene.query-api.html" title="Query Construction API">
+<link rel="next" href="zend.search.lucene.extending.html" title="Extensibility">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Character Set</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="zend.search.lucene.query-api.html">Prev</a> </td>
+<th width="60%" align="center">Zend_Search_Lucene</th>
+<td width="20%" align="right"> <a accesskey="n" href="zend.search.lucene.extending.html">Next</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="zend.search.lucene.charset"></a>Character Set</h2></div></div></div>
+    
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.charset.description"></a>UTF-8 and single-byte character set support</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Search_Lucene</code> works with the UTF-8 charset internally. Index
+            files store unicode data in Java's "modified UTF-8 encoding".
+            <code class="classname">Zend_Search_Lucene</code> core completely supports this encoding with
+            one exception.
+
+            <a href="#ftn.idm482239573120" class="footnote" name="idm482239573120"><sup class="footnote">[15]</sup></a>
+        </p>
+
+        <p>
+            Actual input data encoding may be specified through
+            <code class="classname">Zend_Search_Lucene</code> <acronym class="acronym">API</acronym>. Data will be
+            automatically converted into UTF-8 encoding.
+        </p>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.charset.default_analyzer"></a>Default text analyzer</h3></div></div></div>
+        
+
+        <p>
+            However, the default text analyzer (which is also used within query parser) uses
+            ctype_alpha() for tokenizing text and queries.
+        </p>
+
+        <p>
+            ctype_alpha() is not UTF-8 compatible, so the analyzer converts text to
+            'ASCII//TRANSLIT' encoding before indexing. The same processing is transparently
+            performed during query parsing.
+
+            <a href="#ftn.idm482239566864" class="footnote" name="idm482239566864"><sup class="footnote">[16]</sup></a>
+        </p>
+
+        <div class="note"><table border="0" summary="Note: ">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/assets/manual/img/note.png"></td>
+<th align="left"></th>
+</tr>
+<tr><td align="left" valign="top">
+            
+            <p>
+                Default analyzer doesn't treats numbers as parts of terms. Use corresponding 'Num'
+                analyzer if you don't want words to be broken by numbers.
+            </p>
+        </td></tr>
+</table></div>
+    </div>
+
+    <div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="zend.search.lucene.charset.utf_analyzer"></a>UTF-8 compatible text analyzers</h3></div></div></div>
+        
+
+        <p>
+            <code class="classname">Zend_Search_Lucene</code> also contains a set of UTF-8 compatible
+            analyzers: <code class="classname">Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8</code>,
+            <code class="classname">Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8Num</code>,
+            <code class="classname">Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8_CaseInsensitive</code>,
+            <code class="classname">Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8Num_CaseInsensitive</code>.
+        </p>
+
+        <p>
+            Any of this analyzers can be enabled with the code like this:
+        </p>
+
+        <pre class="programlisting">
+Zend_Search_Lucene_Analysis_Analyzer::setDefault(
+    new Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8());
+</pre>
+
+        <div class="warning"><table border="0" summary="Warning: ">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Warning]" src="/assets/manual/img/warning.png"></td>
+<th align="left"></th>
+</tr>
+<tr><td align="left" valign="top">
+            
+            <p>
+                UTF-8 compatible analyzers were improved in Zend Framework 1.5. Early versions of
+                analyzers assumed all non-ascii characters are letters. New analyzers implementation
+                has more accurate behavior.
+            </p>
+
+            <p>
+                This may need you to re-build index to have data and search queries tokenized in the
+                same way, otherwise search engine may return wrong result sets.
+            </p>
+        </td></tr>
+</table></div>
+
+        <p>
+            All of these analyzers need PCRE (Perl-compatible regular expressions) library to be
+            compiled with UTF-8 support turned on. PCRE UTF-8 support is turned on for the PCRE
+            library sources bundled with <acronym class="acronym">PHP</acronym> source code distribution, but if
+            shared library is used instead of bundled with <acronym class="acronym">PHP</acronym> sources, then
+            UTF-8 support state may depend on you operating system.
+        </p>
+
+        <p>
+            Use the following code to check, if PCRE UTF-8 support is enabled:
+        </p>
+
+        <pre class="programlisting">
+if (@preg_match('/\pL/u', 'a') == 1) {
+    echo "PCRE unicode support is turned on.\n";
+} else {
+    echo "PCRE unicode support is turned off.\n";
+}
+</pre>
+
+        <p>
+            Case insensitive versions of UTF-8 compatible analyzers also need <a class="ulink" href="http://www.php.net/manual/en/ref.mbstring.php" target="_top">mbstring</a> extension to
+            be enabled.
+        </p>
+
+        <p>
+            If you don't want mbstring extension to be turned on, but need case insensitive search,
+            you may use the following approach: normalize source data before indexing and query
+            string before searching by converting them to lowercase:
+        </p>
+
+        <pre class="programlisting">
+// Indexing
+setlocale(LC_CTYPE, 'de_DE.iso-8859-1');
+
+...
+
+Zend_Search_Lucene_Analysis_Analyzer::setDefault(
+    new Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8());
+
+...
+
+$doc = new Zend_Search_Lucene_Document();
+
+$doc-&gt;addField(Zend_Search_Lucene_Field::UnStored('contents',
+                                                  strtolower($contents)));
+
+// Title field for search through (indexed, unstored)
+$doc-&gt;addField(Zend_Search_Lucene_Field::UnStored('title',
+                                                  strtolower($title)));
+
+// Title field for retrieving (unindexed, stored)
+$doc-&gt;addField(Zend_Search_Lucene_Field::UnIndexed('_title', $title));
+</pre>
+
+            <pre class="programlisting">
+// Searching
+setlocale(LC_CTYPE, 'de_DE.iso-8859-1');
+
+...
+
+Zend_Search_Lucene_Analysis_Analyzer::setDefault(
+    new Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8());
+
+...
+
+$hits = $index-&gt;find(strtolower($query));
+</pre>
+    </div>
+<div class="footnotes">
+<br><hr style="width:100; text-align:left;margin-left: 0">
+<div id="ftn.idm482239573120" class="footnote">
+               <p><a href="#idm482239573120" class="para"><sup class="para">[15] </sup></a>
+                   <code class="classname">Zend_Search_Lucene</code> supports only Basic Multilingual Plane
+                   (BMP) characters (from 0x0000 to 0xFFFF) and doesn't support
+                   "supplementary characters" (characters whose code points are
+                   greater than 0xFFFF)
+               </p>
+
+               <p>
+                   Java 2 represents these characters as a pair of char (16-bit)
+                   values, the first from the high-surrogates range (0xD800-0xDBFF),
+                   the second from the low-surrogates range (0xDC00-0xDFFF). Then
+                   they are encoded as usual UTF-8 characters in six bytes.
+                   Standard UTF-8 representation uses four bytes for supplementary
+                   characters.
+               </p>
+            </div>
+<div id="ftn.idm482239566864" class="footnote">
+               <p><a href="#idm482239566864" class="para"><sup class="para">[16] </sup></a>
+                   Conversion to 'ASCII//TRANSLIT' may depend on current locale and OS.
+               </p>
+            </div>
+</div>
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="zend.search.lucene.query-api.html">Prev</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="zend.search.lucene.html">Up</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="zend.search.lucene.extending.html">Next</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Query Construction API </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Extensibility</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>

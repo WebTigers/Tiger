@@ -1,0 +1,204 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Utiliser des Plugins</title>
+<link rel="stylesheet" type="text/css" href="dbstyle.css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.2">
+<link rel="home" href="index.html" title="Guide de référence du programmeur">
+<link rel="up" href="learning.plugins.html" title="Les plugins dans Zend Framework">
+<link rel="prev" href="learning.plugins.intro.html" title="Introduction">
+<link rel="next" href="learning.plugins.conclusion.html" title="Conclusion">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<div class="navheader"><table width="100%" summary="Navigation header">
+<tr><th colspan="3" align="center">Utiliser des Plugins</th></tr>
+<tr>
+<td width="20%" align="left">
+<a accesskey="p" href="learning.plugins.intro.html">Précédent</a> </td>
+<th width="60%" align="center">Les plugins dans Zend Framework</th>
+<td width="20%" align="right"> <a accesskey="n" href="learning.plugins.conclusion.html">Suivant</a>
+</td>
+</tr>
+</table></div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="learning.plugins.usage"></a>Utiliser des Plugins</h2></div></div></div>
+    
+
+    <p>
+        Les composants utilisant des plugins se servent de
+        <code class="classname">Zend_Loader_PluginLoader</code> pour fonctionner. Cette classe vous
+        propose d'enregistrer des "chemins de préfixes". Le composant va alors utiliser la méthode
+        <code class="methodname">load()</code> du PluginLoader en lui passant le nom court du plugin
+        à charger. Le PluginLoader va ensuite tester chaque chemin de préfixe pour trouver une
+        classe qui corresponde au nom court passé. Les chemins de préfixes sont testés en ordre
+        LIFO (last in, first out) et il trouvera d'abord les chemins de préfixes enregistrés
+        en dernier, ce qui permet de surcharger des plugins existants.
+    </p>
+
+    <p>
+        Voici quelques exemples pour éclaircir tout ça.
+    </p>
+
+    <div class="example">
+<a name="learning.plugins.usage.basic"></a><p class="title"><b>Exemple 1. Exemple de base: ajouter un chemin de préfixes simple</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Dans cet exemple, nous supposerons que des validateurs ont été écrits et enregistrés
+            sous <code class="filename">foo/plugins/validators/</code>, puis que toutes ces classes
+            partagent le même préfixe "Foo_Validate_"; ces deux informations forment le
+            "chemin de préfixes". Imaginons maintenant deux validateurs, un s'appelle "Even" (impaire)
+            il validera donc un chiffre impaire, et l'autre "Dozens"(multiples) qui vérifiera
+            un chiffre multiple de 12. L'arbre ressemble à ceci:
+        </p>
+
+        <pre class="programlisting">
+foo/
+|-- plugins/
+|   |-- validators/
+|   |   |-- Even.php
+|   |   |-- Dozens.php
+</pre>
+
+        <p>
+            Maintenant, nous allons informer un <code class="classname">Zend_Form_Element</code> de ce
+            chemin de préfixes. La méthode <code class="methodname">addPrefixPath()</code> de
+            <code class="classname">Zend_Form_Element</code> prend comme troisième paramètre le type de
+            plugin pour lequel on spécifie un chemin, dans notre cas il s'agit d'un plugin de
+            validation , "validate".
+        </p>
+
+        <pre class="programlisting">
+$element-&gt;addPrefixPath('Foo_Validate', 'foo/plugins/validators/', 'validate');
+</pre>
+
+        <p>
+            Dès lors il devient possible de passer à l'élément le nom court du validateur. Dans l'exemple
+            qui suit, nous mixons des validateurs standards ("NotEmpty", "Int") et personnalisés
+            ("Even", "Dozens"):
+        </p>
+
+        <pre class="programlisting">
+$element-&gt;addValidator('NotEmpty')
+        -&gt;addValidator('Int')
+        -&gt;addValidator('Even')
+        -&gt;addValidator('Dozens');
+</pre>
+
+        <p>
+            Lorsque l'élément devra utiliser la validation, il appellera le plugin via le
+            PluginLoader. Les deux premiers validateurs vont correspondre à
+            <code class="classname">Zend_Validate_NotEmpty</code> et
+            <code class="classname">Zend_Validate_Int</code>, puis les deux suivants à
+            <code class="classname">Foo_Validate_Even</code> et <code class="classname">Foo_Validate_Dozens</code>,
+            respectivement.
+        </p>
+    </div>
+</div>
+<br class="example-break">
+
+    <div class="note"><table border="0" summary="Note: Que se passe-t-il si un plugin n'est pas trouvé?">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td>
+<th align="left">Que se passe-t-il si un plugin n'est pas trouvé?</th>
+</tr>
+<tr><td align="left" valign="top">
+        
+
+        <p>
+            Que se passe-t-il si un plugin est demandé mais que le PluginLoader ne peut pas trouver
+            de classe qui y corresponde? Dans notre exemple ci-dessus, la question devient
+            "que se passe-t-il si j'enregistre le validateur "Bar" dans l'élément?"
+        </p>
+
+        <p>
+            Le PluginLoader va chercher dans tous les chemins de prefixes pour trouver un fichier qui
+            corresponde au nom du plugin. Si le fichier n'est pas trouvé, il passe au prochain
+            chemin.
+        </p>
+
+        <p>
+            Une fois que la pile de chemins est épuisée, si aucun fichier n'a été trouvé, il enverra
+            une <code class="exceptionname">Zend_Loader_PluginLoader_Exception</code>.
+        </p>
+    </td></tr>
+</table></div>
+
+    <div class="example">
+<a name="learning.plugins.usage.override"></a><p class="title"><b>Exemple 2. Exemple intermédiaire: Surcharger un plugin existant</b></p>
+<div class="example-contents">
+        
+
+        <p>
+            Une des forces du PluginLoader est qu'il utilise une pile LIFO, ceci vous permet
+            de surcharger des plugins existants par les votres stockés dans des chemins
+            différents en enregistrant ce chemin dans la pile.
+        </p>
+
+        <p>
+            Par exemple, considérons <code class="classname">Zend_View_Helper_FormButton</code> (les aides
+            de vue sont une forme de plugin). Cette aide de vue accepte trois paramètres, un nom
+            DOM, une valeur (utilisée comme libéllé de bouton), et un tableau optionnel d'options.
+            L'aide génère du HTML concernant un élément de formulaire.
+        </p>
+
+        <p>
+            Imaginons que vous vouliez que cette aide génère un vrai bouton HTML
+            <code class="constant">button</code>; vous ne voulez pas que cette aide génère un identifiant DOM
+            mais plutôt une classe CSS; et que vous ne souhaitez pas utiliser d'options
+            supplémentaires. Vous pourriez faire cela de plusieurs manières. Dans tous les cas vous
+            allez créer votre aide de vue en y écrivant le comportement mais comment allez-vous
+            nommer votre aide de vue et comment l'instancier?
+        </p>
+
+        <p>
+            Nous allons d'abord nommer notre classe avec un nom unique non existant,
+            <code class="classname">Foo_View_Helper_CssButton</code>, ceci donne immédiatement un nom de plugin:
+            "CssButton". Pourquoi pas, mais ceci pose quelques problèmes: si vous utilisiez déja
+            "FormButton" dans votre code vous allez devoir changer le nom partout, et si un autre
+            développeur rejoind vos rangs, il pourrait être troublé par "CssButton" et intuitivement
+            penser à l'aide standard "FormButton".
+        </p>
+
+        <p>
+            Le mieux reste encore de nommer notre aide de vue "Button", en lui donnant comme nom de classe
+            <code class="classname">Foo_View_Helper_Button</code>. Nous enregistrons aussi le chemin de préfixes
+            dans la vue:
+        </p>
+
+        <pre class="programlisting">
+// Zend_View::addHelperPath() utilise PluginLoader; attention par contre
+// sa signature inverse les arguments par rapport à PluginLoader, ceci car il
+// propose une valeur par défaut au préfixe : "Zend_View_Helper"
+//
+// La ligne ci-dessous suppose que la classe soit logée dans 'foo/view/helpers/'.
+$view-&gt;addHelperPath('foo/view/helpers', 'Foo_View_Helper');
+</pre>
+
+        <p>
+            A partir de ce moment, utiliser l'aide "Button" mènera vers votre propre classe
+            <code class="classname">Foo_View_Helper_Button</code>!
+        </p>
+    </div>
+</div>
+<br class="example-break">
+</div>
+<div class="navfooter"><table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left">
+<a accesskey="p" href="learning.plugins.intro.html">Précédent</a> </td>
+<td width="20%" align="center"><a accesskey="u" href="learning.plugins.html">Niveau supérieur</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="learning.plugins.conclusion.html">Suivant</a>
+</td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Introduction </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td>
+<td width="40%" align="right" valign="top"> Conclusion</td>
+</tr>
+</table></div>
+<div class="revinfo"></div>
+</body>
+</html>
