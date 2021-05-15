@@ -592,7 +592,7 @@ trait Package_Service_PackageTrait
         $source     = VENDOR_PATH . '/webtigers/platform/*';
         $target     = '/var/www/tiger-www';
 
-        $command    = "cp -rf $source $target";
+        $command    = "sudo -u e2-user cp -rf $source $target";
         $response = shell_exec( $command );
 
         if ( ! empty( $response ) ) {
@@ -615,7 +615,7 @@ trait Package_Service_PackageTrait
         $source     = VENDOR_PATH  . '/' . $vendor . '/' . $package;
         $target     = MODULES_PATH;
 
-        $command    = "cp -rf $source $target";
+        $command    = "sudo -u e2-user cp -rf $source $target";
         $response   = shell_exec( $command );
 
         if ( ! empty( $response ) ) {
@@ -629,7 +629,7 @@ trait Package_Service_PackageTrait
 
             // ln -s /var/www/tiger-www/application/modules/modulename/assets /var/www/tiger-www/public/assets/modulename
 
-            $command = "ln -sf $assets $link";
+            $command = "sudo -u e2-user ln -sf $assets $link";
             $response = shell_exec( $command );
 
             if ( ! empty( $response ) ) {
@@ -653,11 +653,11 @@ trait Package_Service_PackageTrait
         /** First we need to remove any assets symlink ... */
         $link = PUBLIC_PATH . '/assets/' . $package;
         if ( file_exists( $link ) && is_link( $link ) ) {
-            shell_exec( 'unlink ' . $link );
+            shell_exec( 'sudo -u e2-user unlink ' . $link );
         };
 
         $module = MODULES_PATH . '/' . $package;
-        shell_exec( 'rm -rf ' . $module );
+        shell_exec( 'sudo -u e2-user rm -rf ' . $module );
 
     }
 
