@@ -53,6 +53,31 @@ class Account_Model_User extends Zend_Db_Table_Abstract
 
     }
 
+    public function getUserProfileById ( $user_id )
+    {
+        $fields = [
+            'user_id',
+            'username',
+            'user_display_name',
+            'email',
+            'type_title',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'type_suffix',
+            'company_title',
+            'avatar_url',
+        ];
+
+        $sql = $this->
+        select()->
+        from( $this, $fields )->    // <-- select fields using this array
+        where('user_id = ?', $user_id);
+
+        return $this->fetchRow( $sql );
+
+    }
+
     /**
      * @param $key
      * @return Zend_Db_Table_Row_Abstract|null

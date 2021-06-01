@@ -80,7 +80,7 @@
             // console.log( params );
 
             /** returns a jQuery HTML snippet */
-            let $template = Class.attribute();
+            let $template = Class.attribute( 'link' );
 
             $template.find( 'label.attribute' ).attr( 'for', params.id ).html( params.labelAttr );
             $template.find( 'i.attribute' ).attr( 'title', params.descriptionAttr );
@@ -111,7 +111,7 @@
             // console.log( params );
 
             /** returns a jQuery HTML snippet */
-            let $template = Class.attribute();
+            let $template = Class.attribute( 'script' );
 
             $template.find( 'label.attribute' ).attr( 'for', params.id ).html( params.labelAttr );
             $template.find( 'i.attribute' ).attr( 'title', params.descriptionAttr );
@@ -174,7 +174,7 @@
 
         },
 
-        attribute : function ( ) {
+        attribute : function ( type ) {
 
             return $(
                 '        <div class="col-md-2">\n' +
@@ -202,7 +202,7 @@
                 '            <div class="message-container" style="height: 0; opacity: 1; overflow: hidden;"></div>\n' +
                 '        </div>\n' +
                 '        <div class="col-md-2">\n' +
-                '            <button type="button" name="" class="btn btn-alt-light remove-link">\n'+
+                '            <button type="button" name="" class="btn btn-alt-light remove-' + type + '">\n'+
                 '                <i class="fas fa-minus-circle button-icon"></i>\n' +
                 '            </button>\n' +
                 '            <div class="message-container" style="height: 0; opacity: 1; overflow: hidden;"></div>\n' +

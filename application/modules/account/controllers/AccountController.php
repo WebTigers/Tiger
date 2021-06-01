@@ -38,8 +38,10 @@ class Account_AccountController extends Tiger_Controller_Manage
         $this->view->template->inc_header       = '';
         $this->view->template->inc_footer       = '';
 
-        $this->view->template->name = Zend_Registry::get('Zend_Config')->tiger->platform->name;
+        $this->view->template->name = Zend_Registry::get('Zend_Translate')->translate( Zend_Registry::get('Zend_Config')->tiger->platform->name );
         $this->view->template->version = Zend_Registry::get('Zend_Config')->tiger->platform->version;
+
+        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/account/css/account.css' ) );
 
     }
 
@@ -182,12 +184,21 @@ class Account_AccountController extends Tiger_Controller_Manage
     public function profileAction ( )
     {
         $this->view->userForm       = new Account_Form_User();
+        $this->view->avatarForm     = new Account_Form_Avatar();
         $this->view->orgForm        = new Account_Form_Org();
         $this->view->addressForm    = new Account_Form_Address();
         $this->view->contactForm    = new Account_Form_Contact();
 
-        /** Add the profile page JS plugin. */
+        $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/oneui/js/plugins/dropzone/dist/min/dropzone.min.css' ) );
+
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/vendor/clipboardJS/dist/clipboard.min.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/plugins/dropzone/dropzone.min.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerPassword.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.profile.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.profile.avatar.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.org.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.address.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.contact.js' ) );
 
         $this->view->template->inc_side_overlay = true;
         $this->view->template->inc_sidebar      = true;

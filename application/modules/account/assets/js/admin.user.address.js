@@ -375,7 +375,7 @@
                             msgData.messages = [];
 
                             $.each(msgObj, function (errName, errMsg) {
-                                console.log(errName, errMsg);
+                                // console.log(errName, errMsg);
                                 msgData.messages.push({message: errMsg, error: errName, class: "alert"});
                             });
 

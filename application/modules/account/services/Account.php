@@ -19,17 +19,16 @@
  * information and software.
  */
 
-class Account_Service_Account
+class Account_Service_Account extends Core_Service_Webservice
 {
+    use Account_Service_OrgTrait;
+    use Account_Service_AddressTrait;
+    use Account_Service_ContactTrait;
+
     protected $_auth;
     protected $_acl;
-    protected $_locale;
     protected $_translate;
-    protected $_config;
-    protected $_response;
-    protected $_request;
-    protected $_form;
-    protected $_reflection;
+    protected $_utility;
 
     protected $_userModel;
     protected $_orgModel;
@@ -40,6 +39,8 @@ class Account_Service_Account
     protected $_orgAddressModel;
     protected $_userContactModel;
     protected $_userAddressModel;
+
+    protected $_countryModel;
 
     const ROLE_NEWUSER = "newuser";
     const ROLE_USER = "user";
@@ -52,8 +53,7 @@ class Account_Service_Account
         $this->_acl         = Zend_Registry::get('Zend_Acl');
         $this->_locale      = Zend_Registry::get('Zend_Locale');
         $this->_translate   = Zend_Registry::get('Zend_Translate');
-        $this->_config      = Zend_Registry::get('Zend_Config');
-        $this->_response    = new Core_Model_ResponseObject();
+        $this->_utility     = new Core_Service_Utility();
 
         $this->_userModel           = new Account_Model_User();
         $this->_orgModel            = new Account_Model_Org();
@@ -65,84 +65,11 @@ class Account_Service_Account
         $this->_userAddressModel    = new Account_Model_UserAddress();
         $this->_userContactModel    = new Account_Model_UserContact();
 
-        if ( $input instanceof Zend_Controller_Request_Http ) {
-            $this->_request = $input;
-            $params = $this->_request->getParams();
-        } 
-        elseif ( is_array($input) ) {
-            $params = $input;
-        }
-        
-        if ( ! isset( $this->_reflection ) ) {
-            $this->_reflection = new ReflectionClass( $this );
-        }
+        $this->_countryModel        = new Core_Model_Country();
 
-        if ( isset( $params['form'] ) && class_exists( $params['form'], true ) ) {
-            $this->_form = new $params['form'];
-        }
-        
-        $this->_dispatch( $params );
-        
-    }
-
-
-    ### Boilerplate Internal Class Functions ###
-    
-    /**
-     * If this service is called via the API, the dispatch
-     * method will route the $params to the proper function.
-     * @param type $params
-     */
-    private function _dispatch ( $params ) {
-
-        try {
-            
-            if ( isset( $params['method'] ) ) {
-
-                // filter the method to just camelCase alphaNumeric for security
-                $method = Zend_Filter::filterStatic( $params['method'], 
-                        'PregReplace', array('match' => '/[^A-Za-z0-9]/', 'replace' => '') );
-
-                // make sure the method exists and that it's public
-                if ( method_exists( $this, $method ) &&
-                        $this->_reflection->getMethod( $method )->isPublic() ) {
-                            $this->{$method}( $params );
-                }
-            }
-        }
-        
-        catch ( Exception $e ) {
-
-            // @TODO Need to log this
-
-        }
-        
-    }
-
-    /**
-     * Gets the Core ResponseObject
-     * @return object of ResponseObject
-     */
-    public function getResponse() {
-        return $this->_response;
-    }
-
-    /**
-     * Convenience function used to set form errors. Call the function
-     * without passing in a form to use the set form for the service,
-     * or pass in a different form to set the responseObject from it.
-     * @param null $frm
-     */
-    protected function _setFormErrors ( $frm = null ) {
-
-        $form = ( ! is_null( $frm ) ) ? $frm : $this->_form;
-
-        $this->_response->result    = 0;
-        $this->_response->form = $form->getName();
-        $this->_response->messages  = $form->getMessages();
+        parent::__construct( $input );
 
     }
-
 
     ### User Authentication Functions ###
 
@@ -191,6 +118,15 @@ class Account_Service_Account
              * tables and persist each one separately.
              */
 
+            /** Encrypt our password if it has been set ... */
+            if ( ! empty( $data['password'] ) ) {
+                $data['password'] = Tiger_Utility_Cryption::hash($data['password']);
+            }
+            /** Otherwise unset it so that it doesn't update the existing record. */
+            else {
+                unset( $data['password'] );
+            }
+
             $userRow = $this->persistUser( $data );
             $data['user_id'] = $userRow->user_id;
 
@@ -201,10 +137,12 @@ class Account_Service_Account
                 'contact_value' => $data['email'],
                 'primary'       => 1,
             ];
-            $contactRow = $this->persistContact( $contactData );
-            $data['contact_id'] = $contactRow->contact_id;
+            $contactRow = $this->_persistContact( $contactData );
 
-            $this->persistUserContact( $data );
+            $entityData['contact_id'] = $contactRow->contact_id;
+            $entityData['entity'] = 'user';
+            $entityData['entity_id'] = $userRow->user_id;
+            $this->_persistEntityContact( $entityData, $userRow );
 
             /**
              * Only if we have a company_name should we attempt to persist the new org.
@@ -219,7 +157,11 @@ class Account_Service_Account
                 $data['org_id'] = $orgRow->org_id;
 
                 $this->persistOrgUser( $data );
-                $this->persistOrgContact( $data );
+
+                $entityData['contact_id'] = $contactRow->contact_id;    // <-- Yes, it's already been set, but left in for reference and consistency.
+                $entityData['entity'] = 'org';
+                $entityData['entity_id'] = $orgRow->org_id;
+                $this->_persistEntityContact( $entityData, $contactRow );
 
             }
             else {
@@ -251,7 +193,7 @@ class Account_Service_Account
             $this->_response->result = 1;
 
         }
-        catch ( Exception $e ) {
+        catch ( Error | Exception $e ) {
 
             /** Uh oh, something went wrong, rollback all database activity! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
@@ -395,8 +337,6 @@ class Account_Service_Account
         }
 
         $data = $this->_form->getValues();
-
-        // pr( $data );
 
         $tigerAuth = new Tiger_Auth_DbAdapter( $data['username'], $data['password'], time() );
 
@@ -562,6 +502,142 @@ class Account_Service_Account
 
     }
 
+    ### Profile Functions ###
+
+    public function getUserProfile ( $params )
+    {
+        $user_id = Zend_Auth::getInstance()->getIdentity()->user_id;
+        $userRow = $this->_userModel->getUserProfileById( $user_id );
+
+        $this->_response->data = $userRow->toArray();
+        $this->_response->result = 1;
+
+    }
+
+    /**
+     * Service "save" methods essentially are the gateway to persisting whole forms
+     * of data. Save is responsible for validating and then forwarding clean data to
+     * the "persist" method for any grooming which is then sent to the data model.
+     *
+     * @param $params mixed
+     * @param $partial bool
+     * @throws Zend_Form_Exception
+     */
+    public function saveUser ( $params ) {
+
+        try {
+
+            $this->_form = new Account_Form_User();
+
+            /** We don't validate the user role from profile updates. In fact, we remove it if it exists. */
+            $this->_form->getElement('role')->setRequired(false);
+
+            /**
+             * One of the first things to check for is the existence of unique fields
+             * within the saveUser payload. Tiger will complain if we try to re-insert
+             * or update the user record with the same email or username. This function
+             * simply removes certain form validators. Note that this function only works
+             * if passed a user_id as part of the params payload.
+             */
+            $this->_removeUniqueUserValidation( $params );
+
+            /** The password field isn't required. */
+            $this->_form->password->setRequired(false);
+
+            /** Is this just a password update? If so, then we have a current_password field. Remove other required fields. */
+            if ( isset( $params['current_password'] ) ) {
+                $this->_form->email->setRequired(false);
+                $this->_form->username->setRequired(false);
+            }
+            else {
+                $this->_form->current_password->setRequired(false);
+            }
+
+            /**
+             * Note that in Tiger, isValid() is subclassed to remove any request routing
+             * params that are not part of the form. If you wish to preserve the entire
+             * $params array, call the $form->isValidPreserve() method instead.
+             */
+            if ( ! $this->_form->isValid( $params ) ) {
+
+                /**
+                 * We use a convenience method to set the form errors into
+                 * the responseObject and we're done here.
+                 */
+                $this->_setFormErrors();
+                return;
+
+            }
+
+            /** Gets the filtered and validated values from the form. We've got clean data. */
+            $data = $this->_form->getValidValues(  $params );
+
+            /** These are fields that cannot be updated by a user. */
+            unset(
+                $data['user_id'],
+                $data['role'],
+                $data['email_verify_key'],
+                $data['referral_user_id'],
+                $data['referral_org_id'],
+                $data['type_hearabout'],
+                $data['password_reset_key'],
+                $data['active'],
+                $data['deleted']
+            );
+
+            /** Make sure the user cannot pass in just any user_id but their own for updates. */
+            $data['user_id'] = Zend_Auth::getInstance()->getIdentity()->user_id;
+
+            /** Encrypt our password if it has been set ... */
+            if ( ! empty( $data['password'] ) ) {
+                $data['password'] = Tiger_Utility_Cryption::hash($data['password']);
+            }
+            /** Otherwise unset it so that it doesn't update the existing record. */
+            else {
+                unset( $data['password'] );
+            }
+
+            /**
+             * Before saving any data, we wrap all of our saves in DB Transaction.
+             * That way if anything fails, we can roll it all back. Very important!
+             */
+            Zend_Db_Table_Abstract::getDefaultAdapter()->beginTransaction();
+
+            /**
+             * Since we're not really doing anything with the user being persisted
+             * we don't need the $userRow, but we left it in just to let devs know
+             * it's available. We can send the data back to the UI with new or updated
+             * data.
+             */
+            $userRow = $this->persistUser( $data );
+            $orgRow  = $this->_orgUserModel->getOrgByUserId( $userRow->user_id );
+            $this->_setIdentity( $userRow, $orgRow );
+
+            /** Commit the DB transaction. All done! */
+            Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
+
+            /**
+             * Populate the responseObject with our success.
+             */
+            $this->_response->result = 1;
+            $this->_response->data = $userRow;
+            $this->_response->setTextMessage( 'MESSAGE.PROFILE_SAVED', 'success' );
+
+        }
+        catch ( Error | Exception $e ) {
+
+            /** Uh oh, something went wrong, rollback all database activity! */
+            Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
+
+            /** We also log what happened ... */
+            Tiger_Log::error( $e->getMessage() );
+
+        }
+
+    }
 
     ### Persist User Functions ###
 
@@ -589,9 +665,9 @@ class Account_Service_Account
                 throw new Exception('ERROR.USER_NOT_FOUND');
             }
 
-            /** We need a little data massaging before inserting into the database. */
-            if ( isset( $data['password']) ) {
-                $data['password'] = Tiger_Utility_Cryption::hash( $data['password'] );
+            /** We have a special case to handle if this is a password update. */
+            if ( isset( $data['current_password'] ) && Tiger_Utility_Cryption::hash( $data['current_password'] ) !== $userRow->password ) {
+                throw new Exception('ERROR.PASSWORDS_NOT_MATCH');
             }
 
             $userRow->setFromArray( $data );
@@ -647,7 +723,6 @@ class Account_Service_Account
         Zend_Auth::getInstance()->getStorage()->write( (object) $identityObject->toArray() );
     }
 
-
     ### Persist Org Functions ###
 
     /**
@@ -681,7 +756,12 @@ class Account_Service_Account
             $orgRow = $this->_orgModel->createRow( $data );
 
             /** Update the relevant pieces with user data. */
-            $orgRow->org_id = Tiger_Utility_Uuid::v1();;
+            $orgRow->org_id = Tiger_Utility_Uuid::v1();
+            $orgRow->orgname = str_replace('-', '', $orgRow->org_id );
+            $orgRow->type_org = 'COMPANY';
+            $orgRow->primary = 1;
+            $orgRow->create_ip = $_SERVER['REMOTE_ADDR'];
+            $orgRow->update_ip = $_SERVER['REMOTE_ADDR'];
 
         }
 
@@ -725,7 +805,8 @@ class Account_Service_Account
             $orgUserRow = $this->_orgUserModel->createRow( $data );
 
             /** Update the relevant pieces with user data. In this case, we just need a new id. */
-            $orgUserRow->org_user_id = Tiger_Utility_Uuid::v1();;
+            $orgUserRow->org_user_id = Tiger_Utility_Uuid::v1();
+            $orgUserRow->type_user_role = 'ADMIN';
 
         }
 
@@ -739,142 +820,36 @@ class Account_Service_Account
 
     }
 
+    ### Utility Functions ###
 
-    ### Persist Contact Functions ###
-
-    /**
-     * PersistContact is unconcerned with data validation and only concerned with raw
-     * field data that needs to be inserted or updated within the contact table. If you
-     * pass in a contact_id, the persist will be treated as an update. Note that you should
-     * manually set the type_contact.
-     *
-     * @param $data
-     * @throws Exception
-     * @return mixed
-     */
-    public function persistContact( $data )
+    public function getTypeSelect2List ( $params )
     {
-        /** If we have a org_user_id, then we know this is an update. */
-        if ( isset($data['contact_id']) ) {
-
-            $contactRow = $this->_contactModel->getContactById( $data['contact_id'] );
-
-            if ( empty($contactRow) ) {
-                throw new Exception('ERROR.CONTACT_NOT_FOUND');
-            }
-
-            $contactRow->setFromArray( $data );
-
-        }
-        else {
-
-            /** Create the row with our relevant data. */
-            $contactRow = $this->_contactModel->createRow( $data );
-
-            /** Update the relevant pieces with user data. In this case, we just need a new id. */
-            $contactRow->contact_id = Tiger_Utility_Uuid::v1();;
-
-        }
-
-        /**
-         * Now we can save the new orgUser record to the database! The function populates
-         * our boilerplate fields as well as returns an org_user_id for new records if we
-         * need it.
-         */
-        $contactRow->saveRow();
-        return $contactRow;
-
+        $this->_response = $this->_utility->getTypeSelect2List( $params );
     }
 
-    /**
-     * PersistOrgContact creates the link between the Org and the Contact that belongs to it.
-     * Again, persistOrgContact is unconcerned with data validation and only concerned with
-     * raw field data that needs to be inserted or updated within the org_contact table.
-     * If you pass in an org_contact_id, the persist will be treated as an update.
-     *
-     * @param $data
-     * @throws Exception
-     * @return mixed
-     */
-    public function persistOrgContact( $data )
+    protected function _removeUniqueUserValidation ( $params )
     {
-        /** If we have a org_contact_id, then we know this is an update. */
-        if ( isset($data['org_contact_id']) ) {
+        /** If the user_id is empty, this is an insert and we don't need to be here. */
+        if ( empty( $params['user_id'] ) ) { return; }
 
-            $orgContactRow = $this->_orgContactModel->getOrgContactById( $data['org_contact_id'] );
+        /** If the user_id is not a valid UUID, we're outta here. */
+        if ( ! Tiger_Utility_Uuid::is_valid( $params['user_id'] ) ) { return; }
 
-            if ( empty($orgContactRow) ) {
-                throw new Exception('ERROR.ORGCONTACT_NOT_FOUND');
-            }
+        $userRow = $this->_userModel->getUserById( $params['user_id'] );
 
-            /** We should already have all of the pertinent data we need to hydrate the object. */
-            $orgContactRow->setFromArray( $data );
+        /** If there is no record for the user_id, then we're outta here as well. */
+        if ( empty( $userRow ) ){ return; }
 
-        }
-        else {
-
-            /** Create the row with our relevant data. */
-            $orgContactRow = $this->_orgContactModel->createRow( $data );
-
-            /** Update the relevant pieces with user data. In this case, we just need a new id. */
-            $orgContactRow->org_contact_id = Tiger_Utility_Uuid::v1();;
-
+        /** If the username is the same as the user's existing record, removed the validator. */
+        if ( ! empty( $params['username'] ) && $params['username'] === $userRow->username ) {
+            $this->_form->getElement('username')->removeValidator('Db_NoRecordExists');
         }
 
-        /**
-         * Now we can save the new orgUser record to the database! The function populates
-         * our boilerplate fields as well as returns an org_user_id for new records if we
-         * need it.
-         */
-        $orgContactRow->saveRow();
-        return $orgContactRow;
+        /** If the email is the same as the user's existing record, removed the validator. */
+        if ( ! empty( $params['email'] ) && $params['email'] === $userRow->email ) {
+            $this->_form->getElement('email')->removeValidator('Db_NoRecordExists');
+        }
 
     }
-
-    /**
-     * PersistUserContact creates the link between the User and the Contact that belongs to it.
-     * Again, persistUserContact is unconcerned with data validation and only concerned with
-     * raw field data that needs to be inserted or updated within the org_contact table.
-     * If you pass in an user_contact_id, the persist will be treated as an update.
-     *
-     * @param $data
-     * @throws Exception
-     * @return mixed
-     */
-    public function persistUserContact( $data )
-    {
-        /** If we have a user_contact_id, then we know this is an update. */
-        if ( isset($data['user_contact_id']) ) {
-
-            $userContactRow = $this->_userContactModel->getUserContactById( $data['user_contact_id'] );
-
-            if ( empty($userContactRow) ) {
-                throw new Exception('ERROR.USERCONTACT_NOT_FOUND');
-            }
-
-            /** We should already have all of the pertinent data we need to hydrate the object. */
-            $userContactRow->setFromArray( $data );
-
-        }
-        else {
-
-            /** Create the row with our relevant data. */
-            $userContactRow = $this->_userContactModel->createRow( $data );
-
-            /** Update the relevant pieces with user data. In this case, we just need a new id. */
-            $userContactRow->user_contact_id = Tiger_Utility_Uuid::v1();
-
-        }
-
-        /**
-         * Now we can save the new userUser record to the database! The function populates
-         * our boilerplate fields as well as returns an user_user_id for new records if we
-         * need it.
-         */
-        $userContactRow->saveRow();
-        return $userContactRow;
-
-    }
-
 
 }

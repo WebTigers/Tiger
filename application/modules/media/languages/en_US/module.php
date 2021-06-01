@@ -33,4 +33,30 @@ return [
     'TYPE.FILE' => 'Filesystem (Local)',
     'TYPE.S3' => 'AWS S3 (Remote)',
 
+    'TITLE.MEDIA_GALLERY' => 'Media Gallery',
+    'TITLE.MEDIA_SETTINGS' => 'Media Settings',
+
+    'FORM.EDIT_MEDIA' => 'Edit Media',
+    'TAB.MEDIA' => 'Media',
+    'TAB.FILE_INFO' => 'File Info',
+    'LABEL.CAPTION_TITLE' => 'Caption Title',
+    'DESCRIPTION.CAPTION_TITLE' => 'Add a caption or title for this media.',
+    'LABEL.MEDIA_DESCRIPTION' => 'Description',
+    'DESCRIPTION.MEDIA_DESCRIPTION' => '(Optional) Add a description of this media.',
+    'LABEL.MEDIA_TAGS' => 'Tags',
+    'DESCRIPTION.MEDIA_TAGS' => '(Optional) Add any search tags to this media that help describe and find it.',
+    'LABEL.PUBLIC_URL' => 'Public URL',
+
+    'LABEL.BUCKET' => 'Bucket',
+    'LABEL.PREFIX_PATH' => 'Prefix Path',
+    'LABEL.MIME_TYPE' => 'Mime Type',
+    'LABEL.FILENAME' => 'Filename',
+    'LABEL.SIZE' => 'Size',
+    'LABEL.HEIGHT' => 'Height',
+    'LABEL.WIDTH' => 'Width',
+
+    'LABEL.UPLOAD_IP' => 'Upload IP',
+
+    'MESSAGE.MEDIA_SAVED' => 'Media Saved',
+
 ];

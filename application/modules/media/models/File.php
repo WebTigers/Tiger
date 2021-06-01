@@ -21,7 +21,6 @@
 
 class Media_Model_File
 {
-
     protected $_allowedMimeTypes;
     protected $_utility;
 
@@ -54,6 +53,18 @@ class Media_Model_File
         if ( ! empty( $params['prefixPath'] ) ) {
             if ( strtolower( $params['prefixPath'] ) === 'type') {
                 $prefixPath = $this->_utility->getMediaFolderByAllowedMimeType($this->_allowedMimeTypes, $file['type']) . '/';
+            }
+            elseif ( strtolower( $params['prefixPath'] ) === 'avatar') {
+
+                /** Avatars or User-specific so we separate these files by user_id. */
+                $prefixPath =  'avatar/' . Zend_Auth::getInstance()->getIdentity()->user_id . '/';
+
+                /** We need to create the avatar subdir if it doesn't exist. Otherwise move_uploaded_file() has a cow. */
+                $userPath = MODULES_PATH . '/media/assets/media/avatar/' . Zend_Auth::getInstance()->getIdentity()->user_id;
+                if ( ! file_exists( $userPath ) ) {
+                    mkdir( $userPath );
+                }
+
             }
             else {
                 $prefixPath = $params['prefixPath'] . '/';
@@ -106,10 +117,11 @@ class Media_Model_File
 
             $publicUrl = ( ! empty( $params['private'] ) && boolval( $params['private'] ) === true )
                 ? null
-                : '/media/' . $prefixPath . $filename . '.' . $extension;
+                : '/assets/media/media/' . $prefixPath . $filename . '.' . $extension;
 
             return [
                 'type_storage' => 'FILE',
+                'type_media' => $params['type_media'],
                 'media_folder' => $mediaFolder,
                 'prefix_path' => $prefixPath,
                 'filename' => $filename,
@@ -128,6 +140,16 @@ class Media_Model_File
             return 'MESSAGE.MEDIA_PROBLEM_SAVING';
         }
 
+    }
+
+    public function removeFileFromStorage ( $mediaRow )
+    {
+        $result = false;
+        if ( file_exists( $mediaRow->full_file_path ) && is_writable( $mediaRow->full_file_path ) ) {
+            unlink( $mediaRow->full_file_path );
+            $result = true;
+        }
+        return $result;
     }
 
 }

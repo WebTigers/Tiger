@@ -93,8 +93,8 @@ class Package_Form_Package extends Tiger_Form_Base
                                         'data-valid'    => '0',
                                     ],
 
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'             =>  strtoupper( 'LABEL.PACKAGE_' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.PACKAGE_' . $name ),
 
             'required'          =>  true,
 

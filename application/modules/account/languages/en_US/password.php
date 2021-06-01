@@ -19,6 +19,7 @@ return [
     'PASSWORD.STRONG' => 'Strong',
 
     'LABEL.PASSWORD' => 'Password',
+    'DESCRIPTION.PASSWORD' => 'Please enter a password matching the password strength indicators.',
 
     'ERROR.PW_LENGTH' => 'Must have at least %pw_length% characters.',
     'ERROR.PW_UPPER' => 'Must contain %pw_upper% uppercase.',

@@ -94,6 +94,33 @@ class Account_Model_Org extends Zend_Db_Table_Abstract {
 
     }
 
+    /**
+     * Get Org User gets a user's current primary org
+     * @param string $user_id
+     * @param string $org_id
+     * @return Zend_Db_Table_Row_Abstract|null
+     */
+    public function getPrimaryOrgByUser ( string $user_id, string $org_id )
+    {
+        $sql = $this->
+        select()->
+        setIntegrityCheck( false )->
+
+        from( [ 'ou' => 'org_user' ], ['ou.type_user_role'] )->
+        joinLeft( array( 'o' => 'org' ), 'o.org_id  = ou.org_id', ['o.*'] )->
+
+        where( 'ou.user_id = ?', $user_id )->
+        where( 'o.org_id = ?', $org_id )->
+
+        where( 'o.primary = 1' )->
+        where( 'o.active = 1' )->
+        where( 'o.deleted = 0' );
+
+        return $this->fetchRow( $sql );
+
+    }
+
+
     ### Admin Only Functions ###
 
     /**

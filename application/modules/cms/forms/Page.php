@@ -140,8 +140,8 @@ class Cms_Form_Page extends Tiger_Form_Base {
                                     'data-valid'    => '1',
                                 ],
 
-            'label'         =>  strtoupper( 'LABEL.' . $name ),
-            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'         =>  strtoupper( 'LABEL.PAGE_' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.PAGE_' . $name ),
 
             'required'      =>  true,
             'filters'       =>  [
@@ -173,8 +173,8 @@ class Cms_Form_Page extends Tiger_Form_Base {
                                     'data-valid'    => '1',
                                 ],
 
-            'label'         =>  strtoupper( 'LABEL.' . $name ),
-            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'         =>  strtoupper( 'LABEL.PAGE_' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.PAGE_' . $name ),
 
             'required'      =>  true,
             'filters'       =>  [
@@ -320,8 +320,8 @@ class Cms_Form_Page extends Tiger_Form_Base {
                 'data-valid'    => '1',
             ],
 
-            'label'         =>  strtoupper( 'LABEL.' . $name ),
-            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'         =>  strtoupper( 'LABEL.PAGE_' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.PAGE_' . $name ),
 
             'registerInArrayValidator'  => true,
             'multiOptions'  =>  $multiOptions,
@@ -429,8 +429,8 @@ class Cms_Form_Page extends Tiger_Form_Base {
                                     'placeholder' => $this->_translate->translate('form.page.label.' . $name),
                                 ],
 
-            'label'         =>  strtoupper( 'LABEL.' . $name ),
-            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'         =>  strtoupper( 'LABEL.PAGE_' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.PAGE_' . $name ),
 
             'required'      =>  false,
             'filters'       =>  [
@@ -497,25 +497,25 @@ class Cms_Form_Page extends Tiger_Form_Base {
             'id'            =>  $name,
             'class'         =>  'form-control text',
             'attribs'       =>  [
-                'data-valid' => '1',
-                'placeholder' => $this->_translate->translate('form.page.label.' . $name),
-            ],
+                                    'data-valid' => '1',
+                                    'placeholder' => $this->_translate->translate('form.page.label.' . $name),
+                                ],
 
             'label'         =>  strtoupper( 'LABEL.' . $name ),
             'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'      =>  false,
             'filters'       =>  [
-                [ 'StringTrim' ],
-                [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
-            ],
+                                    [ 'StringTrim' ],
+                                    [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
+                                ],
             'validators'    =>  [
-                // [ 'StringLength', false, [1, 10000) ],
-                [ 'Regex', false, [
-                    'pattern' => '/^[\W\w\S\s]+$/mu',
-                    'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
-                ]],
-            ],
+                                    // [ 'StringLength', false, [1, 10000) ],
+                                    [ 'Regex', false, [
+                                        'pattern' => '/^[\W\w\S\s]+$/mu',
+                                        'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ]],
+                                ],
 
         ];
 

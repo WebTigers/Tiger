@@ -19,9 +19,8 @@
  * information and software.
  */
 
-class Account_Service_Admin
+class Account_Service_Admin extends Core_Service_Webservice
 {
-
     /** Within Tiger, traits are more used for code organization. */
 
     use Account_Service_OrgTrait;
@@ -31,13 +30,7 @@ class Account_Service_Admin
 
     protected $_auth;
     protected $_acl;
-    protected $_locale;
     protected $_translate;
-    protected $_config;
-    protected $_response;
-    protected $_request;
-    protected $_form;
-    protected $_reflection;
     protected $_utility;
 
     protected $_userModel;
@@ -58,11 +51,7 @@ class Account_Service_Admin
 
         $this->_auth        = Zend_Auth::getInstance();
         $this->_acl         = Zend_Registry::get('Zend_Acl');
-        $this->_locale      = Zend_Registry::get('Zend_Locale');
         $this->_translate   = Zend_Registry::get('Zend_Translate');
-        $this->_config      = Zend_Registry::get('Zend_Config');
-
-        $this->_response    = new Core_Model_ResponseObject();
         $this->_utility     = new Core_Service_Utility();
 
         $this->_userModel           = new Account_Model_User();
@@ -79,81 +68,7 @@ class Account_Service_Admin
         $this->_typeModel           = new Core_Model_Type();
         $this->_roleModel           = new Acl_Model_AclRoles();
 
-        if ( $input instanceof Zend_Controller_Request_Http ) {
-            $this->_request = $input;
-            $params = $this->_request->getParams();
-        } 
-        elseif ( is_array($input) ) {
-            $params = $input;
-        }
-        
-        if ( ! isset( $this->_reflection ) ) {
-            $this->_reflection = new ReflectionClass( $this );
-        }
-
-        if ( isset( $params['form'] ) && class_exists( $params['form'], true ) ) {
-            $this->_form = new $params['form'];
-        }
-        
-        $this->_dispatch( $params );
-        
-    }
-
-
-    ### Boilerplate Internal Class Functions ###
-    
-    /**
-     * If this service is called via the API, the dispatch
-     * method will route the $params to the proper function.
-     * @param type $params
-     */
-    private function _dispatch ( $params ) {
-
-        try {
-            
-            if ( isset( $params['method'] ) ) {
-
-                // filter the method to just camelCase alphaNumeric for security
-                $method = Zend_Filter::filterStatic( $params['method'], 
-                        'PregReplace', array('match' => '/[^A-Za-z0-9]/', 'replace' => '') );
-
-                // make sure the method exists and that it's public
-                if ( method_exists( $this, $method ) &&
-                        $this->_reflection->getMethod( $method )->isPublic() ) {
-                            $this->{$method}( $params );
-                }
-            }
-        }
-        
-        catch ( Exception $e ) {
-
-            // @TODO Need to log this
-
-        }
-        
-    }
-
-    /**
-     * Gets the Core ResponseObject
-     * @return object of ResponseObject
-     */
-    public function getResponse() {
-        return $this->_response;
-    }
-
-    /**
-     * Convenience function used to set form errors. Call the function
-     * without passing in a form to use the set form for the service,
-     * or pass in a different form to set the responseObject from it.
-     * @param null $frm
-     */
-    protected function _setFormErrors ( $frm = null ) {
-
-        $form = ( ! is_null( $frm ) ) ? $frm : $this->_form;
-
-        $this->_response->result    = 0;
-        $this->_response->form = $form->getName();
-        $this->_response->messages  = $form->getMessages();
+        parent::__construct( $input );
 
     }
 
@@ -209,22 +124,7 @@ class Account_Service_Admin
 
     public function getTypeSelect2List ( $params )
     {
-        $params['key'] = ( ! empty( $params['key'] ) ) ? $params['key'] : '';
-
-        $results = [];
-        $typeRowset = $this->_typeModel->getTypeListByReference( $params['reference'], $params['key'] );
-
-        foreach ( $typeRowset as $typeRow ) {
-            $results[] = (object) ['id' => $typeRow->key, 'text' => $typeRow->type_name ];
-        }
-
-        $this->_response = new Core_Model_ResponseObjectSelect2([
-            'results' => $results,
-            'pagination' => (object) ['more' => false ],
-            'error' => null,
-            'login' => false,
-        ]);
-
+        $this->_response = $this->_utility->getTypeSelect2List( $params );
     }
 
 }

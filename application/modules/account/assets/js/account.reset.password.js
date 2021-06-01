@@ -44,15 +44,15 @@
         save : function ( event ) {
 
             function beforeSend ( jqXHR, settings ) {
-                $('#modal-setup-form [data-wizard="finish"] i.icon').addClass('hide');
-                $('#modal-setup-form [data-wizard="finish"] i.ajax').removeClass('hide');
-                $('#modal-setup-form [data-wizard="finish"]').addClass('disabled').prop('disabled', true);
+                $('#modal-password-reset-form i.icon').addClass('hide');
+                $('#modal-password-reset-form i.ajax').removeClass('hide');
+                $('#modal-password-reset-form button').prop('disabled', true);
             }
 
             function complete ( jqXHR, textStatus ) {
-                $('#modal-setup-form [data-wizard="finish"] i.icon').removeClass('hide');
-                $('#modal-setup-form [data-wizard="finish"] i.ajax').addClass('hide');
-                $('#modal-setup-form [data-wizard="finish"]').removeClass('disabled').prop('disabled', false);
+                $('#modal-password-reset-form i.icon').removeClass('hide');
+                $('#modal-password-reset-form i.ajax').addClass('hide');
+                $('#modal-password-reset-form button').prop('disabled', false);
             }
 
             function success ( data, textStatus, jqXHR ) {

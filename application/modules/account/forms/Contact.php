@@ -228,7 +228,7 @@ class Account_Form_Contact extends Tiger_Form_Base
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9 \'\-,.@]/',
+                                            'match' => '/[^A-Za-z0-9 \'\-\,\.\@\:\/\&\#]/',
                                             'replace' => ''
                                         ] ]
                                     ],
@@ -243,7 +243,7 @@ class Account_Form_Contact extends Tiger_Form_Base
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9 \'\-,.@]+$/',
+                                            'pattern' => '/^[A-Za-z0-9 \'\-\,\.\@\:\/\&\#]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]

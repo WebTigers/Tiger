@@ -32,6 +32,12 @@ abstract class Tiger_Controller_Manage extends Zend_Controller_Action {
         
         parent::init();
 
+        /** The Manage Controller is accessible on regular ports. If we get here from an admin high port, shift back to normal ports. */
+        if ( in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
+            $uri = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+            $this->redirect( $uri );
+        }
+
         /** Set the base theme options. Note that this is what creates the $this->view->template var. */
         $contentService = new Core_Service_Content();
         $contentService->setPageContent( $this->view );

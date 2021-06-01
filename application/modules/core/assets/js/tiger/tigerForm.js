@@ -312,13 +312,19 @@
 
         _setElementMessage : function ( data ) {
 
-            let $element = $('form[name="' + data.form + '"] #' + data.element );
+            let $form = ( typeof data.form === 'string' )
+                ? $('form[name="' + data.form + '"]' )
+                : $( data.form );
+
+            let $element = ( typeof data.element === 'string' )
+                ? $form.find( '#' + data.element )
+                : $(data.element);
 
             if ( data.result === 0 ) {
 
                 let content = '<div id="' + data.element + '-error" class="invalid-feedback">' + data.messages[0].message + '</div>';
                 $element.closest('div.form-group').find('.message-container').tigerDOM('change', { content : content } );
-                $element.removeClass('is-valid').addClass('is-invalid');
+                $element.addClass('is-invalid');
 
             }
             else {

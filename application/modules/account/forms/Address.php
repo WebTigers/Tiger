@@ -576,7 +576,7 @@ class Account_Form_Address extends Tiger_Form_Base
             'validators'    =>  [
                                     [ 'StringLength', false, [
                                         'min'   => 1,
-                                        'max'   => 12,
+                                        'max'   => 15,
                                         'messages' => [
                                             Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                             Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
@@ -622,7 +622,7 @@ class Account_Form_Address extends Tiger_Form_Base
             'validators'    =>  [
                                     [ 'StringLength', false, [
                                         'min'   => 1,
-                                        'max'   => 12,
+                                        'max'   => 15,
                                         'messages' => [
                                             Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                             Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
@@ -657,7 +657,7 @@ class Account_Form_Address extends Tiger_Form_Base
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'checkedValue'      =>  '1',
+            'disableHidden'     =>  true,
 
             'required'          =>  true,
 

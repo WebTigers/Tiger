@@ -38,4 +38,9 @@ class Account_Model_OrgContact extends Zend_Db_Table_Abstract
         return $this->fetchRow( $this->select()->where( 'org_contact_id = ?', $org_contact_id ) );
     }
 
+    public function getEntityContactByEntityId ( $org_id, $contact_id )
+    {
+        return $this->fetchRow( $this->select()->where( 'org_id = ?', $org_id )->where( 'contact_id = ?', $contact_id ) );
+    }
+
 }

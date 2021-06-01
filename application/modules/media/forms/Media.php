@@ -21,6 +21,7 @@ class Media_Form_Media extends Tiger_Form_Base
 
         $this->addElement( $this->_getMediaId() );
         $this->addElement( $this->_getTypeStorage() );
+        $this->addElement( $this->_getTypeMedia() );
         $this->addElement( $this->_getRename() );
         $this->addElement( $this->_getPrefixPath() );
         $this->addElement( $this->_getMediaFolder() );
@@ -121,6 +122,58 @@ class Media_Form_Media extends Tiger_Form_Base
 
     }
 
+    protected function _getTypeMedia ( ) {
+
+        $name = 'type_media';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt select2 no-validate',
+
+            'attribs'           =>  [
+                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
+                                        'data-valid'    => '0',
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'multiOptions'              =>  [],     // Set vis Select2 Control
+            'registerInArrayValidator'  => false,
+
+            'required'          =>  true,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Z0-9_]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 50,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Z0-9_]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Select( $name, $options );
+
+    }
+
+
     protected function _getRename ( ) {
 
         $name = 'rename';
@@ -192,7 +245,7 @@ class Media_Form_Media extends Tiger_Form_Base
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9\_\.\-]/',
+                                            'match' => '/[^A-Za-z0-9\/\_\.\-]/',
                                             'replace' => ''
                                         ] ]
                                     ],
@@ -207,7 +260,7 @@ class Media_Form_Media extends Tiger_Form_Base
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9\_\.\-]+$/',
+                                            'pattern' => '/^[A-Za-z0-9\/\_\.\-]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]
@@ -376,8 +429,8 @@ class Media_Form_Media extends Tiger_Form_Base
                                         'data-valid'    => '0',
                                     ],
 
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'             =>  strtoupper( 'LABEL.MEDIA_' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.MEDIA_' . $name ),
 
             'required'          =>  false,
 
@@ -424,8 +477,8 @@ class Media_Form_Media extends Tiger_Form_Base
                                         'data-valid'    => '0',
                                     ],
 
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'             =>  strtoupper( 'LABEL.MEDIA_' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.MEDIA_' . $name ),
 
             'required'          =>  false,
 

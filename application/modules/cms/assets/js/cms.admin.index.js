@@ -69,14 +69,10 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
 
                      Class.themes = data.data;
 
-                     Class.themesSelect.push({
-                         id: '',
-                         text: 'OPTION.SELECT_THEME'
-                     });
                      $.each( Class.themes, function( theme, data ) {
                          Class.themesSelect.push({
                              id: theme,
-                             text: theme.toUpperCase()
+                             text: ( theme ) ? theme.toUpperCase() : data
                          });
                      });
 
@@ -433,10 +429,12 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
 
         },
 
-        _buildExampleScript : function ( scriptRowContainer ) {
+        _buildExampleScript : function ( event ) {
+
+            let $scriptRowContainer = $(this).closest('.scriptrow-container');
 
             let html = '<script';
-            $( scriptRowContainer ).children('div.row').each(function (i, div){
+            $scriptRowContainer.children('div.row').each(function (i, div){
                 html += ' ' + $(div).find('select').val();
                 if ( $(div).find('select').val() !== '' ) {
                     html += '="' + $(div).find('input').val() + '"';
@@ -444,7 +442,7 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
             });
             html += '></script>';
 
-            $( scriptRowContainer ).parent().find('pre').html( Class._htmlEncode( html ) );
+            $scriptRowContainer.parent().find('pre').html( Class._htmlEncode( html ) );
 
         },
         
@@ -574,7 +572,7 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
                 // Class.pages = settings.json.data;
                 // Class._initRouteSelect2(true);
 
-                // One.helpers('core-bootstrap-tooltip');
+                One.helpers('core-bootstrap-tooltip');
 
             });
 
@@ -649,6 +647,7 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
             });
 
             $('body').on('keyup', 'div.linkrow-container div.row:first-child input', Class._updateLinkId );
+            $('body').on('keyup', 'div.scriptrow-container div.row:first-child input', Class._updateScriptId );
 
             $().tigerDOM('initToggleControls');
 
@@ -902,15 +901,16 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
         _removeLink : function ( event ) {
 
             let $linkNameContainer = $(this).closest('div.linkname-container'),
-                $linkRowContainer = $(this).closest('div.linkrow-container'),
-                $linkRow = $(this).closest('div.row');
+                $linkRowContainer = $(this).closest('div.linkrow-container');
 
             if ( $linkRowContainer.children('div').length === 1 ) {
                 $linkNameContainer.next('hr').tigerDOM('remove');
-                $linkNameContainer.tigerDOM('remove');
+                $linkNameContainer.tigerDOM('remove', function( ) {
+                    $('#head-links-container').css('height','auto');
+                });
             }
             else {
-                $linkRow.tigerDOM('remove', function (){
+                $(this).closest('div.row').tigerDOM('remove', function (){
                     // $linksRowContainer.css('height','auto');
                     Class._buildExampleLink( $linkRowContainer );
                 });
@@ -1009,15 +1009,16 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
         _removeScript : function ( event ) {
 
             let $scriptNameContainer = $(this).closest('div.scriptname-container'),
-                $scriptRowContainer = $(this).closest('div.scriptrow-container'),
-                $scriptRow = $(this).closest('div.row');
+                $scriptRowContainer = $(this).closest('div.scriptrow-container');
 
             if ( $scriptRowContainer.children('div').length === 1 ) {
                 $scriptNameContainer.next('hr').tigerDOM('remove');
-                $scriptNameContainer.tigerDOM('remove');
+                $scriptNameContainer.tigerDOM('remove', function( ) {
+                    $('#head-scripts-container, #inline-scripts-container').css('height','auto');
+                });
             }
             else {
-                $scriptRow.tigerDOM('remove', function (){
+                $(this).closest('div.row').tigerDOM('remove', function (){
                     // $scriptsRowContainer.css('height','auto');
                     Class._buildExampleLink( $scriptRowContainer );
                 });
@@ -1035,10 +1036,10 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
                     name: "change-me",
                     id: "change-me",
                     value: "change-me",
-                    labelAttr: "LABEL.LINK_ATTR",
-                    descriptionAttr: "DESCRIPTION.LINK_ATTR",
-                    labelValue: "LABEL.LINK_VALUE",
-                    descriptionValue: "DESCRIPTION.LINK_VALUE"
+                    labelAttr: "LABEL.SCRIPT_ATTR",
+                    descriptionAttr: "DESCRIPTION.SCRIPT_ATTR",
+                    labelValue: "LABEL.SCRIPT_VALUE",
+                    descriptionValue: "DESCRIPTION.SCRIPT_VALUE"
                 };
 
             $scriptAttributeRow = $('<div class="row"></div>');
@@ -1048,25 +1049,26 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
                 $control.find('label, i').not('.button-icon').remove();
             }
             $scriptAttributeRow.append( $control );
-            $scriptRowContainer.tigerDOM('change', {
+            $scriptRowContainer.tigerDOM('insert', {
                 content: $scriptAttributeRow,
-                callback : function (){
-                    $scriptAttributeRow.find('#select-change-me').select2({
+                callback : function ( ) {
+
+                    $scriptAttributeRow.find('select').select2({
                         minimumResultsForSearch : -1,
                         width : '100%',
-                    })
-                        .on( 'change', Class._buildExampleLink );
+                    }).on( 'change', Class._buildExampleScript );
+
+                    $scriptAttributeRow.find('input').on( 'keyup', Class._buildExampleScript );
 
                     if ( $scriptRowContainer.children().length === 1 ) {
-                        $scriptAttributeRow.find('#select-change-me').val('id').trigger('change');
+                        $scriptAttributeRow.find('select').val('id').trigger('change');
                     }
                     else {
-                        $scriptAttributeRow.find('#select-change-me').val(null).trigger('change');
+                        $scriptAttributeRow.find('select').val(null).trigger('change');
                     }
+
                 }
             });
-
-            Class._buildExampleLink( $scriptRowContainer );
 
         },
 

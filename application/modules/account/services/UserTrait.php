@@ -140,6 +140,16 @@ trait Account_Service_UserTrait
 
     public function getUser ( $params )
     {
+        /**
+         * Since both admins and users will be getting users via this method,
+         * we don't want users to be able to just insert any user_id, so we
+         * check to see if we have admin or user profile. The user will be
+         * accessing this method from the "Account_Service_Account" class.
+         */
+        if ( $this->_reflection->getShortName() === 'Account_Service_Account' ) {
+            $params['user_id'] = Zend_Auth::getInstance()->getIdentity()->user_id;
+        }
+
         if ( Tiger_Utility_Uuid::is_valid( $params['user_id'] ) ) {
 
             $userRow = $this->_userModel->getUserById( $params['user_id'] );
@@ -296,7 +306,17 @@ trait Account_Service_UserTrait
      * @param $params
      * @throws Zend_Form_Exception
      */
-    public function updateUser ( $params ) {
+    public function updateUser ( $params )
+    {
+        /**
+         * Since both admins and users will be getting users via this method,
+         * we don't want users to be able to just insert any user_id, so we
+         * check to see if we have admin or user profile. The user will be
+         * accessing this method from the "Account_Service_Account" class.
+         */
+        if ( $this->_reflection->getShortName() === 'Account_Service_Account' ) {
+            $params['user_id'] = Zend_Auth::getInstance()->getIdentity()->user_id;
+        }
 
         $this->_form = new Account_Form_User();
 
@@ -386,7 +406,17 @@ trait Account_Service_UserTrait
      * @param $partial bool
      * @throws Zend_Form_Exception
      */
-    public function saveUser ( $params ) {
+    public function saveUser ( $params )
+    {
+        /**
+         * Since both admins and users will be getting users via this method,
+         * we don't want users to be able to just insert any user_id, so we
+         * check to see if we have admin or user profile. The user will be
+         * accessing this method from the "Account_Service_Account" class.
+         */
+        if ( $this->_reflection->getShortName() === 'Account_Service_Account' ) {
+            $params['user_id'] = Zend_Auth::getInstance()->getIdentity()->user_id;
+        }
 
         try {
 
@@ -400,6 +430,10 @@ trait Account_Service_UserTrait
              * if passed a user_id as part of the params payload.
              */
             $this->_removeUniqueUserValidation( $params );
+
+            /** The password field isn't required and we remove all validation because admins
+             * need to be able to set any kind of temp passwrod. */
+            $this->_form->password->setRequired( false )->setValidators([]);
 
             /**
              * Note that in Tiger, isValid() is subclassed to remove any request routing
@@ -423,6 +457,10 @@ trait Account_Service_UserTrait
             /** Encrypt our password if it has been set ... */
             if ( ! empty( $data['password'] ) ) {
                 $data['password'] = Tiger_Utility_Cryption::hash($data['password']);
+            }
+            /** Otherwise unset it so that it doesn't update the existing record. */
+            else {
+                unset( $data['password'] );
             }
 
             /**

@@ -38,4 +38,8 @@ class Account_Model_OrgAddress extends Zend_Db_Table_Abstract
         return $this->fetchRow( $this->select()->where( 'org_address_id = ?', $org_address_id ) );
     }
 
+    public function getEntityAddressByEntityId ( $user_id, $address_id ) {
+        return $this->fetchRow( $this->select()->where( 'org_id = ?', $user_id )->where( 'address_id = ?', $address_id ) );
+    }
+
 }

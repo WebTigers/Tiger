@@ -32,6 +32,7 @@ class Account_Model_IdentityObject
     public $email;
     public $locale_preference;
     public $password_reset_key;
+    public $avatar_url;
 
     public $org_id;
     public $parent_org_id;
@@ -75,6 +76,7 @@ class Account_Model_IdentityObject
             'email'         => $this->email,
             'locale_preference' => $this->locale_preference,
             'password_reset_key' => $this->password_reset_key,
+            'avatar_url'    => $this->avatar_url,
 
             'org_id'        => $this->org_id,
             'parent_org_id' => $this->parent_org_id,

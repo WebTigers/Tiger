@@ -25,11 +25,15 @@ class Core_Model_Country extends Zend_Db_Table_Abstract
     protected $_primary     = 'country_code';
     protected $_rowClass    = 'Tiger_Db_Table_Row';
 
+    protected $_locale;
     protected $_translate;
 
-    public function init ( ) {
+    public function init()
+    {
+        parent::init();
 
-        $this->_translate = Zend_Registry::get( 'Zend_Translate' );
+        $this->_locale = Zend_Registry::get('Zend_Locale');
+        $this->_translate = Zend_Registry::get('Zend_Translate');
 
     }
 
@@ -100,5 +104,53 @@ class Core_Model_Country extends Zend_Db_Table_Abstract
         return $countries;
 
     }
+
+    public function getCountrySearchList ( string $search, $offset = 0, $limit = 0 ) {
+
+        /** If the language validates as one Tiger knows, great! Otherwise, just default to English. */
+        $loc = $this->_locale->toString();
+        $pattern = $this->_getRegexLocaleValidationList();
+        $locName = ( preg_match($pattern, $loc ) )
+            ? 'name_' . $this->_locale->getLanguage()
+            : 'name_en';
+
+        $sql = $this->
+        select()->
+        from( $this, ['code' => 'alpha_3', 'name' => $locName ] )->
+        where( 'alpha_3 IS NOT NULL' )->
+        where( '( country_code LIKE ?', "%$search%" )->
+        orWhere( 'alpha_3 LIKE ?', "%$search%" )->
+        orWhere( 'alpha_2 LIKE ?', "%$search%" )->
+        orWhere( "$locName LIKE ? )", "%$search%" )->
+        order( ["sort DESC", "name ASC"] )->
+        limit( $limit, $offset );
+
+        return $this->fetchAll($sql);
+
+    }
+
+    /**
+     * @return string
+     */
+    protected function _getRegexLocaleValidationList ()
+    {
+        /**
+         * The objective of the getRegexValidationList is to auto generate a
+         * RegEx validation string for the routes to validate against. This
+         * list will be based on all of the langugages available within the
+         * translation list. Basically if a language folder exists, it will
+         * show up here as a valid language. The string generated will look
+         * similar to this: ^(en|en_US|es|es_US)$
+         */
+
+        $out = "/^(";
+        $languages = $this->_translate->getList();
+        foreach ($languages as $language) {
+            $out .= $language . "|";
+        }
+        $out = substr($out, 0, -1) . ")$/";  // remove the last "|"
+        return $out;
+    }
+
 
 }

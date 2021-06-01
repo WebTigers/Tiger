@@ -6,6 +6,12 @@ class Manual_IndexController extends Tiger_Controller_Action
     {
         parent::init();
 
+        /** The CMS Controller should not be on hight ports 8080 and 8081 since these are usually public-facing pages. */
+        if ( in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
+            $uri = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+            $this->redirect( $uri );
+        }
+
         $this->view->doctype( Zend_View_Helper_Doctype::HTML5 );    // <-- need this for headMeta()->setProperty() to work.
         $this->view->headMeta()->setCharset('UTF-8');
         $this->view->headMeta()->setProperty('viewport', 'width=device-width, initial-scale=1, shrink-to-fit=no');

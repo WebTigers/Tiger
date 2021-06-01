@@ -28,6 +28,13 @@ class Cms_IndexController extends Tiger_Controller_Action
 
     public function init()
     {
+
+        /** The CMS Controller should not be on hight ports 8080 and 8081 since these are usually public-facing pages. */
+        if ( in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
+            $uri = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+            $this->redirect( $uri );
+        }
+
         $this->_translate = Zend_Registry::get('Zend_Translate');
     }
 
@@ -49,8 +56,6 @@ class Cms_IndexController extends Tiger_Controller_Action
         $contentService = new Cms_Service_Content();
         $params = $this->getRequest()->getParams();
 
-        // pr( $params ); // Version Testing
-
         $contentService->setPageContent( $this->view, $params );
 
     }
@@ -61,12 +66,8 @@ class Cms_IndexController extends Tiger_Controller_Action
         $contentService = new Cms_Service_Content();
         $params = $this->getRequest()->getParams();
 
-        // pr( $params );
-
         $contentService->setPageContent( $this->view, $params );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version('/assets/cms/js/cms.tiger.docs.js' ) );
-
-        // pr( $this->view->template );
 
     }
 

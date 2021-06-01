@@ -155,8 +155,8 @@ class Translate_Form_Translation extends Tiger_Form_Base
                                         'data-valid'    => '0',
                                     ],
 
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'             =>  strtoupper( 'LABEL.TRANSLATE_' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.TRANSLATE_' . $name ),
 
             'required'          =>  true,
 

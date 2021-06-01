@@ -425,45 +425,35 @@ class Account_Form_Org extends Tiger_Form_Base
 
         $options = [
 
-            'name'              =>  $name,
-            'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control form-control-lg form-control-alt select2',
+            'attribs'       =>  [
+                                    'data-valid' => '0',
+                                ],
 
-            'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
-                                        'data-valid'    => '0',
-                                    ],
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'multiOptions'              =>  [],     // Set vis Select2 Control
+            'registerInArrayValidator'  => false,
 
-            'required'          =>  false,
+            'required'      =>  false,
+            'filters'       =>  [
+                                    [ 'StringTrim' ],
+                                ],
+            'validators'    =>  [
+                                    [ 'Regex', false, [
+                                        'pattern'   => '/^[A-Za-z0-9_\-\.]+$/',
+                                        'messages'  => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                    ] ],
 
-            'filters'           =>  [
-                                        [ 'StringTrim' ],
-                                        [ 'PregReplace', [
-                                            'match' => '/[^A-Z0-9]/',
-                                            'replace' => ''
-                                        ] ]
-                                    ],
+                                ],
 
-            'validators'        =>  [
-                                        [ 'StringLength', false, [
-                                            'min'   => 1,
-                                            'max'   => 50,
-                                            'messages' => [
-                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
-                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
-                                            ]
-                                        ] ],
-                                        [ 'Regex', false, [
-                                            'pattern' => '/^[A-Z0-9]+$/',
-                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
-                                        ] ]
-                                    ]
         ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 
@@ -512,45 +502,35 @@ class Account_Form_Org extends Tiger_Form_Base
 
         $options = [
 
-            'name'              =>  $name,
-            'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control form-control-lg form-control-alt select2',
+            'attribs'       =>  [
+                                    'data-valid' => '0',
+                                ],
 
-            'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
-                                        'data-valid'    => '0',
-                                    ],
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'multiOptions'              =>  [],     // Set vis Select2 Control
+            'registerInArrayValidator'  => false,
 
-            'required'          =>  false,
+            'required'      =>  false,
+            'filters'       =>  [
+                                    [ 'StringTrim' ],
+                                ],
+            'validators'    =>  [
+                                    [ 'Regex', false, [
+                                        'pattern'   => '/^[A-Za-z0-9_\-\.]+$/',
+                                        'messages'  => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                    ] ],
 
-            'filters'           =>  [
-                                        [ 'StringTrim' ],
-                                        [ 'PregReplace', [
-                                            'match' => '/[^A-Z0-9]/',
-                                            'replace' => ''
-                                        ] ]
-                                    ],
+                                ],
 
-            'validators'        =>  [
-                                        [ 'StringLength', false, [
-                                            'min'   => 1,
-                                            'max'   => 50,
-                                            'messages' => [
-                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
-                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
-                                            ]
-                                        ] ],
-                                        [ 'Regex', false, [
-                                            'pattern' => '/^[A-Z0-9]+$/',
-                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
-                                        ] ]
-                                    ]
         ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 

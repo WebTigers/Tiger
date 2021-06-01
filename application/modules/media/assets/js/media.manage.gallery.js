@@ -185,6 +185,7 @@
                         module      : 'media',
                         service     : 'media:media',
                         method      : 'upload',
+                        type_media  : 'PUBLIC',
                         storageType : '',       // 'File' or 'S3' or config media.default_storage_model,
                         rename      : '',       // '' or 'othername' or 'uuid' (Does not change the file extension.)
                         prefixPath  : 'type',   // '' or 'type' or '/path/to/file' (For File oath or S3 prefix)

@@ -188,8 +188,6 @@
 
         _edit : function ( event ) {
 
-            console.log(this, event, $('#contact-form #contact_id').val() );
-
             /** if the value is empty, then it's a new contact. Just clear the form and return. */
             if ( ! $('#contact-form #contact_id').val() ) {
 

@@ -59,6 +59,8 @@ class Core_Service_Utility
     {
         $typeModel = new Core_Model_Type();
 
+        $params['key'] = ( ! empty( $params['key'] ) ) ? $params['key'] : null;
+
         $results = [];
         $typeRowset = $typeModel->getTypeListByReference( $params['reference'], $params['key'] );
 

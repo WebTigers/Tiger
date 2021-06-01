@@ -27,7 +27,7 @@ return [
     'DESCRIPTION.EMAIL' => 'Please enter your email address.',
 
     'LABEL.COUNTRY' => 'Country',
-    'DESCRIPTION.COUNTRY' => 'Select the country where you live.',
+    'DESCRIPTION.COUNTRY' => 'Select the country.',
 
     'LABEL.TYPE_PROFESSION' => 'Profession',
     'DESCRIPTION.TYPE_PROFESSION' => 'Please select the profession that most closely matches what you do. We use this to try to understand who our clients are.',

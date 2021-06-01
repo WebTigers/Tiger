@@ -131,6 +131,7 @@ class Media_Model_S3
 
             return [
                 'type_storage' => 'S3',
+                'type_media' => $params['type_media'],
                 'bucket' => $bucket,
                 'media_folder' => $mediaFolder,
                 'prefix_path' => $prefixPath,
@@ -150,6 +151,16 @@ class Media_Model_S3
             return 'MESSAGE.MEDIA_PROBLEM_SAVING';
         }
 
+    }
+
+    public function removeFileFromStorage ( $mediaRow )
+    {
+        $result = false;
+        if ( file_exists( $mediaRow->full_file_path ) && is_writable( $mediaRow->full_file_path ) ) {
+            unlink( $mediaRow->full_file_path );
+            $result = true;
+        }
+        return $result;
     }
 
 }

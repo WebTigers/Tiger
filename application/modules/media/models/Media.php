@@ -48,6 +48,7 @@ class Media_Model_Media extends Zend_Db_Table_Abstract {
         $sql = $this->
             select()->
 
+            where( 'type_media IN (?)', ['public'] )->
             where( '( filename LIKE ?', "%$search%" )->
             orWhere( 'original_filename LIKE ?', "%$search%" )->
             orWhere( 'extension LIKE ?', "%$search%" )->
@@ -59,6 +60,36 @@ class Media_Model_Media extends Zend_Db_Table_Abstract {
             where( 'deleted = 0' )->
             order( $orderby )->
             limit( $limit, $offset );
+
+        // pr( $sql->assemble() );
+
+        return $this->fetchAll( $sql );
+
+    }
+
+    /**
+     * @param string $locale
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    public function getUserMediaSearchList ( string $user_id, string $search, $offset = 0, $limit = 0, $orderby = '' ) {
+
+        $sql = $this->
+        select()->
+
+        where( 'create_user_id = ?', $user_id )->
+        where( 'type_media IN (?)', ['user','avatar'] )->
+
+        where( '( filename LIKE ?', "%$search%" )->
+        orWhere( 'original_filename LIKE ?', "%$search%" )->
+        orWhere( 'extension LIKE ?', "%$search%" )->
+        orWhere( 'description LIKE ?', "%$search%" )->
+        orWhere( 'mime_type LIKE ?', "%$search%" )->
+        orWhere( 'tags LIKE ? )', "%$search%" )->
+
+        where( 'active = 1' )->
+        where( 'deleted = 0' )->
+        order( $orderby )->
+        limit( $limit, $offset );
 
         // pr( $sql->assemble() );
 

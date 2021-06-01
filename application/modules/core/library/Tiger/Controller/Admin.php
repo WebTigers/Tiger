@@ -34,7 +34,9 @@ abstract class Tiger_Controller_Admin extends Zend_Controller_Action {
 
         /** The Admin Controller and Admin Service are only available on ports 8080 and 8081 for security purposes. */
         if ( ! in_array( $_SERVER['SERVER_PORT'], [ '8080', '8081' ] ) ) {
-            throw new Error( 'ADMIN.DISALLOWED' );
+            $port = ( $_SERVER['REQUEST_SCHEME'] === 'http' ) ? '8080' : '8081' ;
+            $uri = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . ':' . $port . $_SERVER['REQUEST_URI'];
+            $this->redirect( $uri );
         }
 
         /** Set the base theme options. Note that this is what creates the $this->view->template var. */
@@ -42,6 +44,9 @@ abstract class Tiger_Controller_Admin extends Zend_Controller_Action {
         $contentService->setPageContent( $this->view );
 
         $this->loadCommonAdminAssets();
+
+        /** This makes use of the admin branch of the menu tree. */
+        $this->view->template->menu = 'admin';
 
         /** Set User to the theme container */
         $this->view->template->user = Zend_Auth::getInstance()->getIdentity();

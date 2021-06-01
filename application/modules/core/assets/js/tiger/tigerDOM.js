@@ -298,7 +298,7 @@
                     .css( 'height'  , 0 )
                     .css( 'overflow', 'hidden' );
                 
-                // Expand the target container to accomodate the hidden content
+                // Expand the target container to accommodate the hidden content
                 $this.animate( { height : height }, baseTime, function(){
                     // Now make the content visible
                     $this.animate( { opacity : 1 }, baseTime, function(){

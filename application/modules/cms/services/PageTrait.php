@@ -64,6 +64,7 @@ trait Cms_Service_PageTrait
                 'DT.LOCALE',
                 'DT.CREATE_DATE',
                 'DT.UPDATE_DATE',
+                'DT.ACTIONS',
                 'DT.HISTORY',
                 'DT.ACTIVE',
                 'DT.DELETED',
@@ -180,8 +181,11 @@ trait Cms_Service_PageTrait
 
     public function getThemes ( ) {
 
-        $themes = Tiger_Utility_Themes::getThemesList()->toArray();
-        foreach ( $themes as $theme => $data ) {
+        $themes = [ '' => $this->_translate->translate('OPTION.SELECT_THEME') ];
+
+        $themeArr = Tiger_Utility_Themes::getThemesList()->toArray();
+
+        foreach ( $themeArr as $theme => $data ) {
 
             $this->getLayoutSelect2List( ['theme' => $theme] );
             $themes[$theme]['layouts'] = $this->_response->results;
@@ -451,9 +455,9 @@ trait Cms_Service_PageTrait
                     'type' => 'text',
                     'value' => $value,
                     'labelAttr' => $this->_translate->translate('LABEL.LINK_ATTR'),
-                    'descriptionAttr' => $this->_translate->translate('DESCRIPTION.LINK_ATTR_VALUE'),
+                    'descriptionAttr' => $this->_translate->translate('DESCRIPTION.LINK_ATTR'),
                     'labelValue' => $this->_translate->translate('LABEL.LINK_VALUE'),
-                    'descriptionValue' => $this->_translate->translate('DESCRIPTION.LINK_ATTR_VALUE'),
+                    'descriptionValue' => $this->_translate->translate('DESCRIPTION.LINK_VALUE'),
                 ];
 
             }

@@ -105,6 +105,40 @@ trait Media_Service_MediaTrait
 
     }
 
+    public function getUserGallery ( $params )
+    {
+        /** A generic form to validate search params. */
+        $this->_form = new Core_Form_Search();
+
+        if ( $this->_form->isValidPartial( $params ) ) {
+
+            $data = $this->_form->getValidValues( $params );
+
+            $mediaRowset = $this->getUserMediaSearchList( $data );
+
+            if ( ! empty( $mediaRowset ) ) {
+
+                $this->_response->result = 1;
+                $this->_response->data = $mediaRowset->toArray();
+
+            }
+            else {
+
+                $this->_response->result = 0;
+                $this->_response->setTextMessage('ERROR.NOT_FOUND', 'alert');
+
+            }
+
+        }
+        else {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage('ERROR.INVALID', 'alert');
+
+        }
+
+    }
+
     public function getAdminConfigs ( $params )
     {
         $configRowset = $this->_configModel->getAdminConfigsByKeys([
@@ -138,6 +172,27 @@ trait Media_Service_MediaTrait
         $orderby   .= ( ! empty( $params['direction'] ) ) ? ' ' . $params['direction'] : '';;
 
         return $this->_mediaModel->getMediaSearchList( $search, $offset, $limit, $orderby );
+
+    }
+
+    /**
+     * getMediaSearchList returns a rowset of media.
+     *
+     * @param array $params
+     * @return array of Zend Db Table Rowset
+     */
+    public function getUserMediaSearchList ( array $params )
+    {
+        $user_id    = $this->_auth->getIdentity()->user_id;
+
+        $search     = ( ! empty( $params['search'] ) ) ? $params['search'] : '';
+        $offset     = ( ! empty( $params['offset'] ) ) ? $params['offset'] : '';;
+        $limit      = ( ! empty( $params['limit'] ) ) ? $params['limit'] : '';;
+
+        $orderby    = ( ! empty( $params['orderby'] ) ) ? $params['orderby'] : '';
+        $orderby   .= ( ! empty( $params['direction'] ) ) ? ' ' . $params['direction'] : '';;
+
+        return $this->_mediaModel->getUserMediaSearchList( $user_id, $search, $offset, $limit, $orderby );
 
     }
 
@@ -190,8 +245,69 @@ trait Media_Service_MediaTrait
 
             $this->_response->result = 0;
             $this->_response->setTextMessage( 'MESSAGE.MEDIA_ERROR_SAVING', 'error' );
+            Tiger_Log::error( $e->getMessage() );
 
-            pr( $e->getMessage() );
+        }
+
+    }
+
+    ### Profile Methods ###
+
+    public function removeProfileAvatar ( $params ) {
+
+        try {
+
+            if ( Tiger_Utility_Uuid::is_valid( $params['media_id'] ) ) {
+
+                $mediaRow = $this->_mediaModel->getMediaById( $params['media_id'] );
+
+                if ( ! empty( $mediaRow ) ) {
+
+                    /** Sanity check to make sure the avatar actually belongs to our user. */
+                    $user_id = Zend_Auth::getInstance()->getIdentity()->user_id;
+                    $prefix  = $mediaRow->prefix_path;
+                    if ( strstr( $prefix,  $user_id ) ) {
+
+                        /**
+                         * We abstract where files are sent via a default storage driver. This
+                         * can be set as a default or selected via a UI passed param.
+                         */
+                        $storageClass = ( ! empty( $params['storageType'] ) )
+                            ? 'Media_Model_' . ucfirst( strtolower( $params['storageType'] ) )
+                            : 'Media_Model_' . ucfirst( strtolower( Zend_Registry::get('Zend_Config')->media->storage_model ) );
+
+                        $storage = new $storageClass;
+
+                        /** Uncomment if you want to remove the file permanently from storage. */
+                        // $result = $storage->removeFileFromStorage( $mediaRow );
+                        $result = true;
+
+                        if ( $result ) {
+
+                            $mediaRow->deleted = 1;
+                            $mediaRow->saveRow();
+
+                            $this->_response->result = 1;
+                            $this->_response->setTextMessage( 'MESSAGE.MEDIA_SUCCESS_REMOVING', 'success' );
+                            return;
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage( 'MESSAGE.MEDIA_ERROR_REMOVING', 'error' );
+
+        }
+        catch ( Error | Exception $e ) {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage( 'MESSAGE.MEDIA_ERROR_REMOVING', 'error' );
+            Tiger_Log::error( $e->getMessage() );
 
         }
 
@@ -228,8 +344,8 @@ trait Media_Service_MediaTrait
 
         $uploader
             ->addValidator('Size',      false, $this->_config->media->upload->max_filesize)    // Set single file size in bytes
-            ->addValidator('FilesSize', false, $this->_config->media->upload->max_totalsize)   // Set aggregate file uploads size in bytes
-            ->addValidator('Extension', false, $this->_getValidExtensions() )                  // Validate file extension
+            ->addValidator('FilesSize', false, $this->_config->media->upload->max_totalsize)    // Set aggregate file uploads size in bytes
+            ->addValidator('Extension', false, $this->_getValidExtensions() )    // Validate file extension
             ->addValidator('Count',     false, [
                 'min' => $this->_config->media->upload->min_files,  // Set the minimum number of files that can be uploaded
                 'max' => $this->_config->media->upload->max_files   // Set the maximum number of files that can be uploaded
@@ -406,7 +522,7 @@ trait Media_Service_MediaTrait
             return $mediaRow;
 
         }
-        catch ( Exception $e ) {
+        catch ( Error | Exception $e ) {
 
             /** Uh oh, something went wrong, rollback all database activity! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
@@ -415,23 +531,7 @@ trait Media_Service_MediaTrait
             $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
 
             /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
-
-            pr( $e->getMessage() );
-
-        }
-        catch ( Error $e ) {
-
-            /** Uh oh, something went wrong, rollback all database activity! */
-            Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
-
-            /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
-
-            pr( $e->getMessage() );
+            Tiger_Log::error( $e->getMessage() );
 
         }
 

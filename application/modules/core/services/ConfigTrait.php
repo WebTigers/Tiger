@@ -178,7 +178,7 @@ trait Core_Service_ConfigTrait
             'id'        => $config->config_id,                          // Gets built as a data-id attribute.
             'value'     => '',                                          // Gets built as a data-value attribute.
             'class'     => 'fa fas fa-pencil-alt edit',                 // The class for the icon or button.
-            'title'     => $this->_translate->_('DT.EDIT_ORG'),         // The title attribute, often used for tooltips.
+            'title'     => $this->_translate->_('DT.EDIT_CONFIG'),      // The title attribute, often used for tooltips.
             'label'     => $this->_translate->_('DT.EDIT'),             // The title attribute.
         ];
 
@@ -189,7 +189,7 @@ trait Core_Service_ConfigTrait
             'class'     => ( intval($config->active) !== 1 )
                                 ? 'fa fas fa-play active'
                                 : 'fa fas fa-pause active',
-            'title'     => $this->_translate->_('DT.ACTIVE_INACTIVE_ORG'),
+            'title'     => $this->_translate->_('DT.ACTIVE_INACTIVE_CONFIG'),
             'label'     => $this->_translate->_('DT.ACTIVE_INACTIVE'),
         ];
 
@@ -200,7 +200,7 @@ trait Core_Service_ConfigTrait
             'class'     => ( intval($config->deleted) !== 0 )
                                 ? 'fa fas fa-trash-restore deleted'
                                 : 'fa fas fa-trash deleted',
-            'title'     => $this->_translate->_('DT.DELETE_UNDELETE_ORG'),
+            'title'     => $this->_translate->_('DT.DELETE_UNDELETE_CONFIG'),
             'label'     => $this->_translate->_('DT.DELETE_UNDELETE'),
         ];
 

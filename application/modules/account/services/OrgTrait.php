@@ -129,17 +129,48 @@ trait Account_Service_OrgTrait
 
     }
 
+    public function getProfileOrg ( $params )
+    {
+        $params['user_id']  = $this->_auth->getIdentity()->user_id;
+        $params['org_id']   = $this->_auth->getIdentity()->org_id;
+
+        $orgRow = $this->_orgModel->getPrimaryOrgByUser( $params['user_id'],  $params['org_id'] );
+
+        if ( ! empty( $orgRow ) ) {
+
+            /** Profile users are not allowed to edit the DEFAULT org. */
+            if ( $orgRow->type_org === 'DEFAULT' || $orgRow->type_user_role === 'MEMBER' ) {
+                $this->_response->data = [
+                    'type_org' => $orgRow->type_org,
+                    'type_user_role' => $orgRow->type_user_role
+                ];
+            }
+            else {
+                $this->_response->data = $orgRow->toArray();
+            }
+
+            $this->_response->result = 1;
+
+        }
+        else {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage('ERROR.NOT_FOUND', 'alert');
+
+        }
+
+    }
+
     public function getOrg ( $params )
     {
         if ( Tiger_Utility_Uuid::is_valid( $params['org_id'] ) ) {
 
-            $orgRow = $this->_orgModel->getOrgById( $params['org_id'] );
+            $orgRow = $this->_orgModel->getOrg( $params['org_id'] );
 
             if ( ! empty( $orgRow ) ) {
 
                 $this->_response->result = 1;
                 $this->_response->data = $orgRow->toArray();
-
 
             }
             else {
@@ -339,6 +370,16 @@ trait Account_Service_OrgTrait
      * @throws Zend_Form_Exception
      */
     public function saveOrg ( $params ) {
+
+        /**
+         * Since both admins and users will be persisting via this method,
+         * check to see if we have admin or user profile. The user will be
+         * accessing this saveAddress from the "Account_Service_Account" class.
+         */
+        if ( $this->_reflection->getShortName() === 'Account_Service_Account' ) {
+            $params['active'] = 1;
+            $params['deleted'] = 0;
+        }
 
         try {
 

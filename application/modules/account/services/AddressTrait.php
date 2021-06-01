@@ -113,17 +113,72 @@ trait Account_Service_AddressTrait
 
     }
 
+    public function getAddressSelect2List ( $params )
+    {
+        try {
+
+            $entity     = $params['entity'];    // "user" or "org"
+            $entity_id  = Zend_Auth::getInstance()->getIdentity()->{ $entity . '_id' };
+            $search     = (isset($params['search'])) ? $params['search'] : '';
+            $offset     = (isset($params['page'])) ? $params['page'] : 0;
+            $limit      = (isset($params['limit'])) ? $params['limit'] : 1;
+            $orderby    = (isset($params['order'])) ? $params['order'] : '';
+
+            $results[] = (object) [
+                'id' => '',
+                'text' => Zend_Registry::get('Zend_Translate')->_('LABEL.ADD_NEW_ADDRESS'),
+            ];
+            $addressRowset = $this->_addressModel->getAddressSearchList( $entity, $entity_id, $search, $offset, $limit, $orderby );;
+
+            foreach ( $addressRowset as $addressRow) {
+                $results[] = (object) [
+                    'id' => $addressRow->address_id,
+                    'text' => $addressRow->address . ', ' . $addressRow->city . ', ' . $addressRow->state . ' ' . $addressRow->postal_code,
+                    'type' => $addressRow->type_address,
+                    'primary' => $addressRow->primary,
+                    'address' => $addressRow->address,
+                    'city' => $addressRow->city,
+                    'state' => $addressRow->state,
+                    'postal_code' => $addressRow->postal_code,
+                ];
+            }
+
+        }
+        catch ( Error | Exception $e ) {
+
+            $this->_response = new Core_Model_ResponseObjectSelect2([
+                'results' => [],
+                'pagination' => (object) ['more' => false ],
+                'error' => $this->_translate->_('ERROR.ERROR_RETRIEVING_ADDRESSES'),
+                'login' => false,
+            ]);
+
+            Tiger_Log::error( $e->getMessage() );
+
+        }
+
+        $this->_response = new Core_Model_ResponseObjectSelect2([
+            'results' => $results,
+            'pagination' => (object) ['more' => false ],
+            'error' => null,
+            'login' => false,
+        ]);
+
+    }
+
     public function getAddress ( $params )
     {
         if ( Tiger_Utility_Uuid::is_valid( $params['address_id'] ) ) {
 
-            $addressRow = $this->_addressModel->getAddressById( $params['address_id'] );
+            $entity = $params['entity'];    // <-- this should either be "user" or "org"
+            $entity_id = $this->_auth->getIdentity()->{ $entity . '_id' }; // <-- This could be "user_id" or "org_id"
+
+            $addressRow = $this->_addressModel->getEntityAddressById( $params['address_id'], $entity, $entity_id );
 
             if ( ! empty( $addressRow ) ) {
 
                 $this->_response->result = 1;
                 $this->_response->data = $addressRow->toArray();
-
 
             }
             else {
@@ -181,7 +236,7 @@ trait Account_Service_AddressTrait
         }
         catch (Exception $e ) {
 
-            pr( $e->getMessage() );
+            Tiger_Log::error( $e->getMessage() );
 
         }
 
@@ -280,6 +335,96 @@ trait Account_Service_AddressTrait
 
     }
 
+    public function getAddressLookupAWS ( $params ) {
+
+        /** If the AWS Location Services are not configued, attempt to fail gracefully. */
+        if ( ! isset( Zend_Registry::get('Zend_Config')->aws->client ) || ! isset( Zend_Registry::get('Zend_Config')->aws->location ) ) {
+            $this->_response->result = 0;
+            $this->_response->data = 'not_configured';
+            return;
+        }
+
+        try {
+
+            // https://docs.aws.amazon.com/aws-sdk-php/v3/api/class-Aws.LocationService.LocationServiceClient.html
+            // https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-location-2020-11-19.html#searchplaceindexfortext
+
+            $clientConfigs = Zend_Registry::get('Zend_Config')->aws->client->toArray();
+            $client = new \Aws\LocationService\LocationServiceClient( $clientConfigs );
+            $location = Zend_Registry::get('Zend_Config')->aws->location;
+
+            $config = [
+                // 'BiasPosition'      => [],                       // <float>, ...
+                // 'FilterBBox'        => [],                       // <float>, ...
+                'FilterCountries'   => explode(',', $location->filterCountries ),  // '<string>', like: USA,CAN,MEX
+                'IndexName'         => $location->indexName,        // REQUIRED, <string>
+                'MaxResults'        => $location->maxResults,       // <integer>, like 10
+                'Text'              => $params['address'],          // REQUIRED, <string>
+            ];
+
+            $result = $client->searchPlaceIndexForText( $config );
+
+            $this->_response->result = 1;
+            $this->_response->data = $result->toArray();
+            $this->_response->setTextMessage( 'MESSAGE.SUCCESS', 'success');
+
+        }
+        catch ( Error | Exception $e ) {
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage( $e->getMessage(), 'alert');
+
+            Tiger_Log::error( $e->getMessage() );
+
+        }
+
+    }
+
+    public function removeAddress ( $params ) {
+
+        $entity = $params['entity'];    // <-- this should either be "user" or "org"
+        $entity_id = $this->_auth->getIdentity()->{ $entity . '_id' };  // <-- This could be "user_id" or "org_id"
+
+        Zend_Db_Table_Abstract::getDefaultAdapter()->beginTransaction();
+
+        try {
+
+            $addressRow = $this->_addressModel->getEntityAddressById( $params['address_id'], $entity, $entity_id );
+            $entityLinkRow = $this->{'_' . $entity . 'AddressModel'}->getEntityAddressByEntityId( $entity_id, $params['address_id'] );
+
+            if ( ! empty( $addressRow ) && ! empty( $entityLinkRow ) ) {
+
+                $addressRow->deleted = 1;
+                $addressRow->saveRow();
+                $entityLinkRow->deleted = 1;
+                $entityLinkRow->saveRow();
+
+                /** Commit the DB transaction. All done! */
+                Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
+
+                /**
+                 * Populate the responseObject with our success.
+                 */
+                $this->_response->result = 1;
+                $this->_response->setTextMessage('MESSAGE.ADDRESS_REMOVED', 'success');
+
+            }
+
+        }
+        catch ( Error | Exception $e ) {
+
+                /** Uh oh, something went wrong, rollback all database activity! */
+                Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
+
+                $this->_response->result = 0;
+                $this->_response->setTextMessage( 'MESSAGE.ADDRESS_REMOVE_FAILED', 'alert' );
+
+                /** We also log what happened ... */
+                Tiger_Log::error( $e->getMessage() );
+
+            }
+
+    }
 
     ### Persistence Methods ###
 
@@ -374,6 +519,19 @@ trait Account_Service_AddressTrait
      */
     public function saveAddress ( $params ) {
 
+        /**
+         * Since both admins and users will be persisting via this method,
+         * check to see if we have admin or user profile. The user will be
+         * accessing this saveAddress from the "Account_Service_Account" class.
+         */
+        if ( $this->_reflection->getShortName() === 'Account_Service_Account' ) {
+
+            $params['entity_id'] = Zend_Auth::getInstance()->getIdentity()->{ $params['entity'] . '_id' };
+            $params['active'] = 1;
+            $params['deleted'] = 0;
+
+        }
+
         try {
 
             $this->_form = new Account_Form_Address();
@@ -425,35 +583,19 @@ trait Account_Service_AddressTrait
              */
             $this->_response->result = 1;
             $this->_response->data = $addressRow;
-            $this->_response->setTextMessage( 'MESSAGE.CONTACT_SAVED', 'success' );
+            $this->_response->setTextMessage( 'MESSAGE.ADDRESS_SAVED', 'success' );
 
         }
-        catch ( Exception $e ) {
+        catch ( Error | Exception $e ) {
 
             /** Uh oh, something went wrong, rollback all database activity! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
 
             $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
+            $this->_response->setTextMessage( 'MESSAGE.ADDRESS_SAVE_FAILED', 'alert' );
 
             /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
-
-            pr( $e->getMessage() );
-
-        }
-        catch ( Error $e ) {
-
-            /** Uh oh, something went wrong, rollback all database activity! */
-            Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
-
-            /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
-
-            pr( $e->getMessage() );
+            Tiger_Log::error( $e->getMessage() );
 
         }
 

@@ -143,6 +143,51 @@ trait Account_Service_ContactTrait
 
     }
 
+    public function getContactSelect2List ( $params )
+    {
+        try {
+
+            if ( ! isset( $params['entity'] ) || ! in_array( $params['entity'], ['org', 'user'] ) ) {
+                throw new Exception($this->_translate->_('ERROR.INVALID'));
+            };
+
+            $entity     = $params['entity'];    // "user" or "org"
+            $entity_id  = $this->_auth->getIdentity()->{ $entity . '_id' };
+            $search     = (isset($params['search'])) ? $params['search'] : '';
+            $offset     = (isset($params['page'])) ? $params['page'] : 0;
+            $limit      = (isset($params['limit'])) ? $params['limit'] : 1;
+            $orderby    = (isset($params['order'])) ? $params['order'] : '';
+
+            $results = [];
+            $results[] = (object)['id' => '', 'text' => $this->_translate->_('LABEL.ADD_NEW_CONTACT')];
+            $contactRowset = $this->_contactModel->getContactSearchList( $entity, $entity_id, $search, $offset, $limit, $orderby );
+
+            foreach ($contactRowset as $contactRow) {
+                $results[] = (object)[
+                    'id' => $contactRow->contact_id,
+                    'text' => $contactRow->contact_value,
+                    'type' => $contactRow->type_contact,
+                    'primary' => $contactRow->primary
+                ];
+            }
+
+        }
+        catch ( Error | Exception $e ) {
+
+            $results = [];
+            Tiger_Log::error( $e->getMessage() );
+
+        }
+
+        $this->_response = new Core_Model_ResponseObjectSelect2([
+            'results' => $results,
+            'pagination' => (object) ['more' => false ],
+            'error' => null,
+            'login' => false,
+        ]);
+
+    }
+
     public function getAdminContactSelect2List ( $params )
     {
 
@@ -230,6 +275,52 @@ trait Account_Service_ContactTrait
         ];
 
         return $actions;
+
+    }
+
+    public function removeContact ( $params ) {
+
+        $entity = $params['entity'];    // <-- this should either be "user" or "org"
+        $entity_id = $this->_auth->getIdentity()->{ $entity . '_id' };  // <-- This could be "user_id" or "org_id"
+
+        Zend_Db_Table_Abstract::getDefaultAdapter()->beginTransaction();
+
+        try {
+
+            $contactRow = $this->_contactModel->getEntityContactById( $params['contact_id'], $entity, $entity_id );
+            $entityLinkRow = $this->{'_' . $entity . 'ContactModel'}->getEntityContactByEntityId( $entity_id, $params['contact_id'] );
+
+            if ( ! empty( $contactRow ) && ! empty( $entityLinkRow ) ) {
+
+                $contactRow->deleted = 1;
+                $contactRow->saveRow();
+                $entityLinkRow->deleted = 1;
+                $entityLinkRow->saveRow();
+
+                /** Commit the DB transaction. All done! */
+                Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
+
+                /**
+                 * Populate the responseObject with our success.
+                 */
+                $this->_response->result = 1;
+                $this->_response->setTextMessage('MESSAGE.CONTACT_REMOVED', 'success');
+
+            }
+
+        }
+        catch ( Error | Exception $e ) {
+
+            /** Uh oh, something went wrong, rollback all database activity! */
+            Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
+
+            $this->_response->result = 0;
+            $this->_response->setTextMessage( 'MESSAGE.CONTACT_REMOVE_FAILED', 'alert' );
+
+            /** We also log what happened ... */
+            Tiger_Log::error( $e->getMessage() );
+
+        }
 
     }
 
@@ -326,6 +417,19 @@ trait Account_Service_ContactTrait
      */
     public function saveContact ( $params ) {
 
+        /**
+         * Since both admins and users will be persisting via this method,
+         * check to see if we have admin or user profile. The user will be
+         * accessing this saveAddress from the "Account_Service_Account" class.
+         */
+        if ( $this->_reflection->getShortName() === 'Account_Service_Account' ) {
+
+            $params['entity_id'] = Zend_Auth::getInstance()->getIdentity()->{ $params['entity'] . '_id' };
+            $params['active'] = 1;
+            $params['deleted'] = 0;
+
+        }
+
         try {
 
             $this->_form = new Account_Form_Contact();
@@ -376,7 +480,7 @@ trait Account_Service_ContactTrait
             $this->_response->setTextMessage( 'MESSAGE.CONTACT_SAVED', 'success' );
 
         }
-        catch ( Exception $e ) {
+        catch ( Error | Exception $e ) {
 
             /** Uh oh, something went wrong, rollback all database activity! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
@@ -385,21 +489,7 @@ trait Account_Service_ContactTrait
             $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
 
             /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
-
-        }
-        catch ( Error $e ) {
-
-            /** Uh oh, something went wrong, rollback all database activity! */
-            Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
-
-            $this->_response->result = 0;
-            $this->_response->setTextMessage( 'MESSAGE.SAVE_FAILED', 'alert' );
-
-            /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
-
-            pr( $e->getMessage() );
+            Tiger_Log::error( $e->getMessage() );
 
         }
 

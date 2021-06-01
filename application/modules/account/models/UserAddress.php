@@ -38,4 +38,8 @@ class Account_Model_UserAddress extends Zend_Db_Table_Abstract
         return $this->fetchRow( $this->select()->where( 'user_address_id = ?', $user_address_id ) );
     }
 
+    public function getEntityAddressByEntityId ( $user_id, $address_id ) {
+        return $this->fetchRow( $this->select()->where( 'user_id = ?', $user_id )->where( 'address_id = ?', $address_id ) );
+    }
+
 }

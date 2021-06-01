@@ -10,10 +10,17 @@
 
 return [
 
+    // Tiger Types //
+    'TYPE.RETAIL' => 'Retail',
+    'TYPE.SERVICE' => 'Service',
+    'TYPE.WHOLESALE' => 'Wholesale',
+
+
     // Tiger Setup //
     'FORM.TIGER_SETUP' => 'Tiger Setup',
     'HEADER.SETUP_WELCOME' => 'Welcome!',
     'HEADER.SETUP_INITIAL' => 'Tiger Initial Setup',
+    'HEADER.TERMS' => 'Terms of Service',
     'HEADER.SETUP_OVERVIEW' => 'If this is your first time using TIGER, we just need to make a few changes to the TIGER setup to make your instance more secure. Click each of the tabs and add or replace the current entries with your unique settings.',
 
     'TAB.REGISTER' => 'Register',
@@ -99,6 +106,9 @@ return [
     'BUTTON.SIGNUP' => 'Signup',
     'REFERRAL_CODE' => 'Referral Code',
     'ERROR.NEW_USER_FAILED' => 'There was an error creating your account.',
+
+    // Email From Name //
+    'MAIL.FROM_NAME' => 'Tiger Platform',
 
     // Welcome Page - Shown after signup. //
     'HEADER.WELCOME' => 'Welcome!',
@@ -191,9 +201,120 @@ return [
     'WELCOME.COMPANY_FOOTER' => 'WebTigers',
     'WELCOME.SITE_NAME' => 'Tiger Platform 2.0',
 
+    // Profile Form //
+    'BUTTON.UPDATE' => 'Update',
 
+    'TAB.USER_PROFILE' => 'User Profile',
+    'TITLE.USER_PROFILE' => 'User Profile',
+    'TEXT.USER_PROFILE' => 'Your account’s vital information. This information is editable by you.',
+    'LABEL.USERNAME' => 'Username',
+    'DESCRIPTION.USERNAME' => 'Please enter a username. Usernames may contain lowercase letters, numbers and a period.',
+    'LABEL.USER_DISPLAY_NAME' => 'User Display Name',
+    'DESCRIPTION.USER_DISPLAY_NAME' => 'A user display name is what you prefer to be seen as on the site and what other users will see your name as.',
+    'LABEL.TYPE_TITLE' => 'Title',
+    'DESCRIPTION.TYPE_TITLE' => 'Select an optional title.',
+    'LABEL.TYPE_SUFFIX' => 'Name Suffix',
+    'DESCRIPTION.TYPE_SUFFIX' => 'Select an optional name suffix.',
+    'LABEL.COMPANY_TITLE' => 'Company Title',
+    'DESCRIPTION.COMPANY_TITLE' => 'Add an optional company title.',
+    'LABEL.AVATAR_URL' => 'Avatar URL',
+    'DESCRIPTION.AVATAR_URL' => 'Choose a new avatar by entering a full ur relative URL to the image.',
 
+    'TAB.PASSWORD' => 'Change Password',
+    'TITLE.CHANGE_PASSWORD' => 'Change Password',
+    'LABEL.CURRENT_PASSWORD' => 'Current Password',
+    'LABEL.NEW_PASSWORD' => 'New Password',
+    'DESCRIPTION.CURRENT_PASSWORD' => 'Please enter your current password to change passwords.',
+    'TEXT.PASSWORD' => 'Changing your sign in password is an easy way to keep your account secure.',
 
+    'FORM.MANAGE_AVATAR' => 'Manage Avatar',
+    'AVATAR.SELECT_AVATAR' => 'Select Avatar',
+    'AVATAR.TEXT_1' => 'Avatar Images can be uploaded here. Image files should be no larger 250 x 250 pixels. Drag an image into the uploader, the select the image to populate the url.',
+    'TITLE.UPLOAD' => 'Upload',
+    'AVATAR.DROP_FILES_HERE' => 'Drop an avatar image here to upload.',
+    'BUTTON.REMOVE' => 'Remove',
 
+    'MESSAGE.PROFILE_SAVED' => 'Profile Saved.',
+    'MESSAGE.SAVE_FAILED' => 'Save Failed.',
+    'MESSAGE.AVATAR_CHANGED' => 'Your avatar has changed. Be sure to save (update) your profile to keep these changes.',
+
+    // Profile Address and Contacts //
+
+    'MESSAGE.ADDRESS_SAVED' => 'Address Saved',
+    'MESSAGE.ADDRESS_SAVE_FAILED' => 'There was an error saving your address.',
+
+    'TAB.USER_ADDRESSES' => 'User Addresses',
+    'TITLE.USER_ADDRESSES' => 'User Addresses',
+    'TEXT.USER_ADDRESS' => 'Enter your user address information if you need to for mailing or billing purposes. Using the address selector, you can have multiple types of addresses.',
+
+    'TAB.USER_CONTACTS' => 'User Contacts',
+    'TITLE.USER_CONTACTS' => 'User Contacts',
+    'TEXT.USER_CONTACTS' => 'Enter your contact information. Using the contact selector, you can have multiple types of contacts.',
+    'TEXT.ORG_CONTACTS' => 'Enter your contact information. Using the contact selector, you can have multiple types of contacts.',
+    'LABEL.ADD_NEW_CONTACT' => 'Add New Contact',
+    'LABEL.TYPE_CONTACT' => 'Contact Type',
+    'DESCRIPTION.TYPE_CONTACT' => 'Select the type of contact, whether phone, email, website, etc.',
+    'LABEL.CONTACT_VALUE' => 'Contact Value',
+    'DESCRIPTION.CONTACT_VALUE' => 'Enter the contact value. For a phone, enter your phone number. For an email, enter your email address. For a website, enter the URL of your website, etc.',
+    'MESSAGE.CONTACT_SAVED' => 'Contact Saved.',
+    'MESSAGE.CONTACT_REMOVED' => 'Contact has been removed.',
+    'MESSAGE.CONTACT_REMOVE_FAILED' => 'Contact could not be removed.',
+
+    // Profile Org //
+
+    'MESSAGE.DEFAULT_ORG' => 'You are a member of the default org which is not editable from the profile screen.',
+    'MESSAGE.NOT_ORG_ADMIN' => 'You must be an admin for your org to edit from the profile screen.',
+    'TAB.ORG' => 'Company',
+    'TITLE.ORG' => 'Company Information',
+    'TEXT.ORG_PROFILE' => 'If you are part of an organization, you can enter that information here. Tiger offers this area only for applications with subscribers who may need to collect company information as well as user data. Some of these fields may be commented out in code if not needed for your particular application.',
+    'LABEL.ORGNAME' => 'Orgname',
+    'DESCRIPTION.ORGNAME' => 'Your organization\'s &quot;orgname&quot; is like a user\'s &quot;username&quot; within the application and must be unique among all the organizations within the application.',
+    'LABEL.ORG_DISPLAY_NAME' => 'Organization Display Name',
+    'DESCRIPTION.ORG_DISPLAY_NAME' => 'Like a user\'s display name, this is the name that typically gets shown for you and your user\'s benefit.',
+    'LABEL.ORG_DESCRIPTION' => 'Organization Description',
+    'DESCRIPTION.ORG_DESCRIPTION' => 'A short description of your organization that you would would like the public to see.',
+    'LABEL.DOMAIN' => 'Domain or URL',
+    'DESCRIPTION.DOMAIN' => 'Your organization\'s domain name or URL to your website.',
+    'LABEL.TYPE_ORG' => 'Type of Organization',
+    'DESCRIPTION.TYPE_ORG' => 'Please select the type of organization that best describes what your organization is.',
+    'LABEL.TYPE_BUSINESS' => 'Type of Business',
+    'DESCRIPTION.TYPE_BUSINESS' => 'If your organization is a business, please select the type of business that best describes what your company does.',
+    'LABEL.REFERRAL_CODE' => 'Referral Code',
+    'DESCRIPTION.REFERRAL_CODE' => 'You can create a short referral code that helps identify your organization when users signup. Users who signup with your referral code wil be assigned to your organization.',
+
+    'TAB.ORG_ADDRESSES' => 'Company Addresses',
+    'TITLE.ORG_ADDRESSES' => 'Company Addresses',
+    'TEXT.ORG_ADDRESS' => 'Enter your company address information if you need to for mailing or billing purposes. Using the address selector, you can have multiple types of addresses.',
+
+    'TAB.ORG_CONTACTS' => 'Company Contacts',
+    'TITLE.ORG_CONTACTS' => 'Company Contacts',
+    'LABEL.CONTACT_ID' => 'Contact',
+    'DESCRIPTION.CONTACT_ID' => 'Select a contact to add, view or edit.',
+
+    // Profile Address //
+
+    'BUTTON.NEW' => 'New',
+    'LABEL.ADDRESS_ID' => 'Select an Address',
+    'LABEL.ADD_NEW_ADDRESS' => 'Add New Address',
+    'DESCRIPTION.ADDRESS_ID' => 'Select an address to add, view or edit.',
+    'TITLE.ADDRESS' => 'Address',
+    'LABEL.TYPE_ADDRESS' => 'Type of Address',
+    'DESCRIPTION.TYPE_ADDRESS' => 'Please tell us what type of address this is. Address tyupes are like: billing, home, or office.',
+    'LABEL.PRIMARY' => 'Primary',
+    'DESCRIPTION.PRIMARY' => 'Set your primary address or contact type. This will be the primary method we will use to contact you with.',
+    'LABEL.ADDRESS' => 'Address',
+    'DESCRIPTION.ADDRESS' => 'This is your primary street address, and usually includes your house or building number.',
+    'LABEL.ADDRESS2' => 'Address 2',
+    'DESCRIPTION.ADDRESS2' => 'This is your address\'s additional information, like an apartment, floor, or unit number.',
+    'LABEL.CITY' => 'City',
+    'DESCRIPTION.CITY' => 'The city or town your address is located.',
+    'LABEL.STATE' => 'State',
+    'DESCRIPTION.STATE' => 'The state where your address is located.',
+    'LABEL.POSTAL_CODE' => 'Zip / Postal Code',
+    'DESCRIPTION.POSTAL_CODE' => 'The zip or postal code for your address.',
+    'LABEL.LAT' => 'Latitude',
+    'DESCRIPTION.LAT' => '(Optional) This latitude for the address. If setup, this will be auto-configured for you.',
+    'LABEL.LNG' => 'Longitude',
+    'DESCRIPTION.LNG' => '(Optional) This longitude for the address. If setup, this will be auto-configured for you.',
 
 ];

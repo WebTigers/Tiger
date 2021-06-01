@@ -56,6 +56,9 @@ class Account_Form_User extends Tiger_Form_Base
         $this->addElement( $this->_getActive() );
         $this->addElement( $this->_getDeleted() );
 
+        $this->addElement( $this->_getCurrentPassword() );
+        $this->addElement( $this->_getAvatarURL() );
+
     }
 
     ##### Form Fields #####
@@ -154,40 +157,62 @@ class Account_Form_User extends Tiger_Form_Base
 
     protected function _getPassword ( ) {
 
+        // Get the password strength configs and update them with translated labels
+        $configs = $this->_config->password->toArray();
+
+        $configs['labels'][0] = $this->_translate->translate('PASSWORD.WEAK');
+        $configs['labels'][1] = $this->_translate->translate('PASSWORD.FAIR');
+        $configs['labels'][2] = $this->_translate->translate('PASSWORD.GOOD');
+        $configs['labels'][3] = $this->_translate->translate('PASSWORD.STRONG');
+
         $name = 'password';
 
         $options = [
 
             'name'          =>  $name,
             'id'            =>  $name,
-            'class'         =>  'form-control form-control-lg form-control-alt',
+            'class'         =>  'form-control form-control-lg form-control-alt tiger-password-strength',
 
             'attribs'       =>  [
-                                    // 'placeholder'       =>  $this->_translate->translate( 'PASSWORD' ),
-                                    'data-valid'        => '0',
-                                    'autocomplete'      => 'off',
-                                    // 'data-requirements' => json_encode( $configs ), // <-- configs get added to the control
-                                ],
+                'placeholder'       =>  $this->_translate->translate( 'FORM.NEW_PASSWORD' ),
+                'data-valid'        => '0',
+                'autocomplete'      => 'off',
+                'data-requirements' => json_encode( $configs ), // <-- configs get added to the control
+            ],
 
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'         =>  'LABEL.PASSWORD',
+            'description'   =>  'PASSWORD.DESCRIPTION', // <-- this is a special template that needs to be set in translations
 
-            'required'      =>  false,
+            'required'      =>  true,
 
             'filters'       =>  [
-                                    [ 'StringTrim' ],
-                                ],
+                [ 'StringTrim' ],
+            ],
 
             'validators'    =>  [
-                                    ['StringLength', false, [
-                                        'min' => 1,
-                                        'max' => 50,
-                                        'messages' => [
-                                            Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
-                                            Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
-                                        ]
-                                    ] ],
-                                ],
+                ['NotEmpty', false, [
+                    'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                ] ],
+                ['StringLength', false, [
+                    'min' => 1,
+                    'max' => 50,
+                    'messages' => [
+                        Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                        Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                    ]
+                ] ],
+                [ 'Strength', false, [
+                    'messages' => [
+                        Tiger_Validate_Strength::PW_LENGTH    => "ERROR.PW_LENGTH",
+                        Tiger_Validate_Strength::PW_UPPER     => "ERROR.PW_UPPER",
+                        Tiger_Validate_Strength::PW_LOWER     => "ERROR.PW_LOWER",
+                        Tiger_Validate_Strength::PW_DIGIT     => "ERROR.PW_DIGIT",
+                        Tiger_Validate_Strength::PW_SPECIAL   => "ERROR.PW_SPECIAL",
+                        Tiger_Validate_Strength::PW_ILLEGAL   => "ERROR.PW_ILLEGAL",
+                        Tiger_Validate_Strength::PW_REPEATING => "ERROR.PW_REPEATING",
+                    ],
+                ] ],
+            ],
         ];
 
         return new Zend_Form_Element_Text( $name, $options );
@@ -892,6 +917,101 @@ class Account_Form_User extends Tiger_Form_Base
         ];
 
         return new Zend_Form_Element_Checkbox( $name, $options );
+
+    }
+
+    protected function _getCurrentPassword ( ) {
+
+        $name = 'current_password';
+
+        $options = [
+
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'       =>  [
+                // 'placeholder'       =>  $this->_translate->translate( 'PASSWORD' ),
+                'data-valid'        => '0',
+                'autocomplete'      => 'off',
+                // 'data-requirements' => json_encode( $configs ), // <-- configs get added to the control
+            ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'required'      =>  true,
+
+            'filters'       =>  [
+                                    [ 'StringTrim' ],
+                                ],
+
+            'validators'    =>  [
+                                    ['NotEmpty', false, [
+                                        'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                    ] ],
+                                    ['StringLength', false, [
+                                        'min' => 1,
+                                        'max' => 50,
+                                        'messages' => [
+                                            Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                            Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                        ]
+                                    ] ],
+                                ],
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getAvatarURL ( ) {
+
+        $name = 'avatar_url';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'           =>  [
+                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE_DESCRIPTION' ),
+                                        'data-valid'    => '0',
+                                        'data-toggle'   => 'custom-file-input'
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'required'          =>  false,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Za-z0-9\/\_\%\&\$\-\.\+]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'StringLength', false, [
+                                            'min'   => 0,
+                                            'max'   => 250,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Za-z0-9\/\_\%\&\$\-\.\+]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ],
+
+        ];
+
+        return new Zend_Form_Element_Hidden( $name, $options );
 
     }
 

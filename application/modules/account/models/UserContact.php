@@ -38,4 +38,9 @@ class Account_Model_UserContact extends Zend_Db_Table_Abstract
         return $this->fetchRow( $this->select()->where( 'user_contact_id = ?', $user_contact_id ) );
     }
 
+    public function getEntityContactByEntityId ( $user_id, $contact_id )
+    {
+        return $this->fetchRow( $this->select()->where( 'user_id = ?', $user_id )->where( 'contact_id = ?', $contact_id ) );
+    }
+
 }
