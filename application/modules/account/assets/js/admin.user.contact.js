@@ -188,6 +188,10 @@
 
         _edit : function ( event ) {
 
+            $('#contact-form').find('div.overlay').animate({'opacity': '0'}, 400, function (){
+                $(this).css('display','none');
+            });
+
             /** if the value is empty, then it's a new contact. Just clear the form and return. */
             if ( ! $('#contact-form #contact_id').val() ) {
 

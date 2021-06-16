@@ -194,6 +194,9 @@
 
             $().tigerDOM('initToggleControls');
 
+            // Admin's can set passwords can be set to anything, so don't bother validating. //
+            $('#user-form #password').off( 'blur.autovalidate' );
+
             Class._initRoleSelect2();
             Class._initTypeTitleSelect2();
             Class._initTypeSuffixSelect2();

@@ -174,6 +174,42 @@ trait Package_Service_PackageTrait
 
     #### Functions for Composer SYNC Operations ####
 
+    public function getSyncPackageList ( ) {
+
+        /** Checks and sets the auth token. */
+        $this->_setAuthorization();
+
+        /** Removes any packages in the DB that have been removed from Composer. */
+        $this->_removePackages();
+
+        $this->_response->result = 1;
+        $this->_response->data = $this->_composerService->status();
+
+    }
+
+    public function syncPackage ( $params )
+    {
+
+        try {
+
+            $package = (object) $params['package'];
+
+            $packageRow = $this->_storePackage( $package );
+
+            $this->_response->result = 1;
+            $this->_response->data = $packageRow->toArray();
+
+        }
+        catch ( Error | Exception $e )
+        {
+            $this->_response->result = 0;
+            $this->_response->setTextMessage( $e->getMessage() , 'error');
+
+        }
+
+
+    }
+
     /**
      * Package Service Sync
      *
@@ -184,9 +220,13 @@ trait Package_Service_PackageTrait
      * in the composer.json. The sync function should be run by cron at least once each night and whenever composer
      * is run from the command line.
      */
-    public function sync ( $params ) {
+    public function sync ( $params )
+    {
 
         try {
+
+            /** Checks and sets the auth token. */
+            $this->_setAuthorization();
 
             /** First, we remove any packages in the DB that have been removed from Composer. */
             $this->_removePackages();
@@ -205,10 +245,43 @@ trait Package_Service_PackageTrait
 
         }
 
+    }
+
+    protected function _setAuthorization ( )
+    {
+        $composerJSON = $this->_composerService->getComposerJSON();
+
+        if ( empty( $this->_config->github_oauth->token ) ){
+            $message = $this->_translate->translate( 'PACKAGE.TOKEN.NOT.SET' );
+            throw new Exception( $message );
+        }
+
+        if ( empty( $composerJSON->config ) ) {
+
+            /**
+             *  {
+             *      "github-oauth": {
+             *          "github.com": "token_goes_here"
+             *      },
+             *      "github-protocols": [
+             *          "https"
+             *      ]
+             *  }
+             */
+
+            $configStr = '{"github-oauth":{"github.com":"' . $this->_config->github_oauth->token . '"},"github-protocols":["https"]}';
+            $configObj = json_decode( $configStr );
+            $composerJSON->config = $configObj;
+
+            $this->_composerService->setComposerJSON( $composerJSON );
+            $this->_composerService->writeComposerJSON();
+
+        }
 
     }
 
-    protected function _removePackages ( ) {
+    protected function _removePackages ( )
+    {
 
         $composerPackages   = array_keys( (array) $this->_composerService->getComposerJSON()->require );
         $dbPackages         = $this->_getDbPackages();
@@ -256,12 +329,12 @@ trait Package_Service_PackageTrait
 
         /**
          * $package example:
-        [0] => stdClass Object
-        (
-        [name] => aws/aws-sdk-php
-        [version] => 3.178.1
-        [description] => AWS SDK for PHP - Use Amazon Web Services in your PHP project
-        )
+            [0] => stdClass Object
+            (
+                [name] => aws/aws-sdk-php
+                [version] => 3.178.1
+                [description] => AWS SDK for PHP - Use Amazon Web Services in your PHP project
+            )
          */
 
         $packageInfo = $this->_composerService->status( $package->name, true );
@@ -477,7 +550,7 @@ trait Package_Service_PackageTrait
 
                 $this->_composerService->removePackage( $packageRow->name );
                 $this->_composerService->removeRepository( $packageRow->repo_url );
-                $this->_composerService->setComposerJSON();
+                $this->_composerService->writeComposerJSON();
                 $this->_composerService->updatePackage( $packageRow->name );
 
                 $packageRow->delete();

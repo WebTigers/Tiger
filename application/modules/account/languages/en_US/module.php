@@ -15,7 +15,6 @@ return [
     'TYPE.SERVICE' => 'Service',
     'TYPE.WHOLESALE' => 'Wholesale',
 
-
     // Tiger Setup //
     'FORM.TIGER_SETUP' => 'Tiger Setup',
     'HEADER.SETUP_WELCOME' => 'Welcome!',
@@ -51,6 +50,8 @@ return [
     'LABEL.ADMIN_PASSWORD' => 'Admin Password',
     'LABEL.ADMIN_EMAIL' => 'Admin Email',
     'DESCRIPTION.ADMIN_EMAIL' => 'Enter your administrator email address. This needs to be a working email in the event you need to reset your password.',
+
+    'DESCRIPTION.USER_ADMIN_PASSWORD' => 'Enter a user password. Strength requirements are not active for admins. Double-click the password field to show or hide the password.',
 
     // SMTP Credentials //
     'TAB.SMTP' => 'SMTP',
@@ -89,6 +90,64 @@ return [
     'DT.LAST_NAME' => 'Last Name',
     'DT.ROLE' => 'Role',
     'DT.USER_ID' => 'User ID',
+
+    'DT.EDIT_USER' => 'Edit User',
+    'DT.EDIT_ORG' => 'Edit Org',
+
+    'DT.ADDRESS' => 'Addresses',
+    'DT.CONTACT' => 'Contacts',
+
+    'DT.ACTIVE_INACTIVE_USER' => 'Active / Inactive',
+    'DT.DELETE_UNDELETE_USER' => 'Delete / Undelete',
+    'DT.ACTIVE_INACTIVE_ORG' => 'Active / Inactive',
+    'DT.DELETE_UNDELETE_ORG' => 'Delete / Undelete',
+
+    // User Admin Form //
+    'TITLE.USER' => 'User',
+    'TITLE.PROFILE' => 'Profile',
+    'TITLE.REFERRALS' => 'Referrals',
+    'FORM.ADD_USER' => 'Add User',
+    'FORM.EDIT_USER' => 'Edit User',
+    'TAB.USER' => 'User',
+    'TAB.PROFILE' => 'Profile',
+    'TAB.REFERRALS' => 'Referrals',
+    'LABEL.USER_ID' => 'User ID',
+    'DESCRIPTION.USER_ID' => 'User ID in the form of a v1 UUID. This is system-generated and is not editable. Shown for Admin reference only.',
+    'LABEL.REFERRAL_ORG_ID' => 'Referral Org ID',
+    'DESCRIPTION.REFERRAL_ORG_ID' => 'The Org ID of the organization that referred the user.',
+    'LABEL.REFERRAL_USER_ID' => 'Referral User ID',
+    'DESCRIPTION.REFERRAL_USER_ID' => 'The User ID of the user that referred the user.',
+
+    'FORM.ADDRESSES' => 'Addresses',
+    'TAB.ADDRESS' => 'Addresses',
+    'TAB.GEO_SPATIAL' => 'Geo Spatial',
+    'TITLE.GEO_SPATIAL' => 'Geo Spatial',
+    'FORM.ADD_NEW_ADDRESS' => 'Add New Address',
+
+    'MESSAGE.USER_SAVED' => 'User Saved',
+
+    'LABEL.PASSWORD_RESET_KEY' => 'Password Reset Key',
+    'LABEL.EMAIL_VERIFY_KEY' => 'Email Verify Key',
+    'LABEL.LAST_LOGIN_DATE' => 'Last Login Date',
+    'LABEL.LAST_LOGIN_IP' => 'Last Login IP',
+    'LABEL.CREATE_IP' => 'Create IP',
+    'LABEL.UPDATE_IP' => 'Update IP',
+    'FORM.ADD_NEW_CONTACT' => 'Add New Contact',
+    'TAB.CONTACT' => 'Contact',
+    'TITLE.CONTACT' => 'Contact',
+
+    // Org Form //
+    'FORM.ADD_ORG' => 'Add Org',
+    'FORM.EDIT_ORG' => 'Edit Org',
+    'TITLE.ORG_INFO' => 'Org Info',
+    'TAB.REFERRAL' => 'Referral',
+    'TAB.ORG_INFO' => 'Org Info',
+    'LABEL.ORG_ID' => 'Org ID',
+    'DESCRIPTION.ORG_ID' => 'Org ID in the form of a v1 UUID. This is system-generated and is not editable. Shown for Admin reference only.',
+    'LABEL.PARENT_ORG_ID' => 'Parent Org ID',
+    'DESCRIPTION.PARENT_ORG_ID' => 'The parent Org ID in the form of a v1 UUID. This is system-generated and is not editable. Shown for Admin reference only.',
+
+    'MESSAGE.ORG_SAVED' => 'Org Saved',
 
     // Signup Form //
     'SIGNUP.CREATE_ACCOUNT' => 'Create Account',
@@ -286,6 +345,7 @@ return [
     'TITLE.ORG_ADDRESSES' => 'Company Addresses',
     'TEXT.ORG_ADDRESS' => 'Enter your company address information if you need to for mailing or billing purposes. Using the address selector, you can have multiple types of addresses.',
 
+    'FORM.CONTACTS' => 'Contacts',
     'TAB.ORG_CONTACTS' => 'Company Contacts',
     'TITLE.ORG_CONTACTS' => 'Company Contacts',
     'LABEL.CONTACT_ID' => 'Contact',

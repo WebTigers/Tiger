@@ -23,21 +23,29 @@ final class Package_Service_Composer
     public function __construct ( ) {
 
         /** Automagically pull the contents of the composer.json file */
-        $this->getComposerJSON();
+        $this->readComposerJSON();
 
     }
 
-    public function getComposerJSON ( ) {
+    public function getComposerJSON ( )
+    {
+        return $this->_composerJSON;
+    }
 
+    public function setComposerJSON ( $composerJSON )
+    {
+        $this->_composerJSON = $composerJSON;
+    }
+
+    public function readComposerJSON ( )
+    {
         return $this->_composerJSON = json_decode( file_get_contents( self::COMPOSER_JSON_FILEPATH ) );
-
     }
 
-    public function setComposerJSON ( ) {
-
+    public function writeComposerJSON ( )
+    {
         $json = json_encode( $this->_composerJSON, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
         file_put_contents(self::COMPOSER_JSON_FILEPATH, $json );
-
     }
 
     /**
@@ -60,7 +68,14 @@ final class Package_Service_Composer
 
         /** If the output is not JSON, throw an exception and log it. */
         if ( ! is_json( $output ) ) {
-            throw new Exception('ERROR.PACKAGE_NOT_AVAILABLE' );
+
+            Tiger_Log::error( $output );
+
+            $message = ( ! empty( $package ) )
+                ? 'ERROR.RETRIEVING_PACKAGE : ' . $package
+                : 'ERROR.RETRIEVING_PACKAGES';
+            throw new Exception( $message );
+
         }
 
         /**
@@ -186,7 +201,7 @@ final class Package_Service_Composer
         }
 
         /** Write the update composer.json file. */
-        $this->setComposerJSON();
+        $this->writeComposerJSON();
 
         /** Pull the package into Tiger via composer update call. */
         $this->updatePackage( $name );

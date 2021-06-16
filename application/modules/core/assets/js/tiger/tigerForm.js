@@ -110,7 +110,9 @@
 
             let boilerPlateVars = [
                 'create_user_id',   'update_user_id',   'create_date',
-                'update_date',      'create_ip',        'update_ip'
+                'update_date',      'create_ip',        'update_ip',
+                'last_login_date',  'last_login_ip',    'password_reset_key',
+                'email_verify_key'
             ];
 
             for ( let key in formValues ) {

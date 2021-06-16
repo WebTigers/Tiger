@@ -40,6 +40,8 @@
 
         _initControls : function () {
 
+            $('#address-form #entity').val('user');
+
             $('#save-address-button').on( 'click', Class._save );
 
             $('body').on( 'click', 'table i.address', Class._view );
@@ -47,6 +49,8 @@
             Class._initSAddressIdSelect2();
             Class._initTypeAddressSelect2();
             Class._initCountrySelect2();
+
+            $('#address-form #address').accountAddressLookup('attach');
 
         },
 
@@ -84,14 +88,16 @@
                     return markup;
                 },
                 templateSelection: function(data) {
-                    let html = '<span>';
+                    let status = ( parseInt( data.deleted, 10 ) === 1 ) ? 'deleted' : '';
+                    let html = '<span class="' + status + '">';
                     html += ( parseInt(data.primary,10) === 1 ) ? '<i class="fa fa-star"></i> ' : '<i> </i>';
                     html += ( data.id ) ? data.type + ' - ' : '';
                     html += data.text
                     return html;
                 },
                 templateResult : function ( data ){
-                    let html = '<span>';
+                    let status = ( parseInt( data.deleted, 10 ) === 1 ) ? 'deleted' : '';
+                    let html = '<span class="' + status + '">';
                     html += ( parseInt(data.primary,10) === 1 ) ? '<i class="fa fa-star"></i> ' : '<i> </i>';
                     html += ( data.id ) ? data.type + ' - ' : '';
                     html += data.text
@@ -213,7 +219,6 @@
 
         },
 
-
         // CRUD Functions //
 
         _resetAddress ( exclude ) {
@@ -245,6 +250,10 @@
         },
 
         _edit : function ( event ) {
+
+            $('#address-form').find('div.overlay').animate({'opacity': '0'}, 400, function (){
+                $(this).css('display','none');
+            });
 
             /** if the value is empty, then it's a new address. Just clear the form and return. */
             if ( ! $('#address-form #address_id').val() ) {

@@ -40,6 +40,8 @@
 
         _initControls : function () {
 
+            $('#address-form #address').accountAddressLookup('attach');
+
             $('#save-address-button').on( 'click', Class._save );
 
             $('body').on( 'click', 'table i.address', Class._view );
@@ -245,6 +247,10 @@
         },
 
         _edit : function ( event ) {
+
+            $('#address-form').find('div.overlay').animate({'opacity': '0'}, 400, function (){
+                $(this).css('display','none');
+            });
 
             /** if the value is empty, then it's a new address. Just clear the form and return. */
             if ( ! $('#address-form #address_id').val() ) {

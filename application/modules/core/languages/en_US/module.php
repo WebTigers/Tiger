@@ -70,6 +70,11 @@ return [
     'DT.ACTIVE_INACTIVE_CONFIG' => 'Toggle active or inactive configuration param.',
     'DT.DELETE_UNDELETE_CONFIG' => 'Toggle delete or undelete configuration param.',
     'DT.EDIT_CONFIG' => 'Edit this configuration param.',
+    'TAB.PACKAGES' => 'Packages',
+    'TITLE.PACKAGES' => 'Package Config',
+    'PACKAGES_TEXT' => 'In order for Tiger to update packages contained within the WebTIGERS private repos, we need to fetch and install a public token. Click the FETCH button to download this token automagically.',
+    'LABEL.GITHUB_OAUTH_TOKEN' => 'GitHub Access Token',
+    'DESCRIPTION.GITHUB_OAUTH_TOKEN' => 'The public token allows you to access the WebTIGERS private repos to update your packages.',
 
     // Backup //
     'MENU.ADMIN.SERVER_BACKUP' => 'Backup',
@@ -83,12 +88,17 @@ return [
     'DT.RESTORE_DB' => 'Restore Database from File',
     'DT.DELETE_FILE' => 'Delete Database Backup File',
     'FORM.ADD_BACKUP' => 'Create New Database Backup',
+    'FORM.CONFIRM_DELETE_BACKUP' => 'Confirm Delete Backup',
+    'MESSAGE.CONFIRM_DELETE_BACKUP' => 'Please confirm you would like the following backup deleted. Note this is a destructive process and cannot be undone!',
     'LABEL.OPTIONAL_FILE_NAME' => 'File Name (Optional)',
     'DESCRIPTION.OPTIONAL_FILE_NAME' => 'Enter an optional filename. The file will be saved as your filename with the &quot;.sql.gz&quot; file type appended.',
     'BUTTON.BACKUP_NOW' => 'Backup Now',
+    'BUTTON.FETCH' => 'Fetch',
+    'BUTTON.GENERATE' => 'Generate',
 
     'MESSAGE.BACKUP_COMPLETED' => 'Backup Completed Successfully.',
     'MESSAGE.BACKUP_REMOVE_SUCCESS' => 'Backup file successfully removed.',
     'MESSAGE.BACKUP_REMOVE_ERROR' => 'There was an error removing the backup file.',
+    'MESSAGE.CONFIG_SAVED' => 'Config Saved.',
 
 ];

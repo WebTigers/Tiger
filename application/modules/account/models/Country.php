@@ -25,7 +25,7 @@
 class Account_Model_Country extends Zend_Db_Table_Abstract
 {
     protected $_name    = 'country';
-    protected $_primary = 'code';
+    protected $_primary = 'country_code';
 
     protected $_locale;
     protected $_translate;
@@ -50,11 +50,10 @@ class Account_Model_Country extends Zend_Db_Table_Abstract
         
         $sql = $this->
                 select()->
-                from( 'country', ['code' => 'code_3', 'name' => $locName ] )->
-                where( 'code_3 IS NOT NULL' )->
-                where( '( code LIKE ?', "%$search%" )->
-                orWhere( 'code_3 LIKE ?', "%$search%" )->
-                orWhere( 'code_numeric LIKE ?', "%$search%" )->
+                from( 'country', ['code' => 'alpha_3', 'name' => $locName ] )->
+                where( 'alpha_3 IS NOT NULL' )->
+                where( '( country_code LIKE ?', "%$search%" )->
+                orWhere( 'alpha_3 LIKE ?', "%$search%" )->
                 orWhere( "$locName LIKE ? )", "%$search%" )->
                 order( ["sort DESC", "name ASC"] )->
                 limit( $limit, $offset );

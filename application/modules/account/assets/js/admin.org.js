@@ -205,6 +205,8 @@
             Class._initTypeHearaboutSelect2();
             Class._initReferralOrgsSelect2();
             Class._initReferralUserSelect2();
+            Class._initTypeOrgSelect2();
+            Class._initTypeBusinessSelect2();
 
         },
 
@@ -314,6 +316,112 @@
                     dataType    : "json",
                     data        : data
                 }
+            });
+
+        },
+
+        _initTypeOrgSelect2 ( ) {
+
+            function data( params ) {
+
+                let query = {
+                    service     : 'account:admin',
+                    method      : 'getTypeSelect2List',
+                    reference   : 'org',
+                    key         : ''
+                }
+
+                return query;
+
+            }
+
+            $('#org-form #type_org').select2({
+                width : '100%',
+                ajax: {
+                    type        : "POST",
+                    url         : "/api",
+                    dataType    : "json",
+                    data        : data
+                }
+            });
+
+        },
+
+        _setTypeOrgSelect2 ( type_org ) {
+
+            if ( ! type_org ) { return; }
+
+            let $typeOrg = $('#org-form #type_org');
+
+            $.ajax({
+                type        : 'GET',
+                dataType    : "json",
+                url         : '/api/service/account:admin/method/getTypeSelect2List/reference/org/key/' + type_org
+            }).then( function ( data ) {
+
+                let option = new Option( data.results[0].text, data.results[0].id, true, true);
+                $typeOrg.append(option).trigger('change');
+
+                $typeOrg.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: data
+                    }
+                });
+
+            });
+
+        },
+
+        _initTypeBusinessSelect2 ( ) {
+
+            function data( params ) {
+
+                let query = {
+                    service     : 'account:admin',
+                    method      : 'getTypeSelect2List',
+                    reference   : 'business',
+                    key         : ''
+                }
+
+                return query;
+
+            }
+
+            $('#org-form #type_business').select2({
+                width : '100%',
+                ajax: {
+                    type        : "POST",
+                    url         : "/api",
+                    dataType    : "json",
+                    data        : data
+                }
+            });
+
+        },
+
+        _setTypeBusinessSelect2 ( type_business ) {
+
+            if ( ! type_org ) { return; }
+
+            let $typeBusiness = $('#org-form #type_business');
+
+            $.ajax({
+                type        : 'GET',
+                dataType    : "json",
+                url         : '/api/service/account:admin/method/getTypeSelect2List/reference/business/key/' + type_business
+            }).then( function ( data ) {
+
+                let option = new Option( data.results[0].text, data.results[0].id, true, true);
+                $typeBusiness.append(option).trigger('change');
+
+                $typeBusiness.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: data
+                    }
+                });
+
             });
 
         },

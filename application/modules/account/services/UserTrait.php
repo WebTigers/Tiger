@@ -408,6 +408,8 @@ trait Account_Service_UserTrait
      */
     public function saveUser ( $params )
     {
+        $this->_form = new Account_Form_User();
+
         /**
          * Since both admins and users will be getting users via this method,
          * we don't want users to be able to just insert any user_id, so we
@@ -417,10 +419,11 @@ trait Account_Service_UserTrait
         if ( $this->_reflection->getShortName() === 'Account_Service_Account' ) {
             $params['user_id'] = Zend_Auth::getInstance()->getIdentity()->user_id;
         }
+        else {
+            $this->_form->removeElement('current_password');
+        }
 
         try {
-
-            $this->_form = new Account_Form_User();
 
             /**
              * One of the first things to check for is the existence of unique fields

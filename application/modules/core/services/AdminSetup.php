@@ -160,7 +160,12 @@ class Core_Service_AdminSetup extends Core_Service_Webservice
             [
                 'key' => 'resources.mail.transport.port',
                 'value' => $params['smtp_port'],
-            ]
+            ],
+
+            [
+                'key' => 'github_oauth.token',
+                'value' => $params['github_oauth_token'],
+            ],
 
         ];
 

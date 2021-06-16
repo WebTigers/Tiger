@@ -29,6 +29,8 @@
         packageTypes : ['tiger-module','tiger-theme'],
         confirm : null,
 
+        ajaxQueue : $({}),
+
         init : function( ) {
 
             $(document).ready(function() {
@@ -210,7 +212,8 @@
             $('#delete-package-button').on( 'click', Class._delete );
 
             $('#sync-packages').on('click', Class._confirmSync );
-            $('#sync-package-confirm').on( 'click', Class._sync );
+            // $('#sync-package-confirm').on( 'click', Class._sync );
+            $('#sync-package-confirm').on( 'click', Class._getSyncedPackageList );
 
             $('#add-package').on('click', Class._showAddPackage );
 
@@ -489,16 +492,15 @@
 
         },
 
-        _sync : function ( event ) {
+        _getSyncedPackageList : function ( event ) {
 
             function beforeSend ( jqXHR, settings ) {
-                $('#sync-spinner').addClass('fa-spin');
-                $('#restore-package-button').addClass('disabled').prop('disabled', true);
+                $('#sync-progress').addClass('progress-bar-striped').addClass('progress-bar-animated').css('width','0%');
+                $('#sync-progress span').html('width','0%');
+                $('#rsync-package-confirm').prop('disabled', true);
             }
 
             function complete ( jqXHR, textStatus ) {
-                $('#sync-spinner').removeClass('fa-spin');
-                $('#restore-package-button').removeClass('disabled').prop('disabled', false);
             }
 
             function success ( data, textStatus, jqXHR ) {
@@ -507,14 +509,7 @@
 
                 if ( data.result === 1 ) {
 
-                    Class.confirm = null;
-                    $('#modal-package-confirm-sync').modal('hide');
-                    $('div.block-options [data-tiger-reload-table]').trigger('click');
-                    $( '#page-messages' ).css('overflow','hidden').tigerDOM( 'change', {
-                        content       : data.html[0],
-                        removeClick   : true,
-                        removeTimeout : 0
-                    });
+                    Class._syncPackageList( data.data.installed );
 
                 }
                 else {
@@ -546,7 +541,93 @@
 
             let data = {
                 service : 'package:package',
-                method  : 'sync',
+                method  : 'getSyncPackageList',
+            };
+
+            $.ajax({
+                type        : "POST",
+                url         : "/api",
+                dataType    : "json",
+                data        : data,
+                beforeSend  : beforeSend,
+                complete    : complete,
+                success     : success,
+                error       : error
+            });
+
+        },
+
+        _syncPackageList : function ( packages ) {
+
+            let increment = 100/packages.length;
+            let completed = 0;
+            let total = 0;
+
+            function success ( data, textStatus, jqXHR ) {
+
+                /** Result Success / Error */
+
+                completed++;
+                total += increment;
+                if ( total > 100 ) { total = 100; }
+
+                $('#sync-progress').addClass('progress-bar-striped').addClass('progress-bar-animated').css('width', Math.round( total ) + '%');
+                $('#sync-progress span').html( Math.round( total ) + '%');
+
+                if ( completed === packages.length ) {
+                    $('#sync-package-confirm').prop('disabled', false);
+                    $('#sync-progress').removeClass('progress-bar-striped').removeClass('progress-bar-animated');
+                }
+
+                if ( data.result !== 1 ) {
+
+                    /** Oops, something went wrong ... */
+
+                    $( '#sync-error-message' ).css('overflow','hidden').tigerDOM( 'insert', {
+                        content       : data.html[0],
+                        removeClick   : true,
+                        removeTimeout : 0
+                    });
+
+                }
+
+
+
+            }
+
+            function error ( jqXHR, textStatus, errorThrown ) {
+
+                // show general error message
+                let oMessage = {
+                    content       : '<div class="alert alert-danger"><i class="fa fa-ban"></i> &nbsp;' + errorThrown + '</div>',
+                    removeClick   : true,
+                    removeTimeout : 0
+                };
+
+                $( '#sync-error-message' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
+
+            };
+
+            $.each( packages, function ( i, package ) {
+
+                Class._sync( package, success, error );
+
+            });
+
+        },
+
+        _sync : function ( package, success, error ) {
+
+            function beforeSend ( jqXHR, settings ) {
+            }
+
+            function complete ( jqXHR, textStatus ) {
+            }
+
+            let data = {
+                service : 'package:package',
+                method  : 'syncPackage',
+                package : package
             };
 
             $.ajax({

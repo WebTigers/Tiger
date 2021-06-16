@@ -91,8 +91,11 @@ class Core_Model_ResponseObject
     const MESSAGE_CLASS_SUCCESS = 1;
     const MESSAGE_CLASS_INFO = 0;
 
-    public function __construct()
+    public function __construct( array $params = [] )
     {
+        foreach ( $params as $key => $value) {
+            $this->$key = $value;
+        }
     }
 
     public function setTextMessage( $message, $type = 3 )

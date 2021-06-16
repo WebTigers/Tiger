@@ -88,7 +88,7 @@
                         window.location = data.redirect;
                     }
                     else {
-                        window.location = '/account/dashboard';
+                        window.location = '/manage';
                     }
 
                 }

@@ -52,6 +52,7 @@ class Cms_IndexController extends Tiger_Controller_Action
 
     public function pageAction ( )
     {
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/cms/js/cms.blaze.js' ) );
 
         $contentService = new Cms_Service_Content();
         $params = $this->getRequest()->getParams();

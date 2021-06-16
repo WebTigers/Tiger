@@ -39,6 +39,8 @@
                     $(this).closest('.input-group').find('input').focus().val( Class._generate() ).blur();
                 });
 
+                $('button.fetch-token').on( 'click', Class._fetch );
+
                 $('#modal-setup-form [data-wizard="finish"]').on('click', Class.saveSetup );
 
                 Class._initFormWizard();
@@ -79,6 +81,96 @@
             }
 
             return result.join('');
+
+        },
+
+        _fetch : function ( event ) {
+
+            function beforeSend ( jqXHR, settings ) {
+            }
+
+            function complete ( jqXHR, textStatus ) {
+            }
+
+            function success ( data, textStatus, jqXHR ) {
+
+                /** Result Success / Error */
+
+                if ( data.result === 1 ) {
+
+                    $('#setup-form #github_oauth_token').val( data.data );
+
+                }
+                else {
+
+                    /** Oops, something went wrong ... */
+
+                    if ( data.html ) {
+
+                        $( '#form-setup-message' ).css('overflow','hidden').tigerDOM( 'change', {
+                            content       : data.html[0],
+                            removeClick   : true,
+                            removeTimeout : 0
+                        });
+
+                    }
+
+                    /** show element error messages */
+                    if ( data.messages ) {
+
+                        let msgData = {
+                            result : 0,
+                            form : 'Core_Form_Setup',
+                            element : null,
+                            messages : []
+                        };
+
+                        $.each( data.messages, function ( el, msgObj ) {
+
+                            msgData.element = el;
+                            msgData.messages = [];
+
+                            $.each( msgObj, function (errName, errMsg) {
+                                msgData.messages.push( {message: errMsg, error: errName, class: "alert"} );
+                            });
+
+                            $().tigerForm('_setElementMessage', msgData );
+
+                        });
+
+                        Class._setTabColor();
+
+                    }
+
+                }
+
+            }
+
+            function error ( jqXHR, textStatus, errorThrown ) {
+
+                // show general error message
+                let oMessage = {
+                    content       : '<div class="alert alert-danger"><i class="fa fa-ban"></i> &nbsp;' + errorThrown + '</div>',
+                    removeClick   : true,
+                    removeTimeout : 0
+                };
+
+                $( '#form-setup-message' ).css('overflow','hidden').tigerDOM( 'change', oMessage );
+
+            };
+
+            let url = $('#setup-form #github_oauth_token').attr( 'data-token-url' );
+
+            $.ajax({
+                type        : "POST",
+                url         : url,
+                dataType    : "json",
+                data        : null,
+                beforeSend  : beforeSend,
+                complete    : complete,
+                success     : success,
+                error       : error
+            });
 
         },
 

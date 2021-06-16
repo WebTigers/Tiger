@@ -59,10 +59,15 @@ class Tiger_Api_ServiceFactory {
 
     protected function _authenticate ( ) {
 
-        if ( isset( $this->_params['user'] ) && isset( $this->_params['pass'] ) ){
+        if ( isset( $this->_params['user'] ) && isset( $this->_params['pass'] ) ) {
+
+            $credentials = [
+                'username' => $this->_params['user'],
+                'password' => $this->_params['pass']
+            ];
 
             $accountService = new Account_Service_Account( [] );
-            $accountService->login( $this->_params );
+            $accountService->login( $credentials );
             if ( $accountService->getResponse()->result === 1 ){
                 $this->_role = Zend_Auth::getInstance()->getIdentity()->role;
             }

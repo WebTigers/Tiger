@@ -170,10 +170,17 @@ trait Account_Service_AddressTrait
     {
         if ( Tiger_Utility_Uuid::is_valid( $params['address_id'] ) ) {
 
-            $entity = $params['entity'];    // <-- this should either be "user" or "org"
-            $entity_id = $this->_auth->getIdentity()->{ $entity . '_id' }; // <-- This could be "user_id" or "org_id"
+            if ( $this->_reflection->getShortName() === 'Account_Service_Account' ) {
 
-            $addressRow = $this->_addressModel->getEntityAddressById( $params['address_id'], $entity, $entity_id );
+                $entity = $params['entity'];    // <-- this should either be "user" or "org"
+                $entity_id = $this->_auth->getIdentity()->{$entity . '_id'}; // <-- This could be "user_id" or "org_id"
+
+                $addressRow = $this->_addressModel->getEntityAddressById( $params['address_id'], $entity, $entity_id );
+
+            }
+            else {
+                $addressRow = $this->_addressModel->getAddressById( $params['address_id'] );
+            }
 
             if ( ! empty( $addressRow ) ) {
 
@@ -229,8 +236,11 @@ trait Account_Service_AddressTrait
                     'city' => $addressRow->city,
                     'state' => $addressRow->state,
                     'postal_code' => $addressRow->postal_code,
+                    'country' => $addressRow->country,
                     'type' => $addressRow->type_address,
-                    'primary' => $addressRow->primary
+                    'primary' => $addressRow->primary,
+                    'active' => $addressRow->active,
+                    'deleted' => $addressRow->deleted,
                 ];
             }
         }

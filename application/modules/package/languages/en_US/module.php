@@ -27,6 +27,8 @@ return [
 
     'FORM.ADD_PACKAGE' => 'Add Package',
     'FORM.EDIT_PACKAGE' => 'Edit Package',
+    'FORM.CANCEL' => 'Cancel',
+    'FORM.CONFIRM' => 'Confirm',
     'TAB.PACKAGE' => 'Package',
     'TITLE.PACKAGE' => 'Package',
     'LABEL.PACKAGE_NAME' => 'Package Name',
@@ -44,5 +46,10 @@ return [
     'MESSAGE.CONFIRM_PACKAGE_SYNC_TEXT_3' => 'This process happens automagically each night. Note that this process can take up to a minute or so to complete depending on how many packages (modules, themes, etc.) you have installed.',
 
     'FORM.SAVE_PACKAGE' => 'Save Package',
+    'MESSAGE.SYNC_PACKAGES_COMPLETED' => 'Packages Sync Completed',
+    'MESSAGE.PACKAGE_UPDATED' => 'Package Updated',
+
+    'WARNING.TOKEN_NOT_SET' => 'NOTICE: The Tiger Auth Token Is Missing',
+    'WARNING.TOKEN_NOT_SET_TEXT' => 'The token that authorizes your instance to access Tiger updates has not yet been set. See Tiger\'s Package Module docs for instructions to set this token before using the Package Manager.'
 
 ];

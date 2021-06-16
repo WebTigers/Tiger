@@ -165,7 +165,7 @@ trait Account_Service_OrgTrait
     {
         if ( Tiger_Utility_Uuid::is_valid( $params['org_id'] ) ) {
 
-            $orgRow = $this->_orgModel->getOrg( $params['org_id'] );
+            $orgRow = $this->_orgModel->getOrgById( $params['org_id'] );
 
             if ( ! empty( $orgRow ) ) {
 

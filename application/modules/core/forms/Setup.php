@@ -63,6 +63,10 @@ class Core_Form_Setup extends Tiger_Form_Base
         $this->addElement( $this->_getSMTPSSL() );
         $this->addElement( $this->_getSMTPPort() );
 
+        // COMPOSER GITHUB oAUTH TOKEN //
+
+        $this->addElement( $this->_getGitHubToken() );
+
         // Register //
 
         $this->addElement( $this->_getFirstName() );
@@ -847,6 +851,57 @@ class Core_Form_Setup extends Tiger_Form_Base
                                         ] ],
                                         [ 'Regex', false, [
                                             'pattern' => '/^[0-9]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    ##### COMPOSER GITHUB TOKEN #####
+
+    protected function _getGitHubToken ( ) {
+
+        $name = 'github_oauth_token';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'           =>  [
+                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE_DESCRIPTION' ),
+                                        'data-valid'    => '0',
+                                        'data-token-url' => $this->_config->tiger->composer->token_url
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'required'          =>  false,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^\w\W]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 255,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[\w\W]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]

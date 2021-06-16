@@ -49,8 +49,9 @@ class Account_AdminController extends Tiger_Controller_Admin
     public function orgAction ( )
     {
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.org.js' ) );
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.user.address.js' ) );
-        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.user.contact.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.org.address.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.address.lookup.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.org.contact.js' ) );
         $this->view->orgForm = new Account_Form_Org();
         $this->view->addressForm = new Account_Form_Address();
         $this->view->contactForm = new Account_Form_Contact();
@@ -60,6 +61,7 @@ class Account_AdminController extends Tiger_Controller_Admin
     {
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.user.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.user.address.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.address.lookup.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/admin.user.contact.js' ) );
         $this->view->userForm = new Account_Form_User();
         $this->view->addressForm = new Account_Form_Address();
