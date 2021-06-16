@@ -498,6 +498,9 @@ trait Package_Service_PackageTrait
             $packageRow->latest = $packageInfo->latest;
             $packageRow->saveRow();
 
+            /** Copy the newly updated package files into the module. */
+            $this->copyPackageFiles( $packageRow );
+
             $this->_response->result = 1;
             $this->_response->setTextMessage('MESSAGE.PACKAGE_UPDATED', 'success');
 
