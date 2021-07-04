@@ -88,7 +88,7 @@ class Account_Model_OrgUser extends Zend_Db_Table_Abstract
 
         return $this->fetchAll(
             $this->_orgModel->select()->
-            where( "org_id IN ('?')", implode( ',' , $orgs ) )->  // <-- Pay careful attention to the quote syntax here.
+            where( 'org_id IN ( ? )', $orgs )->
             where( 'active = 1' )->
             where( 'deleted = 0' )
         );
@@ -96,6 +96,18 @@ class Account_Model_OrgUser extends Zend_Db_Table_Abstract
 
     }
 
+    public function getAdminOrgUserListByUserId( $user_id )
+    {
+        $sql = $this->
+        select()->
+        setIntegrityCheck(false)->  // We need this for any kind of join where updates cannot be performed.
+        from( [ 'ou' => 'org_user'], ['ou.*'] )->
+        joinLeft( [ 'o' => 'org'], 'o.org_id = ou.org_id', ['orgname','company_name','org_display_name'] )->
+        joinLeft( [ 'u' => 'user'], 'u.user_id = ou.user_id', ['username'] )->
+        where('u.user_id = ?', $user_id );
 
+        return $this->fetchAll( $sql );
+
+    }
 
 }

@@ -46,7 +46,7 @@ class Acl_Form_Role extends Tiger_Form_Base
 
             'validators'    =>  [
                                     ['Uuid', false, [
-                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID." ]
+                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID" ]
                                     ] ],
                                 ]
         ];

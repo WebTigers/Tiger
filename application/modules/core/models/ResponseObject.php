@@ -122,7 +122,7 @@ class Core_Model_ResponseObject
             case 3:
             case 'alert':
                 $class = 'alert alert-warning';
-                $icon  = 'fa fa-fw fa-warning';
+                $icon  = 'fa fa-fw fa-exclamation-triangle';
                 break;
 
             case 2:

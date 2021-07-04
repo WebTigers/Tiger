@@ -27,6 +27,7 @@ class Account_Service_Admin extends Core_Service_Webservice
     use Account_Service_UserTrait;
     use Account_Service_AddressTrait;
     use Account_Service_ContactTrait;
+    use Account_Service_OrgUserTrait;
 
     protected $_auth;
     protected $_acl;

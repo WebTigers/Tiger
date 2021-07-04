@@ -101,8 +101,8 @@
          * The target then becomes the control for toggling (opening and 
          * closing the target container. Sweet!
          * 
-         * If the state of the control is to be hidden, set the container
-         * element to display:none with a class named "hide".
+         * If the initial state of the control is to be hidden, set the
+         * container element to display:none with a class named "hide".
          * 
          *     .hide { display: none; }
          * 
@@ -119,20 +119,30 @@
                 let $icon = $control.find('i');
                 let $target = $( $control.attr('data-tiger-control') );
 
+                let toggleClose = function ( $icon, $target ){
+                    $icon.addClass( $control.attr('data-tiger-class-close') );
+                    $icon.removeClass( $control.attr('data-tiger-class-open') );
+                    $target.tigerDOM('close');
+                }
+
+                let toggleOpen = function ( $icon, $target ){
+                    $icon.addClass( $control.attr('data-tiger-class-open') );
+                    $icon.removeClass( $control.attr('data-tiger-class-close') );
+                    $target.tigerDOM('open');
+                }
+
+                /** Setup initial state if the target is hidden. */
                 if ( ! $target.is(':visible') ) {
-                    $target.css('overflow', 'hidden').height(0).css('opacity', 0).removeClass('hide');
+                    $target.css('overflow', 'hidden').css('height', '0').css('opacity', '0').css('display', '').removeClass('hide');
+                    toggleClose( $icon, $target );
                 }
 
                 $(this).on('click', {target:$target}, function( event ){
                     event.preventDefault();
                     if ( ! $target.is(':visible') ) {
-                        $icon.addClass( $control.attr('data-tiger-class-open') );
-                        $icon.removeClass( $control.attr('data-tiger-class-close') );
-                        $target.tigerDOM('open');
+                        toggleOpen( $icon, $target );
                     } else {
-                        $icon.addClass( $control.attr('data-tiger-class-close') );
-                        $icon.removeClass( $control.attr('data-tiger-class-open') );
-                        $target.tigerDOM('close');
+                        toggleClose( $icon, $target );
                     }
                 });    
             });

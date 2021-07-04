@@ -488,6 +488,7 @@
         _confirmSync : function ( event ) {
 
             $('#sync-error-message').css('height', '').children().remove();
+            $('#sync-progress').css('width', '0%');
             $('#modal-package-confirm-sync').modal('show');
 
         },
@@ -562,6 +563,7 @@
             let increment = 100/packages.length;
             let completed = 0;
             let total = 0;
+            let errors = 0;
 
             function success ( data, textStatus, jqXHR ) {
 
@@ -577,11 +579,19 @@
                 if ( completed === packages.length ) {
                     $('#sync-package-confirm').prop('disabled', false);
                     $('#sync-progress').removeClass('progress-bar-striped').removeClass('progress-bar-animated');
+                    if ( errors === 0 ) {
+                        setTimeout(function () {
+                            $('#modal-package-confirm-sync').modal('hide');
+                            $('div.block-options [data-tiger-reload-table]').trigger('click');
+                        }, 2000);
+                    }
                 }
 
                 if ( data.result !== 1 ) {
 
                     /** Oops, something went wrong ... */
+
+                    errors++;
 
                     $( '#sync-error-message' ).css('overflow','hidden').tigerDOM( 'insert', {
                         content       : data.html[0],

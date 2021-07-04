@@ -117,7 +117,7 @@
                     'targets': -1,
                     'data': null,
                     'orderable': false,
-                    'width': '250px',
+                    'width': '280px',
                     'render': Class._buildControls,
                 }, {
                     'title': 'DT.USER_ID',
@@ -214,7 +214,7 @@
 
                 let query = {
                     search  : params.term,
-                    page    : params.page || 1,
+                    page    : params.page || 0,
                     limit   : 10,
                     order   : 'priority ASC',
                     service : 'account:admin',
@@ -419,7 +419,7 @@
 
                 let query = {
                     search  : params.term,
-                    page    : params.page || 1,
+                    page    : params.page || 0,
                     limit   : 10,
                     service : 'account:admin',
                     method  : 'getOrgSelect2List'
@@ -473,7 +473,7 @@
 
                 let query = {
                     search  : params.term,
-                    page    : params.page || 1,
+                    page    : params.page || 0,
                     limit   : 10,
                     service : 'account:admin',
                     method  : 'getUserSelect2List'
@@ -565,6 +565,9 @@
                     Class._setTypeTitleSelect2( data.data.type_title );
                     Class._setTypeSuffixSelect2( data.data.type_suffix );
                     Class._setTypeHearaboutSelect2( data.data.type_hearabout );
+
+                    $('#user-form #username').attr('data-context', $('#user-form #username').val() );
+                    $('#user-form #email').attr('data-context', $('#user-form #email').val() );
 
                     // $('#user-form .form-ids .user_id').html( data.data.user_id );
                     $('#modal-users-form').modal('show');

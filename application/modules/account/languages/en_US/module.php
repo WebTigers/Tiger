@@ -165,6 +165,9 @@ return [
     'BUTTON.SIGNUP' => 'Signup',
     'REFERRAL_CODE' => 'Referral Code',
     'ERROR.NEW_USER_FAILED' => 'There was an error creating your account.',
+    'ERROR.USERNAME_EXISTS' => 'Username already exists.',
+    'ERROR.ORGNAME_EXISTS' => 'Orgname already exists.',
+    'ERROR.INVALID_ID' => 'Invalid ID.',
 
     // Email From Name //
     'MAIL.FROM_NAME' => 'Tiger Platform',
@@ -376,5 +379,37 @@ return [
     'DESCRIPTION.LAT' => '(Optional) This latitude for the address. If setup, this will be auto-configured for you.',
     'LABEL.LNG' => 'Longitude',
     'DESCRIPTION.LNG' => '(Optional) This longitude for the address. If setup, this will be auto-configured for you.',
+
+    // Admin //
+
+    'TITLE.USER_RESET_PASSWORD' => 'Reset Password',
+    'TITLE.USER_ORGS' => 'User Orgs (Groups)',
+
+    'DT.ORGS' => 'Orgs (Groups)',
+
+    'LABEL.ADD_NEW_ORG' => 'Add New Org (Group)',
+    'FORM.ORGS' => 'Orgs',
+    'TAB.ORGS' => 'Orgs',
+    'TITLE.ORGS' => 'Orgs (Groups)',
+    'LABEL.ORG_USER_ID' => 'Orgs',
+    'DESCRIPTION.ORG_USER_ID' => 'Select the org that this user has been assigned. If no org has been assigned, select &quot;Add New Org&quot;.',
+    'LABEL.ORGUSER_ORG_ID' => 'Org (Group)',
+    'DESCRIPTION.ORGUSER_ORG_ID' => 'Select an org (group) that this user should be assigned.',
+    'LABEL.ORGUSER_PRIMARY' => 'Primary',
+    'DESCRIPTION.ORGUSER_PRIMARY' => 'Set this org as the user\'s primary org if the user is assigned more than one org (group).',
+    'LABEL.TYPE_USER_ROLE' => 'User Role Type',
+    'DESCRIPTION.TYPE_USER_ROLE' => 'If you want this user to be able to manage the org, select the &quot;Admin&quot; role. Otherwise select &quot;Member&quot; role.',
+    'MESSAGE.ORG_USER_NOT_FOUND' => 'The user\'s org could not be found.',
+
+    'TYPE.ADMIN' => 'Org Admin',
+    'TYPE.MEMBER' => 'Org Member',
+
+    'INSTRUCTIONS.ORGUSERS' =>  '<p><strong>NOTE:</strong> Every user should be assigned an active org (group). Usually, this will be to the user\'s compnay org if they signup with a company name. If you remove or make inactive the user\'s org, the user will not be able to login.</p>' .
+                                '<p>To remove a user\'s link to an org, set the deleted flag to true. The link to the org will remain within this screen until physically removed from the database.</p>' .
+                                '<p>Note that disabling or removing the user\'s link to an org from this screen does not disable nor remove the entire org, only this user\'s link to it.</p>',
+
+    'MESSAGE.ORG_USER_SAVED' => 'Org link saved.',
+    'ERROR.ORG_USER_NOT_FOUND' => 'Org link not found.',
+
 
 ];

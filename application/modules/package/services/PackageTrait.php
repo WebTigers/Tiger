@@ -21,7 +21,6 @@
 
 trait Package_Service_PackageTrait
 {
-
     ### Datatables Functions ###
 
     /**
@@ -498,9 +497,6 @@ trait Package_Service_PackageTrait
             $packageRow->latest = $packageInfo->latest;
             $packageRow->saveRow();
 
-            /** Copy the newly updated package files into the module. */
-            $this->copyPackageFiles( $packageRow );
-
             $this->_response->result = 1;
             $this->_response->setTextMessage('MESSAGE.PACKAGE_UPDATED', 'success');
 
@@ -668,8 +664,8 @@ trait Package_Service_PackageTrait
         $source     = VENDOR_PATH . '/webtigers/platform/*';
         $target     = '/var/www/tiger-www';
 
-        $command    = "sudo -u e2-user cp -rf $source $target";
-        $response = shell_exec( $command );
+        $command    = "cp -rf $source $target";
+        $response = exec( $command );
 
         if ( ! empty( $response ) ) {
             Tiger_Log::error( $response );
@@ -683,7 +679,9 @@ trait Package_Service_PackageTrait
      *
      * @param $packageRow
      */
-    public function copyPackageFiles ( $packageRow ) {
+    public function copyPackageFiles ( $packageRow )
+    {
+        /** Copy the files from Composer to modules */
 
         $vendor     = explode('/', $packageRow->name)[0];
         $package    = explode('/', $packageRow->name)[1];
@@ -691,12 +689,29 @@ trait Package_Service_PackageTrait
         $source     = VENDOR_PATH  . '/' . $vendor . '/' . $package;
         $target     = MODULES_PATH;
 
-        $command    = "sudo -u e2-user cp -rf $source $target";
-        $response   = shell_exec( $command );
+        $command    = "cp -rf $source $target";
+        $response   = exec( $command );
 
         if ( ! empty( $response ) ) {
             Tiger_Log::error( $response );
         }
+
+        $command    = "chmod -R 0775 $target/$package";
+        $response   = exec( $command );
+
+        if ( ! empty( $response ) ) {
+            Tiger_Log::error( $response );
+        }
+
+        $command    = "sudo chown -R ec2-user:apache $target/$package";
+
+        $response   = exec( $command );
+
+        if ( ! empty( $response ) ) {
+            Tiger_Log::error( $response );
+        }
+
+        /** Make sure the symlink is in-place */
 
         $assets = MODULES_PATH  . '/' . $package . '/assets';
         $link   = PUBLIC_PATH . '/assets/' . $package;
@@ -705,8 +720,8 @@ trait Package_Service_PackageTrait
 
             // ln -s /var/www/tiger-www/application/modules/modulename/assets /var/www/tiger-www/public/assets/modulename
 
-            $command = "sudo -u e2-user ln -sf $assets $link";
-            $response = shell_exec( $command );
+            $command = "ln -sf $assets $link";
+            $response = exec( $command );
 
             if ( ! empty( $response ) ) {
                 Tiger_Log::error( $response );
@@ -729,11 +744,19 @@ trait Package_Service_PackageTrait
         /** First we need to remove any assets symlink ... */
         $link = PUBLIC_PATH . '/assets/' . $package;
         if ( file_exists( $link ) && is_link( $link ) ) {
-            shell_exec( 'sudo -u e2-user unlink ' . $link );
-        };
+            $response = exec( 'unlink ' . $link );
+        }
+        ;
+        if ( ! empty( $response ) ) {
+            Tiger_Log::error( $response );
+        }
 
         $module = MODULES_PATH . '/' . $package;
-        shell_exec( 'sudo -u e2-user rm -rf ' . $module );
+        $response = exec( 'rm -rf ' . $module );
+
+        if ( ! empty( $response ) ) {
+            Tiger_Log::error( $response );
+        }
 
     }
 

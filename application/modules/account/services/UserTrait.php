@@ -186,26 +186,58 @@ trait Account_Service_UserTrait
 
     }
 
+    public function getUserCount ( $params )
+    {
+
+        $userIds    = ( ! empty( $params['send_users'] ) ) ? $params['send_users'] : '';
+        $roleIds    = ( ! empty( $params['send_roles'] ) ) ? $params['send_roles'] : '';
+        $orgIds     = ( ! empty( $params['send_orgs'] ) )  ? $params['send_orgs']  : '';
+
+        $count = $this->_userModel->getUserCount( $userIds, $roleIds, $orgIds )->total;
+        $message = sprintf( $this->_translate->translate('MESSAGE.TOTAL_USERS'), number_format( $count ) );
+
+        $this->_response->status = 1;
+        $this->_response->data = $count;
+        $this->_response->setTextMessage( $message, 'info' );
+
+    }
+
     public function getUserSelect2List ( $params )
     {
-        $search     = ( isset( $params['search'] ) ) ? $params['search'] : '';
-        $offset     = ( isset( $params['page']   ) ) ? $params['page']   : 0;
-        $limit      = ( isset( $params['limit']  ) ) ? $params['limit']  : 1;
-        $orderby    = ( isset( $params['order']  ) ) ? $params['order']  : '';
+        try {
 
-        $results = [];
-        $userRowset = $this->_userModel->getUserSearchList( $search, $offset, $limit, $orderby );
+            $search     = ( isset( $params['search'] ) ) ? $params['search'] : '';
+            $offset     = ( isset( $params['page']   ) ) ? $params['page']   : 0;
+            $limit      = ( isset( $params['limit']  ) ) ? $params['limit']  : 1;
+            $orderby    = ( isset( $params['order']  ) ) ? $params['order']  : '';
 
-        foreach ( $userRowset as $userRow ) {
-            $results[] = (object) ['id' => $userRow->user_id, 'text' => $userRow->username . ' - ' . $userRow->user_display_name ];
+            $results = [];
+            $userRowset = $this->_userModel->getUserSearchList( $search, $offset, $limit, $orderby );
+
+            foreach ( $userRowset as $userRow ) {
+
+                $displayNme = ( empty( $userRow->user_display_name ) )
+                    ? $userRow->first_name . ' ' . $userRow->last_name
+                    : $userRow->user_display_name;
+
+                $results[] = (object) ['id' => $userRow->user_id, 'text' => $userRow->username . ' - ' . $displayNme ];
+            }
+
+            $this->_response = new Core_Model_ResponseObjectSelect2([
+                'results' => $results,
+                'pagination' => (object) ['more' => false ],
+                'error' => null,
+                'login' => false,
+            ]);
+
         }
+        catch ( Error | Exception $e ) {
 
-        $this->_response = new Core_Model_ResponseObjectSelect2([
-            'results' => $results,
-            'pagination' => (object) ['more' => false ],
-            'error' => null,
-            'login' => false,
-        ]);
+            // pr( $e->getMessage() );
+
+            Tiger_Log::error( $e->getMessage() );
+
+        }
 
     }
 
@@ -246,7 +278,7 @@ trait Account_Service_UserTrait
             'type'      => 'icon',                                      // Controls are either 'icon' or 'button'.
             'id'        => $user->user_id,                              // Gets built as a data-id attribute.
             'value'     => '',                                          // Gets built as a data-value attribute.
-            'class'     => 'fa fas fa-pencil-alt edit',                 // The class for the icon or button.
+            'class'     => 'fas fa-pencil-alt edit',                    // The class for the icon or button.
             'title'     => $this->_translate->_('DT.EDIT_USER'),        // The title attribute, often used for tooltips.
             'label'     => $this->_translate->_('DT.EDIT'),             // The title attribute.
         ];
@@ -255,7 +287,16 @@ trait Account_Service_UserTrait
             'type'      => 'icon',                                      // Controls are either 'icon' or 'button'.
             'id'        => $user->user_id,                              // Gets built as a data-id attribute.
             'value'     => '',                                          // Gets built as a data-value attribute.
-            'class'     => 'fa fa fa-address-card address',             // The class for the icon or button.
+            'class'     => 'fas fa-sitemap orguser',                    // The class for the icon or button.
+            'title'     => $this->_translate->_('DT.ORGS'),             // The title attribute, often used for tooltips.
+            'label'     => $this->_translate->_('DT.ORGS'),             // The title attribute.
+        ];
+
+        $actions[] = (object) [
+            'type'      => 'icon',                                      // Controls are either 'icon' or 'button'.
+            'id'        => $user->user_id,                              // Gets built as a data-id attribute.
+            'value'     => '',                                          // Gets built as a data-value attribute.
+            'class'     => 'fa fa-address-card address',                // The class for the icon or button.
             'title'     => $this->_translate->_('DT.ADDRESS'),          // The title attribute, often used for tooltips.
             'label'     => $this->_translate->_('DT.ADDRESS'),          // The title attribute.
         ];
@@ -264,7 +305,7 @@ trait Account_Service_UserTrait
             'type'      => 'icon',                                      // Controls are either 'icon' or 'button'.
             'id'        => $user->user_id,                              // Gets built as a data-id attribute.
             'value'     => '',                                          // Gets built as a data-value attribute.
-            'class'     => 'fa fa fa-mobile-alt contact',               // The class for the icon or button.
+            'class'     => 'fa fa-mobile-alt contact',                  // The class for the icon or button.
             'title'     => $this->_translate->_('DT.CONTACT'),          // The title attribute, often used for tooltips.
             'label'     => $this->_translate->_('DT.CONTACT'),          // The title attribute.
         ];
@@ -274,8 +315,8 @@ trait Account_Service_UserTrait
             'id'        => $user->user_id,
             'value'     => $user->active,
             'class'     => ( intval($user->active) !== 1 )
-                                ? 'fa fas fa-play active'
-                                : 'fa fas fa-pause active',
+                                ? 'fas fa-play active'
+                                : 'fas fa-pause active',
             'title'     => $this->_translate->_('DT.ACTIVE_INACTIVE_USER'),
             'label'     => $this->_translate->_('DT.ACTIVE_INACTIVE'),
         ];
@@ -285,8 +326,8 @@ trait Account_Service_UserTrait
             'id'        => $user->user_id,
             'value'     => $user->deleted,
             'class'     => ( intval($user->deleted) !== 0 )
-                                ? 'fa fas fa-trash-restore deleted'
-                                : 'fa fas fa-trash deleted',
+                                ? 'fas fa-trash-restore deleted'
+                                : 'fas fa-trash deleted',
             'title'     => $this->_translate->_('DT.DELETE_UNDELETE_USER'),
             'label'     => $this->_translate->_('DT.DELETE_UNDELETE'),
         ];

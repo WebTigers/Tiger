@@ -216,7 +216,7 @@
 
                 let query = {
                     search  : params.term,
-                    page    : params.page || 1,
+                    page    : params.page || 0,
                     limit   : 10,
                     service : 'account:admin',
                     method  : 'getOrgSelect2List'
@@ -270,7 +270,7 @@
 
                 let query = {
                     search  : params.term,
-                    page    : params.page || 1,
+                    page    : params.page || 0,
                     limit   : 10,
                     service : 'account:admin',
                     method  : 'getOrgSelect2List'
@@ -298,7 +298,7 @@
 
                 let query = {
                     search  : params.term,
-                    page    : params.page || 1,
+                    page    : params.page || 0,
                     limit   : 10,
                     service : 'account:admin',
                     method  : 'getUserSelect2List'
@@ -459,6 +459,8 @@
 
                     $('#org-form').tigerForm('setFormValues', data.data );
                     $('#org-form .form-ids .org_id').html( data.data.org_id );
+                    $('#org-form #orgname').attr('data-context', $('#org-form #orgname').val() );
+
                     $('#modal-orgs-form').modal('show');
 
                 }

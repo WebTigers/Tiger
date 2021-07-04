@@ -96,6 +96,7 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
                         $this->_authenticateUser( $user );
 
                     }
+
                     /** Authenticate if user is using a password reset key. */
                     elseif ( ! empty( $user->password_reset_key ) && $this->_credential === $user->password_reset_key ) {
 
@@ -113,6 +114,30 @@ class Tiger_Auth_DbAdapter implements Zend_Auth_Adapter_Interface {
 
                             /** Toast the user row if the password reset key is too old. */
                             $user = null;
+
+                            $this->_logFailure();
+
+                        }
+
+                    }
+
+                    /** Authenticate if user is using temporary tiger user and instance-id as password. */
+                    elseif ( ! empty( $this->_credential ) && $user->username === 'tiger' ) {
+
+                        $instanceId = file_get_contents( 'http://169.254.169.254/latest/meta-data/instance-id' );
+
+                        if ( $this->_credential === $instanceId ) {
+
+                            /** We log the user's last access within their account. */
+                            $this->_authenticateUser( $user );
+
+                        }
+                        else {
+
+                            /** Toast the user row if the password fails to authenticate. */
+                            $user = null;
+
+                            $this->_logFailure();
 
                         }
 

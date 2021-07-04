@@ -128,6 +128,16 @@ final class Core_Service_Validate {
 
         if ( $element instanceof Zend_Form_Element ) {
 
+            if ( $element->getName() === 'username' ){
+                $element->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'username', 'value' => $params['context'] ] );
+            }
+            elseif ( $element->getName() === 'email' ){
+                $element->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'email', 'value' => $params['context'] ] );
+            }
+            elseif ( $element->getName() === 'orgname' ){
+                $element->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'orgname', 'value' => $params['context'] ] );
+            }
+
             if ($element->isValid($params['value'], $params)) {
 
                 // Sends an empty response

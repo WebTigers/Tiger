@@ -112,7 +112,7 @@ class Account_Model_Org extends Zend_Db_Table_Abstract {
         where( 'ou.user_id = ?', $user_id )->
         where( 'o.org_id = ?', $org_id )->
 
-        where( 'o.primary = 1' )->
+        where( 'ou.primary = 1' )->
         where( 'o.active = 1' )->
         where( 'o.deleted = 0' );
 

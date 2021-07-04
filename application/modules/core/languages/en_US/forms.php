@@ -67,6 +67,7 @@ return [
     'ERROR.INVALID' => 'Invalid entry.',
     'ERROR.UNKNOWN' => 'An unknown error has occurred.',
     'ERROR.USER_NOT_FOUND' => 'User was not found.',
+    'ERROR.INVALID_SERVICE' => 'Invalid Service.',
 
     // Common Form Tabs //
     'TAB.SYSTEM' => 'System',

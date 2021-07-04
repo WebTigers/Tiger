@@ -19,7 +19,7 @@
  * information and software.
  */
 
-class Core_Form_Config extends Tiger_Form_Base
+class Account_Form_OrgUser extends Tiger_Form_Base
 {
 
     public function init ( ) {
@@ -34,11 +34,13 @@ class Core_Form_Config extends Tiger_Form_Base
      */
     protected function _addFormElements ( ) {
 
-        $this->setName('Core_Form_Config');
+        $this->setName('Account_Form_OrgUser');
 
-        $this->addElement( $this->_getConfigId() );
-        $this->addElement( $this->_getKey() );
-        $this->addElement( $this->_getValue() );
+        $this->addElement( $this->_getOrgUserId() );
+        $this->addElement( $this->_getOrgId() );
+        $this->addElement( $this->_getUserId() );
+        $this->addElement( $this->_getPrimary() );
+        $this->addElement( $this->_getTypeUserRole() );
         $this->addElement( $this->_getActive() );
         $this->addElement( $this->_getDeleted() );
 
@@ -46,9 +48,47 @@ class Core_Form_Config extends Tiger_Form_Base
 
     ##### Form Fields #####
 
-    protected function _getConfigId ( ) {
+    protected function _getOrgUserId ( ) {
 
-        $name = 'config_id';
+        $name = 'org_user_id';
+
+        $options = [
+
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control form-control-lg form-control-alt select2',
+
+            'attribs'       =>  [
+                                    // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
+                                    'data-valid'    => '0',
+                                ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'multiOptions'              =>  [],     // Set vis Select2 Control
+            'registerInArrayValidator'  => false,
+
+            'required'          => false,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                    ],
+
+            'validators'        =>  [
+                                        ['Uuid', false, [
+                                            'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID" ]
+                                        ] ],
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Select( $name, $options );
+
+    }
+
+    protected function _getUserId ( ) {
+
+        $name = 'user_id';
 
         $options = [
 
@@ -64,6 +104,44 @@ class Core_Form_Config extends Tiger_Form_Base
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
+            'required'          => true,
+
+            'filters'       =>  [
+                [ 'StringTrim' ],
+            ],
+
+            'validators'    =>  [
+                ['Uuid', false, [
+                    'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID" ]
+                ] ],
+            ]
+        ];
+
+        return new Zend_Form_Element_Hidden( $name, $options );
+
+    }
+
+    protected function _getOrgId ( ) {
+
+        $name = 'org_id';
+
+        $options = [
+
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control form-control-lg form-control-alt select2',
+
+            'attribs'       =>  [
+                                    // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
+                                    'data-valid'    => '0',
+                                ],
+
+            'multiOptions'              =>  [],     // Set vis Select2 Control
+            'registerInArrayValidator'  => false,
+
+            'label'             =>  strtoupper( 'LABEL.ORGUSER_' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.ORGUSER_' . $name ),
+
             'filters'       =>  [
                                     [ 'StringTrim' ],
                                 ],
@@ -75,113 +153,92 @@ class Core_Form_Config extends Tiger_Form_Base
                                 ]
         ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 
-    protected function _getKey ( ) {
+    protected function _getPrimary ( ) {
 
-        $name = 'key';
+        $name = 'primary';
 
         $options = [
 
             'name'              =>  $name,
-            'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
+            'id'                =>  $name . '_org',
+            'class'             =>  'custom-control-input',
 
             'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
-                                        'data-valid'    => '0',
+                                        'data-valid' => '0',
                                     ],
 
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'             =>  strtoupper( 'LABEL.ORGUSER_' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.ORGUSER_' . $name ),
+
+            'disableHidden'     => true,
 
             'required'          =>  true,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
-                                        [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9\-\.\_]/',
-                                            'replace' => ''
-                                        ] ]
                                     ],
 
             'validators'        =>  [
                                         [ 'NotEmpty', false, [
+                                            Zend_Validate_NotEmpty::INTEGER,
                                             'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
                                         ] ],
-                                        [ 'StringLength', false, [
-                                            'min'   => 1,
-                                            'max'   => 255,
+                                        [ 'Digits', false, [
                                             'messages' => [
-                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
-                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                                Zend_Validate_Digits::INVALID => "ERROR.INVALID",
+                                                Zend_Validate_Digits::NOT_DIGITS => "ERROR.INVALID",
                                             ]
                                         ] ],
-                                        [ 'Db_NoRecordExists', false, [
-                                            'table'    => 'config',
-                                            'field'    => 'key',
-                                            'messages' => [
-                                                Zend_Validate_Db_NoRecordExists::ERROR_RECORD_FOUND => "ERROR.CONFIG_KEY_EXISTS",
-                                            ]
+                                        [ 'Between', false, [
+                                            'min' => 0,
+                                            'max' => 1
                                         ] ],
-                                        [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9\-\.\_]+$/',
-                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
-                                        ] ]
-                                    ]
+                                    ],
         ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+        return new Zend_Form_Element_Checkbox( $name, $options );
 
     }
 
-    protected function _getValue ( ) {
+    protected function _getTypeUserRole ( ) {
 
-        $name = 'value';
+        $name = 'type_user_role';
 
         $options = [
 
-            'name'              =>  $name,
-            'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'form-control form-control-lg form-control-alt select2',
+            'attribs'       =>  [
+                                    'data-valid' => '0',
+                                ],
 
-            'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE_DESCRIPTION' ),
-                                        'data-valid'    => '0',
-                                    ],
+            'label'         =>  strtoupper( 'LABEL.' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'multiOptions'              =>  [],     // Set vis Select2 Control
+            'registerInArrayValidator'  => false,
 
-            'required'          =>  false,
+            'required'      =>  true,
+            'filters'       =>  [
+                                    [ 'StringTrim' ],
+                                ],
+            'validators'    =>  [
+                                    [ 'Regex', false, [
+                                        'pattern'   => '/^[A-Za-z0-9_\-\.]+$/',
+                                        'messages'  => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                    ] ],
 
-            'filters'           =>  [
-                                        [ 'StringTrim' ],
-                                        [ 'PregReplace', [
-                                            'match' => '/[^\w\W]/',
-                                            'replace' => ''
-                                        ] ]
-                                    ],
+                                ],
 
-            'validators'        =>  [
-                                        [ 'StringLength', false, [
-                                            'min'   => 0,
-                                            'max'   => 255,
-                                            'messages' => [
-                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
-                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
-                                            ]
-                                        ] ],
-                                        [ 'Regex', false, [
-                                            'pattern' => '/^[\w\W]+$/',
-                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
-                                        ] ]
-                                    ]
         ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+
+        return new Zend_Form_Element_Select( $name, $options );
 
     }
 
@@ -192,7 +249,7 @@ class Core_Form_Config extends Tiger_Form_Base
         $options = [
 
             'name'              =>  $name,
-            'id'                =>  $name . '_config',
+            'id'                =>  $name . '_orguser',
             'class'             =>  'custom-control-input',
 
             'attribs'           =>  [
@@ -239,7 +296,7 @@ class Core_Form_Config extends Tiger_Form_Base
         $options = [
 
             'name'              =>  $name,
-            'id'                =>  $name . '_config',
+            'id'                =>  $name . '_orguser',
             'class'             =>  'custom-control-input',
 
             'attribs'           =>  [

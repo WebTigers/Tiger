@@ -776,7 +776,7 @@ CKEDITOR_BASEPATH = '/assets/oneui/js/plugins/ckeditor/';
 
                 let query = {
                     search  : params.term,
-                    page    : params.page || 1,
+                    page    : params.page || 0,
                     limit   : 10,
                     order   : 'priority ASC',
                     service : 'cms:admin',

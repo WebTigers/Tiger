@@ -81,7 +81,7 @@ class Account_Form_Org extends Tiger_Form_Base
 
             'validators'    =>  [
                                     ['Uuid', false, [
-                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID." ]
+                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID" ]
                                     ] ],
                                 ]
         ];
@@ -115,7 +115,7 @@ class Account_Form_Org extends Tiger_Form_Base
                                 ],
             'validators'    =>  [
                                     ['Uuid', false, [
-                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID." ]
+                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID" ]
                                     ] ],
                                 ],
         ];
@@ -137,6 +137,7 @@ class Account_Form_Org extends Tiger_Form_Base
             'attribs'           =>  [
                                         // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
                                         'data-valid'    => '0',
+                                        'data-context'  => '',
                                     ],
 
             'label'             =>  strtoupper( 'LABEL.' . $name ),
@@ -559,7 +560,7 @@ class Account_Form_Org extends Tiger_Form_Base
                                 ],
             'validators'    =>  [
                                     ['Uuid', false, [
-                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID." ]
+                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID" ]
                                     ] ],
 
                                 ],
@@ -594,7 +595,7 @@ class Account_Form_Org extends Tiger_Form_Base
                                 ],
             'validators'    =>  [
                                     ['Uuid', false, [
-                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID." ]
+                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID" ]
                                     ] ],
 
                                 ],

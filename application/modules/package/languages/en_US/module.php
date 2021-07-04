@@ -31,6 +31,7 @@ return [
     'FORM.CONFIRM' => 'Confirm',
     'TAB.PACKAGE' => 'Package',
     'TITLE.PACKAGE' => 'Package',
+    'TITLE.PACKAGE_CONTROLS' => 'Package Controls',
     'LABEL.PACKAGE_NAME' => 'Package Name',
     'DESCRIPTION.PACKAGE_NAME' => 'Enter the name of the package you would like to add to Tiger. Typical names are domain/package, like: aws/aws-sdk-php',
     'LABEL.TARGET_VERSION' => 'Target Version',
@@ -48,6 +49,8 @@ return [
     'FORM.SAVE_PACKAGE' => 'Save Package',
     'MESSAGE.SYNC_PACKAGES_COMPLETED' => 'Packages Sync Completed',
     'MESSAGE.PACKAGE_UPDATED' => 'Package Updated',
+    'MESSAGE.PACKAGE_ACTIVATED' => 'Package Activated',
+    'MESSAGE.PACKAGE_DEACTIVATED' => 'Package Deactivated',
 
     'WARNING.TOKEN_NOT_SET' => 'NOTICE: The Tiger Auth Token Is Missing',
     'WARNING.TOKEN_NOT_SET_TEXT' => 'The token that authorizes your instance to access Tiger updates has not yet been set. See Tiger\'s Package Module docs for instructions to set this token before using the Package Manager.'

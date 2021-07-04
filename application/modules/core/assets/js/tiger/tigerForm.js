@@ -235,20 +235,34 @@
 
             return $( 'input[data-valid], select[data-valid]' )
                 .not( 'input[type=hidden]' )
-                .not( '.no-validate' ).each( function( ) {
+                .not( '.no-validate' ).each( function( i, el ) {
+                    Class._setAjaxValidate( el );
+                });
 
-                let $this = $(this);
+        },
 
-                if ( $this.is('input:radio') ) { $(this).on( 'click.autovalidate', Class._ajaxValidate ); }
-                else if ( $this.is('input:checkbox') ) { $(this).on( 'click.autovalidate', Class._ajaxValidate ); }
-                else if ( $this.is('select') ) { $(this).on( 'change.autovalidate', Class._ajaxValidate ); }
-                else if ( $this.is('textarea') ) { $this.on( 'blur.autovalidate', Class._ajaxValidate ); }
-                else if ( $this.is('input') ) { $this.on( 'blur.autovalidate', Class._ajaxValidate ); }
+        autoValidate : function ( ) {
+            Class._setAjaxValidate( this );
+            return $( this );
+        },
 
-                // Set change detection so that we only validate on a changed field //
-                $this.attr( 'data-value', $this.val() );
+        autoValidateOff : function ( ) {
+            $( this ).off('click.autovalidate').off('change.autovalidate').off('blur.autovalidate');
+            return $( this );
+        },
 
-            });
+        _setAjaxValidate : function ( el ) {
+
+            let $this = $( el );
+
+            if ( $this.is('input:radio') ) { $this.on( 'click.autovalidate', Class._ajaxValidate ); }
+            else if ( $this.is('input:checkbox') ) { $this.on( 'click.autovalidate', Class._ajaxValidate ); }
+            else if ( $this.is('select') ) { $this.on( 'change.autovalidate', Class._ajaxValidate ); }
+            else if ( $this.is('textarea') ) { $this.on( 'blur.autovalidate', Class._ajaxValidate ); }
+            else if ( $this.is('input') ) { $this.on( 'blur.autovalidate', Class._ajaxValidate ); }
+
+            // Set change detection so that we only validate on a changed field //
+            $this.attr( 'data-value', $this.val() );
 
         },
 
@@ -268,7 +282,7 @@
                 form    : $this.closest('form').attr('name'),
                 element : $this.attr('name'),
                 value   : '',
-                context : ''
+                context : $this.attr('data-context'),
             };
 
             let $form = $('form[name="' + data.form + '"]');

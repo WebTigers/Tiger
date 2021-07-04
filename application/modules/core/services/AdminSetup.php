@@ -6,6 +6,7 @@ class Core_Service_AdminSetup extends Core_Service_Webservice
     protected $_translate;
     protected $_userModel;
     protected $_rulesModel;
+    protected $_orgModel;
 
     public function __construct( $input ) {
 
@@ -14,6 +15,7 @@ class Core_Service_AdminSetup extends Core_Service_Webservice
         $this->_form            = new Core_Form_Setup();
         $this->_userModel       = new Account_Model_User;
         $this->_rulesModel      = new Acl_Model_AclRules;
+        $this->_orgModel        = new Account_Model_Org;
 
         parent::__construct( $input );
 
@@ -92,6 +94,12 @@ class Core_Service_AdminSetup extends Core_Service_Webservice
         try {
             $command = "CREATE USER '$dbUser'@'localhost' IDENTIFIED BY '$dbPass'";
             $PDO->exec( $command );
+
+            $command = "CREATE USER '$dbUser'@'127.0.0.1' IDENTIFIED BY '$dbPass'";
+            $PDO->exec( $command );
+
+            $command = "CREATE USER '$dbUser'@'::1' IDENTIFIED BY '$dbPass'";
+            $PDO->exec( $command );
         }
         catch ( PDOException $e ) {
             Tiger_Log::error("SETUP ERROR: Command failed: " . $command );
@@ -101,7 +109,13 @@ class Core_Service_AdminSetup extends Core_Service_Webservice
         Tiger_Log::file("SETUP: New DB user: $dbUser created.");
 
         try {
-            $command = "GRANT ALL PRIVILEGES ON * . * TO '$dbUser'@'localhost'";
+            $command = "GRANT ALL PRIVILEGES ON *.* TO '$dbUser'@'localhost' WITH GRANT OPTION";
+            $PDO->exec( $command );
+
+            $command = "GRANT ALL PRIVILEGES ON *.* TO '$dbUser'@'127.0.0.1' WITH GRANT OPTION";
+            $PDO->exec( $command );
+
+            $command = "GRANT ALL PRIVILEGES ON *.* TO '$dbUser'@'::1' WITH GRANT OPTION";
             $PDO->exec( $command );
         }
         catch ( PDOException $e ) {
@@ -200,6 +214,15 @@ class Core_Service_AdminSetup extends Core_Service_Webservice
         ]);
 
         $userRow->saveRow();
+
+        $orgUserRow = $this->_userModel->createRow([
+            'org_user_id'       => Tiger_Utility_Uuid::v1(),
+            'org_id'            => $this->_orgModel->getOrgDefault()->org_id,
+            'user_id'           => $userRow->user_id,
+            'type_user_role'    => 'ADMIN',
+        ]);
+
+        $orgUserRow->saveRow();
 
     }
 

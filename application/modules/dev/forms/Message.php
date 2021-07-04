@@ -1,25 +1,6 @@
 <?php
 
-/**
- * ————————————————————————————————————————————————————————————————————————————————
- * WEBTIGERS Copyright Notice
- * ————————————————————————————————————————————————————————————————————————————————
- *
- *  Copyright © 2020 WebTigers
- *  All Rights Reserved.
- *
- * NOTICE: All information contained herein is, and remains the property of WebTigers.
- * The intellectual and technical concepts contained herein are proprietary to
- * WebTigers and may be covered by U.S. and Foreign Patents, patents in process, and
- * are protected by trade secret or copyright law. Dissemination of this information
- * or reproduction of this material is strictly forbidden unless prior written
- * permission is obtained from WebTigers.
- *
- * See the LICENSE.txt for full licensing information governing the use of this
- * information and software.
- */
-
-class Account_Form_Contact extends Tiger_Form_Base
+class Message_Form_Message extends Tiger_Form_Base
 {
 
     public function init ( ) {
@@ -34,15 +15,14 @@ class Account_Form_Contact extends Tiger_Form_Base
      */
     protected function _addFormElements ( ) {
 
-        $this->setName('Account_Form_Contact');
+        $this->setName('Dev_Form_Resource');
 
-        $this->addElement( $this->_getEntity() );           // org or user
-        $this->addElement( $this->_getEntityId() );         // org_id or user_id
-
-        $this->addElement( $this->_getContactId() );        // select the contact_id or set it to null
-        $this->addElement( $this->_getTypeContact() );
-        $this->addElement( $this->_getContactValue() );
-        $this->addElement( $this->_getPrimary() );
+        $this->addElement( $this->_getResourceId() );
+        $this->addElement( $this->_getModuleName() );
+        $this->addElement( $this->_getResourceName() );
+        $this->addElement( $this->_getResourceDescription() );
+        $this->addElement( $this->_getResource() );
+        $this->addElement( $this->_getPrivilege() );
         $this->addElement( $this->_getActive() );
         $this->addElement( $this->_getDeleted() );
 
@@ -50,57 +30,16 @@ class Account_Form_Contact extends Tiger_Form_Base
 
     ##### Form Fields #####
 
-    protected function _getEntity ( ) {
+    protected function _getResourceId ( ) {
 
-        $name = 'entity';
-
-        $options = [
-
-            'name'              =>  $name,
-            'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
-
-            'required'          =>  true,
-
-            'filters'           =>  [
-                                        [ 'StringTrim' ],
-                                        [ 'PregReplace', [
-                                            'match' => '/[^org|user]/',
-                                            'replace' => ''
-                                        ] ]
-                                    ],
-
-            'validators'        =>  [
-                                        [ 'StringLength', false, [
-                                            'min'   => 1,
-                                            'max'   => 25,
-                                            'messages' => [
-                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
-                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
-                                            ]
-                                        ] ],
-                                        [ 'Regex', false, [
-                                            'pattern' => '/^[org|user]+$/',
-                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
-                                        ] ]
-                                    ]
-        ];
-
-        return new Zend_Form_Element_Hidden( $name, $options );
-
-    }
-
-    protected function _getEntityId ( ) {
-
-        $name = 'entity_id';
+        $name = 'resource_id';
 
         $options = [
 
-            'name'              =>  $name,
-            'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt',
-
-            'required'          =>  true,
+            'name'          =>  $name,
+            'id'            =>  $name,
+            'class'         =>  'hide',
+            'required'      =>  false,
 
             'filters'       =>  [
                                     [ 'StringTrim' ],
@@ -117,52 +56,15 @@ class Account_Form_Contact extends Tiger_Form_Base
 
     }
 
-    protected function _getContactId ( ) {
+    protected function _getModuleName ( ) {
 
-        $name = 'contact_id';
-
-        $options = [
-
-            'name'              =>  $name,
-            'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt select2',
-
-            'attribs'           =>  [
-                                        // 'placeholder'     =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
-                                        'data-valid'        => '0',
-                                    ],
-
-            'label'             =>  strtoupper( 'LABEL.' . $name ),
-            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
-
-            'multiOptions'              =>  [],     // Set vis Select2 Control
-            'registerInArrayValidator'  => false,
-
-            'required'          =>  false,
-
-            'filters'           =>  [
-                                        [ 'StringTrim' ],
-                                    ],
-            'validators'        =>  [
-                                        [ 'Uuid', false, [
-                                            'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID" ]
-                                        ] ],
-                                    ]
-        ];
-
-        return new Zend_Form_Element_Select( $name, $options );
-
-    }
-
-    protected function _getTypeContact ( ) {
-
-        $name = 'type_contact';
+        $name = 'module_name';
 
         $options = [
 
             'name'              =>  $name,
             'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt select2',
+            'class'             =>  'form-control form-control-lg form-control-alt',
 
             'attribs'           =>  [
                                         // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
@@ -172,42 +74,93 @@ class Account_Form_Contact extends Tiger_Form_Base
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'multiOptions'              =>  [],     // Set vis Select2 Control
-            'registerInArrayValidator'  => false,
-
             'required'          =>  true,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Z0-9_]/',
+                                            'match' => '/[^A-Za-z0-9]/',
                                             'replace' => ''
                                         ] ]
                                     ],
 
             'validators'        =>  [
+                                        [ 'NotEmpty', false, [
+                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                        ] ],
                                         [ 'StringLength', false, [
                                             'min'   => 1,
-                                            'max'   => 50,
+                                            'max'   => 25,
                                             'messages' => [
                                                 Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                                 Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Z0-9_]+$/',
+                                            'pattern' => '/^[A-Za-z0-9]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]
         ];
 
-        return new Zend_Form_Element_Select( $name, $options );
+        return new Zend_Form_Element_Text( $name, $options );
 
     }
 
-    protected function _getContactValue ( ) {
+    protected function _getResourceName ( ) {
 
-        $name = 'contact_value';
+        $name = 'resource_name';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'           =>  [
+                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE_NAME' ),
+                                        'data-valid'    => '0',
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'required'          =>  true,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Za-z0-9 \'\-,.]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'NotEmpty', false, [
+                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                        ] ],
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 100,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Za-z0-9 \'\-,.]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getResourceDescription ( ) {
+
+        $name = 'resource_description';
 
         $options = [
 
@@ -223,27 +176,30 @@ class Account_Form_Contact extends Tiger_Form_Base
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'required'          =>  false,
+            'required'          =>  true,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9 \'\-\,\.\@\:\/\&\#]/',
+                                            'match' => '/[^A-Za-z0-9 \'\-,.]/',
                                             'replace' => ''
                                         ] ]
                                     ],
 
             'validators'        =>  [
+                                        [ 'NotEmpty', false, [
+                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                        ] ],
                                         [ 'StringLength', false, [
-                                            'min'   => 0,
-                                            'max'   => 255,
+                                            'min'   => 1,
+                                            'max'   => 100,
                                             'messages' => [
                                                 Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                                 Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9 \'\-\,\.\@\:\/\&\#]+$/',
+                                            'pattern' => '/^[A-Za-z0-9 \'\-,.]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]
@@ -253,50 +209,105 @@ class Account_Form_Contact extends Tiger_Form_Base
 
     }
 
-    protected function _getPrimary ( ) {
+    protected function _getResource ( ) {
 
-        $name = 'primary';
+        $name = 'resource';
 
         $options = [
 
             'name'              =>  $name,
             'id'                =>  $name,
-            'class'             =>  'custom-control-input',
+            'class'             =>  'form-control form-control-lg form-control-alt',
 
             'attribs'           =>  [
-                                        'data-valid' => '0',
+                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
+                                        'data-valid'    => '0',
                                     ],
 
             'label'             =>  strtoupper( 'LABEL.' . $name ),
             'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
-            'checkedValue'      =>  '1',
+            'required'          =>  true,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Za-z0-9\_.]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'NotEmpty', false, [
+                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                        ] ],
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 100,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Za-z0-9\_.]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getPrivilege ( ) {
+
+        $name = 'privilege';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'           =>  [
+                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.PRIVILEGE' ),
+                                        'data-valid'    => '0',
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
 
             'required'          =>  true,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Za-z0-9\_.]/',
+                                            'replace' => ''
+                                        ] ]
                                     ],
 
             'validators'        =>  [
                                         [ 'NotEmpty', false, [
-                                            Zend_Validate_NotEmpty::INTEGER,
                                             'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
                                         ] ],
-                                        [ 'Digits', false, [
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 100,
                                             'messages' => [
-                                                Zend_Validate_Digits::INVALID => "ERROR.INVALID",
-                                                Zend_Validate_Digits::NOT_DIGITS => "ERROR.INVALID",
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
                                             ]
                                         ] ],
-                                        [ 'Between', false, [
-                                            'min' => 0,
-                                            'max' => 1
-                                        ] ],
-                                    ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Za-z0-9\_.]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ]
         ];
 
-        return new Zend_Form_Element_Checkbox( $name, $options );
+        return new Zend_Form_Element_Text( $name, $options );
 
     }
 
@@ -307,7 +318,7 @@ class Account_Form_Contact extends Tiger_Form_Base
         $options = [
 
             'name'              =>  $name,
-            'id'                =>  $name . '_contact',
+            'id'                =>  $name . '_resource',
             'class'             =>  'custom-control-input',
 
             'attribs'           =>  [
@@ -354,7 +365,7 @@ class Account_Form_Contact extends Tiger_Form_Base
         $options = [
 
             'name'              =>  $name,
-            'id'                =>  $name . '_contact',
+            'id'                =>  $name . '_resource',
             'class'             =>  'custom-control-input',
 
             'attribs'           =>  [

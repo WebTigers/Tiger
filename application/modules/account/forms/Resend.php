@@ -66,7 +66,7 @@ class Account_Form_Resend extends Tiger_Form_Base
                                         'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
                                     ] ],
                                     ['Uuid', false, [
-                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID." ]
+                                        'messages' => [ Tiger_Validate_Uuid::MSG_INVALID_UUID => "ERROR.INVALID_ID" ]
                                     ] ],
                                 ]
         ];

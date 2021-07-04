@@ -59,7 +59,8 @@ final class Package_Service_Composer
 
         $outdated = ( $outdated === true ) ? '--outdated' : '';
 
-        $command = "cd /var/www/tiger-vendor;
+        $command = "sudo -u -n ec2-user;
+            cd /var/www/tiger-vendor;
             export COMPOSER_HOME=/home/ec2-user/.config/composer;
             export COMPOSER_CACHE_DIR=/var/www/tiger-vendor/vendor/composer;
             php composer.phar show $package $outdated --format=json --direct 2>&1";
@@ -251,7 +252,8 @@ final class Package_Service_Composer
      */
     public function updatePackage ( $package ) {
 
-        $command = "cd /var/www/tiger-vendor;
+        $command = "sudo -u -n ec2-user;
+            cd /var/www/tiger-vendor;
             export COMPOSER_HOME=/home/ec2-user/.config/composer;
             export COMPOSER_CACHE_DIR=/var/www/tiger-vendor/vendor/composer;
             php composer.phar update $package 2>&1";

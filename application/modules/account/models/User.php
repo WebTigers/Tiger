@@ -126,8 +126,7 @@ class Account_Model_User extends Zend_Db_Table_Abstract
     }
 
     /**
-     * Searches and returns a list of users based on various searchable fields. Note
-     * that admin searches are unconcerned with whether or not a record is active or deleted.
+     * Searches and returns a list of users based on various searchable fields.
      *
      * These "SearchList" type functions are typically used exclusively by DataTables.
      *
@@ -155,6 +154,8 @@ class Account_Model_User extends Zend_Db_Table_Abstract
 
             order( $orderby)->
             limit( $limit, $offset );
+
+        // pr( $sql->assemble() );
 
         return $this->fetchAll( $sql );
 
@@ -191,5 +192,36 @@ class Account_Model_User extends Zend_Db_Table_Abstract
         return $this->fetchAll( $sql );
 
     }
+
+    public function getUserCount( $userIds, $roleNames, $orgIds )
+    {
+        /** This needs to join with the org table so that we make sure the org is active too. */
+
+        $sql = $this->
+        select()->
+        setIntegrityCheck(false)->  // We need this for any kind of join where updates cannot be performed.
+        from( [ 'ou' => 'org_user'], [ 'total' => new Zend_Db_Expr('COUNT(*)') ] )->
+        joinLeft( [ 'o' => 'org'], 'o.org_id = ou.org_id', [] )->
+        joinLeft( [ 'u' => 'user'], 'u.user_id = ou.user_id', [] )->
+
+        where("( u.user_id IN (?)", $userIds )->
+        orWhere('u.role IN (?)', $roleNames )->
+        orWhere('o.org_id IN (?) )', $orgIds )->
+
+        where('ou.active = 1')->
+        where('ou.deleted = 0')->
+
+        where('u.active = 1')->
+        where('u.deleted = 0')->
+
+        where('o.active = 1')->
+        where('o.deleted = 0');
+
+        // pr( $sql->assemble() );
+
+        return $this->fetchRow( $sql );
+
+    }
+
 
 }
