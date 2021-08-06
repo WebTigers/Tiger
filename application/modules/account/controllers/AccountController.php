@@ -33,13 +33,11 @@ class Account_AccountController extends Tiger_Controller_Manage
         /** Global hero header vars */
         $this->view->template->page_title = $this->view->translate('ACCOUNTS');
 
-        $this->view->template->inc_side_overlay = '';
-        $this->view->template->inc_sidebar      = '';
-        $this->view->template->inc_header       = '';
-        $this->view->template->inc_footer       = '';
-
         $this->view->template->name = Zend_Registry::get('Zend_Translate')->translate( Zend_Registry::get('Zend_Config')->tiger->platform->name );
         $this->view->template->version = Zend_Registry::get('Zend_Config')->tiger->platform->version;
+
+        /** This makes use of the default manage branch of the menu tree. */
+        $this->view->template->menu = 'account';
 
         $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/account/css/account.css' ) );
 
@@ -49,12 +47,41 @@ class Account_AccountController extends Tiger_Controller_Manage
 
     public function indexAction ( )
     {
-        $this->forward('dashboard', 'manage', 'core');
+        $this->forward('dashboard' );
+
+    }
+
+    public function dashboardAction ( )
+    {
+        /** Global hero header vars */
+        $this->view->template->page_title = $this->view->translate( 'MANAGE.DASHBOARD' );
+        $this->_checkPassword();
+    }
+
+    public function adminAction ( )
+    {
+        $port = ( $_SERVER['REQUEST_SCHEME'] === 'http' ) ? '8080' : '8081' ;
+        $uri = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . ':' . $port . '/admin';
+        $this->redirect( $uri );
+    }
+
+    private function _checkPassword ( )
+    {
+        if ( ! empty( Zend_Auth::getInstance()->getIdentity()->password_reset_key )  ) {
+            $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerPassword.js' ) );
+            $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.reset.password.js' ) );
+            $this->view->passwordForm = new Account_Form_Password();
+        }
 
     }
 
     public function signupAction ( )
     {
+        /** Remove the backend theme includes. */
+         $this->view->template->inc_side_overlay = false;
+         $this->view->template->inc_sidebar      = false;
+         $this->view->template->inc_header       = false;
+         $this->view->template->inc_footer       = false;
 
         /** Add the tigerPassword widget. */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerPassword.js' ) );
@@ -62,12 +89,50 @@ class Account_AccountController extends Tiger_Controller_Manage
         /** Add the signup page JS plugin. */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.signup.js' ) );
 
+        /** Set the signup form into the view. */
         $this->view->signupForm = new Account_Form_Signup();
+
+        /** Do some referral and org pre-processing of the request and form. */
+        $this->_setSignupFormValues();
+
+    }
+
+    protected function _setSignupFormValues()
+    {
+
+        $params = $this->getRequest()->getParams();
+
+        if ( ! empty( $params['org_referral_code'] ) ) {
+            $this->view->signupForm->org_referral_code->setValue( $params['org_referral_code'] );
+        }
+
+        if ( ! empty( $params['user_referral_code'] ) ) {
+            $this->view->signupForm->user_referral_code->setValue( $params['user_referral_code'] );
+        }
+
+        if ( ! empty( $params['orgname'] ) ) {
+            if ( Zend_Validate::is( $params['orgname'], 'Alnum') ) {
+
+                $this->view->signupForm->orgname->setValue( $params['orgname'] );
+                $orgModel = new Account_Model_Org();
+                $orgRow = $orgModel->getOrgByName( $params['orgname'] );
+                if ( ! empty( $orgRow ) ) {
+                    $this->view->org = (object) $orgRow->toArray();
+                }
+
+            }
+        }
 
     }
 
     public function welcomeAction ( )
     {
+        /** Remove the backend theme includes. */
+        $this->view->template->inc_side_overlay = false;
+        $this->view->template->inc_sidebar      = false;
+        $this->view->template->inc_header       = false;
+        $this->view->template->inc_footer       = false;
+
         /** Add the welcome page JS plugin. */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.welcome.js' ) );
 
@@ -81,6 +146,12 @@ class Account_AccountController extends Tiger_Controller_Manage
 
     public function loginAction ( )
     {
+        /** Remove the backend theme includes. */
+        $this->view->template->inc_side_overlay = false;
+        $this->view->template->inc_sidebar      = false;
+        $this->view->template->inc_header       = false;
+        $this->view->template->inc_footer       = false;
+
         /** Add the login page JS plugin. */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/account/js/account.login.js' ) );
 
@@ -95,6 +166,12 @@ class Account_AccountController extends Tiger_Controller_Manage
 
     public function lockAction ( )
     {
+        /** Remove the backend theme includes. */
+        $this->view->template->inc_side_overlay = false;
+        $this->view->template->inc_sidebar      = false;
+        $this->view->template->inc_header       = false;
+        $this->view->template->inc_footer       = false;
+
         $username =  Zend_Auth::getInstance()->getIdentity()->username;
 
         Zend_Auth::getInstance()->clearIdentity();  // <-- This logs us out of the application.
@@ -110,6 +187,12 @@ class Account_AccountController extends Tiger_Controller_Manage
 
     public function logoutAction ( )
     {
+        /** Remove the backend theme includes. */
+        $this->view->template->inc_side_overlay = false;
+        $this->view->template->inc_sidebar      = false;
+        $this->view->template->inc_header       = false;
+        $this->view->template->inc_footer       = false;
+
         Zend_Auth::getInstance()->clearIdentity();  // <-- This logs us out of the application.
         Zend_Session::regenerateId();               // <-- Gets us a shiny new session id.
 
@@ -132,22 +215,33 @@ class Account_AccountController extends Tiger_Controller_Manage
 
     public function verifyAction ( )
     {
+        /** Remove the backend theme includes. */
+        $this->view->template->inc_side_overlay = false;
+        $this->view->template->inc_sidebar      = false;
+        $this->view->template->inc_header       = false;
+        $this->view->template->inc_footer       = false;
 
-         $request = $this->getRequest();
-         $request->setParam('method', 'verify');
+        $request = $this->getRequest();
+        $request->setParam('method', 'verify');
 
-         /**
-          * Notice how we can just pass in the request object to have to Account Service
-          * auto-route to the verify method, do the work, and then we can just poll the
-          * service for the response once the service in instantiated.
-          */
-         $accountService = new Account_Service_Account( $request );
-         $this->view->response = $accountService->getResponse();
+        /**
+         * Notice how we can just pass in the request object to have to Account Service
+         * auto-route to the verify method, do the work, and then we can just poll the
+         * service for the response once the service in instantiated.
+         */
+        $accountService = new Account_Service_Account( $request );
+        $this->view->response = $accountService->getResponse();
 
     }
 
     public function recoverAction ( )
     {
+        /** Remove the backend theme includes. */
+        $this->view->template->inc_side_overlay = false;
+        $this->view->template->inc_sidebar      = false;
+        $this->view->template->inc_header       = false;
+        $this->view->template->inc_footer       = false;
+
         $this->view->loginForm = new Account_Form_Login();
         $this->view->loginForm->getElement('username')->setAttrib('placeholder', $this->view->translate('RECOVER.USERNAME_EMAIL'));
 
@@ -158,6 +252,11 @@ class Account_AccountController extends Tiger_Controller_Manage
 
     public function passwordAction ( )
     {
+        /** Remove the backend theme includes. */
+        $this->view->template->inc_side_overlay = false;
+        $this->view->template->inc_sidebar      = false;
+        $this->view->template->inc_header       = false;
+        $this->view->template->inc_footer       = false;
 
         $request = $this->getRequest();
         $request->setParam('method', 'login');
@@ -172,8 +271,8 @@ class Account_AccountController extends Tiger_Controller_Manage
         /** If we have a valid login, just redirect the user to their profile password reset page. */
 
         $role = Zend_Auth::getInstance()->getIdentity()->role;
-        if ( Zend_Registry::get('Zend_Acl')->isAllowed( $role, 'Core_Controller_Manage', 'dashboard' ) ) {
-            $this->forward('dashboard', 'manage', 'core');
+        if ( Zend_Registry::get('Zend_Acl')->isAllowed( $role, 'Account_Controller_Account', 'dashboard' ) ) {
+            $this->forward('dashboard', 'account', 'account');
         }
         else {
             $this->forward('recover');

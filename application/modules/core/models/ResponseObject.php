@@ -98,7 +98,7 @@ class Core_Model_ResponseObject
         }
     }
 
-    public function setTextMessage( $message, $type = 3 )
+    public function setTextMessage ( $message, $type = 3 )
     {
 
         $this->text[] = $message;
@@ -112,7 +112,8 @@ class Core_Model_ResponseObject
      * @param mixed $type (see switch statement for types)
      * @return string '<div class="alert alert-info"><i class="fa fa-info-circle"></i> &nbsp;Some translated message.</div>'
      */
-    public function createHTMLMessage ( $message, $type = 3 ) {
+    public function createHTMLMessage ( $message, $type = 3 )
+    {
         
         $out_message    = ( is_object( $message ) ) ? $message->message : $message;
         $out_type       = ( is_object( $message ) ) ? $message->class   : $type;
@@ -175,7 +176,7 @@ class Core_Model_ResponseObject
      * Returns an array of the public response properties.
      * @return array
      */
-    public function toArray()
+    public function toArray ( )
     {
         return [
             'result'    => $this->result,
@@ -189,5 +190,13 @@ class Core_Model_ResponseObject
             'redirect'  => $this->redirect,
         ];
     }
-    
+
+    public function clearMessages ( )
+    {
+        $this->text = [];
+        $this->html = [];
+
+        return $this;
+    }
+
 }

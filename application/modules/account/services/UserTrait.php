@@ -186,29 +186,13 @@ trait Account_Service_UserTrait
 
     }
 
-    public function getUserCount ( $params )
-    {
-
-        $userIds    = ( ! empty( $params['send_users'] ) ) ? $params['send_users'] : '';
-        $roleIds    = ( ! empty( $params['send_roles'] ) ) ? $params['send_roles'] : '';
-        $orgIds     = ( ! empty( $params['send_orgs'] ) )  ? $params['send_orgs']  : '';
-
-        $count = $this->_userModel->getUserCount( $userIds, $roleIds, $orgIds )->total;
-        $message = sprintf( $this->_translate->translate('MESSAGE.TOTAL_USERS'), number_format( $count ) );
-
-        $this->_response->status = 1;
-        $this->_response->data = $count;
-        $this->_response->setTextMessage( $message, 'info' );
-
-    }
-
     public function getUserSelect2List ( $params )
     {
         try {
 
             $search     = ( isset( $params['search'] ) ) ? $params['search'] : '';
             $offset     = ( isset( $params['page']   ) ) ? $params['page']   : 0;
-            $limit      = ( isset( $params['limit']  ) ) ? $params['limit']  : 1;
+            $limit      = ( isset( $params['limit']  ) ) ? $params['limit']  : 0;
             $orderby    = ( isset( $params['order']  ) ) ? $params['order']  : '';
 
             $results = [];
@@ -250,12 +234,19 @@ trait Account_Service_UserTrait
 
         foreach ( $aclRoles as $role => $roleData ) {
 
-            // Only allow assigning of roles at or below the user's own role //
             if ( isset( $params['search'] ) ) {
-                if ( trim( $params['search'] ) === $role ) {
-                    $results[] = (object)['id' => $role, 'text' => $roleData['role_name'] . ' - ' . $roleData['role_description']];
+                if ( is_array( $params['search'] ) ){
+                    if ( in_array( $roleData['role_name'], $params['search'] ) ) {
+                        $results[] = (object)['id' => $role, 'text' => $roleData['role_name'] . ' - ' . $roleData['role_description']];
+                    }
+                }
+                else {
+                    if ( trim( $params['search'] ) === $role ) {
+                        $results[] = (object)['id' => $role, 'text' => $roleData['role_name'] . ' - ' . $roleData['role_description']];
+                    }
                 }
             }
+            // If we're just getting a list, only allow assigning of roles at or below the user's own role //
             else {
                 if ( $acl->inheritsRole($userRole, $role, false) || $role === $userRole ) {
                     $results[] = (object)['id' => $role, 'text' => $roleData['role_name'] . ' - ' . $roleData['role_description']];
@@ -362,11 +353,11 @@ trait Account_Service_UserTrait
         $this->_form = new Account_Form_User();
 
         /**
-         * One of the first things to check for is the existence of unique fields
-         * within the saveUser payload. Tiger will complain if we try to re-insert
-         * or update the user record with the same email or username. This function
-         * simply removes certain form validators. Note that this function only works
-         * if passed a user_id as part of the params payload.
+         * One of the first things to check for is the existence of unique fields within the
+         * saveUser payload. Tiger will complain if we try to re-insert or update the user
+         * record with the same email or username. This function simply adds exclusions for
+         * certain form validators. Note that this function only works if passed a user_id as
+         * part of the params payload.
          */
         $this->_removeUniqueUserValidation( $params );
 
@@ -467,11 +458,11 @@ trait Account_Service_UserTrait
         try {
 
             /**
-             * One of the first things to check for is the existence of unique fields
-             * within the saveUser payload. Tiger will complain if we try to re-insert
-             * or update the user record with the same email or username. This function
-             * simply removes certain form validators. Note that this function only works
-             * if passed a user_id as part of the params payload.
+             * One of the first things to check for is the existence of unique fields within the
+             * saveUser payload. Tiger will complain if we try to re-insert or update the user
+             * record with the same email or username. This function simply adds exclusions for
+             * certain form validators. Note that this function only works if passed a user_id as
+             * part of the params payload.
              */
             $this->_removeUniqueUserValidation( $params );
 
@@ -618,25 +609,15 @@ trait Account_Service_UserTrait
 
     protected function _removeUniqueUserValidation ( $params )
     {
-        /** If the user_id is empty, this is an insert and we don't need to be here. */
-        if ( empty( $params['user_id'] ) ) { return; }
+        /** If the user_id is empty or not a valid UUID, we're outta here. */
+        if ( ! empty( $params['user_id'] ) && Tiger_Utility_Uuid::is_valid( $params['user_id'] ) ) {
 
-        /** If the user_id is not a valid UUID, we're outta here. */
-        if ( ! Tiger_Utility_Uuid::is_valid( $params['user_id'] ) ) { return; }
+            /** If the username is the same as the user's existing record, we exclude the record. */
+            $this->_form->username->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'user_id', 'value' => $params['user_id'] ] );
 
-        $userRow = $this->_userModel->getUserById( $params['user_id'] );
+            /** If the email is the same as the user's existing record, we exclude the record. */
+            $this->_form->email->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'user_id', 'value' => $params['user_id'] ] );
 
-        /** If there is no record for the user_id, then we're outta here as well. */
-        if ( empty( $userRow ) ){ return; }
-
-        /** If the username is the same as the user's existing record, removed the validator. */
-        if ( ! empty( $params['username'] ) && $params['username'] === $userRow->username ) {
-            $this->_form->getElement('username')->removeValidator('Db_NoRecordExists');
-        }
-
-        /** If the email is the same as the user's existing record, removed the validator. */
-        if ( ! empty( $params['email'] ) && $params['email'] === $userRow->email ) {
-            $this->_form->getElement('email')->removeValidator('Db_NoRecordExists');
         }
 
     }

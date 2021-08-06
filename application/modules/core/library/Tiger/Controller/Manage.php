@@ -38,6 +38,9 @@ abstract class Tiger_Controller_Manage extends Zend_Controller_Action {
             $this->redirect( $uri );
         }
 
+        /** Makes the Message View helpers available to all Admin Pages. */
+        $this->view->addHelperPath(MODULES_PATH . '/message/views/helpers', 'Message_View_Helper');
+
         /** Set the base theme options. Note that this is what creates the $this->view->template var. */
         $contentService = new Core_Service_Content();
         $contentService->setPageContent( $this->view );
@@ -47,7 +50,7 @@ abstract class Tiger_Controller_Manage extends Zend_Controller_Action {
         /** Set User to the theme container. */
         $this->view->template->user = Zend_Auth::getInstance()->getIdentity();
 
-        /** This makes use of the manage branch of the menu tree. */
+        /** This makes use of the default manage branch of the menu tree. */
         $this->view->template->menu = 'manage';
 
     }
@@ -100,6 +103,7 @@ abstract class Tiger_Controller_Manage extends Zend_Controller_Action {
         /** Tiger Core DOM Plugins */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerForm.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDashboard.js' ) );
 
     }
 

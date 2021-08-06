@@ -208,6 +208,11 @@
                         // $('img.img-avatar').attr('src', data.data.avatar_url );
                     }
 
+                    /** Set the data-context attribute on certain fields for validation. */
+                    $('#user-form-profile #username').attr('data-context', data.data.user_id);
+                    $('#user-form-profile #email').attr('data-context', data.data.user_id);
+                    $('#user-form-profile #user_referral_code').attr('data-context', data.data.user_id);
+
                     /**
                      * Select2 controls present an interesting issue since they are dynamically
                      * populated. We need to make an ajax call out to the server to populate

@@ -60,7 +60,7 @@ class Account_Form_Login extends Tiger_Form_Base
             'class'             =>  'form-control form-control-lg form-control-alt no-validate',
 
             'attribs'           =>  [
-                                        'placeholder'   =>  $this->_translate->translate( 'USERNAME' ),
+                                        'placeholder'   =>  $this->_translate->translate( 'LOGIN.USERNAME_EMAIL' ),
                                     ],
 
             'label'             =>  'LABEL.USERNAME',
@@ -131,7 +131,7 @@ class Account_Form_Login extends Tiger_Form_Base
                                 ],
         ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+        return new Zend_Form_Element_Password( $name, $options );
 
     }
 

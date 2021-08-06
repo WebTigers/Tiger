@@ -43,17 +43,6 @@ class Message_Model_Message extends Zend_Db_Table_Abstract {
         
     }
 
-    public function getMessageDBConfigs ( ) {
-
-        $messageRowset = $this->getMessageList();
-        $messages = [];
-        foreach ( $messageRowset as $messageRow ) {
-            $messages[ $messageRow->message_id ] = $messageRow->toArray();
-        }
-        return new Zend_Config( $messages, true );
-
-    }
-
     /**
      * Searches and returns a list of messages based on various searchable fields. Note
      * that admin searches are unconcerned with whether or not a record is active or deleted.

@@ -123,16 +123,16 @@ trait Account_Service_OrgUserTrait
 
             /**
              * Since we're not really doing anything with the org being persisted
-             * we don't need the $orgRow, but we left it in just to let devs know
+             * we don't need the $orgUserRow, but we left it in just to let devs know
              * it's available. We can send the data back to the UI with new or updated
              * data.
              */
-            $orgRow = $this->_persistOrgUser( $data, true );
+            $orgUserRow = $this->_persistOrgUser( $data, true );
 
             /** Commit the DB transaction. All done! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
 
-            $orgUser = (object) $orgRow->toArray();
+            $orgUser = (object) $orgUserRow->toArray();
 
             /**
              * Populate the responseObject with our success.
@@ -142,7 +142,7 @@ trait Account_Service_OrgUserTrait
             $this->_response->setTextMessage( 'MESSAGE.ORG_USER_SAVED', 'success' );
 
         }
-        catch ( Exception $e ) {
+        catch ( Error | Exception $e ) {
 
             /** Uh oh, something went wrong, rollback all database activity! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->rollBack();
@@ -155,7 +155,7 @@ trait Account_Service_OrgUserTrait
             $this->_response->setTextMessage( 'MESSAGE.UPDATE_FAILED', 'alert' );
 
             /** We also log what happened ... */
-            // Tiger_Log::logger( $e->getMessage() );
+            Tiger_Log::error( $e->getMessage() );
 
         }
 
@@ -202,7 +202,7 @@ trait Account_Service_OrgUserTrait
 
             /**
              * Since we're not really doing anything with the org being persisted
-             * we don't need the $orgRow, but we left it in just to let devs know
+             * we don't need the $orgUserRow, but we left it in just to let devs know
              * it's available. We can send the data back to the UI with new or updated
              * data.
              */
@@ -211,11 +211,13 @@ trait Account_Service_OrgUserTrait
             /** Commit the DB transaction. All done! */
             Zend_Db_Table_Abstract::getDefaultAdapter()->commit();
 
+            $orgUser = (object) $orgUserRow->toArray();
+
             /**
              * Populate the responseObject with our success.
              */
             $this->_response->result = 1;
-            $this->_response->data = $orgUserRow;
+            $this->_response->data = $orgUser;
             $this->_response->setTextMessage( 'MESSAGE.ORG_USER_SAVED', 'success' );
 
         }

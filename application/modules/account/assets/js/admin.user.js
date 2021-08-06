@@ -566,8 +566,10 @@
                     Class._setTypeSuffixSelect2( data.data.type_suffix );
                     Class._setTypeHearaboutSelect2( data.data.type_hearabout );
 
-                    $('#user-form #username').attr('data-context', $('#user-form #username').val() );
-                    $('#user-form #email').attr('data-context', $('#user-form #email').val() );
+                    /** Set the data-context attribute on certain fields for validation. */
+                    $('#user-form #username').attr('data-context', data.data.user_id );
+                    $('#user-form #email').attr('data-context', data.data.user_id );
+                    $('#user-form #user_referral_code').attr('data-context', data.data.user_id );
 
                     // $('#user-form .form-ids .user_id').html( data.data.user_id );
                     $('#modal-users-form').modal('show');

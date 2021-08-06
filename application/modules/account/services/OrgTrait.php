@@ -194,7 +194,7 @@ trait Account_Service_OrgTrait
     {
         $search     = ( isset( $params['search'] ) ) ? $params['search'] : '';
         $offset     = ( isset( $params['page']   ) ) ? $params['page']   : 0;
-        $limit      = ( isset( $params['limit']  ) ) ? $params['limit']  : 1;
+        $limit      = ( isset( $params['limit']  ) ) ? $params['limit']  : 0;
         $orderby    = ( isset( $params['order']  ) ) ? $params['order']  : '';
 
         $results = [];
@@ -285,11 +285,11 @@ trait Account_Service_OrgTrait
         $this->_form = new Account_Form_Org();
 
         /**
-         * One of the first things to check for is the existence of unique fields
-         * within the saveOrg payload. Tiger will complain if we try to re-insert
-         * or update the org record with the same email or orgname. This function
-         * simply removes certain form validators. Note that this function only works
-         * if passed a org_id as part of the params payload.
+         * One of the first things to check for is the existence of unique fields within the
+         * saveUser payload. Tiger will complain if we try to re-insert or update the org
+         * record with the same orgname. This function simply adds exclusions for certain
+         * form validators. Note that this function only works if passed a org_id as
+         * part of the params payload.
          */
         $this->_removeUniqueOrgValidation( $params );
 
@@ -386,11 +386,11 @@ trait Account_Service_OrgTrait
             $this->_form = new Account_Form_Org();
 
             /**
-             * One of the first things to check for is the existence of unique fields
-             * within the saveOrg payload. Tiger will complain if we try to re-insert
-             * or update the org record with the same email or orgname. This function
-             * simply removes certain form validators. Note that this function only works
-             * if passed a org_id as part of the params payload.
+             * One of the first things to check for is the existence of unique fields within the
+             * saveUser payload. Tiger will complain if we try to re-insert or update the org
+             * record with the same orgname. This function simply adds exclusions for certain
+             * form validators. Note that this function only works if passed a org_id as
+             * part of the params payload.
              */
             $this->_removeUniqueOrgValidation( $params );
 
@@ -538,20 +538,12 @@ trait Account_Service_OrgTrait
      */
     protected function _removeUniqueOrgValidation ( $params )
     {
-        /** If the org_id is empty, this is an insert and we don't need to be here. */
-        if ( empty( $params['org_id'] ) ) { return; }
+        /** If the user_id is empty or not a valid UUID, we're outta here. */
+        if ( ! empty( $params['org_id'] ) && Tiger_Utility_Uuid::is_valid( $params['org_id'] ) ) {
 
-        /** If the org_id is not a valid UUID, we're outta here. */
-        if ( ! Tiger_Utility_Uuid::is_valid( $params['org_id'] ) ) { return; }
+            /** If the username is the same as the user's existing record, we exclude the record. */
+            $this->_form->orgname->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'org_id', 'value' => $params['org_id'] ] );
 
-        $orgRow = $this->_orgModel->getOrgById( $params['org_id'] );
-
-        /** If there is no record for the org_id, then we're outta here as well. */
-        if ( empty( $orgRow ) ){ return; }
-
-        /** If the orgname is the same as the org's existing record, removed the validator. */
-        if ( ! empty( $params['orgname'] ) && $params['orgname'] === $orgRow->orgname ) {
-            $this->_form->getElement('orgname')->removeValidator('Db_NoRecordExists');
         }
 
     }

@@ -34,6 +34,7 @@ class Message_AdminController extends Tiger_Controller_Admin
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/message/js/message.admin.js' ) );
 
         $this->view->messageForm = new Message_Form_Message();
+
     }
 
 }

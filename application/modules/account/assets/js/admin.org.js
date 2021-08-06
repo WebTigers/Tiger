@@ -459,7 +459,10 @@
 
                     $('#org-form').tigerForm('setFormValues', data.data );
                     $('#org-form .form-ids .org_id').html( data.data.org_id );
-                    $('#org-form #orgname').attr('data-context', $('#org-form #orgname').val() );
+
+                    /** Set the data-context attribute on certain fields for validation. */
+                    $('#org-form #orgname').attr('data-context', data.data.org_id );
+                    $('#org-form #org_referral_code').attr('data-context', data.data.org_id );
 
                     $('#modal-orgs-form').modal('show');
 

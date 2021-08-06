@@ -179,6 +179,10 @@
                     $('div.org-overlay .overlay').hide();
                     $('#org-form').tigerForm('setFormValues', data.data );
 
+                    /** Set the data-context attribute on certain fields for validation. */
+                    $('#org-form #orgname').attr('data-context', data.data.org_id);
+                    $('#org-form #org_referral_code').attr('data-context', data.data.org_id);
+
                     /**
                      * Select2 controls present an interesting issue since they are dynamically
                      * populated. We need to make an ajax call out to the server to populate

@@ -163,4 +163,23 @@ class Core_Service_Admin
 
     }
 
+    public function getLocaleSelect2List( $params ){
+
+        $search_text = ( ! empty( $params['search'] ) ) ? $params['search'] : '';
+
+        $options = $this->_utility->getLocalSelect2List( $params );
+
+        $out = array_values( array_filter( $options, function( $el ) use ( $search_text ) {
+            return ( $search_text ) ? is_int( stripos( $el->text, $search_text ) ) : true;
+        }) );
+
+        $this->_response = new Core_Model_ResponseObjectSelect2([
+            'results' => $out,
+            'pagination' => (object) ['more' => false ],
+            'error' => null,
+            'login' => false,
+        ]);
+
+    }
+
 }

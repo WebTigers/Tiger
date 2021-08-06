@@ -40,21 +40,27 @@
     let Class = {
 
         element : null,
+        container : null,
 
         init : function( ) {
 
             Class.element = this;
+            Class.container = Class.element.closest('.form-group');
             Class.initElement();
 
         },
 
         initElement : function ( ) {
 
-            let $iconDisplay = $('<div class="icon-display"><div class="icon-container"><span><i class=""></i></span></div><div class="icon-list-container" style="display:none;"></div></div>');
-            let $listContainer = $('<div class="search-container"><input id="icon-search" name="icon-search" value="" class="form-control" placeholder="Search Icons" /></div>' +
-            '<div class="icon-list"></div>');
+            let $iconDisplay = $('<div class="icon-display"><div class="icon-container"><span><i class=""></i></span></div><div class="form-group icon-list-container" style="display:none;"></div></div>');
+            let $listContainer = $('<div class="search-container input-group">' +
+                                        '<input type="text" class="form-control form-control-alt" id="icon-search" name="icon-search" value="" placeholder="Search Icons">' +
+                                        '<div class="input-group-append"><button id="icon-search-close" type="button" class="btn btn-alt-dark">Close</button></div>' +
+                                    '</div>' +
+                                    '<div class="icon-list"></div>');
             $iconDisplay.find('.icon-list-container').append( $listContainer );
-            Class.element.closest('.form-group').append( $iconDisplay );
+
+            Class.container.append( $iconDisplay );
 
             Class.populateIcons();
 
@@ -62,40 +68,43 @@
             $('body').on('click', 'div.icon-list span', Class.selectIcon );
             $('body').on('click', 'div.icon-container', Class.showIconList );
 
+            Class.container.find('#icon-search-close').on( 'click', Class.hideIconList );
+            Class.element.on( 'change', Class.setIcon );
+
         },
 
         populateIcons : function ( ) {
 
             let list = Class._iconList;
 
-            $('div.icon-display .icon-list').children().remove();
+            Class.container.find('div.icon-display .icon-list').children().remove();
 
-            if ( $('#icon-search').val().length > 0 ) {
+            if ( Class.container.find('#icon-search').val().length > 0 ) {
                 list = Class.filterIcons( Class._iconList, $('#icon-search').val() )
             }
 
             $.each( list, function ( i, strClass ) {
-                $('div.icon-display .icon-list').append( $('<span><i class="' + strClass + '"></i></span>') );
+                Class.container.find('div.icon-display .icon-list').append( $('<span><i class="' + strClass + '"></i></span>') );
             });
 
         },
 
         showIconList : function ( event ) {
-            $('.icon-list-container').fadeIn(300);
+            Class.container.find('.icon-list-container').fadeIn(300);
         },
 
         hideIconList : function ( event ) {
-            $('.icon-list-container').fadeOut(300);
+            Class.container.find('.icon-list-container').fadeOut(300);
         },
 
         selectIcon : function ( event ) {
 
             if ( $(this).find('i').hasClass( 'none' ) ) {
-                $('div.icon-container i').attr( 'class', '' );
+                Class.container.find('div.icon-container i').attr( 'class', '' );
                 Class.element.val( '' ).trigger('change');
             }
             else {
-                $('div.icon-container i').attr( 'class', $(this).find('i').attr('class') );
+                Class.container.find('div.icon-container i').attr( 'class', $(this).find('i').attr('class') );
                 Class.element.val( $(this).find('i').attr('class') ).trigger('change');
             }
 
@@ -103,10 +112,26 @@
 
         },
 
-        filterIcons: function ( arr, query ) {
+        filterIcons : function ( arr, query ) {
             return arr.filter( function(el) {
                 return el.toLowerCase().indexOf( query.toLowerCase() ) !== -1
             });
+        },
+
+        setIcon : function ( event ) {
+
+            Class.container.find('div.icon-container i').attr( 'class', Class.element.val() );
+            Class.container.find('input#icon-search').val( Class.element.val() );
+            Class.populateIcons();
+
+        },
+
+        reset : function () {
+
+            Class.container.find('div.icon-container i').attr( 'class', '' );
+            Class.container.find('input#icon-search').val('');
+            Class.populateIcons();
+
         },
 
         _iconList : [

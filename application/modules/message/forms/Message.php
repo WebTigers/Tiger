@@ -23,6 +23,8 @@ class Message_Form_Message extends Tiger_Form_Base
         $this->addElement( $this->_getFormat() );
         $this->addElement( $this->_getIconCss() );
         $this->addElement( $this->_getDismissible() );
+        $this->addElement( $this->_getLink() );
+        $this->addElement( $this->_getLinkNew() );
         $this->addElement( $this->_getSendUsers() );
         $this->addElement( $this->_getSendRoles() );
         $this->addElement( $this->_getSendOrgs() );
@@ -34,6 +36,9 @@ class Message_Form_Message extends Tiger_Form_Base
         $this->addElement( $this->_getRoute() );
         $this->addElement( $this->_getActive() );
         $this->addElement( $this->_getDeleted() );
+
+        /** Not uses in the DB */
+        $this->addElement( $this->_getWrapper() );
 
     }
 
@@ -87,10 +92,7 @@ class Message_Form_Message extends Tiger_Form_Base
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
-                                        [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9 \'\-,.]/',
-                                            'replace' => ''
-                                        ] ]
+                                        [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
                                     ],
 
             'validators'        =>  [
@@ -99,16 +101,16 @@ class Message_Form_Message extends Tiger_Form_Base
                                         ] ],
                                         [ 'StringLength', false, [
                                             'min'   => 1,
-                                            'max'   => 50,
+                                            'max'   => 100,
                                             'messages' => [
                                                 Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
                                                 Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9 \'\-,.]+$/',
-                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
-                                        ] ]
+                                            'pattern' => '/^[\W\w\S\s]+$/mu',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                        ] ],
                                     ]
         ];
 
@@ -137,16 +139,16 @@ class Message_Form_Message extends Tiger_Form_Base
 
             'required'      =>  false,
             'filters'       =>  [
-                [ 'StringTrim' ],
-                [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
-            ],
+                                    [ 'StringTrim' ],
+                                    [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
+                                ],
             'validators'    =>  [
-                // [ 'StringLength', false, [1, 10000) ],
-                [ 'Regex', false, [
-                    'pattern' => '/^[\W\w\S\s]+$/mu',
-                    'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
-                ]],
-            ],
+                                    // [ 'StringLength', false, [1, 10000) ],
+                                    [ 'Regex', false, [
+                                        'pattern' => '/^[\W\w\S\s]+$/mu',
+                                        'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
+                                    ] ],
+                                ],
         ];
 
         return new Zend_Form_Element_Textarea( $name, $options );
@@ -209,16 +211,15 @@ class Message_Form_Message extends Tiger_Form_Base
 
     protected function _getIconCss ( ) {
 
-        $name = 'icon_css';
+        $name = 'icon_class';
 
         $options = [
 
             'name'              =>  $name,
             'id'                =>  $name,
-            'class'             =>  'form-control form-control-lg form-control-alt select2',
+            'class'             =>  'form-control form-control-lg form-control-alt',
 
             'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.PRIVILEGE' ),
                                         'data-valid'    => '0',
                                     ],
 
@@ -305,6 +306,103 @@ class Message_Form_Message extends Tiger_Form_Base
 
     }
 
+    protected function _getLink ( ) {
+
+        $name = 'link';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'           =>  [
+                                        'data-valid'    => '0',
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.MESSAGE_' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.MESSAGE_' . $name ),
+
+            'required'          =>  false,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Za-z0-9\?\=\-\_\&\#\+\%\:\/]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'NotEmpty', false, [
+                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                        ] ],
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 100,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Za-z0-9\?\=\-\_\&\#\+\%\:\/]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getLinkNew ( ) {
+
+        $name = 'link_new';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name . '_message',
+            'class'             =>  'custom-control-input',
+
+            'attribs'           =>  [
+                                        'data-valid' => '0',
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.MESSAGE_' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.MESSAGE_' . $name ),
+
+            'disableHidden'     =>  true,
+
+            'required'          =>  true,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'NotEmpty', false, [
+                                            Zend_Validate_NotEmpty::INTEGER,
+                                            'messages' => [ Zend_Validate_NotEmpty::IS_EMPTY => "ERROR.REQUIRED" ]
+                                        ] ],
+                                        [ 'Digits', false, [
+                                            'messages' => [
+                                                Zend_Validate_Digits::INVALID => "ERROR.INVALID",
+                                                Zend_Validate_Digits::NOT_DIGITS => "ERROR.INVALID",
+                                            ]
+                                        ] ],
+                                        [ 'Between', false, [
+                                            'min' => 0,
+                                            'max' => 1
+                                        ] ],
+                                    ],
+        ];
+
+        return new Zend_Form_Element_Checkbox( $name, $options );
+
+    }
+
     protected function _getSendUsers ( ) {
 
         $name = 'send_users';
@@ -326,16 +424,9 @@ class Message_Form_Message extends Tiger_Form_Base
             'registerInArrayValidator'  => false,
 
             'required'      =>  false,
-            'filters'       =>  [
-                                    [ 'StringTrim' ],
-                                    [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
-                                ],
-            'validators'    =>  [
-                                [ 'Regex', false, [
-                                    'pattern' => '/^[\W\w\S\s]+$/mu',
-                                    'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
-                                ]],
-            ],
+            'filters'       =>  [],
+            'validators'    =>  [],
+
         ];
 
         return new Zend_Form_Element_Select( $name, $options );
@@ -363,17 +454,9 @@ class Message_Form_Message extends Tiger_Form_Base
             'registerInArrayValidator'  => false,
 
             'required'      =>  false,
-            'filters'       =>  [
-                [ 'StringTrim' ],
-                [ 'PregReplace', ['match' => '/[^\W\w\S\s]/mu', 'replace' => '']],
-            ],
-            'validators'    =>  [
-                // [ 'StringLength', false, [1, 10000) ],
-                [ 'Regex', false, [
-                    'pattern' => '/^[\W\w\S\s]+$/mu',
-                    'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
-                ]],
-            ],
+            'filters'       =>  [],
+            'validators'    =>  [],
+
         ];
 
         return new Zend_Form_Element_Select( $name, $options );
@@ -401,18 +484,9 @@ class Message_Form_Message extends Tiger_Form_Base
             'registerInArrayValidator'  => false,
 
             'required'      =>  false,
-            'filters'       =>  [
-                                    [ 'StringTrim' ],
-                                    [ 'PregReplace', [
-                                        'match' => '/[^\W\w\S\s]/mu', 'replace' => '']
-                                    ],
-                                ],
-            'validators'    =>  [
-                                    [ 'Regex', false, [
-                                        'pattern' => '/^[\W\w\S\s]+$/mu',
-                                        'messages' => [ Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
-                                    ]],
-                                ],
+            'filters'       =>  [],
+            'validators'    =>  [],
+
         ];
 
         return new Zend_Form_Element_Select( $name, $options );
@@ -433,7 +507,6 @@ class Message_Form_Message extends Tiger_Form_Base
             'class'             =>  'form-control form-control-lg form-control-alt select2',
 
             'attribs'           =>  [
-                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
                                         'data-valid'    => '0',
                                     ],
 
@@ -532,8 +605,6 @@ class Message_Form_Message extends Tiger_Form_Base
 
     protected function _getLocale ( ) {
 
-        $multiOptions = Zend_Registry::get('Zend_Translate')->getList();
-
         $name = 'locale';
 
         $options = [
@@ -542,25 +613,25 @@ class Message_Form_Message extends Tiger_Form_Base
             'id'            =>  $name,
             'class'         =>  'form-control form-control-lg form-control-alt select2',
             'attribs'       =>  [
-                'data-valid'    => '1',
-            ],
+                                    'data-valid'    => '1',
+                                ],
 
-            'label'         =>  strtoupper( 'LABEL.' . $name ),
-            'description'   =>  strtoupper( 'DESCRIPTION.' . $name ),
+            'label'         =>  strtoupper( 'LABEL.MESSAGE_' . $name ),
+            'description'   =>  strtoupper( 'DESCRIPTION.MESSAGE_' . $name ),
 
-            'registerInArrayValidator'  => true,
-            'multiOptions'  =>  $multiOptions,
+            'registerInArrayValidator'  => false,
+            'multiOptions'  =>  [],
 
             'required'      =>  false,
             'filters'       =>  [
-                                    ['PregReplace', ['match' => '/[^A-Za-z\_]/', 'replace' => '']],
+                                    ['PregReplace', ['match' => '/[^A-Za-z\.\-\_]/', 'replace' => '']],
                                 ],
             'validators'    =>  [
                                     ['Regex', false, [
-                                        'pattern' => '/^[A-Za-z\_]+$/',
+                                        'pattern' => '/^[A-Za-z\.\-\_]+$/',
                                         'messages' => [Zend_Validate_Regex::NOT_MATCH => "Invalid characters."]
-                                    ]],
-            ],
+                                    ] ],
+                                ],
         ];
 
         return new Zend_Form_Element_Select( $name, $options );
@@ -793,6 +864,24 @@ class Message_Form_Message extends Tiger_Form_Base
 
     }
 
+    protected function _getWrapper ( ) {
+
+        $name = 'wrapper';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'required'          =>  false,
+            'filters'           =>  [],
+            'validators'        =>  [],
+
+        ];
+
+        return new Zend_Form_Element_Hidden( $name, $options );
+
+    }
+
     ##### Utility Methods #####
 
     public function getTargetOptions(){
@@ -814,7 +903,7 @@ class Message_Form_Message extends Tiger_Form_Base
 
         $out = ['' => $this->_translate->translate( 'SELECT' ) ];
         foreach ( $formats as $key => $value ) {
-            $out[ $key ] = $this->_translate->translate( $value );
+            $out[ $key ] = $this->_translate->translate( $value->label );
         }
 
         return $out;

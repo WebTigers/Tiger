@@ -50,6 +50,7 @@ class Account_Form_User extends Tiger_Form_Base
         $this->addElement( $this->_getLastName() );
         $this->addElement( $this->_getTypeSuffix() );
         $this->addElement( $this->_getCompanyTitle() );
+        $this->addElement( $this->_getUserReferralCode() );
         $this->addElement( $this->_getReferralUserId() );
         $this->addElement( $this->_getReferralOrgId() );
         $this->addElement( $this->_getTypeHearAbout() );
@@ -698,6 +699,61 @@ class Account_Form_User extends Tiger_Form_Base
                                         ] ],
                                         [ 'Regex', false, [
                                             'pattern' => '/^[A-Za-z0-9 \'\-,.]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Text( $name, $options );
+
+    }
+
+    protected function _getUserReferralCode ( ) {
+
+        $name = 'user_referral_code';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'           =>  [
+                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.PRIVILEGE' ),
+                                        'data-valid'    => '0',
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'required'          =>  false,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Za-z0-9\_\-\.]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 50,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Db_NoRecordExists', false, [
+                                            'table'    => 'user',
+                                            'field'    => 'user_referral_code',
+                                            'messages' => [
+                                                Zend_Validate_Db_NoRecordExists::ERROR_RECORD_FOUND => "ERROR.REFERRAL_CODE_EXISTS",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Za-z0-9\_\-\.]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]

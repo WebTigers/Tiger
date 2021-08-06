@@ -83,14 +83,23 @@ class Account_Service_Account extends Core_Service_Webservice
      */
     public function signup ( $params ) {
 
-        $this->_form = new Account_Form_Signup();
-
         /**
+         * Next, we instantiate the Signup form. Because this class is used
+         * by multiple types of calls, the form gets instantiated here and
+         * not in the constructor.
+         *
          * Note that in Tiger, isValid() is subclassed to remove
          * any request routing params that are not part of the form. If
          * you wish to preserve the entire $params array, call the
          * $form->isValidPreserve() method instead.
          */
+        $this->_form = new Account_Form_Signup();
+
+        /** If we have an orgname, tell the form it's okay, we're not setting a duplicate org. */
+        if ( ! empty( $params['orgname'] ) ) {
+            $this->_form->orgname->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'orgname', 'value' => $params['orgname'] ] );
+        }
+
         if ( ! $this->_form->isValid( $params ) ) {
 
             /**
@@ -108,6 +117,12 @@ class Account_Service_Account extends Core_Service_Webservice
         try {
 
             /**
+             * Now that we're validated, the first thing to do is check for referral codes
+             * and populate the user_referral_id and org_referral_id fields, if any.
+             */
+            $this->_populateReferrals( $data );
+
+            /**
              * Before saving any data, we wrap all of our saves in DB Transaction.
              * That way if anything fails, we can roll it all back. Very important!
              */
@@ -122,7 +137,7 @@ class Account_Service_Account extends Core_Service_Webservice
             if ( ! empty( $data['password'] ) ) {
                 $data['password'] = Tiger_Utility_Cryption::hash($data['password']);
             }
-            /** Otherwise unset it so that it doesn't update the existing record. */
+            /** Otherwise unset the empty field so that it doesn't update the existing record. */
             else {
                 unset( $data['password'] );
             }
@@ -145,17 +160,31 @@ class Account_Service_Account extends Core_Service_Webservice
             $this->_persistEntityContact( $entityData, $userRow );
 
             /**
-             * Only if we have a company_name should we attempt to persist the new org.
-             * $orgRow should be set to the default org if there is no company_name at signup.
+             * Only if we have a company_name should we attempt to persist the new org. If we have an
+             * orgname, they we'll place the user with that org. $orgRow should be set to the default
+             * org if there is no orgname or company_name at signup.
              */
 
             $orgRow = null;
 
-            if ( ! empty( $data['company_name'] ) ) {
+            if ( ! empty( $data['orgname'] ) ) {
+
+                $orgRow = $this->_orgModel->getOrgByName( $data['orgname'] );
+
+                if ( ! empty( $data['orgname'] ) ) {
+                    $data['org_id'] = $orgRow->org_id;
+                    $data['type_user_role'] = 'MEMBER';
+                    $data['primary'] = 1;
+                    $this->persistOrgUser( $data );
+                }
+
+            }
+            elseif ( ! empty( $data['company_name'] ) ) {
 
                 $orgRow = $this->persistOrg( $data );
                 $data['org_id'] = $orgRow->org_id;
-
+                $data['type_user_role'] = 'ADMIN';
+                $data['primary'] = 1;
                 $this->persistOrgUser( $data );
 
                 $entityData['contact_id'] = $contactRow->contact_id;    // <-- Yes, it's already been set, but left in for reference and consistency.
@@ -168,7 +197,8 @@ class Account_Service_Account extends Core_Service_Webservice
 
                 $orgRow = $this->_orgModel->getOrgDefault();
                 $data['org_id'] = $orgRow->org_id;
-
+                $data['type_user_role'] = 'MEMBER';
+                $data['primary'] = 1;
                 $this->persistOrgUser( $data );
 
             }
@@ -182,8 +212,12 @@ class Account_Service_Account extends Core_Service_Webservice
             $identity = $this->_setIdentity( $userRow, $orgRow );
 
             /** Send the new user and admins various messages that a new user signed up. */
-            Core_Service_Message::sendUserWelcomeEmail( $userRow );
-            Core_Service_Message::sendUserVerifyEmail( $userRow );
+            if ( ! empty( $this->_config->resources->mail->transport->username ) ) {
+
+                Core_Service_Message::sendUserWelcomeEmail( $userRow );
+                Core_Service_Message::sendUserVerifyEmail( $userRow );
+
+            }
 
             /**
              * Populate the responseObject with our success. There probably shouldn't
@@ -201,7 +235,6 @@ class Account_Service_Account extends Core_Service_Webservice
             /**
              * Populate the responseObject with the bad news.
              */
-
             $this->_response->result = 0;
             $this->_response->setTextMessage( 'ERROR.NEW_USER_FAILED' );
 
@@ -209,6 +242,28 @@ class Account_Service_Account extends Core_Service_Webservice
             Tiger_Log::error( $e->getMessage() );
 
         }
+
+    }
+
+    protected function _populateReferrals ( & $data )
+    {
+        if ( ! empty( $data['org_referral_code'] ) ) {
+            $orgRow = $this->_orgModel->getOrgByReferralCode( $data['org_referral_code'] );
+            if ( ! empty( $orgRow ) ) {
+                $data['referral_org_id'] = $orgRow->org_id;
+            }
+        }
+
+        if ( ! empty( $data['user_referral_code'] ) ) {
+            $userRow = $this->_userModel->getUserByReferralCode( $data['user_referral_code'] );
+            if ( ! empty( $userRow ) ) {
+                $data['referral_user_id'] = $userRow->user_id;
+            }
+        }
+
+        /** We don't want these ending up in the new user or org records. */
+        unset( $data['org_referral_code'] );
+        unset( $data['user_referral_code'] );
 
     }
 
@@ -533,11 +588,11 @@ class Account_Service_Account extends Core_Service_Webservice
             $this->_form->getElement('role')->setRequired(false);
 
             /**
-             * One of the first things to check for is the existence of unique fields
-             * within the saveUser payload. Tiger will complain if we try to re-insert
-             * or update the user record with the same email or username. This function
-             * simply removes certain form validators. Note that this function only works
-             * if passed a user_id as part of the params payload.
+             * One of the first things to check for is the existence of unique fields within the
+             * saveUser payload. Tiger will complain if we try to re-insert or update the user
+             * record with the same email or username. This function simply adds exclusions for
+             * certain form validators. Note that this function only works if passed a user_id as
+             * part of the params payload.
              */
             $this->_removeUniqueUserValidation( $params );
 
@@ -759,7 +814,6 @@ class Account_Service_Account extends Core_Service_Webservice
             $orgRow->org_id = Tiger_Utility_Uuid::v1();
             $orgRow->orgname = str_replace('-', '', $orgRow->org_id );
             $orgRow->type_org = 'COMPANY';
-            $orgRow->primary = 1;
             $orgRow->create_ip = $_SERVER['REMOTE_ADDR'];
             $orgRow->update_ip = $_SERVER['REMOTE_ADDR'];
 
@@ -806,7 +860,7 @@ class Account_Service_Account extends Core_Service_Webservice
 
             /** Update the relevant pieces with user data. In this case, we just need a new id. */
             $orgUserRow->org_user_id = Tiger_Utility_Uuid::v1();
-            $orgUserRow->type_user_role = 'ADMIN';
+            $orgUserRow->type_user_role = ( ! empty( $data['type_user_role'] ) ) ? $data['type_user_role'] : 'ADMIN';
 
         }
 
@@ -829,25 +883,15 @@ class Account_Service_Account extends Core_Service_Webservice
 
     protected function _removeUniqueUserValidation ( $params )
     {
-        /** If the user_id is empty, this is an insert and we don't need to be here. */
-        if ( empty( $params['user_id'] ) ) { return; }
+        /** If the user_id is empty or not a valid UUID, we're outta here. */
+        if ( ! empty( $params['user_id'] ) && Tiger_Utility_Uuid::is_valid( $params['user_id'] ) ) {
 
-        /** If the user_id is not a valid UUID, we're outta here. */
-        if ( ! Tiger_Utility_Uuid::is_valid( $params['user_id'] ) ) { return; }
+            /** If the username is the same as the user's existing record, we exclude the record. */
+            $this->_form->username->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'user_id', 'value' => $params['user_id'] ] );
 
-        $userRow = $this->_userModel->getUserById( $params['user_id'] );
+            /** If the email is the same as the user's existing record, we exclude the record. */
+            $this->_form->email->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'user_id', 'value' => $params['user_id'] ] );
 
-        /** If there is no record for the user_id, then we're outta here as well. */
-        if ( empty( $userRow ) ){ return; }
-
-        /** If the username is the same as the user's existing record, removed the validator. */
-        if ( ! empty( $params['username'] ) && $params['username'] === $userRow->username ) {
-            $this->_form->getElement('username')->removeValidator('Db_NoRecordExists');
-        }
-
-        /** If the email is the same as the user's existing record, removed the validator. */
-        if ( ! empty( $params['email'] ) && $params['email'] === $userRow->email ) {
-            $this->_form->getElement('email')->removeValidator('Db_NoRecordExists');
         }
 
     }

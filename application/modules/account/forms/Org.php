@@ -43,7 +43,7 @@ class Account_Form_Org extends Tiger_Form_Base
         $this->addElement( $this->_getDescription() );
         $this->addElement( $this->_getCompanyName() );
         $this->addElement( $this->_getDomain() );
-        $this->addElement( $this->_getReferralCode() );
+        $this->addElement( $this->_getOrgReferralCode() );
         $this->addElement( $this->_getTypeOrg() );
         $this->addElement( $this->_getTypeHearabout() );
         $this->addElement( $this->_getTypeBusiness() );
@@ -372,9 +372,9 @@ class Account_Form_Org extends Tiger_Form_Base
 
     }
 
-    protected function _getReferralCode ( ) {
+    protected function _getOrgReferralCode ( ) {
 
-        $name = 'referral_code';
+        $name = 'org_referral_code';
 
         $options = [
 
@@ -395,7 +395,7 @@ class Account_Form_Org extends Tiger_Form_Base
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9\_\-.]/',
+                                            'match' => '/[^A-Za-z0-9\_\-\.]/',
                                             'replace' => ''
                                         ] ]
                                     ],
@@ -409,8 +409,15 @@ class Account_Form_Org extends Tiger_Form_Base
                                                 Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
                                             ]
                                         ] ],
+                                        [ 'Db_NoRecordExists', false, [
+                                            'table'    => 'org',
+                                            'field'    => 'org_referral_code',
+                                            'messages' => [
+                                                Zend_Validate_Db_NoRecordExists::ERROR_RECORD_FOUND => "ERROR.REFERRAL_CODE_EXISTS",
+                                            ]
+                                        ] ],
                                         [ 'Regex', false, [
-                                            'pattern' => '/^[A-Za-z0-9\_\-.]+$/',
+                                            'pattern' => '/^[A-Za-z0-9\_\-\.]+$/',
                                             'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ]
                                     ]

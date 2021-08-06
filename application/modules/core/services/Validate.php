@@ -22,100 +22,18 @@
 /**
  * Class Core_Service_Validate
  */
-final class Core_Service_Validate {
+final class Core_Service_Validate extends Core_Service_Webservice {
 
-    protected $_locale;
     protected $_translate;
-    protected $_config;
-    protected $_response;
-    protected $_request;
-    protected $_form;
-    protected $_reflection;
 
     public function __construct( $input ) {
 
-        $this->_locale      = Zend_Registry::get('Zend_Locale');
-        $this->_translate   = Zend_Registry::get('Zend_Translate');
-        $this->_config      = Zend_Registry::get('Zend_Config');
-        $this->_response    = new Core_Model_ResponseObject();
+        $this->_translate = Zend_Registry::get('Zend_Translate');
 
-        if ( $input instanceof Zend_Controller_Request_Http ) {
-            $this->_request = $input;
-            $params = $this->_request->getParams();
-        }
-        elseif ( is_array($input) ) {
-            $params = $input;
-        }
-
-        if ( ! isset( $this->_reflection ) ) {
-            $this->_reflection = new ReflectionClass( $this );
-        }
-
-        if ( isset( $params['form'] ) && class_exists( $params['form'], true ) ) {
-            $this->_form = new $params['form'];
-        }
-
-        $this->_dispatch( $params );
+        parent::__construct( $input );
 
     }
 
-    // Common Class Functions //
-
-    /**
-     * If this service is called via the API, the dispatch
-     * method will route the $params to the proper function.
-     * @param type $params
-     */
-    private function _dispatch ( $params ) {
-
-        try {
-
-            if ( isset( $params['method'] ) ) {
-
-                // filter the method to just camelCase alphaNumeric for security
-                $method = Zend_Filter::filterStatic( $params['method'],
-                    'PregReplace', array('match' => '/[^A-Za-z0-9]/', 'replace' => '') );
-
-                // make sure the method exists and that it's public
-                if ( method_exists( $this, $method ) &&
-                    $this->_reflection->getMethod( $method )->isPublic() ) {
-                    $this->{$method}( $params );
-                }
-            }
-        }
-
-        catch ( Exception $e ) {
-
-            // @TODO Need to log this
-
-        }
-
-    }
-
-    /**
-     * Gets the Core ResponseObject
-     * @return object of ResponseObject
-     */
-    public function getResponse() {
-        return $this->_response;
-    }
-
-    /**
-     * Convenience function used to set form errors. Call the function
-     * without passing in a form to use the set form for the service,
-     * or pass in a different form to set the responseObject from it.
-     * @param null $frm
-     */
-    protected function _setFormErrors ( $frm = null ) {
-
-        $form = ( ! is_null( $frm ) ) ? $frm : $this->_form;
-
-        $this->_response->result        = 0;
-        $this->_response->form          = $form->getMessages();
-        $this->_response->error         = $form->getErrors();
-
-    }
-    
     /**
      * Validate Field
      * 
@@ -128,14 +46,20 @@ final class Core_Service_Validate {
 
         if ( $element instanceof Zend_Form_Element ) {
 
+            /** Some fields need to be unique within the DB. However, if the user or admin is editing a field, we need to */
+
             if ( $element->getName() === 'username' ){
-                $element->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'username', 'value' => $params['context'] ] );
+                $element->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'user_id', 'value' => $params['context'] ] );
             }
             elseif ( $element->getName() === 'email' ){
-                $element->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'email', 'value' => $params['context'] ] );
+                $element->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'user_id', 'value' => $params['context'] ] );
             }
             elseif ( $element->getName() === 'orgname' ){
-                $element->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'orgname', 'value' => $params['context'] ] );
+                $element->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => 'org_id', 'value' => $params['context'] ] );
+            }
+            elseif ( $element->getName() === 'referral_code' ){
+                $field = ( $this->_form->getName() === 'Account_Form_Org' ) ? 'org_id' : 'user_id';
+                $element->getValidator('Db_NoRecordExists')->setExclude( [ 'field' => $field, 'value' => $params['context'] ] );
             }
 
             if ($element->isValid($params['value'], $params)) {

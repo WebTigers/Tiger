@@ -21,7 +21,8 @@
 
 class ManageController extends Tiger_Controller_Manage
 {
-    public function init()
+
+    public function init ( )
     {
         /** Set theme and theme template options. */
         $this->view->theme  = 'oneui';
@@ -29,17 +30,25 @@ class ManageController extends Tiger_Controller_Manage
 
         parent::init();
 
-        /** Global Footer */
-        $this->view->template->name = Zend_Registry::get('Zend_Config')->tiger->platform->name;
+        /** Global hero header vars */
+        $this->view->template->page_title = $this->view->translate('ACCOUNTS');
+
+        $this->view->template->name = Zend_Registry::get('Zend_Translate')->translate( Zend_Registry::get('Zend_Config')->tiger->platform->name );
         $this->view->template->version = Zend_Registry::get('Zend_Config')->tiger->platform->version;
+
+        /** This makes use of the default manage branch of the menu tree. */
+        $this->view->template->menu = 'manage';
+
+        // $this->view->headLink()->appendStylesheet( Tiger_Cache::version('/assets/account/css/account.css' ) );
 
     }
 
-    ##### Admin Actions #####
+    ### Public Actions ###
 
     public function indexAction ( )
     {
-        $this->forward('dashboard');
+        $this->forward('dashboard' );
+
     }
 
     public function dashboardAction ( )
@@ -47,13 +56,6 @@ class ManageController extends Tiger_Controller_Manage
         /** Global hero header vars */
         $this->view->template->page_title = $this->view->translate( 'MANAGE.DASHBOARD' );
         $this->_checkPassword();
-    }
-
-    public function adminAction ( )
-    {
-        $port = ( $_SERVER['REQUEST_SCHEME'] === 'http' ) ? '8080' : '8081' ;
-        $uri = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . ':' . $port . '/admin';
-        $this->redirect( $uri );
     }
 
     private function _checkPassword ( )
@@ -65,6 +67,7 @@ class ManageController extends Tiger_Controller_Manage
         }
 
     }
+
 
 }
 

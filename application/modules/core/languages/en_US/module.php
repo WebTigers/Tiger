@@ -101,4 +101,11 @@ return [
     'MESSAGE.BACKUP_REMOVE_ERROR' => 'There was an error removing the backup file.',
     'MESSAGE.CONFIG_SAVED' => 'Config Saved.',
 
+    'UTILITY.YEAR' => 'year',
+    'UTILITY.MONTH' => 'month',
+    'UTILITY.DAY' => 'day',
+    'UTILITY.HOUR' => 'hour',
+    'UTILITY.MINUTE' => 'minute',
+    'UTILITY.SECOND' => 'second',
+    'UTILITY.AGO' => 'ago',
 ];

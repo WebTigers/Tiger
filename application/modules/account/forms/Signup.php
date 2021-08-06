@@ -40,7 +40,10 @@ class Account_Form_Signup extends Tiger_Form_Base
 
         $this->setName('Account_Form_Signup');
 
-        $this->addElement( $this->_getReferralCode() );
+        $this->addElement( $this->_getOrgname() );
+        $this->addElement( $this->_getOrgReferralCode() );
+        $this->addElement( $this->_getUserReferralCode() );
+
         $this->addElement( $this->_getFirstName() );
         $this->addElement( $this->_getLastName() );
         $this->addElement( $this->_getCompanyName() );
@@ -55,7 +58,63 @@ class Account_Form_Signup extends Tiger_Form_Base
 
     ##### Form Fields #####
 
-    protected function _getReferralCode ( ) {
+    protected function _getOrgname ( ) {
+
+        $name = 'orgname';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'           =>  [
+                                        // 'placeholder'   =>  $this->_translate->translate( 'PLACEHOLDER.RESOURCE' ),
+                                        'data-valid'    => '0',
+                                        'data-context'  => '',
+                                    ],
+
+            'label'             =>  strtoupper( 'LABEL.' . $name ),
+            'description'       =>  strtoupper( 'DESCRIPTION.' . $name ),
+
+            'required'          =>  false,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Za-z0-9]/',
+                                            'replace' => ''
+                                        ] ]
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 25,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Db_NoRecordExists', false, [
+                                            'table'    => 'org',
+                                            'field'    => 'orgname',
+                                            'messages' => [
+                                                Zend_Validate_Db_NoRecordExists::ERROR_RECORD_FOUND => "ERROR.ORGNAME_EXISTS",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Za-z0-9]+$/',
+                                            'messages' => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ]
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Hidden( $name, $options );
+
+    }
+
+    protected function _getOrgReferralCode ( ) {
 
         /**
          * Referral code is usually set within the signup form or via the URL. You will need to create a specific
@@ -65,7 +124,7 @@ class Account_Form_Signup extends Tiger_Form_Base
          * validated and stored in the database when the user signs up if it is present.
          */
 
-        $name = 'referral_code';
+        $name = 'org_referral_code';
 
         $options = [
 
@@ -78,15 +137,15 @@ class Account_Form_Signup extends Tiger_Form_Base
                                         'data-valid'    => '0',
                                     ],
 
-            'label'             =>  'LABEL.REFERRAL_CODE',
-            'description'       =>  'DESCRIPTION.REFERRAL_CODE',
+            'label'             =>  'LABEL.' . strtoupper( $name ),
+            'description'       =>  'DESCRIPTION.' . strtoupper( $name ),
 
             'required'          =>  false,
 
             'filters'           =>  [
                                         [ 'StringTrim' ],
                                         [ 'PregReplace', [
-                                            'match' => '/[^A-Za-z0-9]/',
+                                            'match' => '/[^A-Za-z0-9\_\-\.]/',
                                             'replace' => ''
                                         ] ],
                                     ],
@@ -101,13 +160,69 @@ class Account_Form_Signup extends Tiger_Form_Base
                                             ]
                                         ] ],
                                         [ 'Regex', false, [
-                                            'pattern'   => '/^[A-Za-z0-9]+$/',
+                                            'pattern' => '/^[A-Za-z0-9\_\-\.]+$/',
                                             'messages'  => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
                                         ] ],
                                     ]
         ];
 
-        return new Zend_Form_Element_Text( $name, $options );
+        return new Zend_Form_Element_Hidden( $name, $options );
+
+    }
+
+    protected function _getUserReferralCode ( ) {
+
+        /**
+         * Referral code is usually set within the signup form or via the URL. You will need to create a specific
+         * route to set a referral code from a URL. The current /signup route has this referral code pre-configured.
+         * Typing /signup/123456 will make the referral_code available within the form field as a hidden form element.
+         * What you do with the referral code is up to your specific application use case, but it will be sent,
+         * validated and stored in the database when the user signs up if it is present.
+         */
+
+        $name = 'user_referral_code';
+
+        $options = [
+
+            'name'              =>  $name,
+            'id'                =>  $name,
+            'class'             =>  'form-control form-control-lg form-control-alt',
+
+            'attribs'           =>  [
+                                        'placeholder' =>  $this->_translate->translate( 'REFERRAL_CODE' ),
+                                        'data-valid'    => '0',
+                                    ],
+
+            'label'             =>  'LABEL.' . strtoupper( $name ),
+            'description'       =>  'DESCRIPTION.' . strtoupper( $name ),
+
+            'required'          =>  false,
+
+            'filters'           =>  [
+                                        [ 'StringTrim' ],
+                                        [ 'PregReplace', [
+                                            'match' => '/[^A-Za-z0-9\_\-\.]/',
+                                            'replace' => ''
+                                        ] ],
+                                    ],
+
+            'validators'        =>  [
+                                        [ 'StringLength', false, [
+                                            'min'   => 1,
+                                            'max'   => 50,
+                                            'messages' => [
+                                                Zend_Validate_StringLength::TOO_SHORT => "ERROR.TOO_SHORT",
+                                                Zend_Validate_StringLength::TOO_LONG => "ERROR.TOO_LONG",
+                                            ]
+                                        ] ],
+                                        [ 'Regex', false, [
+                                            'pattern' => '/^[A-Za-z0-9\_\-\.]+$/',
+                                            'messages'  => [ Zend_Validate_Regex::NOT_MATCH => "ERROR.INVALID_CHARACTERS" ]
+                                        ] ],
+                                    ]
+        ];
+
+        return new Zend_Form_Element_Hidden( $name, $options );
 
     }
 
@@ -126,8 +241,8 @@ class Account_Form_Signup extends Tiger_Form_Base
                                         'data-valid'    => '0',
                                     ],
 
-            'label'             =>  'label.first_name',
-            'description'       =>  'description.first_name',
+            'label'             =>  'label.' . $name,
+            'description'       =>  'description.' . $name,
 
             'required'          =>  true,
 
@@ -456,7 +571,7 @@ class Account_Form_Signup extends Tiger_Form_Base
         $typeList   = $type->getTypeListByReference( 'hearabout', false, true );
 
         /** Add an empty "Please Select' to the top of the list. */
-        array_unshift( $typeList, $this->_translate->translate('SELECT.PLEASE_SELECT') );
+        array_unshift( $typeList, $this->_translate->translate('SELECT.PLACEHOLDER_HEARABOUT') );
 
         $name = 'type_hearabout';
 

@@ -53,6 +53,19 @@ class Account_Model_User extends Zend_Db_Table_Abstract
 
     }
 
+    public function getUserByReferralCode ( $user_referral_code ) {
+
+        $sql = $this->
+            select()->
+            where('user_referral_code = ?', $user_referral_code )->
+
+            where( 'active = 1' )->
+            where( 'deleted = 0' );
+
+        return $this->fetchRow( $sql );
+
+    }
+
     public function getUserProfileById ( $user_id )
     {
         $fields = [
@@ -67,6 +80,7 @@ class Account_Model_User extends Zend_Db_Table_Abstract
             'type_suffix',
             'company_title',
             'avatar_url',
+            'user_referral_code',
         ];
 
         $sql = $this->
@@ -138,24 +152,27 @@ class Account_Model_User extends Zend_Db_Table_Abstract
     public function getUserSearchList ( $search, $offset = 0, $limit = 0, $orderby = '' )
     {
 
-        $sql = $this->select()->
+        $sql = $this->select();
 
-            where( '( user_id LIKE ?', "%$search%" )->
+        if ( is_array( $search ) ) {
+            $sql->where("user_id IN ( ? )", $search );
+        }
+        else {
+            $sql->where('( user_id LIKE ?', "%$search%")->
             orWhere( 'username LIKE ?', "%$search%" )->
             orWhere( 'email LIKE ?', "%$search%" )->
             orWhere( 'user_display_name LIKE ?', "%$search%" )->
             orWhere( 'first_name LIKE ?', "%$search%" )->
             orWhere( 'middle_name LIKE ?', "%$search%" )->
             orWhere( 'last_name LIKE ?', "%$search%" )->
-            orWhere( 'role LIKE ? )', "%$search%" )->
+            orWhere( 'role LIKE ? )', "%$search%" );
+        }
 
-            where( 'active = 1' )->
+        $sql->where( 'active = 1' )->
             where( 'deleted = 0' )->
 
             order( $orderby)->
             limit( $limit, $offset );
-
-        // pr( $sql->assemble() );
 
         return $this->fetchAll( $sql );
 
@@ -192,36 +209,5 @@ class Account_Model_User extends Zend_Db_Table_Abstract
         return $this->fetchAll( $sql );
 
     }
-
-    public function getUserCount( $userIds, $roleNames, $orgIds )
-    {
-        /** This needs to join with the org table so that we make sure the org is active too. */
-
-        $sql = $this->
-        select()->
-        setIntegrityCheck(false)->  // We need this for any kind of join where updates cannot be performed.
-        from( [ 'ou' => 'org_user'], [ 'total' => new Zend_Db_Expr('COUNT(*)') ] )->
-        joinLeft( [ 'o' => 'org'], 'o.org_id = ou.org_id', [] )->
-        joinLeft( [ 'u' => 'user'], 'u.user_id = ou.user_id', [] )->
-
-        where("( u.user_id IN (?)", $userIds )->
-        orWhere('u.role IN (?)', $roleNames )->
-        orWhere('o.org_id IN (?) )', $orgIds )->
-
-        where('ou.active = 1')->
-        where('ou.deleted = 0')->
-
-        where('u.active = 1')->
-        where('u.deleted = 0')->
-
-        where('o.active = 1')->
-        where('o.deleted = 0');
-
-        // pr( $sql->assemble() );
-
-        return $this->fetchRow( $sql );
-
-    }
-
 
 }

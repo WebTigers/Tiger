@@ -10,6 +10,12 @@
 
 return [
 
+    // Menu Items //
+    'MENU.ACCOUNT.HEADING' => 'Account Management',
+    'MENU.ACCOUNT.DASHBOARD' => 'Dashboard',
+    'MENU.ACCOUNT.PROFILE' => 'Profile Settings',
+
+
     // Tiger Types //
     'TYPE.RETAIL' => 'Retail',
     'TYPE.SERVICE' => 'Service',
@@ -111,6 +117,8 @@ return [
     'TAB.USER' => 'User',
     'TAB.PROFILE' => 'Profile',
     'TAB.REFERRALS' => 'Referrals',
+    'LABEL.USER_REFERRAL_CODE' => 'Referral Code',
+    'DESCRIPTION.USER_REFERRAL_CODE' => 'A unique public referral code that identifies this user account within the system.',
     'LABEL.USER_ID' => 'User ID',
     'DESCRIPTION.USER_ID' => 'User ID in the form of a v1 UUID. This is system-generated and is not editable. Shown for Admin reference only.',
     'LABEL.REFERRAL_ORG_ID' => 'Referral Org ID',
@@ -168,6 +176,7 @@ return [
     'ERROR.USERNAME_EXISTS' => 'Username already exists.',
     'ERROR.ORGNAME_EXISTS' => 'Orgname already exists.',
     'ERROR.INVALID_ID' => 'Invalid ID.',
+    'ERROR.REFERRAL_CODE_EXISTS' => 'Referral Code already exists.',
 
     // Email From Name //
     'MAIL.FROM_NAME' => 'Tiger Platform',
@@ -198,7 +207,8 @@ return [
     'LOGIN.TEXT' => 'Welcome, please login.',
     'LABEL.REMEMBER_ME' => 'Remember Me',
     'BUTTON.LOGIN' => 'Login',
-    'ALERT.LOGIN_FAILED' => '',
+    'LOGIN.FAILED' => 'Username or password incorrect.',
+    'LOGIN.USERNAME_EMAIL' => 'Username or Email',
 
     // Lock //
     'LOCK.ACCOUNT_LOCKED' => 'Account Locked',
@@ -411,5 +421,6 @@ return [
     'MESSAGE.ORG_USER_SAVED' => 'Org link saved.',
     'ERROR.ORG_USER_NOT_FOUND' => 'Org link not found.',
 
+    'SELECT.PLACEHOLDER_HEARABOUT' => 'How did you hear about us?',
 
 ];

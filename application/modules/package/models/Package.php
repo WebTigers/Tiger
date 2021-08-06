@@ -58,7 +58,7 @@ class Package_Model_Package extends Zend_Db_Table_Abstract {
 
     }
 
-    public function getAdminPackageSearchList ( $search = '', $offset = 0, $limit = 10, $orderby = '' ) {
+    public function getAdminPackageSearchList ( $search = '', $offset = 0, $limit = 0, $orderby = '' ) {
 
         $sql = $this->
         select()->

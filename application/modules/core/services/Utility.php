@@ -106,4 +106,50 @@ class Core_Service_Utility
         return $out;
     }
 
+    public function getLocalSelect2List ( $params )
+    {
+        $locales = Zend_Registry::get('Zend_Translate')->getList();
+
+        $out = [];
+        foreach ( $locales as $key => $locale ) {
+            $out[] = (object) [ 'id' => $locale, 'text' => $locale . ' | '. Zend_Locale::getTranslationList('language', LOCALE )[ $locale ] ];
+        }
+        return $out;
+    }
+
+    public static function getTimeAgo ( $datetime ) {
+
+        $time = strtotime( $datetime );
+
+        $translate = Zend_Registry::get('Zend_Translate');
+
+        $time_difference = time() - $time;
+
+        if ( $time_difference < 11 ) {
+            return 'Just now';
+        }
+
+        $condition = array(
+            12 * 30 * 24 * 60 * 60  =>  $translate->translate('UTILITY.YEAR'),
+            30 * 24 * 60 * 60       =>  $translate->translate('UTILITY.MONTH'),
+            24 * 60 * 60            =>  $translate->translate('UTILITY.DAY'),
+            60 * 60                 =>  $translate->translate('UTILITY.HOUR'),
+            60                      =>  $translate->translate('UTILITY.MINUTE'),
+            1                       =>  $translate->translate('UTILITY.SECOND')
+        );
+
+        foreach( $condition as $secs => $str )
+        {
+            $d = $time_difference / $secs;
+
+            if ( $d >= 1 ) {
+                $t = round( $d );
+                return $t . ' ' . $str . ( $t > 1 ? 's' : '' ) . ' ' . $translate->translate('UTILITY.AGO');
+            }
+
+        }
+
+    }
+
+
 }

@@ -15,11 +15,15 @@ return [
 
     'DT.TITLE' => 'Title',
     'DT.MESSAGE' => 'Message',
-    'DT.TYPE_MESSAGE_STATUS' => 'Status',
+    'DT.TYPE_STATUS' => 'Status',
+    'DT.TARGET' => 'Target',
     'DT.ROUTE' => 'Route',
     'DT.LOCALE' => 'Locale',
     'DT.START_DATE' => 'Start Date',
     'DT.END_DATE' => 'End Date',
+    'DT.EDIT_MESSAGE' => 'Edit',
+    'DT.ACTIVE_INACTIVE_MESSAGE' => 'Active / Inactive',
+    'DT.DELETE_UNDELETE_MESSAGE' => 'Delete / Undelete',
 
     'TYPE.DRAFT' => 'Draft',
     'TYPE.PUBLISHED' => 'Published',
@@ -60,10 +64,14 @@ return [
     'DESCRIPTION.MESSAGE_TARGET' => 'Select the target module of this message. The target module is whatever module will be handling the publishing of the message.',
     'LABEL.MESSAGE_FORMAT' => 'Format',
     'DESCRIPTION.MESSAGE_FORMAT' => 'Select a message format to wrap your message inside of. When your message is published, it will be seen wrapped within one the selected standard Bootstrap alert types.',
-    'LABEL.MESSAGE_ICON_CSS' => 'Select Icon',
-    'DESCRIPTION.MESSAGE_ICON_CSS' => 'Select an icon. You can search for icons using the search bar when the selector appears. Icons are optional.',
+    'LABEL.MESSAGE_ICON_CLASS' => 'Select Icon',
+    'DESCRIPTION.MESSAGE_ICON_CLASS' => 'Select an icon. You can search for icons using the search bar when the selector appears. Icons are optional.',
     'LABEL.MESSAGE_DISMISSIBLE' => 'Dismissible Message',
     'DESCRIPTION.MESSAGE_DISMISSIBLE' => 'Sets an icon in the message so that the message can be dismissed if clicked.',
+    'LABEL.MESSAGE_LINK' => 'Message Link',
+    'DESCRIPTION.MESSAGE_LINK' => 'Usually reserved for notifications, clicking on the notification will take the user to the link. Usually, this will be some page within the application.',
+    'LABEL.MESSAGE_LINK_NEW' => 'Open Message Link in New Window',
+    'DESCRIPTION.MESSAGE_LINK_NEW' => 'Set this to on if you would like the link to open in a new tab or window.',
 
     'LABEL.MESSAGE_SEND_USERS' => 'Send Users',
     'DESCRIPTION.MESSAGE_SEND_USERS' => 'Search for individual users by usernname, email, or UserId.',
@@ -82,5 +90,27 @@ return [
     'LABEL.MESSAGE_ROUTE' => 'Routes',
     'DESCRIPTION.MESSAGE_ROUTE' => 'Enter one or more routes this alert will display. List one route per line. Routes are: module, module/controller, or module/controller/action',
 
+    'LABEL.MESSAGE_LOCALE' => 'Locale',
+    'DESCRIPTION.MESSAGE_LOCALE' => 'Enter a locale for this message. It will only appear to users with their profile locale set to this locale.',
+
     'MESSAGE.TOTAL_USERS' => 'Total number of users selected: %s',
+
+    'MESSAGE.MESSAGE_NOT_FOUND' => 'Message not found.',
+    'MESSAGE.MESSAGE_SAVED' => 'Message Saved.',
+
+    'OPTION.USE_TRANSLATION_KEY' => 'Use Translation Key',
+
+    'NOTIFICATION.NO_NOTIFICATIONS' => 'No Notifications',
+    'NOTIFICATIONS' => 'Notifications',
+
+    'HEADER.MESSAGE_PREVIEW' => 'Message Preview',
+
+    'MESSAGE.NOTIFICATION_SAVE_FAILED' => 'Notification Save Failed.',
+
+    'SYSTEM.MESSAGE.TITLE.NEW_PACKAGE_UPDATES' => 'New Package Updates Available',
+    'SYSTEM.MESSAGE.TEXT.NEW_PACKAGE_UPDATES' => 'Check the Package Admin area for new package updates.',
+
+    'MESSAGE.NOTIFICATION_UPDATED' => 'Notification Updated.',
+    'MESSAGE.NOTIFICATION_NOT_UPDATED' => 'Notification could not be updated.',
+
 ];

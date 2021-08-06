@@ -26,11 +26,6 @@ class Media_AdminController extends Tiger_Controller_Admin
 
     public function indexAction ( )
     {
-        $this->forward('gallery');
-    }
-
-    public function galleryAction ( )
-    {
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/media/js/media.admin.gallery.js' ) );
         $this->view->mediaForm = new Media_Form_Media();
     }
