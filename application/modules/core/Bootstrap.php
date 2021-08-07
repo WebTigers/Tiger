@@ -147,7 +147,7 @@ class Core_Bootstrap extends Zend_Application_Bootstrap_Bootstrap
     protected function _initTigerId ( )
     {
         /** Set a Guest User Id that tries to persist the same across all visits. */
-        $guest_user_id = ( isset( $_COOKIE['TID'] ) )
+        $guest_user_id = ( isset( $_COOKIE['TID'] ) && Tiger_Utility_Uuid::is_valid( $_COOKIE['TID'] )  )
             ? $_COOKIE['TID']
             : Tiger_Utility_Uuid::v1();
         setcookie('TID', $guest_user_id, time() + (3600 * 24 * 365));

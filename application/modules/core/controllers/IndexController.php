@@ -44,6 +44,8 @@ class IndexController extends Tiger_Controller_Action
     public function indexAction ( )
     {
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/vendor/Cookies/Cookies.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerID.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/core.index.js' ) );
     }
 

@@ -103,6 +103,8 @@ abstract class Tiger_Controller_Manage extends Zend_Controller_Action {
         /** Tiger Core DOM Plugins */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerForm.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/vendor/Cookies/Cookies.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerID.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDashboard.js' ) );
 
     }

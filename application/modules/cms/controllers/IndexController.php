@@ -35,6 +35,9 @@ class Cms_IndexController extends Tiger_Controller_Action
             $this->redirect( $uri );
         }
 
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/vendor/Cookies/Cookies.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerID.js' ) );
+
         $this->_translate = Zend_Registry::get('Zend_Translate');
     }
 

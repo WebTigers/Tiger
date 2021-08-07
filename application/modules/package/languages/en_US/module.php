@@ -48,6 +48,7 @@ return [
 
     'FORM.SAVE_PACKAGE' => 'Save Package',
     'MESSAGE.SYNC_PACKAGES_COMPLETED' => 'Packages Sync Completed',
+    'MESSAGE.PACKAGE_ADDED' => 'Package Added',
     'MESSAGE.PACKAGE_UPDATED' => 'Package Updated',
     'MESSAGE.PACKAGE_ACTIVATED' => 'Package Activated',
     'MESSAGE.PACKAGE_DEACTIVATED' => 'Package Deactivated',

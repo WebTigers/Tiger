@@ -101,9 +101,11 @@ abstract class Tiger_Controller_Admin extends Zend_Controller_Action {
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/plugins/datatables/jquery.dataTables.min.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/oneui/js/plugins/datatables/dataTables.bootstrap4.min.js' ) );
 
-        /** Tiger Core DOM Plugins */
+        /** Tiger Core Utility Plugins */
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDOM.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerForm.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/vendor/Cookies/Cookies.js' ) );
+        $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerID.js' ) );
         $this->view->inlineScript()->appendFile( Tiger_Cache::version( '/assets/core/js/tiger/tigerDashboard.js' ) );
 
     }
