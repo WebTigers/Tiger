@@ -155,6 +155,17 @@ You might notice that we did not install a lot of front-end UI technologies.
 This is because at the end of the day, you are the one driving the UI, not Tiger.
 If you prefer React, Vue, Tailwind, or an Angular SPA (single-page application) that is up to you. Tiger’s UI can be completely decoupled from the backend. All you make are ajax webservice calls to populate your UI framework data.
 
+## Forking and Cloning
+This repo is available for forking and cloning for your Tiger development purposes. However, certain theme modules are not included within this repo and are only available by launching a Tiger Instance. Forking or cloning this repo will not give you a fully operational platform.
+
+Publishing non-public Tiger modules is a violation of owner copyrights and is prohibited.
+
+# Bug Reports
+Feel free to post bugs and other issues on [GitHub Issues](https://github.com/WebTigers/Tiger/issues). We will attempt to remedy whatever issues and then post a new release to fix issues quickly. We appreciate your help in ferreting out bugs and anything else that you think might be wonky.
+
+# Security Issues
+Please do not post security issues publicly. [Contact us](mailto:support@webtigers.com?subject=TIGER%20Security%20Issue) privately so that we have time to fix whatever issue for the safety and security of our clients.
+
 # License
 Tiger is dual-licensed under AGPL 3.0 and Commercial licenses. Basically, you can use Tiger instances to build your own projects much more quickly and distribute those projects while maintaining control of your own code.
 
@@ -165,6 +176,10 @@ See License.txt for details.
 - [Tiger Docs on GoogleDocs](https://docs.google.com/document/d/1eUkRWeliVnJ8bEZa_C_MGaICsoJWMongR1xIE6E-W_s/edit?usp=sharing)
 - [ZF1-Future](https://github.com/Shardj/zf1-future) — Latest community supported and updated ZendFramework 1
 - [ZF1-Future Manual](https://webtigers.com/manual) — Docs for ZendFramework 1
+
+# TODO Roadmap
+- **Tiger Tests are coming.** If you would like to help out and write tests for WebTigers, [contact us](mailto:support@webtigers.com) and let us know what your time costs are.
+- **Multi-site Management.** You can do multiple sites from a Tiger instance, but you'd need to set these up manually. We want to automate this process.
 
 <br><br>
 Copyright 2020-2021 WebTigers
