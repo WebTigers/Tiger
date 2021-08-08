@@ -6,8 +6,10 @@
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0) [![License: AGPL v3](https://img.shields.io/badge/License-Commercial-green.svg)](https://www.webtigers.com/license)
 
-## Tiger Documentation
+## Tiger Quick Links
 Tiger Docs can be found here: [Tiger Docs on GoogleDocs](https://docs.google.com/document/d/1eUkRWeliVnJ8bEZa_C_MGaICsoJWMongR1xIE6E-W_s/edit?usp=sharing)
+
+Docs for updated ZendFramework 1: [ZF1-Future Manual](https://webtigers.com/manual)
 
 Launch a new Tiger instance: [Tiger on AWS](https://aws.amazon.com/marketplace/pp/prodview-wixkz63qgutes)
 
@@ -57,6 +59,20 @@ Most, if not all, of the core functionality of a typical SaaS application is alr
 Why reinvent the wheel each time you or a new client needs a software application platform?
 Tiger has these pieces already in place and is ready to rock!
 
+### Cost/Benefit Analysis
+WebTigers has already done all the heavy lifting for you in terms of getting your new multi-user website or SaaS app up and running.
+
+It would cost you literally 1,000’s of hours of development time just to get your new site or custom web application to the point where Tiger is out of the box! 
+
+How do we know? Because that is exactly the amount of time we put into building Tiger!
+
+The typical development cost for web apps is $75 to $100 per hour for very experienced developers and application architects.
+Tiger has just saved you at a minimum, 3 to 6 months of exceptional work.
+
+If you had only 2 very experienced full-time developers and architects working for 3 months just to get your SaaS app up and running to a base operation of user management, you’d spend $50,000 to $150,000 in people hours alone.
+
+Tiger has you up and running out of the box for **just $12 bucks a month** per Tiger instance. Tiger saves you huge amounts of time and money. Those are precious months and dollars you can be devoting to marketing and other aspects of your business!
+
 # Specifications
 Here’s what makes Tiger tick ...
 
@@ -72,6 +88,9 @@ Here’s what makes Tiger tick ...
 - One-click module updates
 - phpMyAdmin pre-installed
 - Single-folder server configuration
+
+### Tiger Speed
+Tiger is plain PHP code, not compiled. Running on an AWS micro instance Tiger delivers sub-400 ms loading. That's faster than Larvel and Symfony! And on larger instances Tiger is even faster!
 
 ### Tiger Security
 Tiger undergoes continuous security checks and evaluations with each new release. Our team has implemented numerous enterprise-class security features designed to help protect and harden your application from hackers, such as:
