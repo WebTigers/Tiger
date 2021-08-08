@@ -1,5 +1,5 @@
 <a href="https://webtigers.com/" target="_blank">
-    <img src="https://webtigers.s3.amazonaws.com/assets/img/TigerIntro.jpg" alt="WebTigers Tiger header" title="Tiger" align="center" />
+    <img src="https://webtigers.s3.amazonaws.com/assets/img/TigerIntroLogo.jpg" alt="WebTigers Tiger header" title="Tiger" align="center" />
 </a>
 
 # A WebTigers LAMP Development Platform
