@@ -71,7 +71,7 @@ Tiger has just saved you at a minimum, 3 to 6 months of exceptional work.
 
 If you had only 2 very experienced full-time developers and architects working for 3 months just to get your SaaS app up and running to a base operation of user management, you’d spend $50,000 to $150,000 in people hours alone.
 
-Tiger has you up and running out of the box for **just $12 bucks a month** per Tiger instance. Tiger saves you huge amounts of time and money. Those are precious months and dollars you can be devoting to marketing and other aspects of your business!
+Tiger has you up and running out of the box for **just USD$12.00 a month** per Tiger instance. Tiger saves you huge amounts of time and money. Those are precious months and dollars you can be devoting to marketing and other aspects of your business!
 
 # Specifications
 Here’s what makes Tiger tick ...
