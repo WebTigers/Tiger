@@ -177,7 +177,7 @@ See License.txt for details.
 - [ZF1-Future](https://github.com/Shardj/zf1-future) — Latest community supported and updated ZendFramework 1
 - [ZF1-Future Manual](https://webtigers.com/manual) — Docs for ZendFramework 1
 
-# TODO Roadmap
+# Roadmap
 - **Tiger Tests are coming.** If you would like to help out and write tests for WebTigers, [contact us](mailto:support@webtigers.com) and let us know what your time costs are.
 - **Multi-site Management.** You can do multiple sites from a Tiger instance, but you'd need to set these up manually. We want to automate this process.
 

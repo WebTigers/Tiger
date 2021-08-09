@@ -30,6 +30,7 @@
             $( document ).ready( function() {
 
                 $().tigerDOM('initScrollTo');
+                $('.case-studies').tigerDOM('equalHeights');
 
             });            
 
