@@ -7,11 +7,15 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0) [![License: AGPL v3](https://img.shields.io/badge/License-Commercial-green.svg)](https://www.webtigers.com/license)
 
 ## Tiger Quick Links
+Quick-launch and setup instructions are at the end of this document.
+
 Tiger Docs can be found here: [Tiger Docs on GoogleDocs](https://docs.google.com/document/d/1eUkRWeliVnJ8bEZa_C_MGaICsoJWMongR1xIE6E-W_s/edit?usp=sharing)
 
 Docs for updated ZendFramework 1: [ZF1-Future Manual](https://webtigers.com/manual)
 
 Launch a new Tiger instance: [Tiger on AWS](https://aws.amazon.com/marketplace/pp/prodview-wixkz63qgutes)
+
+How to get in-touch with WebTigers: [Contact us](mailto:support@webtigers.com)
 
 # Welcome to Tiger
 
@@ -181,7 +185,26 @@ See License.txt for details.
 - **Tiger Tests are coming.** If you would like to help out and write tests for WebTigers, [contact us](mailto:support@webtigers.com) and let us know what your time costs are.
 - **Multi-site Management.** You can do multiple sites from a Tiger instance, but you'd need to set these up manually. We want to automate this process.
 
+# Quick Launch / Setup
+Launch a Tiger Instance within your AWS environment here: https://aws.amazon.com/marketplace/pp/prodview-wixkz63qgutes
+
+Be sure you assign a Public IP to the Instance.
+
+Once your EC2 server instance is up and running, COPY the server’s InstanceID to your clipboard. This is your initial login password.
+
+Navigate to the Admin area of the box to setup the server:
+
+http://[your.public.ip.address]/admin
+
+You will be taken to the login screen. Login with:
+- Username: tiger
+- Password: [InstanceID]  (paste from your clipboard)
+
+You will be taken to the Tiger Admin Desktop.
+
+Fill out the Setup Wizard to setup your Tiger Instance.
+
 <br><br>
+___
+
 Copyright 2020-2021 WebTigers
-
-
