@@ -28,20 +28,46 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
     }
 
     /**
-     * View script paths as a stack: Core is the base, the app is pushed on top and wins.
+     * Views + active theme/skin. View script paths cascade (last wins):
+     * Core (base) -> theme -> app. Actions are wrapped in the active theme's layout,
+     * which loads bootstrap -> default.css -> the active skin.
+     *
+     * Theme + skin come from config now (tiger.theme / tiger.skin); the resolver
+     * becomes per-org once tenancy lands.
      */
     protected function _initTigerViews()
     {
         $this->bootstrap('tigerPaths');
 
+        $opts  = $this->getOption('tiger') ?: array();
+        $theme = isset($opts['theme']) ? $opts['theme'] : 'puma';
+        $skin  = isset($opts['skin'])  ? $opts['skin']  : '';
+        $themePath = TIGER_CORE_PATH . '/themes/' . $theme;
+
         $view = new Zend_View();
-        $view->addScriptPath(TIGER_CORE_PATH . '/core/views/scripts');   // base (Core)
-        if (is_dir(APPLICATION_PATH . '/views/scripts')) {
-            $view->addScriptPath(APPLICATION_PATH . '/views/scripts');   // override (app wins)
+        $view->doctype('HTML5');
+        $view->addScriptPath(TIGER_CORE_PATH . '/core/views/scripts');      // base (Core)
+        if (is_dir($themePath . '/views/scripts')) {
+            $view->addScriptPath($themePath . '/views/scripts');           // theme override
         }
+        if (is_dir(APPLICATION_PATH . '/views/scripts')) {
+            $view->addScriptPath(APPLICATION_PATH . '/views/scripts');     // app override
+        }
+
+        // Theme context for views + layout:
+        $view->theme       = $theme;
+        $view->skin        = $skin;
+        $view->themeAssets = '/_theme';
 
         $viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
         $viewRenderer->setView($view);
+
+        // Wrap actions in the active theme's layout:
+        $layout = Zend_Layout::startMvc(array(
+            'layoutPath' => $themePath . '/layouts/scripts',
+            'layout'     => 'layout',
+        ));
+        $layout->setView($view);
 
         return $view;
     }
