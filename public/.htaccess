@@ -1,0 +1,55 @@
+# Tiger — public/.htaccess
+#
+# Front-controller routing for Apache. Real files, directories, and SYMLINKS are
+# served straight from disk; everything else is handed to index.php (the ZF1 front
+# controller). A static asset therefore never enters the PHP bootstrap — no session,
+# no ACL, no framework runs for a .css/.js/.png — so assets are fast and the app
+# only boots for real routes.
+#
+# This is request ROUTING, not access control: files under public/ are public by
+# definition. Permission-gated downloads belong in a controller that streams the
+# file after an ACL check — never here.
+#
+# PORTABILITY vs SPEED: this file makes `composer create-project` work on any Apache
+# with `AllowOverride FileInfo` (shared hosting, stock installs) with zero server
+# config. In production, copy these same rules into the vhost's <Directory> block
+# and set `AllowOverride None` — Apache then skips the per-request .htaccess lookup.
+# (That is exactly what the tiger-dev box does; both forms carry identical logic.)
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # If the app is served from a subdirectory rather than a domain root, set:
+    # RewriteBase /
+
+    # Cache-busting: /css/app.1720200000.css is served from /css/app.css on disk.
+    # A 10-digit timestamp before the extension lets the URL change (busting the
+    # browser cache) while the real file keeps its plain name.
+    RewriteRule ^(.*)\.[0-9]{10}\.(css|js)$ $1.$2 [L]
+
+    # Never serve dotfiles/dirs (.git, .env, .htaccess, …) — except ACME's
+    # /.well-known used for TLS certificate challenges.
+    RewriteRule (^|/)\.(?!well-known/) - [F]
+
+    # Static passthrough: serve as-is when the target is a real file (-s = file
+    # with size), a symlink (-l — so the /_theme and /_tiger symlinks resolve), or
+    # a directory (-d).
+    RewriteCond %{REQUEST_FILENAME} -s [OR]
+    RewriteCond %{REQUEST_FILENAME} -l [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^.*$ - [NC,L]
+
+    # Everything else -> the front controller.
+    RewriteRule ^.*$ index.php [NC,L]
+</IfModule>
+
+# Optional hardening (both FileInfo-safe). Uncomment as desired:
+#
+# <IfModule mod_headers.c>
+#     # Long-cache fingerprinted assets (the cache-buster above makes this safe).
+#     <FilesMatch "\.(css|js|woff2?|png|jpe?g|gif|svg|ico)$">
+#         Header set Cache-Control "public, max-age=31536000, immutable"
+#     </FilesMatch>
+#     Header set X-Content-Type-Options "nosniff"
+#     Header set X-Frame-Options "SAMEORIGIN"
+# </IfModule>
