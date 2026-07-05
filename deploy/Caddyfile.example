@@ -1,0 +1,33 @@
+# Tiger — Caddy v2 (and FrankenPHP) front-controller routing.
+#
+# Caddy does NOT read .htaccess — this replaces it, and Caddy adds automatic HTTPS,
+# which makes it a great low-friction choice for MVPs. Caddy follows symlinks
+# (/_theme, /_tiger) by default.
+#
+# Adjust: the site address and the PHP-FPM socket. For FrankenPHP, swap the
+# php_fastcgi + file_server pair for a single `php_server` directive (noted below).
+
+your-app.example.com {
+    root * /var/www/your-app/public
+    encode zstd gzip
+
+    # Cache-busting: /css/app.1720200000.css -> /css/app.css on disk.
+    @cachebust path_regexp cb ^(.+)\.\d{10}\.(css|js)$
+    rewrite @cachebust {re.cb.1}.{re.cb.2}
+
+    # Block dotfiles/dirs (.git, .env, …) except ACME's /.well-known.
+    @dotfiles path_regexp dot ^/\.(?!well-known)
+    respond @dotfiles 403
+
+    # php_fastcgi already implements the front-controller pattern: it serves a real
+    # file if present, else routes to index.php. file_server handles static assets.
+    php_fastcgi unix//run/php-fpm/www.sock {
+        env APPLICATION_ENV production
+    }
+    file_server
+
+    # --- FrankenPHP (embedded PHP, no PHP-FPM) — use this instead of the two above:
+    # php_server {
+    #     env APPLICATION_ENV production
+    # }
+}

@@ -1,0 +1,41 @@
+# Tiger — Apache vhost (production / enterprise Apache).
+#
+# The FAST form of public/.htaccess: `AllowOverride None` means Apache stops looking
+# for a .htaccess on every request. When you deploy with this vhost, DELETE
+# public/.htaccess (its rules live here now — identical logic).
+#
+# Adjust: ServerName, the /var/www/... paths, and add your TLS/443 block.
+
+<VirtualHost *:80>
+    ServerName   your-app.example.com
+    DocumentRoot /var/www/your-app/public
+
+    <Directory /var/www/your-app/public>
+        AllowOverride None
+        Require all granted
+        # -Indexes: no directory listing. +FollowSymLinks: resolve /_theme, /_tiger.
+        Options -Indexes +FollowSymLinks
+        DirectoryIndex index.php
+
+        RewriteEngine On
+
+        # Cache-busting: /css/app.1720200000.css -> /css/app.css on disk.
+        RewriteRule ^(.*)\.[0-9]{10}\.(css|js)$ $1.$2 [L]
+
+        # Block dotfiles/dirs (.git, .env, …) except ACME's /.well-known.
+        RewriteRule (^|/)\.(?!well-known/) - [F]
+
+        # Serve real file (-s) / symlink (-l) / directory (-d) as-is.
+        RewriteCond %{REQUEST_FILENAME} -s [OR]
+        RewriteCond %{REQUEST_FILENAME} -l [OR]
+        RewriteCond %{REQUEST_FILENAME} -d
+        RewriteRule ^.*$ - [NC,L]
+
+        # Everything else -> the front controller.
+        RewriteRule ^.*$ index.php [NC,L]
+    </Directory>
+
+    # APPLICATION_ENV is read by Tiger_Application (getenv/$_SERVER). Set it here,
+    # or via the OS environment / PHP-FPM pool. Default is "production".
+    SetEnv APPLICATION_ENV production
+</VirtualHost>

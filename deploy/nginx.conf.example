@@ -1,0 +1,39 @@
+# Tiger — nginx server block (front-controller routing).
+#
+# nginx does NOT read .htaccess, so on nginx the public/.htaccess file is inert —
+# this config replaces it. Same idea: serve real files (incl. the /_theme and
+# /_tiger symlinks — nginx follows symlinks by default), route everything else to
+# index.php, keep static requests out of PHP entirely.
+#
+# Adjust: server_name, root, and the PHP-FPM fastcgi_pass socket/port.
+
+server {
+    listen 80;
+    server_name your-app.example.com;
+    root /var/www/your-app/public;
+    index index.php;
+
+    # Cache-busting: /css/app.1720200000.css -> /css/app.css on disk.
+    rewrite ^(.+)\.\d{10}\.(css|js)$ $1.$2 last;
+
+    # Block dotfiles/dirs (.git, .env, …) except ACME's /.well-known.
+    location ~ /\.(?!well-known) { deny all; }
+
+    # Serve a real file/dir if it exists; otherwise hand off to the front controller.
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php-fpm/www.sock;   # adjust to your PHP-FPM socket/port
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+        fastcgi_param APPLICATION_ENV production;   # Tiger_Application reads this
+    }
+
+    # Optional: long-cache fingerprinted assets (cache-buster above makes it safe).
+    # location ~* \.(css|js|woff2?|png|jpe?g|gif|svg|ico)$ {
+    #     expires 1y; add_header Cache-Control "public, immutable";
+    # }
+}

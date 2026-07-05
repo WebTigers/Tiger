@@ -44,6 +44,22 @@ Open `http://localhost:8000` — you're running Tiger.
 - A composer post-install script symlinked core assets into your docroot:
   `public/_tiger → vendor/webtigers/tiger-core/public`.
 
+## Deployment (any web server)
+
+Point your server's docroot at `public/` and route every **non-file** request to
+`index.php` (the front controller). Real files, directories, and the `_theme`/`_tiger`
+symlinks are served directly — static assets never touch PHP.
+
+- **Apache (default):** nothing to do — `public/.htaccess` ships with the routing and
+  works out of the box on `AllowOverride FileInfo` (shared hosting, most MVPs). The cost
+  is a ~microsecond per-request `.htaccess` lookup.
+- **Apache (enterprise / high-traffic):** move the rules into your vhost with
+  `AllowOverride None` (skips the per-request lookup) and delete `public/.htaccess`.
+  See [`deploy/apache-vhost.conf.example`](deploy/apache-vhost.conf.example).
+- **nginx / Caddy / FrankenPHP:** these don't read `.htaccess`; use the equivalent
+  front-controller config — [`deploy/nginx.conf.example`](deploy/nginx.conf.example),
+  [`deploy/Caddyfile.example`](deploy/Caddyfile.example).
+
 ## The ownership rule (why updates are safe)
 
 - **`vendor/` is Tiger-owned.** `composer update` replaces it in place.

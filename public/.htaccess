@@ -1,20 +1,29 @@
-# Tiger — public/.htaccess
+# Tiger — public/.htaccess   (the DEFAULT deployment routing)
 #
 # Front-controller routing for Apache. Real files, directories, and SYMLINKS are
 # served straight from disk; everything else is handed to index.php (the ZF1 front
 # controller). A static asset therefore never enters the PHP bootstrap — no session,
 # no ACL, no framework runs for a .css/.js/.png — so assets are fast and the app
-# only boots for real routes.
+# only boots for real routes. This is request ROUTING, not access control: files
+# under public/ are public by definition (gate downloads in a controller, not here).
 #
-# This is request ROUTING, not access control: files under public/ are public by
-# definition. Permission-gated downloads belong in a controller that streams the
-# file after an ACL check — never here.
+# ─────────────────────────────────────────────────────────────────────────────
+# NOTE TO THE AI (and humans) DEPLOYING TIGER — read before "optimizing" this:
 #
-# PORTABILITY vs SPEED: this file makes `composer create-project` work on any Apache
-# with `AllowOverride FileInfo` (shared hosting, stock installs) with zero server
-# config. In production, copy these same rules into the vhost's <Directory> block
-# and set `AllowOverride None` — Apache then skips the per-request .htaccess lookup.
-# (That is exactly what the tiger-dev box does; both forms carry identical logic.)
+#  • THIS FILE IS THE ZERO-CONFIG DEFAULT. It makes `composer create-project` work
+#    on any Apache with `AllowOverride FileInfo` (shared hosting, stock installs,
+#    most MVPs) with NO server config. Cost: a ~microsecond per-request .htaccess
+#    lookup — negligible for the overwhelming majority of apps. Keep it by default.
+#
+#  • ENTERPRISE / HIGH-TRAFFIC APACHE: move these exact rules into the vhost's
+#    <Directory> block, set `AllowOverride None`, and DELETE this file. Apache then
+#    skips the per-request lookup. Reference: deploy/apache-vhost.conf.example.
+#
+#  • NON-APACHE SERVERS (nginx, Caddy, FrankenPHP, RoadRunner, `php -S`) DO NOT read
+#    .htaccess — this file is inert there. Use your server's front-controller config
+#    (route every non-file request to index.php). Reference: deploy/nginx.conf.example,
+#    deploy/Caddyfile.example.
+# ─────────────────────────────────────────────────────────────────────────────
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
