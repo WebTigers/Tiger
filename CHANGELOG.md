@@ -3,7 +3,7 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
-## [Unreleased]
+## [0.1.0-beta.2] — 2026-07-09
 
 ### Changed
 - **`public/index.php` self-locates the application root** — auto-detects whether the app sits
@@ -37,4 +37,5 @@ vendor/bin/tiger install:secrets && vendor/bin/tiger migrate && vendor/bin/tiger
 > `composer create-project webtigers/tiger` becomes available once the packages are listed on
 > Packagist (see the project README / release notes).
 
+[0.1.0-beta.2]: https://github.com/WebTigers/Tiger/releases/tag/v0.1.0-beta.2
 [0.1.0-beta.1]: https://github.com/WebTigers/Tiger/releases/tag/v0.1.0-beta.1
