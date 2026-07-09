@@ -6,28 +6,29 @@ A **1-click SaaS platform** built on [TigerZF](https://github.com/WebTigers/Tige
 Tiger gives you the boring-but-essential SaaS substrate — multi-tenant orgs, users,
 memberships, roles/ACL, auth — so you build *product*, not plumbing.
 
-> **Status: greenfield.** This README describes the *target* install experience we're
-> building toward. Nothing here works yet.
+> **Status: public beta** (`v0.1.0-beta`). Installable from Packagist today; the API may still
+> shift between beta releases.
 
 ## Install a new Tiger app
 
 ```bash
 # 1. Scaffold your app from the Tiger skeleton (this repo). Copies ONCE — it's YOURS.
-composer create-project webtigers/tiger my-app
+#    (--stability=beta while Tiger is in beta; drop it once 1.0 ships)
+composer create-project webtigers/tiger my-app --stability=beta
 cd my-app
 
-# 2. Configure your database + environment
-cp application/configs/application.ini.dist application/configs/application.ini
-#    → set DB creds (or an AWS Secrets Manager key) and APPLICATION_ENV
+# 2. Configure secrets + database
+cp application/configs/local.ini.dist application/configs/local.ini
+#    → set DB creds and APPLICATION_ENV in local.ini
+bin/tiger install:secrets          # generate the app crypto key + password pepper
 
-# 3. Run platform migrations (creates org, user, org_user, acl_* tables)
-bin/tiger migrate
+# 3. Create the schema + your first org/owner
+bin/tiger migrate                  # org, user, org_user, acl_*, … (additive-only)
+bin/tiger install:admin            # the founding org + owner account
 
-# 4. Create your first org + owner account
-bin/tiger install:admin
-
-# 5. Point a web server at ./public (the docroot). Locally:
-php -S localhost:8000 -t public
+# 4. Wire the docroot's asset symlinks, then serve ./public
+bin/tiger link:assets              # (re)create _theme / _tiger (failsafe on any host)
+php -S localhost:8000 -t public    # or point Apache/nginx at ./public
 ```
 
 Open `http://localhost:8000` — you're running Tiger.
