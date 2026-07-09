@@ -3,6 +3,14 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **`public/index.php` self-locates the application root** — auto-detects whether the app sits
+  beside `public/` (dev / VPS) or ABOVE the docroot (cPanel / shared hosting: `~/public_html` +
+  `~/tiger`), via `TIGER_ROOT` env → a `.tiger-root` marker → co-located → split. Makes the same
+  shim work on cPanel out of the box; clean 500 with guidance if nothing resolves.
+
 ## [0.1.0-beta.1] — 2026-07-09
 
 First public **beta** of the app skeleton for the Tiger platform.
