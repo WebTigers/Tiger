@@ -1,0 +1,76 @@
+# .github/workflows/release-bundle.yml  —  lives in WebTigers/Tiger (the skeleton repo)
+#
+# On every published release (full OR pre-release), build the vendored full-app bundle
+# (tiger-<version>.zip + its .sha256) with tiger-core's bin/build-app-bundle.sh and attach it to
+# that release — so the one-file web installer (WebTigers/tiger-install) can auto-download it.
+# Manual / backfill runs: Actions → this workflow → "Run workflow" with a tag input.
+name: Release bundle
+
+on:
+  release:
+    # Mutually exclusive at publish time: a full release fires `released`, a pre-release fires
+    # `prereleased` — so exactly one runs (no double-build). A beta ships pre-releases.
+    types: [released, prereleased]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to (re)build the bundle for (e.g. v0.1.1-beta)"
+        required: true
+
+permissions:
+  contents: write          # required to upload release assets
+
+concurrency:
+  group: release-bundle-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve the release tag
+        id: tag
+        run: echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out the skeleton at the tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
+          path: skeleton
+
+      - name: Check out tiger-core (for bin/build-app-bundle.sh)
+        uses: actions/checkout@v4
+        with:
+          repository: WebTigers/TigerCore
+          ref: main            # pin to a tag instead of main for fully reproducible builds
+          path: core
+
+      - name: Set up PHP + Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: zip, mbstring, curl
+          tools: composer:v2
+
+      - name: Build the full-app bundle
+        env:
+          # build-app-bundle.sh strips a leading "v". SKELETON_PATH builds from the exact released
+          # commit (no Packagist-indexing race); tiger-core + deps resolve from Packagist.
+          VERSION: ${{ steps.tag.outputs.tag }}
+          SKELETON_PATH: ${{ github.workspace }}/skeleton
+          OUT: ${{ github.workspace }}/dist
+        run: bash "${{ github.workspace }}/core/bin/build-app-bundle.sh"
+
+      - name: Attach the bundle to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ steps.tag.outputs.tag }}" \
+            "${{ github.workspace }}"/dist/tiger-*.zip \
+            "${{ github.workspace }}"/dist/tiger-*.zip.sha256 \
+            --clobber -R "${{ github.repository }}"
+
+      - name: Summary
+        run: |
+          echo "### Attached the install bundle to \`${{ steps.tag.outputs.tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+          ls -la "${{ github.workspace }}"/dist >> "$GITHUB_STEP_SUMMARY"
