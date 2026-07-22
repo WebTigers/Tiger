@@ -6,6 +6,11 @@ A **1-click SaaS platform** built on [TigerZF](https://github.com/WebTigers/Tige
 Tiger gives you the boring-but-essential SaaS substrate — multi-tenant orgs, users,
 memberships, roles/ACL, auth — so you build *product*, not plumbing.
 
+> **The stack:** this repo is the **skeleton** you scaffold your app from. The real substance is
+> **[TigerCore](https://github.com/WebTigers/TigerCore)** — the framework it pulls into `vendor/`
+> and updates via Composer — built on **[TigerZF](https://github.com/WebTigers/TigerZF)**.
+> Full docs → **[tiger.webtigers.com/docs](https://tiger.webtigers.com/docs)**.
+
 > **Status: public beta** (`v0.1.0-beta`). Installable from Packagist today; the API may still
 > shift between beta releases.
 
