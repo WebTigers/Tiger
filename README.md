@@ -107,4 +107,4 @@ to `/api/:module/:service/:action`, ACL gates every access — and **never touch
 
 ---
 
-Built by WebTigers. Licensed under `(MIT AND BSD-3-Clause)`, matching TigerZF.
+Built by WebTigers. Licensed under `BSD-3-Clause`, matching TigerZF.
