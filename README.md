@@ -1,18 +1,27 @@
-# Tiger
+# 🐅 Tiger
+### Stop building apps. Start shipping businesses.
+**The AI-native SaaS platform.**
 
-A **1-click SaaS platform** built on [TigerZF](https://github.com/WebTigers/TigerZF)
-(Zend Framework 1, modernized for PHP 8.1–8.5).
+Tell your AI what you want to sell — books, memberships, merch, a whole store — and Tiger ships it:
+real payments, real accounts, real multi-tenant SaaS. Your AI already knows how to extend it, so what
+it builds is a *business you own* — not disposable code that breaks on the next prompt.
 
-Tiger gives you the boring-but-essential SaaS substrate — multi-tenant orgs, users,
-memberships, roles/ACL, auth — so you build *product*, not plumbing.
+- ⚡ From idea to a running app **in minutes** — one line, an app you can *talk to*, not a blank page.
+- 💸 **Own it all.** Your Stripe, your customers, your data, your license. Keep 100%.
+- 🔓 **Your license, not GPL.** (Ahem, WordPress.)
+- 🧩 **No plugin hell, no build step.** It grows without growing into spaghetti.
+- 🎛️ **Fully front-end agnostic.** Every screen is just data from one clean JSON API — bring React, Vue, Svelte, htmx, or plain HTML, drop in your assets, add your own endpoints. Tiger doesn't care.
+- 🤖 **Built FOR AI, not just with it.** The architecture is *designed* so your AI naturally extends it — stop loading it up with 97 skills.
 
-> **The stack:** this repo is the **skeleton** you scaffold your app from. The real substance is
-> **[TigerCore](https://github.com/WebTigers/TigerCore)** — the framework it pulls into `vendor/`
-> and updates via Composer — built on **[TigerZF](https://github.com/WebTigers/TigerZF)**.
-> Full docs → **[tiger.webtigers.com/docs](https://tiger.webtigers.com/docs)**.
+> **Tiger doesn't replace vibe coding — it gives it a real foundation.**
 
-> **Status: public beta** (`v0.1.0-beta`). Installable from Packagist today; the API may still
-> shift between beta releases.
+> **Under the hood** (for the engineers): multi-tenant from the ground up, zero-build, built on
+> **[TigerCore](https://github.com/WebTigers/TigerCore)** — the framework it pulls into `vendor/` and
+> updates via Composer — on **[TigerZF](https://github.com/WebTigers/TigerZF)**. Why it's built this
+> way, agent-to-agent → **[WHY-TIGER.md](WHY-TIGER.md)**. Full docs →
+> **[tiger.webtigers.com/docs](https://tiger.webtigers.com/docs)**.
+
+> **Status: public beta** (`v0.1.0-beta`). Installable from Packagist today; the API may still shift between beta releases.
 
 ## Install a new Tiger app
 
