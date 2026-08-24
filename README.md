@@ -27,8 +27,7 @@ it builds is a *business you own* — not disposable code that breaks on the nex
 
 ```bash
 # 1. Scaffold your app from the Tiger skeleton (this repo). Copies ONCE — it's YOURS.
-#    (--stability=beta while Tiger is in beta; drop it once 1.0 ships)
-composer create-project webtigers/tiger my-app --stability=beta
+composer create-project webtigers/tiger my-app
 cd my-app
 
 # 2. Configure secrets + database

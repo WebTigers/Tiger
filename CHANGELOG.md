@@ -3,6 +3,19 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [1.0.0] — 2026-08-24
+
+**Tiger 1.0.** The skeleton now publishes a stable tag, so a new app is:
+
+```bash
+composer create-project webtigers/tiger my-app
+```
+
+### Changed
+- `minimum-stability` is now `stable` (was `beta`), and `webtigers/tiger-core` is required at
+  `^1.0` (was `>=0.1.0-beta <1.0.0`, which would have excluded the 1.0.0 framework release).
+- Install docs drop `--stability=beta` — it is no longer needed.
+
 ## [0.1.1-beta] — 2026-07-09
 
 ### Changed
