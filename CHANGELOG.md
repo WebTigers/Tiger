@@ -3,6 +3,16 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [1.0.1] — 2026-09-07
+
+**Refreshed install bundle.** No skeleton code changed — this release exists to republish the
+vendored full-app bundle (`tiger-1.0.1.zip`) against the current framework.
+
+### Fixed
+- The bundle attached to `1.0.0` vendored **`webtigers/tiger-core` v1.0.0**, so a browser install
+  landed five releases behind (missing 1.1 → 1.5.1). The skeleton's `^1.0` constraint always
+  resolved forward; only the built artifact was frozen. Rebuilt, it now vendors **1.5.1**.
+
 ## [1.0.0] — 2026-08-24
 
 **Tiger 1.0.** The skeleton now publishes a stable tag, so a new app is:
