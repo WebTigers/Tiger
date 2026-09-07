@@ -3,6 +3,12 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [1.0.3] — 2026-09-07
+
+**Refreshed install bundle.** No skeleton code changed — republishes the vendored full-app bundle
+against **tiger-core 1.5.3**, which is what lets Tiger install on **MySQL** (migration 0041 used a
+MariaDB-only `information_schema` column and killed the install on MySQL hosts).
+
 ## [1.0.2] — 2026-09-07
 
 **Refreshed install bundle.** No skeleton code changed — this republishes the vendored full-app
