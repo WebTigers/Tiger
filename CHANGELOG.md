@@ -3,6 +3,13 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [1.0.2] — 2026-09-07
+
+**Refreshed install bundle.** No skeleton code changed — this republishes the vendored full-app
+bundle against **tiger-core 1.5.2**, which is what lets Tiger install on hosts that block
+`symlink()` (much of hardened shared/cPanel hosting). The 1.0.1 bundle vendored 1.5.1 and would
+still fail at "wiring assets" on those hosts.
+
 ## [1.0.1] — 2026-09-07
 
 **Refreshed install bundle.** No skeleton code changed — this release exists to republish the
