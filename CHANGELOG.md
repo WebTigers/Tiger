@@ -3,6 +3,12 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [1.0.6] — 2026-09-08
+
+**Refreshed install bundle.** No skeleton code changed — republishes the vendored full-app bundle
+against **tiger-core 1.5.6**, which completes the one-click self-update fix (opcache reset after the
+vendor swap + health-probe retries).
+
 ## [1.0.5] — 2026-09-08
 
 **Refreshed install bundle.** No skeleton code changed — republishes the vendored full-app bundle
