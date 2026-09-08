@@ -3,6 +3,12 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [1.0.7] — 2026-09-08
+
+**Security bundle refresh.** No skeleton code changed — republishes the vendored full-app bundle
+against **tiger-core 1.5.7**, which fixes five authorization defects (suspended accounts/memberships
+still authorizing, cross-tenant media access, CMS menu `org_id` trust, and MCP token policy clearing).
+
 ## [1.0.6] — 2026-09-08
 
 **Refreshed install bundle.** No skeleton code changed — republishes the vendored full-app bundle
