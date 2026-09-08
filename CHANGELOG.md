@@ -3,6 +3,12 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [1.0.8] — 2026-09-08
+
+**Refreshed install bundle.** No skeleton code changed — republishes the vendored full-app bundle
+against **tiger-core 1.5.8** (the Update button no longer installs from a stale cache, Add New in the
+Modules nav, and the smoke suite now verifies a page's referenced assets actually serve).
+
 ## [1.0.7] — 2026-09-08
 
 **Security bundle refresh.** No skeleton code changed — republishes the vendored full-app bundle
