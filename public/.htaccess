@@ -25,8 +25,24 @@
 #    deploy/Caddyfile.example.
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Pass the Authorization header through to PHP. Apache DROPS it for CGI / FastCGI / PHP-FPM unless
+# told otherwise — and every Bearer-token path in Tiger (/api tokens, /mcp for AI agents) reads it.
+# On a shared cPanel host with PHP-FPM the token silently never arrives without this: the request
+# degrades to a guest and nothing says why. CGIPassAuth is Apache 2.4.13+ (mod_version guards the
+# directive on older builds); the rewrite-env line below is the fallback, which PHP then finds as
+# REDIRECT_HTTP_AUTHORIZATION (Tiger reads both).
+<IfModule mod_version.c>
+    <IfVersion >= 2.4.13>
+        CGIPassAuth On
+    </IfVersion>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Authorization header → env, for Apache builds without CGIPassAuth (see above).
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
     # If the app is served from a subdirectory rather than a domain root, set:
     # RewriteBase /
