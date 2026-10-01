@@ -3,6 +3,12 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [1.0.26] — 2026-10-01
+
+**Refreshed install bundle.** No skeleton code changed — republishes the vendored full-app bundle
+against **tiger-core 1.19.0** (active-only UNIQUE indexes on `user.email`/`user.username` so
+soft-delete frees the value — TIGER-274).
+
 ## [1.0.8] — 2026-09-08
 
 **Refreshed install bundle.** No skeleton code changed — republishes the vendored full-app bundle
