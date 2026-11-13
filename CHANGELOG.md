@@ -3,6 +3,12 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [1.0.33] — 2026-11-13
+
+**Refreshed install bundle + README status.** Republishes the vendored full-app bundle against
+**tiger-core 1.54.3**, and the README now states Tiger's real status (stable 1.x) instead of the
+leftover "public beta" line.
+
 ## [1.0.26] — 2026-10-01
 
 **Refreshed install bundle.** No skeleton code changed — republishes the vendored full-app bundle

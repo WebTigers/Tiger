@@ -21,7 +21,7 @@ it builds is a *business you own* — not disposable code that breaks on the nex
 > way, agent-to-agent → **[WHY-TIGER.md](WHY-TIGER.md)**. Full docs →
 > **[tiger.webtigers.com/docs](https://tiger.webtigers.com/docs)**.
 
-> **Status: public beta** (`v0.1.0-beta`). Installable from Packagist today; the API may still shift between beta releases.
+> **Status: stable — Tiger 1.x.** Released on Packagist; semver, with continuous minor/patch releases. Updates from the admin or `composer update`.
 
 ## Install a new Tiger app
 
