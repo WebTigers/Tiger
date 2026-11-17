@@ -3,6 +3,12 @@
 All notable changes to the **Tiger skeleton** (`webtigers/tiger`) — the scaffold you create a
 new app from. Follows [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/).
 
+## [1.0.34] — 2026-11-17
+
+**Refreshed install bundle.** Republishes the vendored full-app bundle against **tiger-core 1.65.2**
+(from 1.54.3), so a new install starts on the current core instead of auto-updating eleven minor releases
+on its first boot. Also ships `SECURITY.md` (how to report a vulnerability).
+
 ## [1.0.33] — 2026-11-13
 
 **Refreshed install bundle + README status.** Republishes the vendored full-app bundle against
